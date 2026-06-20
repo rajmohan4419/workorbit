@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calendar, Trash2, Edit2, Check, X } from 'lucide-react'
+import { Calendar, Trash2, Edit2, Check, X, CheckSquare } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 import { useTaskStore } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
@@ -23,7 +24,21 @@ export default function TaskCard({ task, onOpen }) {
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(task.title)
   const [saving, setSaving] = useState(false)
+  const [taskSubtasks, setTaskSubtasks] = useState([])
+  const [taskLabels, setTaskLabels] = useState([])
   const inputRef = useRef(null)
+
+  useEffect(() => {
+    // We fetch card-specific data locally to avoid store pollution
+    const fetchCardData = async () => {
+      const { data: sub } = await supabase.from('task_subtasks').select('*').eq('task_id', task.id)
+      if (sub) setTaskSubtasks(sub)
+
+      const { data: lab } = await supabase.from('task_labels').select('labels(*)').eq('task_id', task.id)
+      if (lab) setTaskLabels(lab.map(l => l.labels))
+    }
+    fetchCardData()
+  }, [task.id])
 
   useEffect(() => {
     if (isEditing) {
@@ -126,7 +141,21 @@ export default function TaskCard({ task, onOpen }) {
         <p className="text-xs text-gray-400 mb-2.5 line-clamp-2">{task.description}</p>
       )}
 
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      {taskLabels.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2.5">
+          {taskLabels.slice(0, 3).map(label => (
+            <div
+              key={label.id}
+              className="w-8 h-1 rounded-full"
+              style={{ backgroundColor: label.color }}
+              title={label.name}
+            />
+          ))}
+          {taskLabels.length > 3 && <span className="text-[8px] text-gray-400">+{taskLabels.length - 3}</span>}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-2.5">
         <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${priorityStyles[task.priority] || priorityStyles.medium}`}>
           {task.priority}
         </span>
@@ -138,6 +167,21 @@ export default function TaskCard({ task, onOpen }) {
           </div>
         )}
       </div>
+
+      {taskSubtasks.length > 0 && (
+        <div className="flex items-center gap-2 mb-1">
+          <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 transition-all duration-500"
+              style={{ width: `${(taskSubtasks.filter(s => s.is_completed).length / taskSubtasks.length) * 100}%` }}
+            />
+          </div>
+          <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+            <CheckSquare size={10} />
+            {taskSubtasks.filter(s => s.is_completed).length}/{taskSubtasks.length}
+          </span>
+        </div>
+      )}
 
       {errorMessage && (
         <p className="mt-2 text-xs text-red-500">{errorMessage}</p>

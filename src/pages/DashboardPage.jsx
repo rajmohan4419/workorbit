@@ -1,15 +1,26 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FolderOpen, CheckCircle2, Clock, AlertCircle, ArrowRight } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
+import { useTaskStore } from '../store/taskStore'
 
 export default function DashboardPage() {
   const projects = useProjectStore((state) => state.projects)
   const loading = useProjectStore((state) => state.loading)
   const error = useProjectStore((state) => state.error)
   const user = useAuthStore((state) => state.user)
+  const searchResults = useTaskStore((state) => state.searchResults)
+  const fetchGlobalTasks = useTaskStore((state) => state.fetchGlobalTasks)
+
+  useEffect(() => {
+    fetchGlobalTasks()
+  }, [fetchGlobalTasks])
 
   const firstName = user?.email?.split('@')[0] || 'there'
+
+  const completedTasks = searchResults.filter(t => t.status === 'done').length
+  const overdueTasks = searchResults.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done').length
 
   return (
     <div className="p-6 max-w-4xl">
@@ -22,8 +33,8 @@ export default function DashboardPage() {
         {[
           { label: 'Projects', value: projects.length, icon: FolderOpen, color: 'text-indigo-600 bg-indigo-50' },
           { label: 'Active', value: projects.length, icon: Clock, color: 'text-blue-600 bg-blue-50' },
-          { label: 'Completed', value: 0, icon: CheckCircle2, color: 'text-green-600 bg-green-50' },
-          { label: 'Overdue', value: 0, icon: AlertCircle, color: 'text-red-500 bg-red-50' },
+          { label: 'Completed', value: completedTasks, icon: CheckCircle2, color: 'text-green-600 bg-green-50' },
+          { label: 'Overdue', value: overdueTasks, icon: AlertCircle, color: 'text-red-500 bg-red-50' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white border border-gray-100 rounded-xl p-4">
             <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center mb-3`}>

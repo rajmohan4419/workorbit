@@ -24,15 +24,23 @@ export const canMoveToStatus = (from, to) => {
 
 export const useTaskStore = create((set, get) => ({
   tasks: [],
+  searchResults: [],
   comments: [],
   logs: [],
+  subtasks: [],
+  labels: [],
+  projectLabels: [],
   loading: false,
   error: null,
 
   reset: () => set({
     tasks: [],
+    searchResults: [],
     comments: [],
     logs: [],
+    subtasks: [],
+    labels: [],
+    projectLabels: [],
     loading: false,
     error: null,
   }),
@@ -43,7 +51,7 @@ export const useTaskStore = create((set, get) => ({
       return { data: [] }
     }
 
-    set({ loading: true, error: null })
+    set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
@@ -65,7 +73,7 @@ export const useTaskStore = create((set, get) => ({
       return { data: [] }
     }
 
-    set({ loading: true, error: null })
+    set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
       .select('*, projects(name)')
@@ -78,6 +86,22 @@ export const useTaskStore = create((set, get) => ({
     }
 
     set({ tasks: data, error: null, loading: false })
+    return { data }
+  },
+
+  fetchGlobalTasks: async () => {
+    set({ loading: true, error: null })
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*, projects(name)')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      set({ error: error.message, loading: false })
+      return { error }
+    }
+
+    set({ searchResults: data, loading: false })
     return { data }
   },
 
@@ -172,6 +196,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchComments: async (taskId) => {
+    set({ comments: [] })
     const { data, error } = await supabase
       .from('task_comments')
       .select('*, profiles(full_name, avatar_path)')
@@ -203,6 +228,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchLogs: async (taskId) => {
+    set({ logs: [] })
     const { data, error } = await supabase
       .from('task_logs')
       .select('*, profiles(full_name)')
@@ -211,6 +237,115 @@ export const useTaskStore = create((set, get) => ({
 
     if (error) return { error }
     set({ logs: data })
+    return { data }
+  },
+
+  fetchSubtasks: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_subtasks')
+      .select('*')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: true })
+
+    if (error) return { error }
+    set({ subtasks: data })
+    return { data }
+  },
+
+  addSubtask: async (taskId, title) => {
+    const { data, error } = await supabase
+      .from('task_subtasks')
+      .insert([{ task_id: taskId, title }])
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ subtasks: [...state.subtasks, data] }))
+    return { data }
+  },
+
+  toggleSubtask: async (id, isCompleted) => {
+    const { data, error } = await supabase
+      .from('task_subtasks')
+      .update({ is_completed: isCompleted })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({
+      subtasks: state.subtasks.map((s) => (s.id === id ? data : s)),
+    }))
+    return { data }
+  },
+
+  deleteSubtask: async (id) => {
+    const { error } = await supabase.from('task_subtasks').delete().eq('id', id)
+    if (error) return { error }
+    set((state) => ({
+      subtasks: state.subtasks.filter((s) => s.id !== id),
+    }))
+    return {}
+  },
+
+  fetchProjectLabels: async (projectId) => {
+    const { data, error } = await supabase
+      .from('labels')
+      .select('*')
+      .eq('project_id', projectId)
+
+    if (error) return { error }
+    set({ projectLabels: data })
+    return { data }
+  },
+
+  fetchTaskLabels: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_labels')
+      .select('*, labels(*)')
+      .eq('task_id', taskId)
+
+    if (error) return { error }
+    const labels = data.map((tl) => tl.labels)
+    set({ labels })
+    return { data: labels }
+  },
+
+  addTaskLabel: async (taskId, labelId) => {
+    const { error } = await supabase
+      .from('task_labels')
+      .insert([{ task_id: taskId, label_id: labelId }])
+
+    if (error) return { error }
+    // Refresh task labels
+    return get().fetchTaskLabels(taskId)
+  },
+
+  removeTaskLabel: async (taskId, labelId) => {
+    const { error } = await supabase
+      .from('task_labels')
+      .delete()
+      .eq('task_id', taskId)
+      .eq('label_id', labelId)
+
+    if (error) return { error }
+    set((state) => ({
+      labels: state.labels.filter((l) => l.id !== labelId),
+    }))
+    return {}
+  },
+
+  createLabel: async (projectId, name, color) => {
+    const { data, error } = await supabase
+      .from('labels')
+      .insert([{ project_id: projectId, name, color }])
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({
+      projectLabels: [...state.projectLabels, data],
+    }))
     return { data }
   },
 }))

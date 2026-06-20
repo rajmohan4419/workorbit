@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useProjectStore } from './store/projectStore'
@@ -9,13 +9,27 @@ import ProjectPage from './pages/ProjectPage'
 import MyTasksPage from './pages/MyTasksPage'
 import UsersPage from './pages/UsersPage'
 import Sidebar from './components/layout/Sidebar'
+import SearchModal from './components/tasks/SearchModal'
 
 function AppShell() {
   const profile = useAuthStore((state) => state.profile)
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
+      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
       <main className="flex-1 overflow-y-auto">
         <Routes>
           <Route path="/" element={<DashboardPage />} />

@@ -466,6 +466,24 @@ create table if not exists public.project_invites (
   unique (project_id, email)
 );
 
+create or replace function public.check_self_invite()
+returns trigger as $$
+begin
+  if exists (
+    select 1 from auth.users
+    where id = new.invited_by and email = new.email
+  ) then
+    raise exception 'You cannot invite yourself.';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists tr_check_self_invite on public.project_invites;
+create trigger tr_check_self_invite
+  before insert on public.project_invites
+  for each row execute procedure public.check_self_invite();
+
 alter table public.project_invites enable row level security;
 
 create policy "Users can view invites for projects they manage"
@@ -479,6 +497,81 @@ create policy "Admins and owners can create invites"
 create policy "Admins and owners can delete invites"
   on public.project_invites for delete
   using (public.can_manage_project(project_id));
+
+-- ─────────────────────────────────────────────
+-- SUBTASKS
+-- ─────────────────────────────────────────────
+create table if not exists public.task_subtasks (
+  id           uuid primary key default uuid_generate_v4(),
+  task_id      uuid references public.tasks(id) on delete cascade not null,
+  title        text not null,
+  is_completed boolean default false,
+  created_at   timestamptz default now()
+);
+
+alter table public.task_subtasks enable row level security;
+
+create policy "Users can view subtasks for tasks they can access"
+  on public.task_subtasks for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_subtasks.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can manage subtasks for tasks they can access"
+  on public.task_subtasks for all
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_subtasks.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+-- ─────────────────────────────────────────────
+-- LABELS
+-- ─────────────────────────────────────────────
+create table if not exists public.labels (
+  id          uuid primary key default uuid_generate_v4(),
+  project_id  uuid references public.projects(id) on delete cascade not null,
+  name        text not null,
+  color       text not null default '#4f46e5',
+  created_at  timestamptz default now(),
+  unique (project_id, name)
+);
+
+alter table public.labels enable row level security;
+
+create policy "Users can view labels for projects they can access"
+  on public.labels for select
+  using (public.can_access_project(project_id));
+
+create policy "Admins and owners can manage labels"
+  on public.labels for all
+  using (public.can_manage_project(project_id));
+
+create table if not exists public.task_labels (
+  task_id  uuid references public.tasks(id) on delete cascade not null,
+  label_id uuid references public.labels(id) on delete cascade not null,
+  primary key (task_id, label_id)
+);
+
+alter table public.task_labels enable row level security;
+
+create policy "Users can view task labels"
+  on public.task_labels for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_labels.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can manage task labels"
+  on public.task_labels for all
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_labels.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
 
 -- ─────────────────────────────────────────────
 -- NOTIFICATIONS

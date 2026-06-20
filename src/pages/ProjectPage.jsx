@@ -6,17 +6,21 @@ import { useAuthStore } from '../store/authStore'
 import { useTaskStore } from '../store/taskStore'
 import { canDeleteProject } from '../lib/permissions'
 import KanbanBoard from '../components/tasks/KanbanBoard'
+import TaskTable from '../components/tasks/TaskTable'
+import TaskModal from '../components/tasks/TaskModal'
 import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
 
 export default function ProjectPage() {
   const { id } = useParams()
   const [view, setView] = useState('board')
+  const [selectedTask, setSelectedTask] = useState(null)
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const activeProject = useProjectStore((state) => state.activeProject)
   const deleteProject = useProjectStore((state) => state.deleteProject)
   const user = useAuthStore((state) => state.user)
+  const tasks = useTaskStore((state) => state.tasks)
   const fetchTasks = useTaskStore((state) => state.fetchTasks)
   const resetTasks = useTaskStore((state) => state.reset)
   const loading = useTaskStore((state) => state.loading)
@@ -66,24 +70,22 @@ export default function ProjectPage() {
           <NotificationBell />
           <div className="w-px h-6 bg-gray-100 mx-1" />
           <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl">
-            <button
-              onClick={() => setView('board')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                view === 'board' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              <LayoutDashboard size={14} />
-              Board
-            </button>
-            <button
-              onClick={() => setView('members')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                view === 'members' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              <Users size={14} />
-              Members
-            </button>
+            {[
+              { id: 'board', label: 'Board', icon: LayoutDashboard },
+              { id: 'list', label: 'List', icon: LayoutDashboard }, // You might want a different icon for List
+              { id: 'members', label: 'Members', icon: Users },
+            ].map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setView(v.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  view === v.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <v.icon size={14} />
+                {v.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -92,6 +94,10 @@ export default function ProjectPage() {
         {view === 'members' ? (
           <div className="max-w-3xl mx-auto">
             <ProjectMembers projectId={id} />
+          </div>
+        ) : view === 'list' ? (
+          <div className="h-full overflow-y-auto">
+            <TaskTable tasks={tasks} onTaskClick={setSelectedTask} />
           </div>
         ) : (
           <>
@@ -111,6 +117,14 @@ export default function ProjectPage() {
           </>
         )}
       </div>
+
+      {selectedTask && (
+        <TaskModal
+          task={selectedTask}
+          projectId={id}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   )
 }
