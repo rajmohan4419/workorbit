@@ -7,9 +7,12 @@ import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
 import ProjectPage from './pages/ProjectPage'
 import MyTasksPage from './pages/MyTasksPage'
+import UsersPage from './pages/UsersPage'
 import Sidebar from './components/layout/Sidebar'
 
 function AppShell() {
+  const profile = useAuthStore((state) => state.profile)
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
@@ -18,6 +21,9 @@ function AppShell() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/project/:id" element={<ProjectPage />} />
           <Route path="/my-tasks" element={<MyTasksPage />} />
+          <Route path="/users" element={
+            profile?.role === 'admin' ? <UsersPage /> : <Navigate to="/" replace />
+          } />
           <Route path="/settings" element={
             <div className="p-6">
               <h1 className="text-xl font-semibold text-gray-900 mb-2">Settings</h1>

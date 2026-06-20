@@ -15,6 +15,7 @@ export default function ProjectMembers({ projectId }) {
   
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [email, setEmail] = useState('')
+  const [role, setRole] = useState('team_member')
   const [inviting, setInviting] = useState(false)
   const [error, setError] = useState('')
 
@@ -31,13 +32,14 @@ export default function ProjectMembers({ projectId }) {
 
     setInviting(true)
     setError('')
-    const { error } = await createInvite(projectId, email.trim())
+    const { error } = await createInvite(projectId, email.trim(), role)
     setInviting(false)
 
     if (error) {
       setError(error.message)
     } else {
       setEmail('')
+      setRole('team_member')
       setIsInviteOpen(false)
     }
   }
@@ -125,6 +127,19 @@ export default function ProjectMembers({ projectId }) {
                     className="w-full text-sm border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 font-medium block mb-1.5">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                >
+                  <option value="team_member">Team Member</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
               </div>
 
               {error && <p className="text-xs text-red-500">{error}</p>}

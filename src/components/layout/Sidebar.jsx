@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, Users } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { canCreateProject } from '../../lib/permissions'
@@ -97,6 +97,21 @@ export default function Sidebar() {
                 {label}
               </Link>
             ))}
+
+            {profile?.role === 'admin' && (
+              <Link
+                to="/users"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  location.pathname === '/users'
+                    ? 'bg-indigo-50 text-indigo-700 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <Users size={16} />
+                Users
+              </Link>
+            )}
 
             <div className="pt-4">
               <button

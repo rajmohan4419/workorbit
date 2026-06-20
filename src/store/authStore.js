@@ -57,6 +57,28 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  fetchAllProfiles: async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('full_name', { ascending: true })
+
+    if (error) return { error }
+    return { data }
+  },
+
+  updateProfileRole: async (userId, role) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', userId)
+      .select()
+      .single()
+
+    if (error) return { error }
+    return { data }
+  },
+
   signOut: async () => {
     const { error } = await supabase.auth.signOut()
     if (error) return { error }

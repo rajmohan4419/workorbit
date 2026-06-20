@@ -252,16 +252,27 @@ alter table public.projects enable row level security;
 alter table public.profiles enable row level security;
 alter table public.project_members enable row level security;
 
-drop policy if exists "Users can view their own profile" on public.profiles;
-create policy "Users can view their own profile"
+drop policy if exists "Users can view profiles" on public.profiles;
+create policy "Users can view profiles"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (
+    auth.uid() = id
+    or public.current_app_role() = 'admin'::app_role
+    or exists (
+      select 1 from public.project_members pm
+      where pm.user_id = profiles.id
+      and public.can_access_project(pm.project_id)
+    )
+  );
 
-drop policy if exists "Users can update their own profile" on public.profiles;
-create policy "Users can update their own profile"
+drop policy if exists "Users can update profiles" on public.profiles;
+create policy "Users can update profiles"
   on public.profiles for update
-  using (auth.uid() = id)
-  with check (auth.uid() = id and role = public.current_app_role());
+  using (auth.uid() = id or public.current_app_role() = 'admin'::app_role)
+  with check (
+    (auth.uid() = id and role = public.current_app_role()) -- Users can't change their own role
+    or public.current_app_role() = 'admin'::app_role
+  );
 
 drop policy if exists "Users can view their own projects" on public.projects;
 create policy "Users can view their own projects"
@@ -452,6 +463,7 @@ create table if not exists public.project_invites (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
   email       text not null,
+  role        app_role not null default 'team_member',
   invited_by  uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   status      text default 'pending',
   created_at  timestamptz default now(),
