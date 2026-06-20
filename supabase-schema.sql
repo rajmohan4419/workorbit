@@ -579,6 +579,38 @@ create trigger on_comment_added
   after insert on public.task_comments
   for each row execute procedure public.notify_new_comment();
 
+create or replace function public.handle_project_member_added()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  invited_role app_role;
+begin
+  -- Find the invite for this user and project
+  select role into invited_role
+  from public.project_invites
+  where project_id = new.project_id
+    and email = (select email from auth.users where id = new.user_id)
+  limit 1;
+
+  -- If an invite exists, update the user's role
+  if (invited_role is not null) then
+    update public.profiles
+    set role = invited_role
+    where id = new.user_id;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_project_member_added on public.project_members;
+create trigger on_project_member_added
+  after insert on public.project_members
+  for each row execute procedure public.handle_project_member_added();
+
 -- Trigger for project invite notification
 create or replace function public.notify_project_invite()
 returns trigger as $$

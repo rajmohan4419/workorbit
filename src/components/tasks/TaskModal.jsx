@@ -93,7 +93,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
       ? await updateTask(task.id, { ...payload, status: form.status })
       : await createTask({
           ...payload,
-          status: defaultStatus,
+          status: form.status || defaultStatus,
           project_id: projectId,
         })
 

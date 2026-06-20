@@ -25,8 +25,6 @@ export default function KanbanBoard({ projectId }) {
   const storeError = useTaskStore((state) => state.error)
   const [modalState, setModalState] = useState(null)
   const [draggingStatus, setDraggingStatus] = useState(null)
-  const [dragError, setDragError] = useState('')
-
   const tasksByStatus = STATUSES.reduce((acc, status) => {
     acc[status] = tasks.filter((task) => task.status === status)
     return acc
@@ -35,7 +33,7 @@ export default function KanbanBoard({ projectId }) {
   const handleDragStart = ({ draggableId }) => {
     const task = tasks.find((item) => item.id === draggableId)
     setDraggingStatus(task?.status ?? null)
-    setDragError('')
+    useTaskStore.setState({ error: null })
   }
 
   const handleDragEnd = async ({ source, destination, draggableId }) => {
@@ -44,25 +42,18 @@ export default function KanbanBoard({ projectId }) {
     if (!destination || destination.droppableId === source.droppableId) return
 
     if (!canMoveToStatus(source.droppableId, destination.droppableId)) {
-      setDragError('Tasks can only move to the next column.')
+      useTaskStore.setState({ error: 'Tasks can only move to valid columns.' })
       return
     }
 
-    const { error } = await moveTask(draggableId, destination.droppableId)
-    if (error) setDragError(error.message)
+    await moveTask(draggableId, destination.droppableId)
   }
 
   return (
     <>
       <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex h-full flex-col gap-3">
-          {dragError && (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-              {dragError}
-            </div>
-          )}
-
-          {!dragError && storeError && (
+          {storeError && (
             <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
               {storeError}
             </div>
@@ -94,7 +85,7 @@ export default function KanbanBoard({ projectId }) {
                         </div>
                         <button
                           onClick={() => {
-                            setDragError('')
+                            useTaskStore.setState({ error: null })
                             setModalState({ type: 'create', status })
                           }}
                           className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors"
@@ -116,7 +107,7 @@ export default function KanbanBoard({ projectId }) {
                                 <TaskCard
                                   task={task}
                                   onOpen={(selectedTask) => {
-                                    setDragError('')
+                                    useTaskStore.setState({ error: null })
                                     setModalState({ type: 'edit', task: selectedTask })
                                   }}
                                 />
@@ -130,7 +121,7 @@ export default function KanbanBoard({ projectId }) {
                         {tasksByStatus[status].length === 0 && (
                           <button
                             onClick={() => {
-                              setDragError('')
+                              useTaskStore.setState({ error: null })
                               setModalState({ type: 'create', status })
                             }}
                             className="w-full py-6 text-xs text-gray-300 hover:text-indigo-400 border-2 border-dashed border-gray-100 hover:border-indigo-200 rounded-xl transition-colors"

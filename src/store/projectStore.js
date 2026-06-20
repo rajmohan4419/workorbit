@@ -155,14 +155,6 @@ export const useProjectStore = create((set, get) => ({
 
     const userId = (await supabase.auth.getUser()).data.user.id
 
-    // Update user role in profile based on invite
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ role: invite.role })
-      .eq('id', userId)
-
-    if (profileError) return { error: profileError }
-
     const { error: memberError } = await supabase
       .from('project_members')
       .insert([{ project_id: invite.project_id, user_id: userId }])
