@@ -7,14 +7,21 @@ import KanbanBoard from '../components/tasks/KanbanBoard'
 
 export default function ProjectPage() {
   const { id } = useParams()
-  const { projects, setActiveProject, activeProject } = useProjectStore()
-  const { fetchTasks, loading } = useTaskStore()
+  const projects = useProjectStore((state) => state.projects)
+  const setActiveProject = useProjectStore((state) => state.setActiveProject)
+  const activeProject = useProjectStore((state) => state.activeProject)
+  const fetchTasks = useTaskStore((state) => state.fetchTasks)
+  const resetTasks = useTaskStore((state) => state.reset)
+  const loading = useTaskStore((state) => state.loading)
+  const error = useTaskStore((state) => state.error)
 
   useEffect(() => {
-    const project = projects.find((p) => p.id === id)
-    if (project) setActiveProject(project)
-    fetchTasks(id)
-  }, [id, projects])
+    const project = projects.find((item) => item.id === id) ?? null
+    setActiveProject(project)
+
+    if (id) fetchTasks(id)
+    else resetTasks()
+  }, [id, projects, setActiveProject, fetchTasks, resetTasks])
 
   const project = activeProject?.id === id ? activeProject : projects.find((p) => p.id === id)
 
@@ -43,6 +50,10 @@ export default function ProjectPage() {
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="w-72 h-48 bg-gray-50 rounded-2xl animate-pulse flex-shrink-0" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
           </div>
         ) : (
           <KanbanBoard projectId={id} />

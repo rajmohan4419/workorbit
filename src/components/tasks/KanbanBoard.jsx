@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Plus, Loader2 } from 'lucide-react'
-import { useTaskStore, STATUSES, STATUS_LABELS } from '../../store/taskStore'
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
+import { Plus } from 'lucide-react'
+import { useTaskStore, STATUSES, STATUS_LABELS, canMoveToStatus } from '../../store/taskStore'
 import TaskCard from './TaskCard'
 import TaskModal from './TaskModal'
 
@@ -18,133 +19,143 @@ const dotColors = {
   done: 'bg-green-400',
 }
 
-function AddTaskInline({ projectId, status, onDone }) {
-  const { createTask } = useTaskStore()
-  const [title, setTitle] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!title.trim()) return
-    setSaving(true)
-    await createTask({ title: title.trim(), status, project_id: projectId, priority: 'medium' })
-    setSaving(false)
-    setTitle('')
-    onDone()
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="mt-2">
-      <input
-        autoFocus
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Task name"
-        className="w-full text-sm border border-indigo-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-        onKeyDown={(e) => e.key === 'Escape' && onDone()}
-      />
-      <div className="flex gap-2 mt-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60"
-        >
-          {saving && <Loader2 size={11} className="animate-spin" />}
-          Add task
-        </button>
-        <button type="button" onClick={onDone} className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1.5">
-          Cancel
-        </button>
-      </div>
-    </form>
-  )
-}
-
 export default function KanbanBoard({ projectId }) {
-  const { tasks, moveTask } = useTaskStore()
-  const [addingTo, setAddingTo] = useState(null)
-  const [openTask, setOpenTask] = useState(null)
-  const [dragging, setDragging] = useState(null)
+  const tasks = useTaskStore((state) => state.tasks)
+  const moveTask = useTaskStore((state) => state.moveTask)
+  const storeError = useTaskStore((state) => state.error)
+  const [modalState, setModalState] = useState(null)
+  const [draggingStatus, setDraggingStatus] = useState(null)
+  const [dragError, setDragError] = useState('')
 
-  const tasksByStatus = STATUSES.reduce((acc, s) => {
-    acc[s] = tasks.filter((t) => t.status === s)
+  const tasksByStatus = STATUSES.reduce((acc, status) => {
+    acc[status] = tasks.filter((task) => task.status === status)
     return acc
   }, {})
 
-  const handleDragStart = (e, task) => {
-    setDragging(task)
-    e.dataTransfer.effectAllowed = 'move'
+  const handleDragStart = ({ draggableId }) => {
+    const task = tasks.find((item) => item.id === draggableId)
+    setDraggingStatus(task?.status ?? null)
+    setDragError('')
   }
 
-  const handleDrop = async (e, status) => {
-    e.preventDefault()
-    if (dragging && dragging.status !== status) {
-      await moveTask(dragging.id, status)
+  const handleDragEnd = async ({ source, destination, draggableId }) => {
+    setDraggingStatus(null)
+
+    if (!destination || destination.droppableId === source.droppableId) return
+
+    if (!canMoveToStatus(source.droppableId, destination.droppableId)) {
+      setDragError('Tasks can only move to the next column.')
+      return
     }
-    setDragging(null)
+
+    const { error } = await moveTask(draggableId, destination.droppableId)
+    if (error) setDragError(error.message)
   }
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto pb-4 h-full">
-        {STATUSES.map((status) => (
-          <div
-            key={status}
-            className={`flex-shrink-0 w-72 rounded-2xl border ${columnColors[status]} flex flex-col`}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => handleDrop(e, status)}
-          >
-            <div className="px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${dotColors[status]}`} />
-                <span className="text-sm font-medium text-gray-700">{STATUS_LABELS[status]}</span>
-                <span className="text-xs text-gray-400 bg-white border border-gray-100 px-1.5 py-0.5 rounded-full">
-                  {tasksByStatus[status].length}
-                </span>
-              </div>
-              <button
-                onClick={() => setAddingTo(status)}
-                className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors"
-              >
-                <Plus size={15} />
-              </button>
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="flex h-full flex-col gap-3">
+          {dragError && (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {dragError}
             </div>
+          )}
 
-            <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
-              {tasksByStatus[status].map((task) => (
-                <div
-                  key={task.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, task)}
-                  className={`transition-opacity ${dragging?.id === task.id ? 'opacity-40' : ''}`}
-                >
-                  <TaskCard task={task} onOpen={setOpenTask} />
-                </div>
-              ))}
-
-              {addingTo === status && (
-                <AddTaskInline
-                  projectId={projectId}
-                  status={status}
-                  onDone={() => setAddingTo(null)}
-                />
-              )}
-
-              {tasksByStatus[status].length === 0 && addingTo !== status && (
-                <button
-                  onClick={() => setAddingTo(status)}
-                  className="w-full py-6 text-xs text-gray-300 hover:text-indigo-400 border-2 border-dashed border-gray-100 hover:border-indigo-200 rounded-xl transition-colors"
-                >
-                  Add a task
-                </button>
-              )}
+          {!dragError && storeError && (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {storeError}
             </div>
+          )}
+
+          <div className="flex min-h-0 gap-4 overflow-x-auto pb-4">
+            {STATUSES.map((status) => {
+              const canDropHere = !draggingStatus || draggingStatus === status || canMoveToStatus(draggingStatus, status)
+
+              return (
+                <Droppable key={status} droppableId={status} isDropDisabled={!canDropHere}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`flex-shrink-0 w-72 rounded-2xl border ${columnColors[status]} flex flex-col transition-colors ${
+                        snapshot.isDraggingOver && canDropHere ? 'ring-2 ring-indigo-200 ring-inset' : ''
+                      } ${
+                        draggingStatus && !canDropHere ? 'opacity-60' : ''
+                      }`}
+                    >
+                      <div className="px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${dotColors[status]}`} />
+                          <span className="text-sm font-medium text-gray-700">{STATUS_LABELS[status]}</span>
+                          <span className="text-xs text-gray-400 bg-white border border-gray-100 px-1.5 py-0.5 rounded-full">
+                            {tasksByStatus[status].length}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setDragError('')
+                            setModalState({ type: 'create', status })
+                          }}
+                          className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors"
+                        >
+                          <Plus size={15} />
+                        </button>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
+                        {tasksByStatus[status].map((task, index) => (
+                          <Draggable key={task.id} draggableId={task.id} index={index}>
+                            {(draggableProvided, draggableSnapshot) => (
+                              <div
+                                ref={draggableProvided.innerRef}
+                                {...draggableProvided.draggableProps}
+                                {...draggableProvided.dragHandleProps}
+                                className={`transition-opacity ${draggableSnapshot.isDragging ? 'opacity-70' : ''}`}
+                              >
+                                <TaskCard
+                                  task={task}
+                                  onOpen={(selectedTask) => {
+                                    setDragError('')
+                                    setModalState({ type: 'edit', task: selectedTask })
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+
+                        {provided.placeholder}
+
+                        {tasksByStatus[status].length === 0 && (
+                          <button
+                            onClick={() => {
+                              setDragError('')
+                              setModalState({ type: 'create', status })
+                            }}
+                            className="w-full py-6 text-xs text-gray-300 hover:text-indigo-400 border-2 border-dashed border-gray-100 hover:border-indigo-200 rounded-xl transition-colors"
+                          >
+                            Add a task
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </Droppable>
+              )
+            })}
           </div>
-        ))}
-      </div>
+        </div>
+      </DragDropContext>
 
-      {openTask && (
-        <TaskModal task={openTask} onClose={() => setOpenTask(null)} />
+      {modalState && (
+        <TaskModal
+          key={modalState.type === 'edit' ? modalState.task.id : `create-${modalState.status}`}
+          task={modalState.type === 'edit' ? modalState.task : null}
+          projectId={projectId}
+          defaultStatus={modalState.type === 'create' ? modalState.status : modalState.task.status}
+          onClose={() => setModalState(null)}
+        />
       )}
     </>
   )

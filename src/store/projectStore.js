@@ -7,6 +7,13 @@ export const useProjectStore = create((set, get) => ({
   loading: false,
   error: null,
 
+  reset: () => set({
+    projects: [],
+    activeProject: null,
+    loading: false,
+    error: null,
+  }),
+
   fetchProjects: async () => {
     set({ loading: true, error: null })
     const { data, error } = await supabase
@@ -14,8 +21,21 @@ export const useProjectStore = create((set, get) => ({
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error) set({ error: error.message, loading: false })
-    else set({ projects: data, loading: false })
+    if (error) {
+      set({ projects: [], activeProject: null, error: error.message, loading: false })
+      return { error }
+    }
+
+    const activeProjectId = get().activeProject?.id
+
+    set({
+      projects: data,
+      activeProject: data.find((project) => project.id === activeProjectId) ?? null,
+      error: null,
+      loading: false,
+    })
+
+    return { data }
   },
 
   setActiveProject: (project) => set({ activeProject: project }),
@@ -27,8 +47,17 @@ export const useProjectStore = create((set, get) => ({
       .select()
       .single()
 
-    if (error) return { error }
-    set((state) => ({ projects: [data, ...state.projects], activeProject: data }))
+    if (error) {
+      set({ error: error.message })
+      return { error }
+    }
+
+    set((state) => ({
+      projects: [data, ...state.projects],
+      activeProject: data,
+      error: null,
+    }))
+
     return { data }
   },
 
@@ -40,20 +69,30 @@ export const useProjectStore = create((set, get) => ({
       .select()
       .single()
 
-    if (error) return { error }
+    if (error) {
+      set({ error: error.message })
+      return { error }
+    }
+
     set((state) => ({
       projects: state.projects.map((p) => (p.id === id ? data : p)),
       activeProject: state.activeProject?.id === id ? data : state.activeProject,
+      error: null,
     }))
     return { data }
   },
 
   deleteProject: async (id) => {
     const { error } = await supabase.from('projects').delete().eq('id', id)
-    if (error) return { error }
+    if (error) {
+      set({ error: error.message })
+      return { error }
+    }
+
     set((state) => ({
       projects: state.projects.filter((p) => p.id !== id),
       activeProject: state.activeProject?.id === id ? null : state.activeProject,
+      error: null,
     }))
     return {}
   },

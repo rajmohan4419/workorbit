@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Calendar, Trash2, ChevronRight } from 'lucide-react'
+import { Calendar, Trash2 } from 'lucide-react'
 import { useTaskStore } from '../../store/taskStore'
 
 const priorityStyles = {
@@ -9,13 +9,20 @@ const priorityStyles = {
 }
 
 export default function TaskCard({ task, onOpen }) {
-  const { deleteTask } = useTaskStore()
+  const deleteTask = useTaskStore((state) => state.deleteTask)
   const [deleting, setDeleting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleDelete = async (e) => {
     e.stopPropagation()
     setDeleting(true)
-    await deleteTask(task.id)
+    setErrorMessage('')
+
+    const { error } = await deleteTask(task.id)
+    if (error) {
+      setDeleting(false)
+      setErrorMessage(error.message)
+    }
   }
 
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done'
@@ -52,6 +59,10 @@ export default function TaskCard({ task, onOpen }) {
           </div>
         )}
       </div>
+
+      {errorMessage && (
+        <p className="mt-2 text-xs text-red-500">{errorMessage}</p>
+      )}
     </div>
   )
 }
