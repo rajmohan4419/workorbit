@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
+import { canCreateProject } from '../../lib/permissions'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
@@ -13,9 +14,9 @@ const navItems = [
 export default function Sidebar() {
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
+  const profile = useAuthStore((state) => state.profile)
   const signOut = useAuthStore((state) => state.signOut)
   const projects = useProjectStore((state) => state.projects)
-  const activeProject = useProjectStore((state) => state.activeProject)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const createProject = useProjectStore((state) => state.createProject)
   const [projectsOpen, setProjectsOpen] = useState(true)
@@ -131,49 +132,53 @@ export default function Sidebar() {
                     )
                   })}
 
-                  {creating ? (
-                    <form onSubmit={handleCreateProject} className="px-3 pt-1">
-                      <input
-                        autoFocus
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        placeholder="Project name"
-                        className="w-full text-sm border border-indigo-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') {
-                            setCreating(false)
-                            setProjectError('')
-                          }
-                        }}
-                      />
-                      <div className="flex gap-2 mt-1.5">
-                        <button type="submit" className="text-xs text-indigo-600 font-medium hover:text-indigo-800">Add</button>
+                  {canCreateProject(profile?.role) && (
+                    <>
+                      {creating ? (
+                        <form onSubmit={handleCreateProject} className="px-3 pt-1">
+                          <input
+                            autoFocus
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            placeholder="Project name"
+                            className="w-full text-sm border border-indigo-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') {
+                                setCreating(false)
+                                setProjectError('')
+                              }
+                            }}
+                          />
+                          <div className="flex gap-2 mt-1.5">
+                            <button type="submit" className="text-xs text-indigo-600 font-medium hover:text-indigo-800">Add</button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCreating(false)
+                                setProjectError('')
+                              }}
+                              className="text-xs text-gray-400 hover:text-gray-600"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                          {projectError && (
+                            <p className="mt-2 text-xs text-red-500">{projectError}</p>
+                          )}
+                        </form>
+                      ) : (
                         <button
-                          type="button"
                           onClick={() => {
-                            setCreating(false)
+                            setCreating(true)
                             setProjectError('')
                           }}
-                          className="text-xs text-gray-400 hover:text-gray-600"
+                          className="flex items-center gap-2 px-3 py-2 w-full text-sm text-gray-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-gray-50"
                         >
-                          Cancel
+                          <Plus size={14} />
+                          New project
                         </button>
-                      </div>
-                      {projectError && (
-                        <p className="mt-2 text-xs text-red-500">{projectError}</p>
                       )}
-                    </form>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setCreating(true)
-                        setProjectError('')
-                      }}
-                      className="flex items-center gap-2 px-3 py-2 w-full text-sm text-gray-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-gray-50"
-                    >
-                      <Plus size={14} />
-                      New project
-                    </button>
+                    </>
                   )}
                 </div>
               )}

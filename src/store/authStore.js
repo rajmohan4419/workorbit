@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 
 export const useAuthStore = create((set) => ({
   user: null,
+  profile: null,
   session: null,
   loading: true,
 
@@ -10,20 +11,44 @@ export const useAuthStore = create((set) => ({
     let active = true
     set({ loading: true })
 
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    const fetchProfile = async (userId) => {
+      if (!userId) return null
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+
+        if (error) {
+          console.error('Error fetching profile:', error.message)
+          return null
+        }
+        return data
+      } catch (err) {
+        console.error('Unexpected error fetching profile:', err)
+        return null
+      }
+    }
+
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (!active) return
 
       if (error) {
-        set({ session: null, user: null, loading: false })
+        set({ session: null, user: null, profile: null, loading: false })
         return
       }
 
-      set({ session, user: session?.user ?? null, loading: false })
+      const user = session?.user ?? null
+      const profile = await fetchProfile(user?.id)
+      set({ session, user, profile, loading: false })
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!active) return
-      set({ session, user: session?.user ?? null, loading: false })
+      const user = session?.user ?? null
+      const profile = await fetchProfile(user?.id)
+      set({ session, user, profile, loading: false })
     })
 
     return () => {
@@ -35,7 +60,7 @@ export const useAuthStore = create((set) => ({
   signOut: async () => {
     const { error } = await supabase.auth.signOut()
     if (error) return { error }
-    set({ user: null, session: null })
+    set({ user: null, profile: null, session: null })
     return {}
   },
 }))
