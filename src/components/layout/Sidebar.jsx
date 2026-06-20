@@ -132,6 +132,28 @@ export default function Sidebar() {
         </div>
       </nav>
 
+      <div className="px-3 py-4 border-t border-gray-100">
+        <div className="flex items-center gap-3 px-3 py-2 mb-1">
+          <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-700 flex-shrink-0">
+            {initials}
+          </div>
+          <span className="text-xs text-gray-600 truncate flex-1">{user?.email}</span>
+        </div>
+        <button
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="flex items-center gap-3 px-3 py-2 w-full text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-60"
+        >
+          <LogOut size={15} />
+          {signingOut ? 'Signing out...' : 'Sign out'}
+        </button>
+        {accountError && (
+          <p className="mt-2 px-3 text-xs text-red-500">{accountError}</p>
+        )}
+      </div>
+    </div>
+  )
+
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'U'
 
   return (
