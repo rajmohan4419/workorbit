@@ -9,7 +9,10 @@ create extension if not exists "uuid-ossp";
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'app_role') then
-    create type app_role as enum ('admin', 'manager', 'team_member');
+    create type app_role as enum ('admin', 'member', 'viewer');
+  else
+    alter type app_role add value if not exists 'member';
+    alter type app_role add value if not exists 'viewer';
   end if;
 end
 $$;
@@ -22,7 +25,7 @@ create table if not exists public.profiles (
   full_name   text,
   phone       text,
   avatar_path text,
-  role        app_role not null default 'team_member',
+  role        app_role not null default 'member',
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -34,7 +37,7 @@ create table if not exists public.projects (
   id          uuid primary key default uuid_generate_v4(),
   name        text not null,
   description text,
-  owner_id    uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -81,8 +84,8 @@ create table if not exists public.tasks (
   status      task_status default 'todo',
   priority    task_priority default 'medium',
   due_date    date,
-  assigned_to uuid references auth.users(id) on delete set null,
-  created_by  uuid references auth.users(id) default auth.uid(),
+  assigned_to uuid references public.profiles(id) on delete set null,
+  created_by  uuid references public.profiles(id) default auth.uid(),
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -90,7 +93,7 @@ create table if not exists public.tasks (
 create table if not exists public.project_members (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
-  user_id     uuid references auth.users(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null,
   created_at  timestamptz default now(),
   unique (project_id, user_id)
 );
@@ -109,7 +112,7 @@ set search_path = public
 as $$
   select coalesce(
     (select role from public.profiles where id = auth.uid()),
-    'team_member'::app_role
+    'member'::app_role
   );
 $$;
 
@@ -151,20 +154,11 @@ as $$
       and (
         project.owner_id = auth.uid()
         or public.current_app_role() = 'admin'::app_role
-        or (
-          public.current_app_role() = 'manager'::app_role
-          and exists (
-            select 1
-            from public.project_members member
-            where member.project_id = project.id
-              and member.user_id = auth.uid()
-          )
-        )
       )
   );
 $$;
 
-create or replace function public.can_team_member_update_task(
+create or replace function public.can_member_update_task(
   task_id uuid,
   new_project_id uuid,
   new_title text,
@@ -180,18 +174,24 @@ security definer
 set search_path = public
 as $$
   select
-    public.current_app_role() = 'team_member'::app_role
+    public.current_app_role() = 'member'::app_role
     and public.can_access_project(new_project_id)
     and exists (
       select 1
       from public.tasks original
       where original.id = task_id
         and original.project_id = new_project_id
-        and original.title is not distinct from new_title
-        and original.description is not distinct from new_description
-        and original.priority is not distinct from new_priority
-        and original.due_date is not distinct from new_due_date
-        and original.assigned_to is not distinct from new_assigned_to
+        and (
+          original.created_by = auth.uid()
+          or original.assigned_to = auth.uid()
+          or (
+            original.title is not distinct from new_title
+            and original.description is not distinct from new_description
+            and original.priority is not distinct from new_priority
+            and original.due_date is not distinct from new_due_date
+            and original.assigned_to is not distinct from new_assigned_to
+          )
+        )
     );
 $$;
 
@@ -207,7 +207,7 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
     case
-      when exists (select 1 from public.profiles) then 'team_member'::app_role
+      when exists (select 1 from public.profiles) then 'member'::app_role
       else 'admin'::app_role
     end
   )
@@ -237,7 +237,7 @@ select
   case
     when ordered_users.row_num = 1 and not exists (select 1 from public.profiles)
       then 'admin'::app_role
-    else 'team_member'::app_role
+    else 'member'::app_role
   end
 from ordered_users
 on conflict (id) do nothing;
@@ -252,16 +252,27 @@ alter table public.projects enable row level security;
 alter table public.profiles enable row level security;
 alter table public.project_members enable row level security;
 
-drop policy if exists "Users can view their own profile" on public.profiles;
-create policy "Users can view their own profile"
+drop policy if exists "Users can view profiles" on public.profiles;
+create policy "Users can view profiles"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (
+    auth.uid() = id
+    or public.current_app_role() = 'admin'::app_role
+    or exists (
+      select 1 from public.project_members pm
+      where pm.user_id = profiles.id
+      and public.can_access_project(pm.project_id)
+    )
+  );
 
-drop policy if exists "Users can update their own profile" on public.profiles;
-create policy "Users can update their own profile"
+drop policy if exists "Users can update profiles" on public.profiles;
+create policy "Users can update profiles"
   on public.profiles for update
-  using (auth.uid() = id)
-  with check (auth.uid() = id and role = public.current_app_role());
+  using (auth.uid() = id or public.current_app_role() = 'admin'::app_role)
+  with check (
+    (auth.uid() = id and role = public.current_app_role()) -- Users can't change their own role
+    or public.current_app_role() = 'admin'::app_role
+  );
 
 drop policy if exists "Users can view their own projects" on public.projects;
 create policy "Users can view their own projects"
@@ -312,27 +323,23 @@ create policy "Users can create tasks in their projects"
   with check (public.can_access_project(project_id));
 
 drop policy if exists "Admins, managers and owners can update tasks" on public.tasks;
-create policy "Admins, managers and owners can update tasks"
+drop policy if exists "Admins and owners can update tasks" on public.tasks;
+create policy "Admins and owners can update tasks"
   on public.tasks for update
-  using (
-    public.can_manage_project(project_id)
-    or auth.uid() = created_by
-  )
-  with check (
-    public.can_manage_project(project_id)
-    or auth.uid() = created_by
-  );
+  using (public.can_manage_project(project_id));
 
 drop policy if exists "Admins and managers can update tasks" on public.tasks;
 drop policy if exists "Team members can update task status only" on public.tasks;
-create policy "Team members can update task status only"
+drop policy if exists "Members can update task status only" on public.tasks;
+drop policy if exists "Members can update tasks" on public.tasks;
+create policy "Members can update tasks"
   on public.tasks for update
   using (
-    public.current_app_role() = 'team_member'::app_role
+    public.current_app_role() = 'member'::app_role
     and public.can_access_project(project_id)
   )
   with check (
-    public.can_team_member_update_task(
+    public.can_member_update_task(
       id,
       project_id,
       title,
@@ -363,7 +370,7 @@ create index if not exists project_members_user_id_idx on public.project_members
 create table if not exists public.task_comments (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   content     text not null,
   created_at  timestamptz default now()
 );
@@ -396,7 +403,7 @@ create policy "Users can delete their own comments"
 create table if not exists public.task_logs (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references auth.users(id) on delete set null,
+  user_id     uuid references public.profiles(id) on delete set null,
   type        text not null,
   old_value   text,
   new_value   text,
@@ -452,7 +459,8 @@ create table if not exists public.project_invites (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
   email       text not null,
-  invited_by  uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  role        app_role not null default 'member',
+  invited_by  uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   status      text default 'pending',
   created_at  timestamptz default now(),
   unique (project_id, email)
@@ -464,11 +472,11 @@ create policy "Users can view invites for projects they manage"
   on public.project_invites for select
   using (public.can_manage_project(project_id) or email = (select email from auth.users where id = auth.uid()));
 
-create policy "Managers can create invites"
+create policy "Admins and owners can create invites"
   on public.project_invites for insert
   with check (public.can_manage_project(project_id));
 
-create policy "Managers can delete invites"
+create policy "Admins and owners can delete invites"
   on public.project_invites for delete
   using (public.can_manage_project(project_id));
 
@@ -477,7 +485,7 @@ create policy "Managers can delete invites"
 -- ─────────────────────────────────────────────
 create table if not exists public.notifications (
   id          uuid primary key default uuid_generate_v4(),
-  user_id     uuid references auth.users(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null,
   type        text not null,
   title       text not null,
   content     text,
@@ -534,6 +542,13 @@ begin
   from public.tasks
   where id = new.task_id;
 
+  -- Notify mentioned users
+  insert into public.notifications (user_id, type, title, content, link)
+  select p.id, 'task_mention', 'You were mentioned in a comment', 'In: ' || task_title, '/project/' || task_project_id
+  from public.profiles p
+  where new.content ~ ('@' || p.full_name)
+    and p.id != new.user_id;
+
   -- Notify assignee if not the commenter
   if (task_assignee is not null and task_assignee != new.user_id) then
     insert into public.notifications (user_id, type, title, content, link)
@@ -566,6 +581,38 @@ drop trigger if exists on_comment_added on public.task_comments;
 create trigger on_comment_added
   after insert on public.task_comments
   for each row execute procedure public.notify_new_comment();
+
+create or replace function public.handle_project_member_added()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  invited_role app_role;
+begin
+  -- Find the invite for this user and project
+  select role into invited_role
+  from public.project_invites
+  where project_id = new.project_id
+    and email = (select email from auth.users where id = new.user_id)
+  limit 1;
+
+  -- If an invite exists, update the user's role
+  if (invited_role is not null) then
+    update public.profiles
+    set role = invited_role
+    where id = new.user_id;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_project_member_added on public.project_members;
+create trigger on_project_member_added
+  after insert on public.project_members
+  for each row execute procedure public.handle_project_member_added();
 
 -- Trigger for project invite notification
 create or replace function public.notify_project_invite()

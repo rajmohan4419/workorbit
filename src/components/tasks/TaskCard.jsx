@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Calendar, Trash2, Edit2, Check, X } from 'lucide-react'
 import { useTaskStore } from '../../store/taskStore'
+import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
-import { canDeleteTask } from '../../lib/permissions'
+import { canDeleteTask, canEditTaskMetadata } from '../../lib/permissions'
 
 const priorityStyles = {
   high: 'bg-red-50 text-red-700 border-red-100',
@@ -13,7 +14,10 @@ const priorityStyles = {
 export default function TaskCard({ task, onOpen }) {
   const deleteTask = useTaskStore((state) => state.deleteTask)
   const updateTask = useTaskStore((state) => state.updateTask)
+  const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+  const projects = useProjectStore((state) => state.projects)
+  const project = projects.find(p => p.id === task.project_id)
   const [deleting, setDeleting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -62,6 +66,8 @@ export default function TaskCard({ task, onOpen }) {
   }
 
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done'
+  const canDelete = canDeleteTask(profile?.role, user?.id, project?.owner_id)
+  const canEdit = canEditTaskMetadata(profile?.role, user?.id, task.created_by, task.assigned_to, project?.owner_id)
 
   return (
     <div
@@ -91,19 +97,21 @@ export default function TaskCard({ task, onOpen }) {
         ) : (
           <div className="flex-1 min-w-0 group/title flex items-start gap-2">
             <p className="text-sm font-medium text-gray-800 leading-snug flex-1 truncate">{task.title}</p>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsEditing(true)
-              }}
-              className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-300 hover:text-indigo-600 transition-all rounded flex-shrink-0"
-            >
-              <Edit2 size={11} />
-            </button>
+            {canEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsEditing(true)
+                }}
+                className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-300 hover:text-indigo-600 transition-all rounded flex-shrink-0"
+              >
+                <Edit2 size={11} />
+              </button>
+            )}
           </div>
         )}
         
-        {canDeleteTask(profile?.role) && !isEditing && (
+        {canDelete && !isEditing && (
           <button
             onClick={handleDelete}
             disabled={deleting}

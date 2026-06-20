@@ -16,7 +16,11 @@ export const NEXT_STATUS = {
   done: null,
 }
 
-export const canMoveToStatus = (from, to) => STATUSES.includes(from) && STATUSES.includes(to)
+export const canMoveToStatus = (from, to) => {
+  const fromIndex = STATUSES.indexOf(from)
+  const toIndex = STATUSES.indexOf(to)
+  return fromIndex !== -1 && toIndex !== -1 && Math.abs(fromIndex - toIndex) === 1
+}
 
 export const useTaskStore = create((set, get) => ({
   tasks: [],
@@ -80,7 +84,7 @@ export const useTaskStore = create((set, get) => ({
   createTask: async ({ title, description, status, priority, due_date, project_id, assigned_to }) => {
     const { data, error } = await supabase
       .from('tasks')
-      .insert([{ title, description, status: status || 'todo', priority: priority || 'medium', due_date, project_id, assigned_to }])
+      .insert([{ title, description, status: status, priority: priority || 'medium', due_date, project_id, assigned_to }])
       .select()
       .single()
 
@@ -114,13 +118,22 @@ export const useTaskStore = create((set, get) => ({
   },
 
   moveTask: async (id, newStatus) => {
-    const currentTask = get().tasks.find((task) => task.id === id)
+    const previousTasks = get().tasks
+    const currentTask = previousTasks.find((task) => task.id === id)
 
-    if (currentTask && !canMoveToStatus(currentTask.status, newStatus)) {
-      const error = { message: 'Tasks can only move to the next column.' }
+    if (!currentTask) return { error: { message: 'Task not found' } }
+
+    if (!canMoveToStatus(currentTask.status, newStatus)) {
+      const error = { message: 'Invalid status transition.' }
       set({ error: error.message })
       return { error }
     }
+
+    // Optimistic update
+    set((state) => ({
+      tasks: state.tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t)),
+      error: null,
+    }))
 
     const { data, error } = await supabase
       .from('tasks')
@@ -130,10 +143,12 @@ export const useTaskStore = create((set, get) => ({
       .single()
 
     if (error) {
-      set({ error: error.message })
+      // Rollback
+      set({ tasks: previousTasks, error: error.message })
       return { error }
     }
 
+    // Update with actual server data (in case of other changes like triggers)
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? data : t)),
       error: null,

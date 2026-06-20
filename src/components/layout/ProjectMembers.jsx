@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { UserPlus, Mail, X, Loader2, Trash2 } from 'lucide-react'
 import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
-import { canManageAssignedProjects } from '../../lib/permissions'
+import { canInviteMembers } from '../../lib/permissions'
 
 export default function ProjectMembers({ projectId }) {
+  const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+  const projects = useProjectStore((state) => state.projects)
   const members = useProjectStore((state) => state.members)
   const invites = useProjectStore((state) => state.invites)
   const fetchMembers = useProjectStore((state) => state.fetchMembers)
@@ -15,6 +17,7 @@ export default function ProjectMembers({ projectId }) {
   
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [email, setEmail] = useState('')
+  const [role, setRole] = useState('member')
   const [inviting, setInviting] = useState(false)
   const [error, setError] = useState('')
 
@@ -31,24 +34,26 @@ export default function ProjectMembers({ projectId }) {
 
     setInviting(true)
     setError('')
-    const { error } = await createInvite(projectId, email.trim())
+    const { error } = await createInvite(projectId, email.trim(), role)
     setInviting(false)
 
     if (error) {
       setError(error.message)
     } else {
       setEmail('')
+      setRole('member')
       setIsInviteOpen(false)
     }
   }
 
-  const canManage = canManageAssignedProjects(profile?.role)
+  const project = projects.find(p => p.id === projectId)
+  const canInvite = canInviteMembers(profile?.role, user?.id, project?.owner_id)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Members</h2>
-        {canManage && (
+        {canInvite && (
           <button
             onClick={() => setIsInviteOpen(true)}
             className="flex items-center gap-2 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
@@ -85,7 +90,7 @@ export default function ProjectMembers({ projectId }) {
                   </div>
                   <span className="text-sm text-gray-600">{invite.email}</span>
                 </div>
-                {canManage && (
+                {canInvite && (
                   <button
                     onClick={() => deleteInvite(invite.id)}
                     className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
@@ -125,6 +130,19 @@ export default function ProjectMembers({ projectId }) {
                     className="w-full text-sm border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 font-medium block mb-1.5">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                >
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                  <option value="viewer">Viewer</option>
+                </select>
               </div>
 
               {error && <p className="text-xs text-red-500">{error}</p>}

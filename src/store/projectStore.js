@@ -123,10 +123,10 @@ export const useProjectStore = create((set, get) => ({
     return { data }
   },
 
-  createInvite: async (projectId, email) => {
+  createInvite: async (projectId, email, role = 'member') => {
     const { data, error } = await supabase
       .from('project_invites')
-      .insert([{ project_id: projectId, email }])
+      .insert([{ project_id: projectId, email, role }])
       .select()
       .single()
 
@@ -153,9 +153,11 @@ export const useProjectStore = create((set, get) => ({
     
     if (fetchError) return { error: fetchError }
 
+    const userId = (await supabase.auth.getUser()).data.user.id
+
     const { error: memberError } = await supabase
       .from('project_members')
-      .insert([{ project_id: invite.project_id, user_id: (await supabase.auth.getUser()).data.user.id }])
+      .insert([{ project_id: invite.project_id, user_id: userId }])
     
     if (memberError) return { error: memberError }
 
