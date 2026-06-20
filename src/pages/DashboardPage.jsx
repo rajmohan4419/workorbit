@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FolderOpen, AlertCircle, ArrowRight, Activity, TrendingUp, Heart } from 'lucide-react'
+import { FolderOpen, AlertCircle, ArrowRight, TrendingUp, Heart } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
