@@ -31,7 +31,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const logs = useTaskStore((state) => state.logs)
 
   const isEditing = Boolean(task)
-  const canEditMetadata = canEditTaskMetadata(profile?.role)
+  const canEditMetadata = canEditTaskMetadata(profile?.role, currentUser?.id, task?.created_by)
   const [form, setForm] = useState(() => getInitialForm(task, defaultStatus, currentUser?.id))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
