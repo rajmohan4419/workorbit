@@ -34,8 +34,8 @@ export function canDeleteTask(role) {
   return role === 'admin' || role === 'manager'
 }
 
-export function canEditTaskMetadata(role) {
-  return role === 'admin' || role === 'manager'
+export function canEditTaskMetadata(role, userId, taskCreatorId) {
+  return role === 'admin' || role === 'manager' || (userId && userId === taskCreatorId)
 }
 
 export function canEditTaskStatus(role) {

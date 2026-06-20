@@ -311,12 +311,19 @@ create policy "Users can create tasks in their projects"
   on public.tasks for insert
   with check (public.can_access_project(project_id));
 
-drop policy if exists "Admins and managers can update tasks" on public.tasks;
-create policy "Admins and managers can update tasks"
+drop policy if exists "Admins, managers and owners can update tasks" on public.tasks;
+create policy "Admins, managers and owners can update tasks"
   on public.tasks for update
-  using (public.can_manage_project(project_id))
-  with check (public.can_manage_project(project_id));
+  using (
+    public.can_manage_project(project_id)
+    or auth.uid() = created_by
+  )
+  with check (
+    public.can_manage_project(project_id)
+    or auth.uid() = created_by
+  );
 
+drop policy if exists "Admins and managers can update tasks" on public.tasks;
 drop policy if exists "Team members can update task status only" on public.tasks;
 create policy "Team members can update task status only"
   on public.tasks for update

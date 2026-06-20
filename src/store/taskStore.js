@@ -16,7 +16,7 @@ export const NEXT_STATUS = {
   done: null,
 }
 
-export const canMoveToStatus = (from, to) => from === to || NEXT_STATUS[from] === to
+export const canMoveToStatus = (from, to) => STATUSES.includes(from) && STATUSES.includes(to)
 
 export const useTaskStore = create((set, get) => ({
   tasks: [],
