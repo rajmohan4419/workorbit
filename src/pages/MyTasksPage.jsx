@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { CheckCircle2, Clock, AlertCircle, Calendar, Tag } from 'lucide-react'
 import { useTaskStore, STATUS_LABELS } from '../store/taskStore'
-import { useAuthStore } from '../store/authStore'
 import TaskModal from '../components/tasks/TaskModal'
 
 const priorityStyles = {
@@ -11,18 +10,10 @@ const priorityStyles = {
 }
 
 export default function MyTasksPage() {
-  const user = useAuthStore((state) => state.user)
   const tasks = useTaskStore((state) => state.tasks)
-  const fetchAllUserTasks = useTaskStore((state) => state.fetchAllUserTasks)
   const loading = useTaskStore((state) => state.loading)
   const error = useTaskStore((state) => state.error)
   const [selectedTask, setSelectedTask] = useState(null)
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchAllUserTasks(user.id)
-    }
-  }, [user?.id, fetchAllUserTasks])
 
   const overdueCount = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done').length
   const completedCount = tasks.filter(t => t.status === 'done').length

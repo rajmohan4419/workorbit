@@ -24,7 +24,6 @@ export default function ProjectPage() {
   const deleteProject = useProjectStore((state) => state.deleteProject)
   const user = useAuthStore((state) => state.user)
   const tasks = useTaskStore((state) => state.tasks)
-  const fetchTasks = useTaskStore((state) => state.fetchTasks)
   const subscribeToProject = useTaskStore((state) => state.subscribeToProject)
   const resetTasks = useTaskStore((state) => state.reset)
   const loading = useTaskStore((state) => state.loading)
@@ -35,13 +34,12 @@ export default function ProjectPage() {
     setActiveProject(project)
 
     if (id) {
-      fetchTasks(id)
       const unsubscribe = subscribeToProject(id)
       return () => unsubscribe()
     } else {
       resetTasks()
     }
-  }, [id, projects, setActiveProject, fetchTasks, resetTasks, subscribeToProject])
+  }, [id, projects, setActiveProject, resetTasks, subscribeToProject])
 
   const project = activeProject?.id === id ? activeProject : projects.find((p) => p.id === id)
 

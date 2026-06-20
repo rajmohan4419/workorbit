@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FolderOpen, AlertCircle, ArrowRight, Activity, TrendingUp, Heart } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
@@ -13,11 +12,6 @@ export default function DashboardPage() {
   const error = useProjectStore((state) => state.error)
   const user = useAuthStore((state) => state.user)
   const searchResults = useTaskStore((state) => state.searchResults)
-  const fetchGlobalTasks = useTaskStore((state) => state.fetchGlobalTasks)
-
-  useEffect(() => {
-    fetchGlobalTasks()
-  }, [fetchGlobalTasks])
 
   const firstName = user?.email?.split('@')[0] || 'there'
 

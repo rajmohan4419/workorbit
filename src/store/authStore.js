@@ -4,8 +4,10 @@ import { supabase } from '../lib/supabase'
 export const useAuthStore = create((set) => ({
   user: null,
   profile: null,
+  profiles: [],
   session: null,
   loading: true,
+  error: null,
 
   init: () => {
     let active = true
@@ -63,7 +65,11 @@ export const useAuthStore = create((set) => ({
       .select('*')
       .order('full_name', { ascending: true })
 
-    if (error) return { error }
+    if (error) {
+      set({ error: error.message })
+      return { error }
+    }
+    set({ profiles: data, error: null })
     return { data }
   },
 
@@ -75,7 +81,14 @@ export const useAuthStore = create((set) => ({
       .select()
       .single()
 
-    if (error) return { error }
+    if (error) {
+      set({ error: error.message })
+      return { error }
+    }
+    set((state) => ({
+      profiles: state.profiles.map((p) => (p.id === userId ? data : p)),
+      error: null,
+    }))
     return { data }
   },
 
