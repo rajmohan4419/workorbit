@@ -13,6 +13,7 @@ function getInitialForm(task, defaultStatus, currentUserId) {
     priority: task?.priority ?? 'medium',
     due_date: task?.due_date?.slice(0, 10) ?? '',
     assigned_to: task?.assigned_to ?? currentUserId ?? '',
+    sprint_id: task?.sprint_id ?? '',
   }
 }
 
@@ -22,7 +23,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const projects = useProjectStore((state) => state.projects)
   const project = projects.find(p => p.id === projectId || p.id === task?.project_id)
   const members = useProjectStore((state) => state.members)
+  const sprints = useProjectStore((state) => state.sprints)
   const fetchMembers = useProjectStore((state) => state.fetchMembers)
+  const fetchSprints = useProjectStore((state) => state.fetchSprints)
   const createTask = useTaskStore((state) => state.createTask)
   const updateTask = useTaskStore((state) => state.updateTask)
   const fetchComments = useTaskStore((state) => state.fetchComments)
@@ -83,9 +86,15 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     window.addEventListener('keydown', handler)
     return () => {
       window.removeEventListener('keydown', handler)
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        // Auto-save timer if active when closing
+        if (timerActive && elapsedTime > 0 && task?.id) {
+           addTimeLog(task.id, elapsedTime, 'Timer session (auto-saved)')
+        }
+      }
     }
-  }, [onClose])
+  }, [onClose, timerActive, elapsedTime, task?.id, addTimeLog])
 
   useEffect(() => {
     if (isEditing) {
@@ -100,8 +109,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
       const pId = projectId || task.project_id
       fetchMembers(pId)
       fetchProjectLabels(pId)
+      fetchSprints(pId)
     }
-  }, [isEditing, task?.id, task?.project_id, projectId, fetchComments, fetchLogs, fetchMembers, fetchSubtasks, fetchTaskLabels, fetchProjectLabels, fetchAttachments, fetchTimeLogs])
+  }, [isEditing, task?.id, task?.project_id, projectId, fetchComments, fetchLogs, fetchMembers, fetchSubtasks, fetchTaskLabels, fetchProjectLabels, fetchAttachments, fetchTimeLogs, fetchSprints])
 
   const handleChange = (field, value) => setForm((currentForm) => ({ ...currentForm, [field]: value }))
 
@@ -176,6 +186,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
       priority: form.priority,
       due_date: form.due_date || null,
       assigned_to: form.assigned_to || null,
+      sprint_id: form.sprint_id || null,
     }
 
     const result = isEditing
@@ -382,6 +393,23 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                 {members.map((member) => (
                   <option key={member.profiles.id} value={member.profiles.id}>
                     {member.profiles.full_name} ({member.profiles.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="lg:col-span-1">
+              <label className="text-xs text-gray-400 font-medium block mb-1.5">Sprint</label>
+              <select
+                value={form.sprint_id}
+                disabled={isEditing && !canEditMetadata}
+                onChange={(e) => handleChange('sprint_id', e.target.value)}
+                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:text-gray-500"
+              >
+                <option value="">No Sprint</option>
+                {sprints.map((sprint) => (
+                  <option key={sprint.id} value={sprint.id}>
+                    {sprint.name} ({sprint.status})
                   </option>
                 ))}
               </select>

@@ -3,9 +3,16 @@ import { Link } from 'react-router-dom'
 import { useProjectStore } from '../../store/projectStore'
 import { useTaskStore } from '../../store/taskStore'
 
+import { useState, useEffect } from 'react'
+
 export default function OnboardingChecklist() {
   const projects = useProjectStore((state) => state.projects)
-  const tasks = useTaskStore((state) => state.searchResults)
+  const [taskCount, setTaskCount] = useState(0)
+  const getTaskCount = useTaskStore((state) => state.getTaskCount)
+
+  useEffect(() => {
+    getTaskCount().then(setTaskCount)
+  }, [getTaskCount])
 
   const steps = [
     {
@@ -18,7 +25,7 @@ export default function OnboardingChecklist() {
     {
       id: 'task',
       label: 'Add your first task',
-      completed: tasks.length > 0,
+      completed: taskCount > 0,
       description: 'Break down your project into actionable tasks.',
       link: projects.length > 0 ? `/project/${projects[0].id}` : null
     },

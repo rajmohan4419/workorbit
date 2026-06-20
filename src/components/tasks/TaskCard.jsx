@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { Calendar, Trash2, Edit2, Check, X, MessageSquare, Paperclip } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
 import { useTaskStore } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
@@ -24,41 +23,7 @@ export default function TaskCard({ task, onOpen }) {
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(task.title)
   const [saving, setSaving] = useState(false)
-  const [taskSubtasks, setTaskSubtasks] = useState([])
-  const [taskLabels, setTaskLabels] = useState([])
-  const [commentCount, setCommentCount] = useState(0)
-  const [attachmentCount, setAttachmentCount] = useState(0)
-  const [assignee] = useState(null)
   const inputRef = useRef(null)
-
-  useEffect(() => {
-    const fetchCardData = async () => {
-      const [sub, lab, comm, att] = await Promise.all([
-        supabase.from('task_subtasks').select('*').eq('task_id', task.id),
-        supabase.from('task_labels').select('labels(*)').eq('task_id', task.id),
-        supabase.from('task_comments').select('id', { count: 'exact' }).eq('task_id', task.id),
-        supabase.from('task_attachments').select('id', { count: 'exact' }).eq('task_id', task.id)
-      ])
-
-      if (sub.data) setTaskSubtasks(sub.data)
-      if (lab.data) setTaskLabels(lab.data.map(l => l.labels))
-      if (comm.count !== null) setCommentCount(comm.count)
-      if (att.count !== null) setAttachmentCount(att.count)
-    }
-    fetchCardData()
-
-    // Realtime listeners for this specific card's metadata
-    const subChannel = supabase.channel(`task-meta-${task.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_subtasks', filter: `task_id=eq.${task.id}` }, fetchCardData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_labels', filter: `task_id=eq.${task.id}` }, fetchCardData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_comments', filter: `task_id=eq.${task.id}` }, fetchCardData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_attachments', filter: `task_id=eq.${task.id}` }, fetchCardData)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(subChannel)
-    }
-  }, [task.id])
 
   useEffect(() => {
     if (isEditing) {
@@ -103,7 +68,13 @@ export default function TaskCard({ task, onOpen }) {
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done'
   const canDelete = canDeleteTask(profile?.role, user?.id, project?.owner_id)
   const canEdit = canEditTaskMetadata(profile?.role, user?.id, task.created_by, task.assigned_to, project?.owner_id)
-  const taskAssignee = task.profiles || assignee
+
+  // Use pre-fetched data from task object
+  const taskSubtasks = task.task_subtasks || []
+  const taskLabels = (task.task_labels || []).map(tl => tl.labels).filter(Boolean)
+  const commentCount = task.task_comments?.[0]?.count || 0
+  const attachmentCount = task.task_attachments?.[0]?.count || 0
+  const taskAssignee = task.profiles
 
   return (
     <div
