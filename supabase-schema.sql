@@ -351,6 +351,251 @@ create index if not exists project_members_project_id_idx on public.project_memb
 create index if not exists project_members_user_id_idx on public.project_members(user_id);
 
 -- ─────────────────────────────────────────────
+-- TASK COMMENTS
+-- ─────────────────────────────────────────────
+create table if not exists public.task_comments (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  content     text not null,
+  created_at  timestamptz default now()
+);
+
+alter table public.task_comments enable row level security;
+
+create policy "Users can view comments for tasks they can access"
+  on public.task_comments for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_comments.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can insert comments for tasks they can access"
+  on public.task_comments for insert
+  with check (exists (
+    select 1 from public.tasks
+    where tasks.id = task_comments.task_id
+      and public.can_access_project(tasks.project_id)
+  ) and auth.uid() = user_id);
+
+create policy "Users can delete their own comments"
+  on public.task_comments for delete
+  using (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────
+-- TASK LOGS (Activity)
+-- ─────────────────────────────────────────────
+create table if not exists public.task_logs (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references auth.users(id) on delete set null,
+  type        text not null,
+  old_value   text,
+  new_value   text,
+  created_at  timestamptz default now()
+);
+
+alter table public.task_logs enable row level security;
+
+create policy "Users can view logs for tasks they can access"
+  on public.task_logs for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_logs.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+-- Trigger to log status changes
+create or replace function public.log_task_status_change()
+returns trigger as $$
+begin
+  if (old.status is distinct from new.status) then
+    insert into public.task_logs (task_id, user_id, type, old_value, new_value)
+    values (new.id, auth.uid(), 'status_change', old.status::text, new.status::text);
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- Trigger to log new comments
+create or replace function public.log_new_comment()
+returns trigger as $$
+begin
+  insert into public.task_logs (task_id, user_id, type, new_value)
+  values (new.task_id, new.user_id, 'comment_added', left(new.content, 50));
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_comment_logged on public.task_comments;
+create trigger on_comment_logged
+  after insert on public.task_comments
+  for each row execute procedure public.log_new_comment();
+
+drop trigger if exists tasks_status_log on public.tasks;
+create trigger tasks_status_log
+  after update on public.tasks
+  for each row execute procedure public.log_task_status_change();
+
+-- ─────────────────────────────────────────────
+-- PROJECT INVITES
+-- ─────────────────────────────────────────────
+create table if not exists public.project_invites (
+  id          uuid primary key default uuid_generate_v4(),
+  project_id  uuid references public.projects(id) on delete cascade not null,
+  email       text not null,
+  invited_by  uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  status      text default 'pending',
+  created_at  timestamptz default now(),
+  unique (project_id, email)
+);
+
+alter table public.project_invites enable row level security;
+
+create policy "Users can view invites for projects they manage"
+  on public.project_invites for select
+  using (public.can_manage_project(project_id) or email = (select email from auth.users where id = auth.uid()));
+
+create policy "Managers can create invites"
+  on public.project_invites for insert
+  with check (public.can_manage_project(project_id));
+
+create policy "Managers can delete invites"
+  on public.project_invites for delete
+  using (public.can_manage_project(project_id));
+
+-- ─────────────────────────────────────────────
+-- NOTIFICATIONS
+-- ─────────────────────────────────────────────
+create table if not exists public.notifications (
+  id          uuid primary key default uuid_generate_v4(),
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  type        text not null,
+  title       text not null,
+  content     text,
+  link        text,
+  read        boolean default false,
+  metadata    jsonb,
+  created_at  timestamptz default now()
+);
+
+alter table public.notifications enable row level security;
+
+create policy "Users can view their own notifications"
+  on public.notifications for select
+  using (auth.uid() = user_id);
+
+create policy "Users can update their own notifications"
+  on public.notifications for update
+  using (auth.uid() = user_id);
+
+-- Trigger for task assignment notification
+create or replace function public.notify_task_assignment()
+returns trigger as $$
+begin
+  if (new.assigned_to is not null and (old.assigned_to is null or old.assigned_to != new.assigned_to)) then
+    insert into public.notifications (user_id, type, title, content, link)
+    values (
+      new.assigned_to,
+      'task_assignment',
+      'New task assigned',
+      'You have been assigned to: ' || new.title,
+      '/project/' || new.project_id
+    );
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_task_assigned on public.tasks;
+create trigger on_task_assigned
+  after update on public.tasks
+  for each row execute procedure public.notify_task_assignment();
+
+-- Trigger for new comment notification
+create or replace function public.notify_new_comment()
+returns trigger as $$
+declare
+  task_title text;
+  task_project_id uuid;
+  task_assignee uuid;
+  task_owner uuid;
+begin
+  select title, project_id, assigned_to, created_by
+  into task_title, task_project_id, task_assignee, task_owner
+  from public.tasks
+  where id = new.task_id;
+
+  -- Notify assignee if not the commenter
+  if (task_assignee is not null and task_assignee != new.user_id) then
+    insert into public.notifications (user_id, type, title, content, link)
+    values (
+      task_assignee,
+      'new_comment',
+      'New comment on task',
+      'Someone commented on: ' || task_title,
+      '/project/' || task_project_id
+    );
+  end if;
+
+  -- Notify owner if not the commenter and not the assignee
+  if (task_owner is not null and task_owner != new.user_id and task_owner != coalesce(task_assignee, '00000000-0000-0000-0000-000000000000'::uuid)) then
+    insert into public.notifications (user_id, type, title, content, link)
+    values (
+      task_owner,
+      'new_comment',
+      'New comment on task',
+      'Someone commented on: ' || task_title,
+      '/project/' || task_project_id
+    );
+  end if;
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_comment_added on public.task_comments;
+create trigger on_comment_added
+  after insert on public.task_comments
+  for each row execute procedure public.notify_new_comment();
+
+-- Trigger for project invite notification
+create or replace function public.notify_project_invite()
+returns trigger as $$
+declare
+  target_user_id uuid;
+  project_name text;
+begin
+  select id into target_user_id
+  from auth.users
+  where email = new.email;
+
+  select name into project_name
+  from public.projects
+  where id = new.project_id;
+
+  if (target_user_id is not null) then
+    insert into public.notifications (user_id, type, title, content, link, metadata)
+    values (
+      target_user_id,
+      'project_invite',
+      'New project invite',
+      'You have been invited to join: ' || project_name,
+      null,
+      jsonb_build_object('inviteId', new.id, 'projectId', new.project_id)
+    );
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_project_invited on public.project_invites;
+create trigger on_project_invited
+  after insert on public.project_invites
+  for each row execute procedure public.notify_project_invite();
+
+-- ─────────────────────────────────────────────
 -- STORAGE
 -- ─────────────────────────────────────────────
 insert into storage.buckets (id, name, public)

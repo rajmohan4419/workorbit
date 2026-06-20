@@ -19,7 +19,7 @@ export const useAuthStore = create((set) => ({
           .select('*')
           .eq('id', userId)
           .single()
-
+        
         if (error) {
           console.error('Error fetching profile:', error.message)
           return null

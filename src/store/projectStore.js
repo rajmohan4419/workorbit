@@ -3,12 +3,16 @@ import { supabase } from '../lib/supabase'
 
 export const useProjectStore = create((set, get) => ({
   projects: [],
+  members: [],
+  invites: [],
   activeProject: null,
   loading: false,
   error: null,
 
   reset: () => set({
     projects: [],
+    members: [],
+    invites: [],
     activeProject: null,
     loading: false,
     error: null,
@@ -95,5 +99,68 @@ export const useProjectStore = create((set, get) => ({
       error: null,
     }))
     return {}
+  },
+
+  fetchMembers: async (projectId) => {
+    const { data, error } = await supabase
+      .from('project_members')
+      .select('*, profiles(*)')
+      .eq('project_id', projectId)
+
+    if (error) return { error }
+    set({ members: data })
+    return { data }
+  },
+
+  fetchInvites: async (projectId) => {
+    const { data, error } = await supabase
+      .from('project_invites')
+      .select('*')
+      .eq('project_id', projectId)
+
+    if (error) return { error }
+    set({ invites: data })
+    return { data }
+  },
+
+  createInvite: async (projectId, email) => {
+    const { data, error } = await supabase
+      .from('project_invites')
+      .insert([{ project_id: projectId, email }])
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ invites: [data, ...state.invites] }))
+    return { data }
+  },
+
+  deleteInvite: async (id) => {
+    const { error } = await supabase.from('project_invites').delete().eq('id', id)
+    if (error) return { error }
+    set((state) => ({ invites: state.invites.filter((i) => i.id !== id) }))
+    return {}
+  },
+
+  acceptInvite: async (inviteId) => {
+    // In a real app, this would involve a more complex flow (edge function or similar)
+    // For now, we'll simulate it by adding the user to project_members and deleting the invite
+    const { data: invite, error: fetchError } = await supabase
+      .from('project_invites')
+      .select('*')
+      .eq('id', inviteId)
+      .single()
+    
+    if (fetchError) return { error: fetchError }
+
+    const { error: memberError } = await supabase
+      .from('project_members')
+      .insert([{ project_id: invite.project_id, user_id: (await supabase.auth.getUser()).data.user.id }])
+    
+    if (memberError) return { error: memberError }
+
+    await supabase.from('project_invites').delete().eq('id', inviteId)
+    
+    return { projectId: invite.project_id }
   },
 }))
