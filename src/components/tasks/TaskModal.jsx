@@ -110,7 +110,10 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     }
 
     setSaved(true)
-    setTimeout(() => setSaved(false), 1500)
+    setTimeout(() => {
+      setSaved(false)
+      onClose()
+    }, 1500)
   }
 
   const heading = isEditing ? 'Task details' : 'Add task'

@@ -34,7 +34,7 @@ create table if not exists public.projects (
   id          uuid primary key default uuid_generate_v4(),
   name        text not null,
   description text,
-  owner_id    uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -81,8 +81,8 @@ create table if not exists public.tasks (
   status      task_status default 'todo',
   priority    task_priority default 'medium',
   due_date    date,
-  assigned_to uuid references auth.users(id) on delete set null,
-  created_by  uuid references auth.users(id) default auth.uid(),
+  assigned_to uuid references public.profiles(id) on delete set null,
+  created_by  uuid references public.profiles(id) default auth.uid(),
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -90,7 +90,7 @@ create table if not exists public.tasks (
 create table if not exists public.project_members (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
-  user_id     uuid references auth.users(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null,
   created_at  timestamptz default now(),
   unique (project_id, user_id)
 );
@@ -363,7 +363,7 @@ create index if not exists project_members_user_id_idx on public.project_members
 create table if not exists public.task_comments (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   content     text not null,
   created_at  timestamptz default now()
 );
@@ -396,7 +396,7 @@ create policy "Users can delete their own comments"
 create table if not exists public.task_logs (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references auth.users(id) on delete set null,
+  user_id     uuid references public.profiles(id) on delete set null,
   type        text not null,
   old_value   text,
   new_value   text,
@@ -452,7 +452,7 @@ create table if not exists public.project_invites (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
   email       text not null,
-  invited_by  uuid references auth.users(id) on delete cascade not null default auth.uid(),
+  invited_by  uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   status      text default 'pending',
   created_at  timestamptz default now(),
   unique (project_id, email)
@@ -477,7 +477,7 @@ create policy "Managers can delete invites"
 -- ─────────────────────────────────────────────
 create table if not exists public.notifications (
   id          uuid primary key default uuid_generate_v4(),
-  user_id     uuid references auth.users(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null,
   type        text not null,
   title       text not null,
   content     text,
