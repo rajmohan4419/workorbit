@@ -43,6 +43,15 @@ export default function Sidebar() {
     setMobileOpen(false)
   }
 
+  const handleSignOut = async () => {
+    setAccountError('')
+    setSigningOut(true)
+    const { error } = await signOut()
+    setSigningOut(false)
+
+    if (error) setAccountError(error.message)
+  }
+
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'U'
 
   return (
