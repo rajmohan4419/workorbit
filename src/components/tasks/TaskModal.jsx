@@ -3,7 +3,7 @@ import { X, Loader2, MessageSquare, History, Send, Trash2 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useTaskStore, STATUSES, STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
-import { canEditTaskMetadata } from '../../lib/permissions'
+import { canEditTaskMetadata, canComment, canEditTaskStatus } from '../../lib/permissions'
 
 function getInitialForm(task, defaultStatus, currentUserId) {
   return {
@@ -19,6 +19,8 @@ function getInitialForm(task, defaultStatus, currentUserId) {
 export default function TaskModal({ task = null, projectId = null, defaultStatus = 'todo', onClose }) {
   const currentUser = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+  const projects = useProjectStore((state) => state.projects)
+  const project = projects.find(p => p.id === projectId || p.id === task?.project_id)
   const members = useProjectStore((state) => state.members)
   const fetchMembers = useProjectStore((state) => state.fetchMembers)
   const createTask = useTaskStore((state) => state.createTask)
@@ -31,7 +33,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const logs = useTaskStore((state) => state.logs)
 
   const isEditing = Boolean(task)
-  const canEditMetadata = canEditTaskMetadata(profile?.role, currentUser?.id, task?.created_by)
+  const canEditMetadata = canEditTaskMetadata(profile?.role, currentUser?.id, task?.created_by, task?.assigned_to, project?.owner_id)
+  const canChangeStatus = canEditTaskStatus(profile?.role, currentUser?.id, task?.created_by, task?.assigned_to, project?.owner_id)
+  const canWriteComment = canComment(profile?.role)
   const [form, setForm] = useState(() => getInitialForm(task, defaultStatus, currentUser?.id))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -208,8 +212,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                 <label className="text-xs text-gray-400 font-medium block mb-1.5">Status</label>
                 <select
                   value={form.status}
+                  disabled={!canChangeStatus}
                   onChange={(e) => handleChange('status', e.target.value)}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                  className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:text-gray-500"
                 >
                   {STATUSES.map((status) => (
                     <option key={status} value={status}>{STATUS_LABELS[status]}</option>
@@ -309,26 +314,28 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                 )}
               </div>
 
-              <form onSubmit={handleAddComment} className="relative">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
-                  rows={3}
-                  className="w-full text-sm text-gray-600 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none pr-12"
-                />
-                <button
-                  type="submit"
-                  disabled={commenting || !newComment.trim()}
-                  className="absolute bottom-3 right-3 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                >
-                  {commenting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                </button>
-              </form>
+              {canWriteComment && (
+                <form onSubmit={handleAddComment} className="relative">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Write a comment... (use @name to mention)"
+                    rows={3}
+                    className="w-full text-sm text-gray-600 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none pr-12"
+                  />
+                  <button
+                    type="submit"
+                    disabled={commenting || !newComment.trim()}
+                    className="absolute bottom-3 right-3 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                  >
+                    {commenting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  </button>
+                </form>
+              )}
             </div>
           )}
 
-          {isEditing && activeTab === 'activity' && (
+          {isEditing && activeTab === 'activity' && profile?.role === 'admin' && (
             <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
               {logs.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">

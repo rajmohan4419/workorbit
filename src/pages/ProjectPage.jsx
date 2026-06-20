@@ -1,8 +1,10 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Users, LayoutDashboard } from 'lucide-react'
+import { ArrowLeft, Users, LayoutDashboard, Trash2 } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
+import { useAuthStore } from '../store/authStore'
 import { useTaskStore } from '../store/taskStore'
+import { canDeleteProject } from '../lib/permissions'
 import KanbanBoard from '../components/tasks/KanbanBoard'
 import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
@@ -13,6 +15,8 @@ export default function ProjectPage() {
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const activeProject = useProjectStore((state) => state.activeProject)
+  const deleteProject = useProjectStore((state) => state.deleteProject)
+  const user = useAuthStore((state) => state.user)
   const fetchTasks = useTaskStore((state) => state.fetchTasks)
   const resetTasks = useTaskStore((state) => state.reset)
   const loading = useTaskStore((state) => state.loading)
@@ -27,6 +31,13 @@ export default function ProjectPage() {
   }, [id, projects, setActiveProject, fetchTasks, resetTasks])
 
   const project = activeProject?.id === id ? activeProject : projects.find((p) => p.id === id)
+
+  const handleDeleteProject = async () => {
+    if (window.confirm('Are you sure you want to delete this project? All tasks will be permanently removed.')) {
+      await deleteProject(id)
+      window.location.href = '/'
+    }
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -43,6 +54,15 @@ export default function ProjectPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {canDeleteProject(user?.id, project?.owner_id) && (
+            <button
+              onClick={handleDeleteProject}
+              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete Project"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
           <NotificationBell />
           <div className="w-px h-6 bg-gray-100 mx-1" />
           <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl">

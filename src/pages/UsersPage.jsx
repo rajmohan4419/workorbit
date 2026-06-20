@@ -89,7 +89,7 @@ export default function UsersPage() {
                 <td className="px-6 py-4">
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                     profile.role === 'admin' ? 'bg-purple-50 text-purple-700' :
-                    profile.role === 'manager' ? 'bg-blue-50 text-blue-700' :
+                    profile.role === 'member' ? 'bg-blue-50 text-blue-700' :
                     'bg-gray-50 text-gray-600'
                   }`}>
                     {profile.role === 'admin' ? <Shield size={12} /> : <User size={12} />}
@@ -104,9 +104,9 @@ export default function UsersPage() {
                       onChange={(e) => handleRoleChange(profile.id, e.target.value)}
                       className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
                     >
-                      <option value="team_member">Team Member</option>
-                      <option value="manager">Manager</option>
+                      <option value="member">Member</option>
                       <option value="admin">Admin</option>
+                      <option value="viewer">Viewer</option>
                     </select>
                   ) : (
                     <span className="text-xs text-gray-400 italic">No actions available</span>

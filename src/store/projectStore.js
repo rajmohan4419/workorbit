@@ -123,7 +123,7 @@ export const useProjectStore = create((set, get) => ({
     return { data }
   },
 
-  createInvite: async (projectId, email, role = 'team_member') => {
+  createInvite: async (projectId, email, role = 'member') => {
     const { data, error } = await supabase
       .from('project_invites')
       .insert([{ project_id: projectId, email, role }])

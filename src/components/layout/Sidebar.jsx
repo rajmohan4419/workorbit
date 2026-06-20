@@ -109,7 +109,7 @@ export default function Sidebar() {
                 }`}
               >
                 <Users size={16} />
-                Users
+                User Management
               </Link>
             )}
 

@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { UserPlus, Mail, X, Loader2, Trash2 } from 'lucide-react'
 import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
-import { canManageAssignedProjects } from '../../lib/permissions'
+import { canInviteMembers } from '../../lib/permissions'
 
 export default function ProjectMembers({ projectId }) {
+  const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+  const projects = useProjectStore((state) => state.projects)
   const members = useProjectStore((state) => state.members)
   const invites = useProjectStore((state) => state.invites)
   const fetchMembers = useProjectStore((state) => state.fetchMembers)
@@ -15,7 +17,7 @@ export default function ProjectMembers({ projectId }) {
   
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState('team_member')
+  const [role, setRole] = useState('member')
   const [inviting, setInviting] = useState(false)
   const [error, setError] = useState('')
 
@@ -39,18 +41,19 @@ export default function ProjectMembers({ projectId }) {
       setError(error.message)
     } else {
       setEmail('')
-      setRole('team_member')
+      setRole('member')
       setIsInviteOpen(false)
     }
   }
 
-  const canManage = canManageAssignedProjects(profile?.role)
+  const project = projects.find(p => p.id === projectId)
+  const canInvite = canInviteMembers(profile?.role, user?.id, project?.owner_id)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Members</h2>
-        {canManage && (
+        {canInvite && (
           <button
             onClick={() => setIsInviteOpen(true)}
             className="flex items-center gap-2 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
@@ -87,7 +90,7 @@ export default function ProjectMembers({ projectId }) {
                   </div>
                   <span className="text-sm text-gray-600">{invite.email}</span>
                 </div>
-                {canManage && (
+                {canInvite && (
                   <button
                     onClick={() => deleteInvite(invite.id)}
                     className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
@@ -136,9 +139,9 @@ export default function ProjectMembers({ projectId }) {
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
                 >
-                  <option value="team_member">Team Member</option>
-                  <option value="manager">Manager</option>
+                  <option value="member">Member</option>
                   <option value="admin">Admin</option>
+                  <option value="viewer">Viewer</option>
                 </select>
               </div>
 

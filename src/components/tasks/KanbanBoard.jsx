@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { Plus } from 'lucide-react'
 import { useTaskStore, STATUSES, STATUS_LABELS, canMoveToStatus } from '../../store/taskStore'
+import { useProjectStore } from '../../store/projectStore'
+import { useAuthStore } from '../../store/authStore'
+import { canCreateTask } from '../../lib/permissions'
 import TaskCard from './TaskCard'
 import TaskModal from './TaskModal'
 
@@ -23,6 +26,10 @@ export default function KanbanBoard({ projectId }) {
   const tasks = useTaskStore((state) => state.tasks)
   const moveTask = useTaskStore((state) => state.moveTask)
   const storeError = useTaskStore((state) => state.error)
+  const profile = useAuthStore((state) => state.profile)
+  const user = useAuthStore((state) => state.user)
+  const projects = useProjectStore((state) => state.projects)
+  const project = projects.find(p => p.id === projectId)
   const [modalState, setModalState] = useState(null)
   const [draggingStatus, setDraggingStatus] = useState(null)
   const tasksByStatus = STATUSES.reduce((acc, status) => {
@@ -48,6 +55,8 @@ export default function KanbanBoard({ projectId }) {
 
     await moveTask(draggableId, destination.droppableId)
   }
+
+  const canCreate = canCreateTask(profile?.role, user?.id, project?.owner_id)
 
   return (
     <>
@@ -83,15 +92,17 @@ export default function KanbanBoard({ projectId }) {
                             {tasksByStatus[status].length}
                           </span>
                         </div>
-                        <button
-                          onClick={() => {
-                            useTaskStore.setState({ error: null })
-                            setModalState({ type: 'create', status })
-                          }}
-                          className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors"
-                        >
-                          <Plus size={15} />
-                        </button>
+                        {canCreate && (
+                          <button
+                            onClick={() => {
+                              useTaskStore.setState({ error: null })
+                              setModalState({ type: 'create', status })
+                            }}
+                            className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors"
+                          >
+                            <Plus size={15} />
+                          </button>
+                        )}
                       </div>
 
                       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
@@ -118,7 +129,7 @@ export default function KanbanBoard({ projectId }) {
 
                         {provided.placeholder}
 
-                        {tasksByStatus[status].length === 0 && (
+                        {tasksByStatus[status].length === 0 && canCreate && (
                           <button
                             onClick={() => {
                               useTaskStore.setState({ error: null })
