@@ -58,7 +58,14 @@ export const useTaskStore = create((set, get) => ({
     set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
+      .select(`
+        *,
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
+        task_subtasks(id, is_completed),
+        task_comments(count),
+        task_attachments(count),
+        task_labels(labels(*))
+      `)
       .eq('project_id', projectId)
       .order('created_at', { ascending: true })
 
@@ -80,7 +87,15 @@ export const useTaskStore = create((set, get) => ({
     set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
+      .select(`
+        *,
+        projects(name),
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
+        task_subtasks(id, is_completed),
+        task_comments(count),
+        task_attachments(count),
+        task_labels(labels(*))
+      `)
       .eq('assigned_to', userId)
       .order('due_date', { ascending: true, nullsFirst: false })
 
@@ -97,7 +112,15 @@ export const useTaskStore = create((set, get) => ({
     set({ loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
+      .select(`
+        *,
+        projects(name),
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
+        task_subtasks(id, is_completed),
+        task_comments(count),
+        task_attachments(count),
+        task_labels(labels(*))
+      `)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -107,6 +130,14 @@ export const useTaskStore = create((set, get) => ({
 
     set({ searchResults: data, loading: false })
     return { data }
+  },
+
+  getTaskCount: async () => {
+    const { count, error } = await supabase
+      .from('tasks')
+      .select('*', { count: 'exact', head: true })
+    if (error) return 0
+    return count
   },
 
   createTask: async ({ title, description, status, priority, due_date, project_id, assigned_to }) => {

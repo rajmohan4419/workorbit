@@ -23,7 +23,7 @@ export function isOwner(userId, projectOwnerId) {
 }
 
 export function canCreateProject(role) {
-  return role === 'admin'
+  return role === 'admin' || role === 'member'
 }
 
 export function canEditProject(role, userId, projectOwnerId) {

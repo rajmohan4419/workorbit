@@ -82,10 +82,18 @@ export default function TimelineView({ tasks }) {
         </div>
       </div>
 
-      {tasks.filter(t => t.due_date).length === 0 && (
+      {tasks.length > 0 && tasks.filter(t => t.due_date).length === 0 && (
         <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-gray-400">
           <Clock size={32} className="mb-2 opacity-20" />
           <p className="text-sm font-medium">No tasks with due dates to show on timeline.</p>
+          <p className="text-[10px] mt-1">Only tasks with due dates are visible here.</p>
+        </div>
+      )}
+
+      {tasks.length === 0 && (
+        <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-gray-400">
+          <Calendar size={32} className="mb-2 opacity-20" />
+          <p className="text-sm font-medium">No tasks in this project yet.</p>
         </div>
       )}
     </div>

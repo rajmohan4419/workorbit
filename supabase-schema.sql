@@ -284,7 +284,7 @@ drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (
-    public.current_app_role() = 'admin'::app_role
+    (public.current_app_role() = 'admin'::app_role or public.current_app_role() = 'member'::app_role)
     and auth.uid() = owner_id
   );
 
@@ -572,6 +572,11 @@ create policy "Users can manage task labels"
     select 1 from public.tasks
     where tasks.id = task_labels.task_id
       and public.can_access_project(tasks.project_id)
+  ))
+  with check (exists (
+    select 1 from public.tasks
+    where tasks.id = task_labels.task_id
+      and public.can_access_project(tasks.project_id)
   ));
 
 -- ─────────────────────────────────────────────
@@ -585,8 +590,14 @@ create table if not exists public.sprints (
   end_date    date not null,
   goal        text,
   status      text default 'planned', -- planned, active, completed
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
 );
+
+drop trigger if exists sprints_updated_at on public.sprints;
+create trigger sprints_updated_at
+  before update on public.sprints
+  for each row execute procedure public.handle_updated_at();
 
 alter table public.sprints enable row level security;
 
@@ -673,6 +684,10 @@ create policy "Users can log time"
     where tasks.id = time_logs.task_id
       and public.can_access_project(tasks.project_id)
   ));
+
+create policy "Users can delete their own time logs"
+  on public.time_logs for delete
+  using (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────
 -- NOTIFICATIONS

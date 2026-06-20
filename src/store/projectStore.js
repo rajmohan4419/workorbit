@@ -5,6 +5,7 @@ export const useProjectStore = create((set, get) => ({
   projects: [],
   members: [],
   invites: [],
+  sprints: [],
   activeProject: null,
   loading: false,
   error: null,
@@ -13,6 +14,7 @@ export const useProjectStore = create((set, get) => ({
     projects: [],
     members: [],
     invites: [],
+    sprints: [],
     activeProject: null,
     loading: false,
     error: null,
@@ -120,6 +122,18 @@ export const useProjectStore = create((set, get) => ({
 
     if (error) return { error }
     set({ invites: data })
+    return { data }
+  },
+
+  fetchSprints: async (projectId) => {
+    const { data, error } = await supabase
+      .from('sprints')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('start_date', { ascending: false })
+
+    if (error) return { error }
+    set({ sprints: data })
     return { data }
   },
 
