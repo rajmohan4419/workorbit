@@ -85,10 +85,10 @@ export default function MyTasksPage() {
               ) : (
                 tasks.map((task) => {
                   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done'
-
+                  
                   return (
-                    <tr
-                      key={task.id}
+                    <tr 
+                      key={task.id} 
                       onClick={() => setSelectedTask(task)}
                       className="group hover:bg-gray-50/50 cursor-pointer transition-colors"
                     >

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, MessageSquare, History, Send, Trash2 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
+import { useProjectStore } from '../../store/projectStore'
 import { useTaskStore, STATUSES, STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
 import { canEditTaskMetadata } from '../../lib/permissions'
 
@@ -18,14 +19,26 @@ function getInitialForm(task, defaultStatus, currentUserId) {
 export default function TaskModal({ task = null, projectId = null, defaultStatus = 'todo', onClose }) {
   const currentUser = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
+  const members = useProjectStore((state) => state.members)
+  const fetchMembers = useProjectStore((state) => state.fetchMembers)
   const createTask = useTaskStore((state) => state.createTask)
   const updateTask = useTaskStore((state) => state.updateTask)
+  const fetchComments = useTaskStore((state) => state.fetchComments)
+  const addComment = useTaskStore((state) => state.addComment)
+  const deleteComment = useTaskStore((state) => state.deleteComment)
+  const fetchLogs = useTaskStore((state) => state.fetchLogs)
+  const comments = useTaskStore((state) => state.comments)
+  const logs = useTaskStore((state) => state.logs)
+
   const isEditing = Boolean(task)
   const canEditMetadata = canEditTaskMetadata(profile?.role)
   const [form, setForm] = useState(() => getInitialForm(task, defaultStatus, currentUser?.id))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [activeTab, setActiveTab] = useState('details')
+  const [newComment, setNewComment] = useState('')
+  const [commenting, setCommenting] = useState(false)
 
   useEffect(() => {
     const handler = (e) => e.key === 'Escape' && onClose()
@@ -33,7 +46,31 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
+  useEffect(() => {
+    if (isEditing) {
+      fetchComments(task.id)
+      fetchLogs(task.id)
+    }
+    if (projectId) {
+      fetchMembers(projectId)
+    }
+  }, [isEditing, task?.id, projectId, fetchComments, fetchLogs, fetchMembers])
+
   const handleChange = (field, value) => setForm((currentForm) => ({ ...currentForm, [field]: value }))
+
+  const handleAddComment = async (e) => {
+    e.preventDefault()
+    if (!newComment.trim()) return
+
+    setCommenting(true)
+    const { error } = await addComment(task.id, newComment.trim())
+    setCommenting(false)
+
+    if (!error) {
+      setNewComment('')
+      fetchLogs(task.id)
+    }
+  }
 
   const handleSave = async () => {
     if (!form.title.trim()) {
@@ -98,17 +135,57 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
-          <div>
-            <label className="text-xs text-gray-400 font-medium block mb-1.5">Title *</label>
-            <input
-              value={form.title}
-              disabled={isEditing && !canEditMetadata}
-              onChange={(e) => handleChange('title', e.target.value)}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-              placeholder="Task title"
-            />
-          </div>
+        <div className="flex border-b border-gray-100 px-6">
+          <button
+            onClick={() => setActiveTab('details')}
+            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === 'details' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Details
+          </button>
+          {isEditing && (
+            <>
+              <button
+                onClick={() => setActiveTab('comments')}
+                className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                  activeTab === 'comments' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <MessageSquare size={14} />
+                Comments
+                {comments.length > 0 && (
+                  <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full text-[10px]">
+                    {comments.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('activity')}
+                className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
+                  activeTab === 'activity' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <History size={14} />
+                Activity
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="px-6 py-5">
+          {activeTab === 'details' && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400 font-medium block mb-1.5">Title *</label>
+                <input
+                  value={form.title}
+                  disabled={isEditing && !canEditMetadata}
+                  onChange={(e) => handleChange('title', e.target.value)}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                  placeholder="Task title"
+                />
+              </div>
 
           <div>
             <label className="text-xs text-gray-400 font-medium block mb-1.5">Description</label>
@@ -172,19 +249,119 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                 className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:text-gray-500"
               >
                 <option value="">Unassigned</option>
-                {currentUser && (
-                  <option value={currentUser.id}>{currentUser.email}</option>
-                )}
+                {members.map((member) => (
+                  <option key={member.profiles.id} value={member.profiles.id}>
+                    {member.profiles.full_name} ({member.profiles.role})
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          {errorMessage && (
-            <p className="text-sm text-red-500">{errorMessage}</p>
+              {errorMessage && (
+                <p className="text-sm text-red-500">{errorMessage}</p>
+              )}
+
+              {!isEditing && !projectId && (
+                <p className="text-sm text-red-500">A project is required before creating a task.</p>
+              )}
+            </div>
           )}
 
-          {!isEditing && !projectId && (
-            <p className="text-sm text-red-500">A project is required before creating a task.</p>
+          {isEditing && activeTab === 'comments' && (
+            <div className="space-y-6">
+              <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
+                {comments.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <MessageSquare size={32} className="mx-auto mb-2 opacity-20" />
+                    <p className="text-sm">No comments yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3 group">
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 flex-shrink-0">
+                        {comment.profiles?.full_name?.slice(0, 2).toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-gray-900">{comment.profiles?.full_name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-gray-400">
+                              {new Date(comment.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {comment.user_id === currentUser?.id && (
+                              <button
+                                onClick={() => deleteComment(comment.id)}
+                                className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all rounded"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{comment.content}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <form onSubmit={handleAddComment} className="relative">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  rows={3}
+                  className="w-full text-sm text-gray-600 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none pr-12"
+                />
+                <button
+                  type="submit"
+                  disabled={commenting || !newComment.trim()}
+                  className="absolute bottom-3 right-3 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  {commenting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {isEditing && activeTab === 'activity' && (
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+              {logs.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <History size={32} className="mx-auto mb-2 opacity-20" />
+                  <p className="text-sm">No activity recorded yet.</p>
+                </div>
+              ) : (
+                logs.map((log) => (
+                  <div key={log.id} className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[8px] font-bold text-gray-500 flex-shrink-0">
+                      {log.profiles?.full_name?.slice(0, 2).toUpperCase() || 'SYS'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600">
+                        <span className="font-semibold text-gray-900">{log.profiles?.full_name || 'System'}</span>
+                        {' '}
+                        {log.type === 'status_change' ? (
+                          <>
+                            moved this task from <span className="font-medium text-indigo-600">{STATUS_LABELS[log.old_value]}</span> to <span className="font-medium text-indigo-600">{STATUS_LABELS[log.new_value]}</span>
+                          </>
+                        ) : log.type === 'comment_added' ? (
+                          <>
+                            added a comment: <span className="italic text-gray-500">"{log.new_value}{log.new_value?.length >= 50 ? '...' : ''}"</span>
+                          </>
+                        ) : (
+                          'performed an action'
+                        )}
+                      </p>
+                      <span className="text-[10px] text-gray-400 mt-0.5 block">
+                        {new Date(log.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
 
