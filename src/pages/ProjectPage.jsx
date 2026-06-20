@@ -78,7 +78,7 @@ export default function ProjectPage() {
           )}
           <NotificationBell />
           <div className="w-px h-6 bg-gray-100 mx-1" />
-          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl max-w-[200px] sm:max-w-none overflow-x-auto no-scrollbar">
             {[
               { id: 'board', label: 'Board', icon: LayoutDashboard },
               { id: 'list', label: 'List', icon: LayoutDashboard },
@@ -90,12 +90,12 @@ export default function ProjectPage() {
               <button
                 key={v.id}
                 onClick={() => setView(v.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
                   view === v.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 <v.icon size={14} />
-                {v.label}
+                <span className="hidden md:inline">{v.label}</span>
               </button>
             ))}
           </div>
