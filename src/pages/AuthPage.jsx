@@ -1,0 +1,42 @@
+import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
+import { supabase } from '../lib/supabase'
+
+export default function AuthPage() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">P</span>
+            </div>
+            <span className="text-xl font-semibold text-gray-900">ProjectFlow</span>
+          </div>
+          <p className="text-gray-500 text-sm">Manage your work, your way</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+          <Auth
+            supabaseClient={supabase}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#4f46e5',
+                    brandAccent: '#4338ca',
+                  },
+                  borderWidths: { buttonBorderWidth: '1px', inputBorderWidth: '1px' },
+                  radii: { borderRadiusButton: '8px', inputBorderRadius: '8px' },
+                },
+              },
+            }}
+            providers={['google', 'github']}
+            redirectTo={window.location.origin}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
