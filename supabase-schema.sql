@@ -27,6 +27,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists projects_updated_at on public.projects;
 create trigger projects_updated_at
   before update on public.projects
   for each row execute procedure public.handle_updated_at();
@@ -34,8 +35,17 @@ create trigger projects_updated_at
 -- ─────────────────────────────────────────────
 -- TASKS
 -- ─────────────────────────────────────────────
-create type task_status as enum ('todo', 'in_progress', 'in_review', 'done');
-create type task_priority as enum ('low', 'medium', 'high');
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'task_status') then
+    create type task_status as enum ('todo', 'in_progress', 'in_review', 'done');
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'task_priority') then
+    create type task_priority as enum ('low', 'medium', 'high');
+  end if;
+end
+$$;
 
 create table if not exists public.tasks (
   id          uuid primary key default uuid_generate_v4(),
@@ -51,6 +61,7 @@ create table if not exists public.tasks (
   updated_at  timestamptz default now()
 );
 
+drop trigger if exists tasks_updated_at on public.tasks;
 create trigger tasks_updated_at
   before update on public.tasks
   for each row execute procedure public.handle_updated_at();
@@ -62,18 +73,22 @@ create trigger tasks_updated_at
 -- Projects: owners can CRUD their own projects
 alter table public.projects enable row level security;
 
+drop policy if exists "Users can view their own projects" on public.projects;
 create policy "Users can view their own projects"
   on public.projects for select
   using (auth.uid() = owner_id);
 
+drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (auth.uid() = owner_id);
 
+drop policy if exists "Users can update their own projects" on public.projects;
 create policy "Users can update their own projects"
   on public.projects for update
   using (auth.uid() = owner_id);
 
+drop policy if exists "Users can delete their own projects" on public.projects;
 create policy "Users can delete their own projects"
   on public.projects for delete
   using (auth.uid() = owner_id);
@@ -82,6 +97,7 @@ create policy "Users can delete their own projects"
 -- Tasks: accessible to project owner
 alter table public.tasks enable row level security;
 
+drop policy if exists "Users can view tasks in their projects" on public.tasks;
 create policy "Users can view tasks in their projects"
   on public.tasks for select
   using (
@@ -91,6 +107,7 @@ create policy "Users can view tasks in their projects"
     )
   );
 
+drop policy if exists "Users can create tasks in their projects" on public.tasks;
 create policy "Users can create tasks in their projects"
   on public.tasks for insert
   with check (
@@ -100,6 +117,7 @@ create policy "Users can create tasks in their projects"
     )
   );
 
+drop policy if exists "Users can update tasks in their projects" on public.tasks;
 create policy "Users can update tasks in their projects"
   on public.tasks for update
   using (
@@ -109,6 +127,7 @@ create policy "Users can update tasks in their projects"
     )
   );
 
+drop policy if exists "Users can delete tasks in their projects" on public.tasks;
 create policy "Users can delete tasks in their projects"
   on public.tasks for delete
   using (

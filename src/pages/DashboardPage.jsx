@@ -1,14 +1,13 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FolderOpen, CheckCircle2, Clock, AlertCircle, ArrowRight } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
 
 export default function DashboardPage() {
-  const { projects, fetchProjects, loading } = useProjectStore()
-  const { user } = useAuthStore()
-
-  useEffect(() => { fetchProjects() }, [])
+  const projects = useProjectStore((state) => state.projects)
+  const loading = useProjectStore((state) => state.loading)
+  const error = useProjectStore((state) => state.error)
+  const user = useAuthStore((state) => state.user)
 
   const firstName = user?.email?.split('@')[0] || 'there'
 
@@ -41,7 +40,11 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-gray-700">Your projects</h2>
         </div>
 
-        {loading ? (
+        {error ? (
+          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        ) : loading ? (
           <div className="grid sm:grid-cols-2 gap-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-24 bg-gray-50 rounded-xl animate-pulse" />

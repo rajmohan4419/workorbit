@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useProjectStore } from './store/projectStore'
+import { useTaskStore } from './store/taskStore'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
 import ProjectPage from './pages/ProjectPage'
@@ -35,14 +36,22 @@ function AppShell() {
 }
 
 export default function App() {
-  const { user, loading, init } = useAuthStore()
-  const { fetchProjects } = useProjectStore()
+  const user = useAuthStore((state) => state.user)
+  const loading = useAuthStore((state) => state.loading)
+  const init = useAuthStore((state) => state.init)
+  const fetchProjects = useProjectStore((state) => state.fetchProjects)
+  const resetProjects = useProjectStore((state) => state.reset)
+  const resetTasks = useTaskStore((state) => state.reset)
+  const userId = user?.id ?? null
 
-  useEffect(() => { init() }, [])
+  useEffect(() => init(), [init])
 
   useEffect(() => {
-    if (user) fetchProjects()
-  }, [user])
+    resetProjects()
+    resetTasks()
+
+    if (userId) fetchProjects()
+  }, [userId, fetchProjects, resetProjects, resetTasks])
 
   if (loading) {
     return (

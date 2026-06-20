@@ -6,17 +6,36 @@ export const useAuthStore = create((set) => ({
   session: null,
   loading: true,
 
-  init: async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    set({ session, user: session?.user ?? null, loading: false })
+  init: () => {
+    let active = true
+    set({ loading: true })
 
-    supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, user: session?.user ?? null })
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!active) return
+
+      if (error) {
+        set({ session: null, user: null, loading: false })
+        return
+      }
+
+      set({ session, user: session?.user ?? null, loading: false })
     })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return
+      set({ session, user: session?.user ?? null, loading: false })
+    })
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
   },
 
   signOut: async () => {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    if (error) return { error }
     set({ user: null, session: null })
+    return {}
   },
 }))
