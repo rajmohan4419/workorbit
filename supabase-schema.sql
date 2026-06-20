@@ -26,6 +26,7 @@ create table if not exists public.profiles (
   phone       text,
   avatar_path text,
   role        app_role not null default 'member',
+  onboarding_completed boolean default false,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -466,6 +467,24 @@ create table if not exists public.project_invites (
   unique (project_id, email)
 );
 
+create or replace function public.check_self_invite()
+returns trigger as $$
+begin
+  if exists (
+    select 1 from auth.users
+    where id = new.invited_by and email = new.email
+  ) then
+    raise exception 'You cannot invite yourself.';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists tr_check_self_invite on public.project_invites;
+create trigger tr_check_self_invite
+  before insert on public.project_invites
+  for each row execute procedure public.check_self_invite();
+
 alter table public.project_invites enable row level security;
 
 create policy "Users can view invites for projects they manage"
@@ -479,6 +498,181 @@ create policy "Admins and owners can create invites"
 create policy "Admins and owners can delete invites"
   on public.project_invites for delete
   using (public.can_manage_project(project_id));
+
+-- ─────────────────────────────────────────────
+-- SUBTASKS
+-- ─────────────────────────────────────────────
+create table if not exists public.task_subtasks (
+  id           uuid primary key default uuid_generate_v4(),
+  task_id      uuid references public.tasks(id) on delete cascade not null,
+  title        text not null,
+  is_completed boolean default false,
+  created_at   timestamptz default now()
+);
+
+alter table public.task_subtasks enable row level security;
+
+create policy "Users can view subtasks for tasks they can access"
+  on public.task_subtasks for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_subtasks.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can manage subtasks for tasks they can access"
+  on public.task_subtasks for all
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_subtasks.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+-- ─────────────────────────────────────────────
+-- LABELS
+-- ─────────────────────────────────────────────
+create table if not exists public.labels (
+  id          uuid primary key default uuid_generate_v4(),
+  project_id  uuid references public.projects(id) on delete cascade not null,
+  name        text not null,
+  color       text not null default '#4f46e5',
+  created_at  timestamptz default now(),
+  unique (project_id, name)
+);
+
+alter table public.labels enable row level security;
+
+create policy "Users can view labels for projects they can access"
+  on public.labels for select
+  using (public.can_access_project(project_id));
+
+create policy "Admins and owners can manage labels"
+  on public.labels for all
+  using (public.can_manage_project(project_id));
+
+create table if not exists public.task_labels (
+  task_id  uuid references public.tasks(id) on delete cascade not null,
+  label_id uuid references public.labels(id) on delete cascade not null,
+  primary key (task_id, label_id)
+);
+
+alter table public.task_labels enable row level security;
+
+create policy "Users can view task labels"
+  on public.task_labels for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_labels.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can manage task labels"
+  on public.task_labels for all
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_labels.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+-- ─────────────────────────────────────────────
+-- SPRINTS
+-- ─────────────────────────────────────────────
+create table if not exists public.sprints (
+  id          uuid primary key default uuid_generate_v4(),
+  project_id  uuid references public.projects(id) on delete cascade not null,
+  name        text not null,
+  start_date  date not null,
+  end_date    date not null,
+  goal        text,
+  status      text default 'planned', -- planned, active, completed
+  created_at  timestamptz default now()
+);
+
+alter table public.sprints enable row level security;
+
+create policy "Users can view sprints for accessible projects"
+  on public.sprints for select
+  using (public.can_access_project(project_id));
+
+create policy "Admins and owners can manage sprints"
+  on public.sprints for all
+  using (public.can_manage_project(project_id));
+
+-- Add sprint_id to tasks
+do $$
+begin
+  if not exists (select 1 from information_schema.columns where table_name='tasks' and column_name='sprint_id') then
+    alter table public.tasks add column sprint_id uuid references public.sprints(id) on delete set null;
+  end if;
+end
+$$;
+
+-- ─────────────────────────────────────────────
+-- ATTACHMENTS
+-- ─────────────────────────────────────────────
+create table if not exists public.task_attachments (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  name        text not null,
+  file_path   text not null,
+  file_size   bigint,
+  content_type text,
+  created_at  timestamptz default now()
+);
+
+alter table public.task_attachments enable row level security;
+
+create policy "Users can view attachments for accessible tasks"
+  on public.task_attachments for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_attachments.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can insert attachments"
+  on public.task_attachments for insert
+  with check (exists (
+    select 1 from public.tasks
+    where tasks.id = task_attachments.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can delete their own attachments"
+  on public.task_attachments for delete
+  using (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────
+-- TIME LOGS
+-- ─────────────────────────────────────────────
+create table if not exists public.time_logs (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  duration_seconds integer not null,
+  description text,
+  logged_at   date default current_date,
+  created_at  timestamptz default now()
+);
+
+alter table public.time_logs enable row level security;
+
+create policy "Users can view time logs for accessible tasks"
+  on public.time_logs for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = time_logs.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can log time"
+  on public.time_logs for insert
+  with check (exists (
+    select 1 from public.tasks
+    where tasks.id = time_logs.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
 
 -- ─────────────────────────────────────────────
 -- NOTIFICATIONS

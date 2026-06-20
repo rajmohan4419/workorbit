@@ -24,15 +24,27 @@ export const canMoveToStatus = (from, to) => {
 
 export const useTaskStore = create((set, get) => ({
   tasks: [],
+  searchResults: [],
   comments: [],
   logs: [],
+  subtasks: [],
+  attachments: [],
+  timeLogs: [],
+  labels: [],
+  projectLabels: [],
   loading: false,
   error: null,
 
   reset: () => set({
     tasks: [],
+    searchResults: [],
     comments: [],
     logs: [],
+    subtasks: [],
+    attachments: [],
+    timeLogs: [],
+    labels: [],
+    projectLabels: [],
     loading: false,
     error: null,
   }),
@@ -43,10 +55,10 @@ export const useTaskStore = create((set, get) => ({
       return { data: [] }
     }
 
-    set({ loading: true, error: null })
+    set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
+      .select('*, profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true })
 
@@ -65,10 +77,10 @@ export const useTaskStore = create((set, get) => ({
       return { data: [] }
     }
 
-    set({ loading: true, error: null })
+    set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(name)')
+      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
       .eq('assigned_to', userId)
       .order('due_date', { ascending: true, nullsFirst: false })
 
@@ -78,6 +90,22 @@ export const useTaskStore = create((set, get) => ({
     }
 
     set({ tasks: data, error: null, loading: false })
+    return { data }
+  },
+
+  fetchGlobalTasks: async () => {
+    set({ loading: true, error: null })
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      set({ error: error.message, loading: false })
+      return { error }
+    }
+
+    set({ searchResults: data, loading: false })
     return { data }
   },
 
@@ -172,6 +200,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchComments: async (taskId) => {
+    set({ comments: [] })
     const { data, error } = await supabase
       .from('task_comments')
       .select('*, profiles(full_name, avatar_path)')
@@ -203,6 +232,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchLogs: async (taskId) => {
+    set({ logs: [] })
     const { data, error } = await supabase
       .from('task_logs')
       .select('*, profiles(full_name)')
@@ -211,6 +241,217 @@ export const useTaskStore = create((set, get) => ({
 
     if (error) return { error }
     set({ logs: data })
+    return { data }
+  },
+
+  fetchSubtasks: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_subtasks')
+      .select('*')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: true })
+
+    if (error) return { error }
+    set({ subtasks: data })
+    return { data }
+  },
+
+  addSubtask: async (taskId, title) => {
+    const { data, error } = await supabase
+      .from('task_subtasks')
+      .insert([{ task_id: taskId, title }])
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ subtasks: [...state.subtasks, data] }))
+    return { data }
+  },
+
+  toggleSubtask: async (id, isCompleted) => {
+    const { data, error } = await supabase
+      .from('task_subtasks')
+      .update({ is_completed: isCompleted })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({
+      subtasks: state.subtasks.map((s) => (s.id === id ? data : s)),
+    }))
+    return { data }
+  },
+
+  deleteSubtask: async (id) => {
+    const { error } = await supabase.from('task_subtasks').delete().eq('id', id)
+    if (error) return { error }
+    set((state) => ({
+      subtasks: state.subtasks.filter((s) => s.id !== id),
+    }))
+    return {}
+  },
+
+  fetchAttachments: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_attachments')
+      .select('*')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: false })
+
+    if (error) return { error }
+    set({ attachments: data })
+    return { data }
+  },
+
+  uploadAttachment: async (taskId, file) => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${taskId}/${Math.random()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('task-attachments')
+      .upload(filePath, file)
+
+    if (uploadError) return { error: uploadError }
+
+    const { data, error } = await supabase
+      .from('task_attachments')
+      .insert([{
+        task_id: taskId,
+        name: file.name,
+        file_path: filePath,
+        file_size: file.size,
+        content_type: file.type
+      }])
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ attachments: [data, ...state.attachments] }))
+    return { data }
+  },
+
+  deleteAttachment: async (id, filePath) => {
+    await supabase.storage.from('task-attachments').remove([filePath])
+    const { error } = await supabase.from('task_attachments').delete().eq('id', id)
+    if (error) return { error }
+    set((state) => ({
+      attachments: state.attachments.filter((a) => a.id !== id),
+    }))
+    return {}
+  },
+
+  fetchTimeLogs: async (taskId) => {
+    const { data, error } = await supabase
+      .from('time_logs')
+      .select('*, profiles(full_name)')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: false })
+
+    if (error) return { error }
+    set({ timeLogs: data })
+    return { data }
+  },
+
+  addTimeLog: async (taskId, durationSeconds, description) => {
+    const { data, error } = await supabase
+      .from('time_logs')
+      .insert([{ task_id: taskId, duration_seconds: durationSeconds, description }])
+      .select('*, profiles(full_name)')
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ timeLogs: [data, ...state.timeLogs] }))
+    return { data }
+  },
+
+  subscribeToProject: (projectId) => {
+    const channel = supabase
+      .channel(`project-updates-${projectId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tasks',
+        filter: `project_id=eq.${projectId}`
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          set((state) => ({ tasks: [...state.tasks, payload.new] }))
+        } else if (payload.eventType === 'UPDATE') {
+          set((state) => ({
+            tasks: state.tasks.map((t) => (t.id === payload.new.id ? payload.new : t)),
+          }))
+        } else if (payload.eventType === 'DELETE') {
+          set((state) => ({
+            tasks: state.tasks.filter((t) => t.id !== payload.old.id),
+          }))
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  },
+
+  fetchProjectLabels: async (projectId) => {
+    const { data, error } = await supabase
+      .from('labels')
+      .select('*')
+      .eq('project_id', projectId)
+
+    if (error) return { error }
+    set({ projectLabels: data })
+    return { data }
+  },
+
+  fetchTaskLabels: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_labels')
+      .select('*, labels(*)')
+      .eq('task_id', taskId)
+
+    if (error) return { error }
+    const labels = data.map((tl) => tl.labels)
+    set({ labels })
+    return { data: labels }
+  },
+
+  addTaskLabel: async (taskId, labelId) => {
+    const { error } = await supabase
+      .from('task_labels')
+      .insert([{ task_id: taskId, label_id: labelId }])
+
+    if (error) return { error }
+    // Refresh task labels
+    return get().fetchTaskLabels(taskId)
+  },
+
+  removeTaskLabel: async (taskId, labelId) => {
+    const { error } = await supabase
+      .from('task_labels')
+      .delete()
+      .eq('task_id', taskId)
+      .eq('label_id', labelId)
+
+    if (error) return { error }
+    set((state) => ({
+      labels: state.labels.filter((l) => l.id !== labelId),
+    }))
+    return {}
+  },
+
+  createLabel: async (projectId, name, color) => {
+    const { data, error } = await supabase
+      .from('labels')
+      .insert([{ project_id: projectId, name, color }])
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({
+      projectLabels: [...state.projectLabels, data],
+    }))
     return { data }
   },
 }))

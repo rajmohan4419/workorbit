@@ -124,6 +124,11 @@ export const useProjectStore = create((set, get) => ({
   },
 
   createInvite: async (projectId, email, role = 'member') => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.email === email) {
+      return { error: { message: 'You cannot invite yourself.' } }
+    }
+
     const { data, error } = await supabase
       .from('project_invites')
       .insert([{ project_id: projectId, email, role }])
@@ -157,7 +162,7 @@ export const useProjectStore = create((set, get) => ({
 
     const { error: memberError } = await supabase
       .from('project_members')
-      .insert([{ project_id: invite.project_id, user_id: userId }])
+      .upsert([{ project_id: invite.project_id, user_id: userId }], { onConflict: 'project_id, user_id' })
     
     if (memberError) return { error: memberError }
 
