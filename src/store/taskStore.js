@@ -28,6 +28,8 @@ export const useTaskStore = create((set, get) => ({
   comments: [],
   logs: [],
   subtasks: [],
+  attachments: [],
+  timeLogs: [],
   labels: [],
   projectLabels: [],
   loading: false,
@@ -39,6 +41,8 @@ export const useTaskStore = create((set, get) => ({
     comments: [],
     logs: [],
     subtasks: [],
+    attachments: [],
+    timeLogs: [],
     labels: [],
     projectLabels: [],
     loading: false,
@@ -54,7 +58,7 @@ export const useTaskStore = create((set, get) => ({
     set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
+      .select('*, profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true })
 
@@ -76,7 +80,7 @@ export const useTaskStore = create((set, get) => ({
     set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(name)')
+      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
       .eq('assigned_to', userId)
       .order('due_date', { ascending: true, nullsFirst: false })
 
@@ -93,7 +97,7 @@ export const useTaskStore = create((set, get) => ({
     set({ loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(name)')
+      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -286,6 +290,108 @@ export const useTaskStore = create((set, get) => ({
       subtasks: state.subtasks.filter((s) => s.id !== id),
     }))
     return {}
+  },
+
+  fetchAttachments: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_attachments')
+      .select('*')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: false })
+
+    if (error) return { error }
+    set({ attachments: data })
+    return { data }
+  },
+
+  uploadAttachment: async (taskId, file) => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${taskId}/${Math.random()}.${fileExt}`
+    const filePath = `${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('task-attachments')
+      .upload(filePath, file)
+
+    if (uploadError) return { error: uploadError }
+
+    const { data, error } = await supabase
+      .from('task_attachments')
+      .insert([{
+        task_id: taskId,
+        name: file.name,
+        file_path: filePath,
+        file_size: file.size,
+        content_type: file.type
+      }])
+      .select()
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ attachments: [data, ...state.attachments] }))
+    return { data }
+  },
+
+  deleteAttachment: async (id, filePath) => {
+    await supabase.storage.from('task-attachments').remove([filePath])
+    const { error } = await supabase.from('task_attachments').delete().eq('id', id)
+    if (error) return { error }
+    set((state) => ({
+      attachments: state.attachments.filter((a) => a.id !== id),
+    }))
+    return {}
+  },
+
+  fetchTimeLogs: async (taskId) => {
+    const { data, error } = await supabase
+      .from('time_logs')
+      .select('*, profiles(full_name)')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: false })
+
+    if (error) return { error }
+    set({ timeLogs: data })
+    return { data }
+  },
+
+  addTimeLog: async (taskId, durationSeconds, description) => {
+    const { data, error } = await supabase
+      .from('time_logs')
+      .insert([{ task_id: taskId, duration_seconds: durationSeconds, description }])
+      .select('*, profiles(full_name)')
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ timeLogs: [data, ...state.timeLogs] }))
+    return { data }
+  },
+
+  subscribeToProject: (projectId) => {
+    const channel = supabase
+      .channel(`project-updates-${projectId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tasks',
+        filter: `project_id=eq.${projectId}`
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          set((state) => ({ tasks: [...state.tasks, payload.new] }))
+        } else if (payload.eventType === 'UPDATE') {
+          set((state) => ({
+            tasks: state.tasks.map((t) => (t.id === payload.new.id ? payload.new : t)),
+          }))
+        } else if (payload.eventType === 'DELETE') {
+          set((state) => ({
+            tasks: state.tasks.filter((t) => t.id !== payload.old.id),
+          }))
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   },
 
   fetchProjectLabels: async (projectId) => {

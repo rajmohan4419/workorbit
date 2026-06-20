@@ -138,10 +138,14 @@ export default function TaskTable({ tasks, onTaskClick }) {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600">
-                      {task.assigned_to_profile?.full_name?.slice(0, 2).toUpperCase() || 'U'}
+                    <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 overflow-hidden">
+                      {task.profiles?.avatar_path ? (
+                        <img src={task.profiles.avatar_path} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        task.profiles?.full_name?.slice(0, 2).toUpperCase() || 'U'
+                      )}
                     </div>
-                    <span className="text-sm text-gray-600">{task.assigned_to_profile?.full_name || 'Unassigned'}</span>
+                    <span className="text-sm text-gray-600">{task.profiles?.full_name || 'Unassigned'}</span>
                   </div>
                 </td>
               </tr>

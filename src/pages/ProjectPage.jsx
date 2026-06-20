@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Users, LayoutDashboard, Trash2 } from 'lucide-react'
+import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
 import { useTaskStore } from '../store/taskStore'
@@ -8,6 +8,9 @@ import { canDeleteProject } from '../lib/permissions'
 import KanbanBoard from '../components/tasks/KanbanBoard'
 import TaskTable from '../components/tasks/TaskTable'
 import TaskModal from '../components/tasks/TaskModal'
+import ActivityFeed from '../components/tasks/ActivityFeed'
+import SprintBoard from '../components/tasks/SprintBoard'
+import TimelineView from '../components/tasks/TimelineView'
 import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
 
@@ -22,6 +25,7 @@ export default function ProjectPage() {
   const user = useAuthStore((state) => state.user)
   const tasks = useTaskStore((state) => state.tasks)
   const fetchTasks = useTaskStore((state) => state.fetchTasks)
+  const subscribeToProject = useTaskStore((state) => state.subscribeToProject)
   const resetTasks = useTaskStore((state) => state.reset)
   const loading = useTaskStore((state) => state.loading)
   const error = useTaskStore((state) => state.error)
@@ -30,9 +34,14 @@ export default function ProjectPage() {
     const project = projects.find((item) => item.id === id) ?? null
     setActiveProject(project)
 
-    if (id) fetchTasks(id)
-    else resetTasks()
-  }, [id, projects, setActiveProject, fetchTasks, resetTasks])
+    if (id) {
+      fetchTasks(id)
+      const unsubscribe = subscribeToProject(id)
+      return () => unsubscribe()
+    } else {
+      resetTasks()
+    }
+  }, [id, projects, setActiveProject, fetchTasks, resetTasks, subscribeToProject])
 
   const project = activeProject?.id === id ? activeProject : projects.find((p) => p.id === id)
 
@@ -72,7 +81,10 @@ export default function ProjectPage() {
           <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl">
             {[
               { id: 'board', label: 'Board', icon: LayoutDashboard },
-              { id: 'list', label: 'List', icon: LayoutDashboard }, // You might want a different icon for List
+              { id: 'list', label: 'List', icon: LayoutDashboard },
+              { id: 'timeline', label: 'Timeline', icon: Calendar },
+              { id: 'activity', label: 'Feed', icon: History },
+              { id: 'sprints', label: 'Sprints', icon: Zap },
               { id: 'members', label: 'Members', icon: Users },
             ].map((v) => (
               <button
@@ -98,6 +110,24 @@ export default function ProjectPage() {
         ) : view === 'list' ? (
           <div className="h-full overflow-y-auto">
             <TaskTable tasks={tasks} onTaskClick={setSelectedTask} />
+          </div>
+        ) : view === 'activity' ? (
+          <div className="max-w-2xl mx-auto h-full overflow-hidden flex flex-col bg-white rounded-2xl border border-gray-100 p-6">
+            <h2 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <History size={16} className="text-indigo-600" />
+              Project Activity
+            </h2>
+            <div className="flex-1 overflow-y-auto">
+              <ActivityFeed projectId={id} />
+            </div>
+          </div>
+        ) : view === 'sprints' ? (
+          <div className="max-w-4xl mx-auto h-full overflow-y-auto">
+            <SprintBoard projectId={id} />
+          </div>
+        ) : view === 'timeline' ? (
+          <div className="h-full overflow-hidden">
+            <TimelineView tasks={tasks} />
           </div>
         ) : (
           <>
