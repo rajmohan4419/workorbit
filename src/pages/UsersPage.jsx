@@ -1,28 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Users, Shield, User, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 export default function UsersPage() {
-  const [profiles, setProfiles] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [updating, setUpdating] = useState(null)
 
-  const fetchAllProfiles = useAuthStore((state) => state.fetchAllProfiles)
   const updateProfileRole = useAuthStore((state) => state.updateProfileRole)
   const currentProfile = useAuthStore((state) => state.profile)
-
-  useEffect(() => {
-    const loadProfiles = async () => {
-      setLoading(true)
-      const { data, error } = await fetchAllProfiles()
-      if (error) setError(error.message)
-      else setProfiles(data)
-      setLoading(false)
-    }
-
-    loadProfiles()
-  }, [fetchAllProfiles])
+  const profiles = useAuthStore((state) => state.profiles)
+  const loading = useAuthStore((state) => state.loading)
+  const error = useAuthStore((state) => state.error)
 
   const handleRoleChange = async (userId, newRole) => {
     setUpdating(userId)
@@ -31,12 +18,10 @@ export default function UsersPage() {
 
     if (error) {
       alert(error.message)
-    } else {
-      setProfiles(profiles.map(p => p.id === userId ? { ...p, role: newRole } : p))
     }
   }
 
-  if (loading) {
+  if (loading && profiles.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />

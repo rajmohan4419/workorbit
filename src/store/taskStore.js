@@ -188,31 +188,33 @@ export const useTaskStore = create((set, get) => ({
       return { error }
     }
 
-    // Optimistic update
+    // Optimistic update (Immediate UI feedback)
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t)),
       error: null,
     }))
 
-    const { data, error } = await supabase
+    // Background update (Non-blocking)
+    supabase
       .from('tasks')
       .update({ status: newStatus })
       .eq('id', id)
       .select()
       .single()
+      .then(({ data, error }) => {
+        if (error) {
+          // Rollback if request fails
+          set({ tasks: previousTasks, error: error.message })
+        } else {
+          // Sync with server data (handles database triggers, e.g. activity logs)
+          set((state) => ({
+            tasks: state.tasks.map((t) => (t.id === id ? data : t)),
+            error: null,
+          }))
+        }
+      })
 
-    if (error) {
-      // Rollback
-      set({ tasks: previousTasks, error: error.message })
-      return { error }
-    }
-
-    // Update with actual server data (in case of other changes like triggers)
-    set((state) => ({
-      tasks: state.tasks.map((t) => (t.id === id ? data : t)),
-      error: null,
-    }))
-    return { data }
+    return { data: { ...currentTask, status: newStatus } }
   },
 
   deleteTask: async (id) => {

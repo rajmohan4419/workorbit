@@ -56,7 +56,7 @@ export default function KanbanBoard({ projectId }) {
     useTaskStore.setState({ error: null })
   }
 
-  const handleDragEnd = async ({ source, destination, draggableId }) => {
+  const handleDragEnd = ({ source, destination, draggableId }) => {
     setDraggingStatus(null)
 
     if (!destination || destination.droppableId === source.droppableId) return
@@ -66,7 +66,7 @@ export default function KanbanBoard({ projectId }) {
       return
     }
 
-    await moveTask(draggableId, destination.droppableId)
+    moveTask(draggableId, destination.droppableId)
   }
 
   const canCreate = canCreateTask(profile?.role, user?.id, project?.owner_id)
