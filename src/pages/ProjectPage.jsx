@@ -1,12 +1,15 @@
-import { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, MoreHorizontal } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowLeft, Users, LayoutDashboard } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { useTaskStore } from '../store/taskStore'
 import KanbanBoard from '../components/tasks/KanbanBoard'
+import ProjectMembers from '../components/layout/ProjectMembers'
+import NotificationBell from '../components/layout/NotificationBell'
 
 export default function ProjectPage() {
   const { id } = useParams()
+  const [view, setView] = useState('board')
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const activeProject = useProjectStore((state) => state.activeProject)
@@ -39,24 +42,53 @@ export default function ProjectPage() {
             )}
           </div>
         </div>
-        <button className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-          <MoreHorizontal size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <div className="w-px h-6 bg-gray-100 mx-1" />
+          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl">
+            <button
+              onClick={() => setView('board')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                view === 'board' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <LayoutDashboard size={14} />
+              Board
+            </button>
+            <button
+              onClick={() => setView('members')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                view === 'members' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <Users size={14} />
+              Members
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden p-6">
-        {loading ? (
-          <div className="flex gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="w-72 h-48 bg-gray-50 rounded-2xl animate-pulse flex-shrink-0" />
-            ))}
-          </div>
-        ) : error ? (
-          <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
+        {view === 'members' ? (
+          <div className="max-w-3xl mx-auto">
+            <ProjectMembers projectId={id} />
           </div>
         ) : (
-          <KanbanBoard projectId={id} />
+          <>
+            {loading ? (
+              <div className="flex gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="w-72 h-48 bg-gray-50 rounded-2xl animate-pulse flex-shrink-0" />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </div>
+            ) : (
+              <KanbanBoard projectId={id} />
+            )}
+          </>
         )}
       </div>
     </div>

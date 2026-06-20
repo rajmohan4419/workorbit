@@ -20,11 +20,15 @@ export const canMoveToStatus = (from, to) => from === to || NEXT_STATUS[from] ==
 
 export const useTaskStore = create((set, get) => ({
   tasks: [],
+  comments: [],
+  logs: [],
   loading: false,
   error: null,
 
   reset: () => set({
     tasks: [],
+    comments: [],
+    logs: [],
     loading: false,
     error: null,
   }),
@@ -150,5 +154,48 @@ export const useTaskStore = create((set, get) => ({
     }))
 
     return {}
+  },
+
+  fetchComments: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_comments')
+      .select('*, profiles(full_name, avatar_path)')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: true })
+
+    if (error) return { error }
+    set({ comments: data })
+    return { data }
+  },
+
+  addComment: async (taskId, content) => {
+    const { data, error } = await supabase
+      .from('task_comments')
+      .insert([{ task_id: taskId, content }])
+      .select('*, profiles(full_name, avatar_path)')
+      .single()
+
+    if (error) return { error }
+    set((state) => ({ comments: [...state.comments, data] }))
+    return { data }
+  },
+
+  deleteComment: async (id) => {
+    const { error } = await supabase.from('task_comments').delete().eq('id', id)
+    if (error) return { error }
+    set((state) => ({ comments: state.comments.filter((c) => c.id !== id) }))
+    return {}
+  },
+
+  fetchLogs: async (taskId) => {
+    const { data, error } = await supabase
+      .from('task_logs')
+      .select('*, profiles(full_name)')
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: false })
+
+    if (error) return { error }
+    set({ logs: data })
+    return { data }
   },
 }))
