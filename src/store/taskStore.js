@@ -51,6 +51,28 @@ export const useTaskStore = create((set, get) => ({
     return { data }
   },
 
+  fetchAllUserTasks: async (userId) => {
+    if (!userId) {
+      set({ tasks: [], loading: false, error: null })
+      return { data: [] }
+    }
+
+    set({ loading: true, error: null })
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*, projects(name)')
+      .eq('assigned_to', userId)
+      .order('due_date', { ascending: true, nullsFirst: false })
+
+    if (error) {
+      set({ tasks: [], error: error.message, loading: false })
+      return { error }
+    }
+
+    set({ tasks: data, error: null, loading: false })
+    return { data }
+  },
+
   createTask: async ({ title, description, status, priority, due_date, project_id, assigned_to }) => {
     const { data, error } = await supabase
       .from('tasks')

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useTaskStore, STATUSES, STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
+import { canEditTaskMetadata } from '../../lib/permissions'
 
 function getInitialForm(task, defaultStatus, currentUserId) {
   return {
@@ -16,9 +17,11 @@ function getInitialForm(task, defaultStatus, currentUserId) {
 
 export default function TaskModal({ task = null, projectId = null, defaultStatus = 'todo', onClose }) {
   const currentUser = useAuthStore((state) => state.user)
+  const profile = useAuthStore((state) => state.profile)
   const createTask = useTaskStore((state) => state.createTask)
   const updateTask = useTaskStore((state) => state.updateTask)
   const isEditing = Boolean(task)
+  const canEditMetadata = canEditTaskMetadata(profile?.role)
   const [form, setForm] = useState(() => getInitialForm(task, defaultStatus, currentUser?.id))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -100,8 +103,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
             <label className="text-xs text-gray-400 font-medium block mb-1.5">Title *</label>
             <input
               value={form.title}
+              disabled={isEditing && !canEditMetadata}
               onChange={(e) => handleChange('title', e.target.value)}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
               placeholder="Task title"
             />
           </div>
@@ -110,10 +114,11 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
             <label className="text-xs text-gray-400 font-medium block mb-1.5">Description</label>
             <textarea
               value={form.description}
+              disabled={isEditing && !canEditMetadata}
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Add a description..."
               rows={4}
-              className="w-full text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none placeholder-gray-300"
+              className="w-full text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none placeholder-gray-300 disabled:bg-gray-50 disabled:text-gray-400"
             />
           </div>
 
@@ -137,8 +142,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
               <label className="text-xs text-gray-400 font-medium block mb-1.5">Priority</label>
               <select
                 value={form.priority}
+                disabled={isEditing && !canEditMetadata}
                 onChange={(e) => handleChange('priority', e.target.value)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:text-gray-500"
               >
                 {PRIORITIES.map((priority) => (
                   <option key={priority} value={priority}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</option>
@@ -151,8 +157,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
               <input
                 type="date"
                 value={form.due_date}
+                disabled={isEditing && !canEditMetadata}
                 onChange={(e) => handleChange('due_date', e.target.value)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
               />
             </div>
 
@@ -160,8 +167,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
               <label className="text-xs text-gray-400 font-medium block mb-1.5">Assignee</label>
               <select
                 value={form.assigned_to}
+                disabled={isEditing && !canEditMetadata}
                 onChange={(e) => handleChange('assigned_to', e.target.value)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:text-gray-500"
               >
                 <option value="">Unassigned</option>
                 {currentUser && (

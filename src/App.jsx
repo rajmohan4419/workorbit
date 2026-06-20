@@ -6,6 +6,7 @@ import { useTaskStore } from './store/taskStore'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
 import ProjectPage from './pages/ProjectPage'
+import MyTasksPage from './pages/MyTasksPage'
 import Sidebar from './components/layout/Sidebar'
 
 function AppShell() {
@@ -16,12 +17,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/project/:id" element={<ProjectPage />} />
-          <Route path="/my-tasks" element={
-            <div className="p-6">
-              <h1 className="text-xl font-semibold text-gray-900 mb-2">My tasks</h1>
-              <p className="text-gray-400 text-sm">Coming soon — tasks assigned to you across all projects.</p>
-            </div>
-          } />
+          <Route path="/my-tasks" element={<MyTasksPage />} />
           <Route path="/settings" element={
             <div className="p-6">
               <h1 className="text-xl font-semibold text-gray-900 mb-2">Settings</h1>

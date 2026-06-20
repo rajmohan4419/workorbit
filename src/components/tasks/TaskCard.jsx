@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Calendar, Trash2 } from 'lucide-react'
 import { useTaskStore } from '../../store/taskStore'
+import { useAuthStore } from '../../store/authStore'
+import { canDeleteTask } from '../../lib/permissions'
 
 const priorityStyles = {
   high: 'bg-red-50 text-red-700 border-red-100',
@@ -10,6 +12,7 @@ const priorityStyles = {
 
 export default function TaskCard({ task, onOpen }) {
   const deleteTask = useTaskStore((state) => state.deleteTask)
+  const profile = useAuthStore((state) => state.profile)
   const [deleting, setDeleting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -34,13 +37,15 @@ export default function TaskCard({ task, onOpen }) {
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <p className="text-sm font-medium text-gray-800 leading-snug flex-1">{task.title}</p>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all rounded"
-        >
-          <Trash2 size={13} />
-        </button>
+        {canDeleteTask(profile?.role) && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all rounded"
+          >
+            <Trash2 size={13} />
+          </button>
+        )}
       </div>
 
       {task.description && (
