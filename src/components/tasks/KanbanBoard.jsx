@@ -1,12 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
-import { Plus } from 'lucide-react'
+import { Plus, Sparkles } from 'lucide-react'
 import { useTaskStore, STATUSES, STATUS_LABELS, canMoveToStatus } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
 import { canCreateTask } from '../../lib/permissions'
 import TaskCard from './TaskCard'
 import TaskModal from './TaskModal'
+import AITaskModal from './AITaskModal'
+
+const [aiModalOpen, setAiModalOpen] = useState(false)
 
 const columnColors = {
   todo: 'bg-gray-50 border-gray-100',
@@ -85,6 +88,13 @@ export default function KanbanBoard({ projectId }) {
             <option key={sprint.id} value={sprint.id}>{sprint.name}</option>
           ))}
         </select>
+        <button
+          onClick={() => setAiModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors ml-auto"
+        >
+          <Sparkles size={13} />
+          AI breakdown
+        </button>
       </div>
 
       <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -184,6 +194,13 @@ export default function KanbanBoard({ projectId }) {
           projectId={projectId}
           defaultStatus={modalState.type === 'create' ? modalState.status : modalState.task.status}
           onClose={() => setModalState(null)}
+        />
+      )}
+
+      {aiModalOpen && (
+        <AITaskModal
+          projectId={projectId}
+          onClose={() => setAiModalOpen(false)}
         />
       )}
     </>
