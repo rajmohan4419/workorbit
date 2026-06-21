@@ -9,10 +9,10 @@ create extension if not exists "uuid-ossp";
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'app_role') then
-    create type app_role as enum ('admin', 'member', 'team_member');
+    create type app_role as enum ('admin', 'member', 'viewer');
   else
     alter type app_role add value if not exists 'member';
-    alter type app_role add value if not exists 'team_member';
+    alter type app_role add value if not exists 'viewer';
   end if;
 end
 $$;
@@ -82,7 +82,7 @@ $$;
 
 create table if not exists public.tasks (
   id          uuid primary key default uuid_generate_v4(),
-  project_id  uuid references public.projects(id) on delete cascade not null,
+  project_id  uuid not null,
   title       text not null,
   description text,
   status      task_status default 'todo',
@@ -90,12 +90,24 @@ create table if not exists public.tasks (
   due_date    date,
   assigned_to uuid,
   created_by  uuid default auth.uid(),
+  sprint_id   uuid,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now(),
 
+  constraint tasks_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade,
   constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null,
   constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null
 );
+
+-- Ensure explicit foreign key constraints exist for relationship detection
+alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
+alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null;
+
+alter table public.tasks drop constraint if exists tasks_created_by_fkey;
+alter table public.tasks add constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null;
+
+alter table public.tasks drop constraint if exists tasks_project_id_fkey;
+alter table public.tasks add constraint tasks_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade;
 
 create table if not exists public.project_members (
   id          uuid primary key default uuid_generate_v4(),
@@ -121,7 +133,7 @@ set search_path = public
 as $$
   select coalesce(
     (select role from public.profiles where id = auth.uid()),
-    'team_member'::app_role
+    'member'::app_role
   );
 $$;
 
@@ -183,7 +195,7 @@ security definer
 set search_path = public
 as $$
   select
-    public.current_app_role() = 'team_member'::app_role
+    public.current_app_role() = 'member'::app_role
     and public.can_access_project(new_project_id)
     and exists (
       select 1
@@ -216,7 +228,7 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
     case
-      when exists (select 1 from public.profiles) then 'team_member'::app_role
+      when exists (select 1 from public.profiles) then 'member'::app_role
       else 'admin'::app_role
     end
   )
@@ -246,7 +258,7 @@ select
   case
     when ordered_users.row_num = 1 and not exists (select 1 from public.profiles)
       then 'admin'::app_role
-    else 'team_member'::app_role
+    else 'member'::app_role
   end
 from ordered_users
 on conflict (id) do nothing;
@@ -292,7 +304,7 @@ drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (
-    public.current_app_role() in ('admin'::app_role, 'team_member'::app_role)
+    public.current_app_role() in ('admin'::app_role, 'member'::app_role)
     and auth.uid() = owner_id
   );
 
@@ -344,7 +356,7 @@ drop policy if exists "Members can update tasks" on public.tasks;
 create policy "Members can update tasks"
   on public.tasks for update
   using (
-    public.current_app_role() = 'team_member'::app_role
+    public.current_app_role() = 'member'::app_role
     and public.can_access_project(project_id)
   )
   with check (
@@ -623,13 +635,17 @@ create policy "Admins and owners can manage sprints"
   using (public.can_manage_project(project_id));
 
 -- Add sprint_id to tasks
+-- Ensure sprint_id exists and has a named foreign key
 do $$
 begin
   if not exists (select 1 from information_schema.columns where table_name='tasks' and column_name='sprint_id') then
-    alter table public.tasks add column sprint_id uuid references public.sprints(id) on delete set null;
+    alter table public.tasks add column sprint_id uuid;
   end if;
 end
 $$;
+
+alter table public.tasks drop constraint if exists tasks_sprint_id_fkey;
+alter table public.tasks add constraint tasks_sprint_id_fkey foreign key (sprint_id) references public.sprints(id) on delete set null;
 
 -- ─────────────────────────────────────────────
 -- ATTACHMENTS
