@@ -15,6 +15,9 @@ function getInitialForm(task, defaultStatus, currentUserId) {
     due_date: task?.due_date?.slice(0, 10) ?? '',
     assigned_to: task?.assigned_to ?? currentUserId ?? '',
     sprint_id: task?.sprint_id ?? '',
+    story_points: task?.story_points ?? '',
+    estimate_hours: task?.estimate_hours ?? '',
+    is_blocked: task?.is_blocked ?? false,
   }
 }
 
@@ -188,6 +191,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
       due_date: form.due_date || null,
       assigned_to: form.assigned_to || null,
       sprint_id: form.sprint_id || null,
+      story_points: form.story_points ? parseInt(form.story_points) : null,
+      estimate_hours: form.estimate_hours ? parseFloat(form.estimate_hours) : null,
+      is_blocked: form.is_blocked,
     }
 
     const result = isEditing
@@ -414,6 +420,44 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 font-medium block mb-1.5">Story Points</label>
+              <input
+                type="number"
+                value={form.story_points}
+                disabled={isEditing && !canEditMetadata}
+                onChange={(e) => handleChange('story_points', e.target.value)}
+                placeholder="e.g. 5"
+                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 font-medium block mb-1.5">Estimate Hours</label>
+              <input
+                type="number"
+                step="0.5"
+                value={form.estimate_hours}
+                disabled={isEditing && !canEditMetadata}
+                onChange={(e) => handleChange('estimate_hours', e.target.value)}
+                placeholder="e.g. 8"
+                className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
+
+            <div className="lg:col-span-1 flex items-end pb-1.5">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={form.is_blocked}
+                  disabled={isEditing && !canEditMetadata}
+                  onChange={(e) => handleChange('is_blocked', e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                />
+                <span className="text-xs font-medium text-gray-700 group-hover:text-red-600 transition-colors">Blocked?</span>
+              </label>
             </div>
           </div>
 

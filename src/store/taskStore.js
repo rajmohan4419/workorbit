@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { taskService } from '../lib/services/taskService'
 
 export const STATUSES = ['todo', 'in_progress', 'in_review', 'done']
 export const STATUS_LABELS = {
@@ -56,18 +57,7 @@ export const useTaskStore = create((set, get) => ({
     }
 
     set({ tasks: [], loading: true, error: null })
-    const { data, error } = await supabase
-      .from('tasks')
-      .select(`
-        *,
-        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
-        task_subtasks(id, is_completed),
-        task_comments(count),
-        task_attachments(count),
-        task_labels(labels(*))
-      `)
-      .eq('project_id', projectId)
-      .order('created_at', { ascending: true })
+    const { data, error } = await taskService.fetchTasks(projectId)
 
     if (error) {
       set({ tasks: [], error: error.message, loading: false })
@@ -85,19 +75,7 @@ export const useTaskStore = create((set, get) => ({
     }
 
     set({ tasks: [], loading: true, error: null })
-    const { data, error } = await supabase
-      .from('tasks')
-      .select(`
-        *,
-        projects(name),
-        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
-        task_subtasks(id, is_completed),
-        task_comments(count),
-        task_attachments(count),
-        task_labels(labels(*))
-      `)
-      .eq('assigned_to', userId)
-      .order('due_date', { ascending: true, nullsFirst: false })
+    const { data, error } = await taskService.fetchAllUserTasks(userId)
 
     if (error) {
       set({ tasks: [], error: error.message, loading: false })
@@ -110,18 +88,7 @@ export const useTaskStore = create((set, get) => ({
 
   fetchGlobalTasks: async () => {
     set({ loading: true, error: null })
-    const { data, error } = await supabase
-      .from('tasks')
-      .select(`
-        *,
-        projects(name),
-        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
-        task_subtasks(id, is_completed),
-        task_comments(count),
-        task_attachments(count),
-        task_labels(labels(*))
-      `)
-      .order('created_at', { ascending: false })
+    const { data, error } = await taskService.fetchGlobalTasks()
 
     if (error) {
       set({ error: error.message, loading: false })
@@ -140,12 +107,8 @@ export const useTaskStore = create((set, get) => ({
     return count
   },
 
-  createTask: async ({ title, description, status, priority, due_date, project_id, assigned_to }) => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([{ title, description, status: status, priority: priority || 'medium', due_date, project_id, assigned_to }])
-      .select()
-      .single()
+  createTask: async (taskData) => {
+    const { data, error } = await taskService.createTask(taskData)
 
     if (error) {
       set({ error: error.message })
@@ -157,12 +120,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   updateTask: async (id, updates) => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    const { data, error } = await taskService.updateTask(id, updates)
 
     if (error) {
       set({ error: error.message })
@@ -195,12 +153,7 @@ export const useTaskStore = create((set, get) => ({
     }))
 
     // Background update (Non-blocking)
-    supabase
-      .from('tasks')
-      .update({ status: newStatus })
-      .eq('id', id)
-      .select()
-      .single()
+    taskService.updateTask(id, { status: newStatus })
       .then(({ data, error }) => {
         if (error) {
           // Rollback if request fails
@@ -218,7 +171,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   deleteTask: async (id) => {
-    const { error } = await supabase.from('tasks').delete().eq('id', id)
+    const { error } = await taskService.deleteTask(id)
     if (error) {
       set({ error: error.message })
       return { error }
@@ -234,11 +187,7 @@ export const useTaskStore = create((set, get) => ({
 
   fetchComments: async (taskId) => {
     set({ comments: [] })
-    const { data, error } = await supabase
-      .from('task_comments')
-      .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: true })
+    const { data, error } = await taskService.fetchComments(taskId)
 
     if (error) return { error }
     set({ comments: data })
@@ -246,11 +195,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   addComment: async (taskId, content) => {
-    const { data, error } = await supabase
-      .from('task_comments')
-      .insert([{ task_id: taskId, content }])
-      .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
-      .single()
+    const { data, error } = await taskService.addComment(taskId, content)
 
     if (error) return { error }
     set((state) => ({ comments: [...state.comments, data] }))
@@ -258,7 +203,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   deleteComment: async (id) => {
-    const { error } = await supabase.from('task_comments').delete().eq('id', id)
+    const { error } = await taskService.deleteComment(id)
     if (error) return { error }
     set((state) => ({ comments: state.comments.filter((c) => c.id !== id) }))
     return {}
@@ -266,11 +211,7 @@ export const useTaskStore = create((set, get) => ({
 
   fetchLogs: async (taskId) => {
     set({ logs: [] })
-    const { data, error } = await supabase
-      .from('task_logs')
-      .select('*, profiles!task_logs_user_id_fkey(full_name)')
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: false })
+    const { data, error } = await taskService.fetchLogs(taskId)
 
     if (error) return { error }
     set({ logs: data })
@@ -278,11 +219,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchSubtasks: async (taskId) => {
-    const { data, error } = await supabase
-      .from('task_subtasks')
-      .select('*')
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: true })
+    const { data, error } = await taskService.fetchSubtasks(taskId)
 
     if (error) return { error }
     set({ subtasks: data })
@@ -290,11 +227,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   addSubtask: async (taskId, title) => {
-    const { data, error } = await supabase
-      .from('task_subtasks')
-      .insert([{ task_id: taskId, title }])
-      .select()
-      .single()
+    const { data, error } = await taskService.addSubtask(taskId, title)
 
     if (error) return { error }
     set((state) => ({ subtasks: [...state.subtasks, data] }))
@@ -302,12 +235,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   toggleSubtask: async (id, isCompleted) => {
-    const { data, error } = await supabase
-      .from('task_subtasks')
-      .update({ is_completed: isCompleted })
-      .eq('id', id)
-      .select()
-      .single()
+    const { data, error } = await taskService.updateSubtask(id, { is_completed: isCompleted })
 
     if (error) return { error }
     set((state) => ({
@@ -317,7 +245,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   deleteSubtask: async (id) => {
-    const { error } = await supabase.from('task_subtasks').delete().eq('id', id)
+    const { error } = await taskService.deleteSubtask(id)
     if (error) return { error }
     set((state) => ({
       subtasks: state.subtasks.filter((s) => s.id !== id),
@@ -326,11 +254,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchAttachments: async (taskId) => {
-    const { data, error } = await supabase
-      .from('task_attachments')
-      .select('*')
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: false })
+    const { data, error } = await taskService.fetchAttachments(taskId)
 
     if (error) return { error }
     set({ attachments: data })
@@ -348,17 +272,13 @@ export const useTaskStore = create((set, get) => ({
 
     if (uploadError) return { error: uploadError }
 
-    const { data, error } = await supabase
-      .from('task_attachments')
-      .insert([{
-        task_id: taskId,
-        name: file.name,
-        file_path: filePath,
-        file_size: file.size,
-        content_type: file.type
-      }])
-      .select()
-      .single()
+    const { data, error } = await taskService.addAttachment({
+      task_id: taskId,
+      name: file.name,
+      file_path: filePath,
+      file_size: file.size,
+      content_type: file.type
+    })
 
     if (error) return { error }
     set((state) => ({ attachments: [data, ...state.attachments] }))
@@ -367,7 +287,7 @@ export const useTaskStore = create((set, get) => ({
 
   deleteAttachment: async (id, filePath) => {
     await supabase.storage.from('task-attachments').remove([filePath])
-    const { error } = await supabase.from('task_attachments').delete().eq('id', id)
+    const { error } = await taskService.deleteAttachment(id)
     if (error) return { error }
     set((state) => ({
       attachments: state.attachments.filter((a) => a.id !== id),
@@ -376,11 +296,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchTimeLogs: async (taskId) => {
-    const { data, error } = await supabase
-      .from('time_logs')
-      .select('*, profiles!time_logs_user_id_fkey(full_name)')
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: false })
+    const { data, error } = await taskService.fetchTimeLogs(taskId)
 
     if (error) return { error }
     set({ timeLogs: data })
@@ -388,11 +304,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   addTimeLog: async (taskId, durationSeconds, description) => {
-    const { data, error } = await supabase
-      .from('time_logs')
-      .insert([{ task_id: taskId, duration_seconds: durationSeconds, description }])
-      .select('*, profiles!time_logs_user_id_fkey(full_name)')
-      .single()
+    const { data, error } = await taskService.addTimeLog(taskId, durationSeconds, description)
 
     if (error) return { error }
     set((state) => ({ timeLogs: [data, ...state.timeLogs] }))
@@ -447,10 +359,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchProjectLabels: async (projectId) => {
-    const { data, error } = await supabase
-      .from('labels')
-      .select('*')
-      .eq('project_id', projectId)
+    const { data, error } = await taskService.fetchProjectLabels(projectId)
 
     if (error) return { error }
     set({ projectLabels: data })
@@ -458,10 +367,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchTaskLabels: async (taskId) => {
-    const { data, error } = await supabase
-      .from('task_labels')
-      .select('*, labels(*)')
-      .eq('task_id', taskId)
+    const { data, error } = await taskService.fetchTaskLabels(taskId)
 
     if (error) return { error }
     const labels = data.map((tl) => tl.labels)
@@ -470,9 +376,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   addTaskLabel: async (taskId, labelId) => {
-    const { error } = await supabase
-      .from('task_labels')
-      .insert([{ task_id: taskId, label_id: labelId }])
+    const { error } = await taskService.addTaskLabel(taskId, labelId)
 
     if (error) return { error }
     // Refresh task labels
@@ -480,11 +384,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   removeTaskLabel: async (taskId, labelId) => {
-    const { error } = await supabase
-      .from('task_labels')
-      .delete()
-      .eq('task_id', taskId)
-      .eq('label_id', labelId)
+    const { error } = await taskService.removeTaskLabel(taskId, labelId)
 
     if (error) return { error }
     set((state) => ({
@@ -494,11 +394,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   createLabel: async (projectId, name, color) => {
-    const { data, error } = await supabase
-      .from('labels')
-      .insert([{ project_id: projectId, name, color }])
-      .select()
-      .single()
+    const { data, error } = await taskService.createLabel(projectId, name, color)
 
     if (error) return { error }
     set((state) => ({

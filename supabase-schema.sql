@@ -50,8 +50,10 @@ create table if not exists public.workspaces (
   name        text not null,
   slug        text not null unique,
   owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  workspace_plan text not null default 'free',
   created_at  timestamptz default now(),
-  updated_at  timestamptz default now()
+  updated_at  timestamptz default now(),
+  check (workspace_plan in ('free', 'pro', 'business', 'enterprise'))
 );
 
 create table if not exists public.workspace_members (
@@ -82,7 +84,7 @@ create table if not exists public.projects (
   name        text not null,
   description text,
   owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
-  workspace_id uuid references public.workspaces(id) on delete cascade,
+  workspace_id uuid references public.workspaces(id) on delete cascade not null,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -132,6 +134,9 @@ create table if not exists public.tasks (
   assigned_to uuid,
   created_by  uuid default auth.uid(),
   sprint_id   uuid,
+  story_points integer,
+  estimate_hours numeric,
+  is_blocked  boolean default false,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now(),
 
@@ -143,6 +148,41 @@ create table if not exists public.tasks (
 -- Ensure explicit foreign key constraints exist for relationship detection
 -- Ensure the workspace_id column exists
 alter table public.projects add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+
+-- Add workspace_plan for existing databases
+alter table public.workspaces add column if not exists workspace_plan text not null default 'free' check (workspace_plan in ('free', 'pro', 'business', 'enterprise'));
+
+-- Constraints for Workspace Ownership (Ensuring unique owner in workspace_members if they are added there)
+-- The owner is already uniquely defined in workspaces.owner_id.
+-- In workspace_members, we should ensure only one user has the 'owner' role per workspace if we use that table for roles.
+
+create or replace function public.check_workspace_owner_role()
+returns trigger as $$
+begin
+  if (new.role = 'owner') then
+    if exists (
+      select 1 from public.workspace_members
+      where workspace_id = new.workspace_id and role = 'owner' and id != new.id
+    ) or exists (
+      select 1 from public.workspaces
+      where id = new.workspace_id and owner_id != new.user_id
+    ) then
+      raise exception 'A workspace can only have one owner.';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists tr_check_workspace_owner_role on public.workspace_members;
+create trigger tr_check_workspace_owner_role
+  before insert or update on public.workspace_members
+  for each row execute procedure public.check_workspace_owner_role();
+
+-- Add new task fields for existing databases
+alter table public.tasks add column if not exists story_points integer;
+alter table public.tasks add column if not exists estimate_hours numeric;
+alter table public.tasks add column if not exists is_blocked boolean default false;
 
 -- Ensure explicit foreign key constraints exist for relationship detection (critical for PostgREST)
 alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
@@ -358,14 +398,23 @@ begin
   for prof in select * from public.profiles loop
     if not exists (select 1 from public.workspaces where owner_id = prof.id) then
       insert into public.workspaces (name, slug, owner_id)
-      values (prof.full_name || '''s Workspace', lower(replace(prof.full_name, ' ', '-')) || '-' || left(prof.id::text, 4), prof.id)
+      values (coalesce(prof.full_name, 'User') || '''s Workspace', lower(replace(coalesce(prof.full_name, 'user'), ' ', '-')) || '-' || left(prof.id::text, 4), prof.id)
+      on conflict (slug) do nothing
       returning id into new_ws_id;
 
+      if (new_ws_id is not null) then
+        update public.projects set workspace_id = new_ws_id where owner_id = prof.id and workspace_id is null;
+      end if;
+    else
+      select id into new_ws_id from public.workspaces where owner_id = prof.id limit 1;
       update public.projects set workspace_id = new_ws_id where owner_id = prof.id and workspace_id is null;
     end if;
   end loop;
 end
 $$;
+
+-- Apply NOT NULL constraint after migration
+alter table public.projects alter column workspace_id set not null;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
@@ -572,6 +621,36 @@ drop policy if exists "Users can delete tasks in their projects" on public.tasks
 create policy "Users can delete tasks in their projects"
   on public.tasks for delete
   using (public.can_manage_project(project_id));
+
+-- ─────────────────────────────────────────────
+-- TASK DEPENDENCIES
+-- ─────────────────────────────────────────────
+create table if not exists public.task_dependencies (
+  id              uuid primary key default uuid_generate_v4(),
+  task_id         uuid references public.tasks(id) on delete cascade not null,
+  depends_on_id   uuid references public.tasks(id) on delete cascade not null,
+  created_at      timestamptz default now(),
+  unique (task_id, depends_on_id),
+  check (task_id != depends_on_id)
+);
+
+alter table public.task_dependencies enable row level security;
+
+create policy "Users can view task dependencies"
+  on public.task_dependencies for select
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_dependencies.task_id
+      and public.can_access_project(tasks.project_id)
+  ));
+
+create policy "Users can manage task dependencies"
+  on public.task_dependencies for all
+  using (exists (
+    select 1 from public.tasks
+    where tasks.id = task_dependencies.task_id
+      and public.can_manage_project(tasks.project_id)
+  ));
 
 -- ─────────────────────────────────────────────
 -- INDEXES for performance
@@ -824,7 +903,8 @@ create table if not exists public.sprints (
   goal        text,
   status      text default 'planned', -- planned, active, completed
   created_at  timestamptz default now(),
-  updated_at  timestamptz default now()
+  updated_at  timestamptz default now(),
+  check (status in ('backlog', 'planned', 'active', 'completed'))
 );
 
 drop trigger if exists sprints_updated_at on public.sprints;
@@ -844,6 +924,9 @@ create policy "Admins and owners can manage sprints"
 
 -- Add sprint_id to tasks
 -- Ensure sprint_id exists and has a named foreign key
+alter table public.sprints drop constraint if exists sprints_status_check;
+alter table public.sprints add constraint sprints_status_check check (status in ('backlog', 'planned', 'active', 'completed'));
+
 do $$
 begin
   if not exists (select 1 from information_schema.columns where table_name='tasks' and column_name='sprint_id') then
