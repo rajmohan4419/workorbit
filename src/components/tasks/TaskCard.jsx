@@ -209,11 +209,26 @@ export default function TaskCard({ task, onOpen }) {
       <div className="flex items-center justify-between gap-2">
         {taskSubtasks.length > 0 ? (
           <div className="flex-1 flex items-center gap-2">
-            <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 transition-all duration-500"
-                style={{ width: `${(taskSubtasks.filter(s => s.is_completed).length / taskSubtasks.length) * 100}%` }}
-              />
+            <div className="relative w-4 h-4">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="8" cy="8" r="7"
+                  fill="transparent"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-gray-100"
+                />
+                <circle
+                  cx="8" cy="8" r="7"
+                  fill="transparent"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeDasharray={44}
+                  strokeDashoffset={44 - (44 * (taskSubtasks.filter(s => s.is_completed).length / taskSubtasks.length))}
+                  className="text-emerald-500 transition-all duration-500"
+                  strokeLinecap="round"
+                />
+              </svg>
             </div>
             <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
               {taskSubtasks.filter(s => s.is_completed).length}/{taskSubtasks.length}

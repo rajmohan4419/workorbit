@@ -284,7 +284,7 @@ drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (
-    public.current_app_role() = 'admin'::app_role
+    (public.current_app_role() = 'admin'::app_role or public.current_app_role() = 'member'::app_role)
     and auth.uid() = owner_id
   );
 

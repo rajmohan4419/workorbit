@@ -94,14 +94,14 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchGlobalTasks: async () => {
-    set({ loading: true, error: null })
+    set({ searchResults: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
       .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
       .order('created_at', { ascending: false })
 
     if (error) {
-      set({ error: error.message, loading: false })
+      set({ searchResults: [], error: error.message, loading: false })
       return { error }
     }
 
@@ -245,6 +245,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchSubtasks: async (taskId) => {
+    set({ subtasks: [] })
     const { data, error } = await supabase
       .from('task_subtasks')
       .select('*')
@@ -293,6 +294,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchAttachments: async (taskId) => {
+    set({ attachments: [] })
     const { data, error } = await supabase
       .from('task_attachments')
       .select('*')
@@ -343,6 +345,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   fetchTimeLogs: async (taskId) => {
+    set({ timeLogs: [] })
     const { data, error } = await supabase
       .from('time_logs')
       .select('*, profiles(full_name)')

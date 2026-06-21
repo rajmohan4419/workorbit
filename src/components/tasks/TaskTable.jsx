@@ -1,10 +1,39 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Calendar, ArrowUpDown } from 'lucide-react'
 import { STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
 
+import { supabase } from '../../lib/supabase'
+
 export default function TaskTable({ tasks, onTaskClick }) {
   const [sortConfig, setSortConfig] = useState({ key: 'due_date', direction: 'asc' })
-  const [filters, setFilters] = useState({ status: '', priority: '' })
+  const [filters, setFilters] = useState({ status: '', priority: '', label: '' })
+  const [taskLabelsMap, setTaskLabelsMap] = useState({})
+  const [allLabels, setAllLabels] = useState([])
+
+  useEffect(() => {
+    const fetchLabels = async () => {
+      const taskIds = tasks.map(t => t.id)
+      if (taskIds.length === 0) return
+
+      const { data: tlData } = await supabase
+        .from('task_labels')
+        .select('task_id, labels(*)')
+        .in('task_id', taskIds)
+
+      if (tlData) {
+        const map = {}
+        const labelsSet = new Map()
+        tlData.forEach(item => {
+          if (!map[item.task_id]) map[item.task_id] = []
+          map[item.task_id].push(item.labels)
+          labelsSet.set(item.labels.id, item.labels)
+        })
+        setTaskLabelsMap(map)
+        setAllLabels(Array.from(labelsSet.values()))
+      }
+    }
+    fetchLabels()
+  }, [tasks])
 
   const sortedAndFilteredTasks = useMemo(() => {
     let result = [...tasks]
@@ -14,6 +43,12 @@ export default function TaskTable({ tasks, onTaskClick }) {
     }
     if (filters.priority) {
       result = result.filter(t => t.priority === filters.priority)
+    }
+    if (filters.label) {
+      result = result.filter(t => {
+        const labels = taskLabelsMap[t.id] || []
+        return labels.some(l => l.id === filters.label)
+      })
     }
 
     result.sort((a, b) => {
@@ -30,7 +65,7 @@ export default function TaskTable({ tasks, onTaskClick }) {
     })
 
     return result
-  }, [tasks, sortConfig, filters])
+  }, [tasks, sortConfig, filters, taskLabelsMap])
 
   const requestSort = (key) => {
     let direction = 'asc'
@@ -75,6 +110,21 @@ export default function TaskTable({ tasks, onTaskClick }) {
                     <option value="">All</option>
                     {Object.entries(STATUS_LABELS).map(([val, label]) => (
                       <option key={val} value={val}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+              </th>
+              <th className="px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Label</span>
+                  <select
+                    value={filters.label}
+                    onChange={(e) => setFilters({ ...filters, label: e.target.value })}
+                    className="text-[10px] bg-transparent border-none focus:ring-0 text-gray-400 cursor-pointer"
+                  >
+                    <option value="">All</option>
+                    {allLabels.map(l => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
                     ))}
                   </select>
                 </div>
@@ -129,6 +179,18 @@ export default function TaskTable({ tasks, onTaskClick }) {
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
                     {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                   </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1">
+                    {(taskLabelsMap[task.id] || []).map(label => (
+                      <span
+                        key={label.id}
+                        className="w-3 h-3 rounded-full shadow-sm"
+                        style={{ backgroundColor: label.color }}
+                        title={label.name}
+                      />
+                    ))}
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
