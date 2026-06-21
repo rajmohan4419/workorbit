@@ -284,7 +284,7 @@ drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (
-    public.current_app_role() = 'admin'::app_role
+    (public.current_app_role() = 'admin'::app_role or public.current_app_role() = 'member'::app_role)
     and auth.uid() = owner_id
   );
 
@@ -305,10 +305,11 @@ create policy "Users can view project members for accessible projects"
   using (public.can_access_project(project_id));
 
 drop policy if exists "Admins can manage project members" on public.project_members;
-create policy "Admins can manage project members"
+drop policy if exists "Admins and owners can manage project members" on public.project_members;
+create policy "Admins and owners can manage project members"
   on public.project_members for all
-  using (public.current_app_role() = 'admin'::app_role)
-  with check (public.current_app_role() = 'admin'::app_role);
+  using (public.can_manage_project(project_id))
+  with check (public.can_manage_project(project_id));
 
 -- Tasks: accessible to project owner
 alter table public.tasks enable row level security;
