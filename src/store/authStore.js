@@ -92,6 +92,30 @@ export const useAuthStore = create((set) => ({
     return { data }
   },
 
+  updateProfile: async (updates) => {
+    const userId = (await supabase.auth.getUser()).data.user?.id
+    if (!userId) return { error: { message: 'Not authenticated' } }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single()
+
+    if (error) {
+      set({ error: error.message })
+      return { error }
+    }
+
+    set((state) => ({
+      profile: data,
+      profiles: state.profiles.map((p) => (p.id === userId ? data : p)),
+      error: null,
+    }))
+    return { data }
+  },
+
   signOut: async () => {
     const { error } = await supabase.auth.signOut()
     if (error) return { error }
