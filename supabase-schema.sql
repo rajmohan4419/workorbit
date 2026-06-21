@@ -9,10 +9,10 @@ create extension if not exists "uuid-ossp";
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'app_role') then
-    create type app_role as enum ('admin', 'member', 'viewer');
+    create type app_role as enum ('admin', 'member', 'team_member');
   else
     alter type app_role add value if not exists 'member';
-    alter type app_role add value if not exists 'viewer';
+    alter type app_role add value if not exists 'team_member';
   end if;
 end
 $$;
@@ -121,7 +121,7 @@ set search_path = public
 as $$
   select coalesce(
     (select role from public.profiles where id = auth.uid()),
-    'member'::app_role
+    'team_member'::app_role
   );
 $$;
 
@@ -183,7 +183,7 @@ security definer
 set search_path = public
 as $$
   select
-    public.current_app_role() = 'member'::app_role
+    public.current_app_role() = 'team_member'::app_role
     and public.can_access_project(new_project_id)
     and exists (
       select 1
@@ -216,7 +216,7 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
     case
-      when exists (select 1 from public.profiles) then 'member'::app_role
+      when exists (select 1 from public.profiles) then 'team_member'::app_role
       else 'admin'::app_role
     end
   )
@@ -246,7 +246,7 @@ select
   case
     when ordered_users.row_num = 1 and not exists (select 1 from public.profiles)
       then 'admin'::app_role
-    else 'member'::app_role
+    else 'team_member'::app_role
   end
 from ordered_users
 on conflict (id) do nothing;
@@ -292,7 +292,7 @@ drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (
-    public.current_app_role() in ('admin'::app_role, 'member'::app_role)
+    public.current_app_role() in ('admin'::app_role, 'team_member'::app_role)
     and auth.uid() = owner_id
   );
 
@@ -344,7 +344,7 @@ drop policy if exists "Members can update tasks" on public.tasks;
 create policy "Members can update tasks"
   on public.tasks for update
   using (
-    public.current_app_role() = 'member'::app_role
+    public.current_app_role() = 'team_member'::app_role
     and public.can_access_project(project_id)
   )
   with check (
