@@ -14,7 +14,7 @@ export default function UpcomingFeaturesPage() {
         <div className="flex gap-6 items-center">
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900">Pricing</Link>
-          <Link to="/upcoming" className="text-sm font-medium text-indigo-600">What's Next</Link>
+          <Link to="/upcoming-features" className="text-sm font-medium text-indigo-600">What's Next</Link>
           <a href="https://app.orbitboard.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
         </div>
       </nav>
