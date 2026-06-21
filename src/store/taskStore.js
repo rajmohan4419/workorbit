@@ -236,7 +236,7 @@ export const useTaskStore = create((set, get) => ({
     set({ comments: [] })
     const { data, error } = await supabase
       .from('task_comments')
-      .select('*, profiles(full_name, avatar_path)')
+      .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
       .eq('task_id', taskId)
       .order('created_at', { ascending: true })
 
@@ -249,7 +249,7 @@ export const useTaskStore = create((set, get) => ({
     const { data, error } = await supabase
       .from('task_comments')
       .insert([{ task_id: taskId, content }])
-      .select('*, profiles(full_name, avatar_path)')
+      .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
       .single()
 
     if (error) return { error }
@@ -268,7 +268,7 @@ export const useTaskStore = create((set, get) => ({
     set({ logs: [] })
     const { data, error } = await supabase
       .from('task_logs')
-      .select('*, profiles(full_name)')
+      .select('*, profiles!task_logs_user_id_fkey(full_name)')
       .eq('task_id', taskId)
       .order('created_at', { ascending: false })
 
@@ -378,7 +378,7 @@ export const useTaskStore = create((set, get) => ({
   fetchTimeLogs: async (taskId) => {
     const { data, error } = await supabase
       .from('time_logs')
-      .select('*, profiles(full_name)')
+      .select('*, profiles!time_logs_user_id_fkey(full_name)')
       .eq('task_id', taskId)
       .order('created_at', { ascending: false })
 
@@ -391,7 +391,7 @@ export const useTaskStore = create((set, get) => ({
     const { data, error } = await supabase
       .from('time_logs')
       .insert([{ task_id: taskId, duration_seconds: durationSeconds, description }])
-      .select('*, profiles(full_name)')
+      .select('*, profiles!time_logs_user_id_fkey(full_name)')
       .single()
 
     if (error) return { error }

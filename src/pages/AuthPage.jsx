@@ -9,9 +9,9 @@ export default function AuthPage() {
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm font-bold">P</span>
+              <span className="text-white text-sm font-bold">O</span>
             </div>
-            <span className="text-xl font-semibold text-gray-900">ProjectFlow</span>
+            <span className="text-xl font-semibold text-gray-900">OrbitBoard</span>
           </div>
           <p className="text-gray-500 text-sm">Manage your work, your way</p>
         </div>
@@ -24,8 +24,8 @@ export default function AuthPage() {
               variables: {
                 default: {
                   colors: {
-                    brand: '#4f46e5',
-                    brandAccent: '#4338ca',
+                    brand: '#4F46E5',
+                    brandAccent: '#4338CA',
                   },
                   borderWidths: { buttonBorderWidth: '1px', inputBorderWidth: '1px' },
                   radii: { borderRadiusButton: '8px', inputBorderRadius: '8px' },
@@ -33,7 +33,7 @@ export default function AuthPage() {
               },
             }}
             providers={['google', 'github']}
-            redirectTo={window.location.origin}
+            redirectTo={`${window.location.origin}/`}
           />
         </div>
       </div>

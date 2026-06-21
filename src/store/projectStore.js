@@ -109,7 +109,7 @@ export const useProjectStore = create((set, get) => ({
   fetchMembers: async (projectId) => {
     const { data, error } = await supabase
       .from('project_members')
-      .select('*, profiles(*)')
+      .select('*, profiles!project_members_user_id_fkey(*)')
       .eq('project_id', projectId)
 
     if (error) return { error }

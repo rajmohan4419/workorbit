@@ -88,18 +88,23 @@ create table if not exists public.tasks (
   status      task_status default 'todo',
   priority    task_priority default 'medium',
   due_date    date,
-  assigned_to uuid references public.profiles(id) on delete set null,
-  created_by  uuid references public.profiles(id) default auth.uid(),
+  assigned_to uuid,
+  created_by  uuid default auth.uid(),
   created_at  timestamptz default now(),
-  updated_at  timestamptz default now()
+  updated_at  timestamptz default now(),
+
+  constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null,
+  constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null
 );
 
 create table if not exists public.project_members (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete cascade not null,
+  user_id     uuid not null,
   created_at  timestamptz default now(),
-  unique (project_id, user_id)
+  unique (project_id, user_id),
+
+  constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
 drop trigger if exists tasks_updated_at on public.tasks;
@@ -374,9 +379,11 @@ create index if not exists project_members_user_id_idx on public.project_members
 create table if not exists public.task_comments (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  user_id     uuid default auth.uid(),
   content     text not null,
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+
+  constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
 alter table public.task_comments enable row level security;
@@ -407,11 +414,13 @@ create policy "Users can delete their own comments"
 create table if not exists public.task_logs (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete set null,
+  user_id     uuid,
   type        text not null,
   old_value   text,
   new_value   text,
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+
+  constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null
 );
 
 alter table public.task_logs enable row level security;
@@ -663,11 +672,13 @@ create policy "Users can delete their own attachments"
 create table if not exists public.time_logs (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  user_id     uuid default auth.uid(),
   duration_seconds integer not null,
   description text,
   logged_at   date default current_date,
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+
+  constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
 alter table public.time_logs enable row level security;
