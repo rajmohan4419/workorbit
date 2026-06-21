@@ -9,9 +9,9 @@ create extension if not exists "uuid-ossp";
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'app_role') then
-    create type app_role as enum ('admin', 'member', 'team_member');
+    create type app_role as enum ('admin', 'manager', 'team_member');
   else
-    alter type app_role add value if not exists 'member';
+    alter type app_role add value if not exists 'manager';
     alter type app_role add value if not exists 'team_member';
   end if;
 end
@@ -25,7 +25,7 @@ create table if not exists public.profiles (
   full_name   text,
   phone       text,
   avatar_path text,
-  role        app_role not null default 'member',
+  role        app_role not null default 'team_member',
   onboarding_completed boolean default false,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
@@ -138,7 +138,7 @@ as $$
     where project.id = target_project_id
       and (
         project.owner_id = auth.uid()
-        or public.current_app_role() = 'admin'::app_role
+        or public.current_app_role() in ('admin'::app_role, 'manager'::app_role)
         or exists (
           select 1
           from public.project_members member
@@ -162,7 +162,7 @@ as $$
     where project.id = target_project_id
       and (
         project.owner_id = auth.uid()
-        or public.current_app_role() = 'admin'::app_role
+        or public.current_app_role() in ('admin'::app_role, 'manager'::app_role)
       )
   );
 $$;
@@ -292,7 +292,7 @@ drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (
-    public.current_app_role() in ('admin'::app_role, 'team_member'::app_role)
+    public.current_app_role() in ('admin'::app_role, 'manager'::app_role, 'team_member'::app_role)
     and auth.uid() = owner_id
   );
 
@@ -344,7 +344,7 @@ drop policy if exists "Members can update tasks" on public.tasks;
 create policy "Members can update tasks"
   on public.tasks for update
   using (
-    public.current_app_role() = 'team_member'::app_role
+    public.current_app_role() in ('team_member'::app_role, 'manager'::app_role)
     and public.can_access_project(project_id)
   )
   with check (
@@ -472,7 +472,7 @@ create table if not exists public.project_invites (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
   email       text not null,
-  role        app_role not null default 'member',
+  role        app_role not null default 'team_member',
   invited_by  uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   status      text default 'pending',
   created_at  timestamptz default now(),
