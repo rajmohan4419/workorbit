@@ -31,6 +31,9 @@ create table if not exists public.profiles (
   updated_at  timestamptz default now()
 );
 
+-- Ensure the column exists for existing databases
+alter table public.profiles add column if not exists onboarding_completed boolean default false;
+
 -- ─────────────────────────────────────────────
 -- PROJECTS
 -- ─────────────────────────────────────────────
