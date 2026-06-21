@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Calendar, Trash2, Edit2, Check, X, MessageSquare, Paperclip } from 'lucide-react'
+import { Calendar, Trash2, Edit2, Check, X, MessageSquare, Paperclip, AlertCircle } from 'lucide-react'
 import { useTaskStore } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
@@ -82,6 +82,11 @@ export default function TaskCard({ task, onOpen }) {
       className="group bg-white border border-gray-100 rounded-xl p-3.5 cursor-pointer hover:border-indigo-200 hover:shadow-sm transition-all"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
+        {task.is_blocked && (
+          <div className="flex-shrink-0 mt-0.5" title="Task is blocked">
+            <AlertCircle size={14} className="text-red-500" />
+          </div>
+        )}
         {isEditing ? (
           <div className="flex-1 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
             <input

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { workspaceService } from '../lib/services/workspaceService'
 
 export const useWorkspaceStore = create((set, get) => ({
   workspaces: [],
@@ -20,10 +21,7 @@ export const useWorkspaceStore = create((set, get) => ({
 
   fetchWorkspaces: async () => {
     set({ loading: true, error: null })
-    const { data, error } = await supabase
-      .from('workspaces')
-      .select('*')
-      .order('created_at', { ascending: false })
+    const { data, error } = await workspaceService.fetchWorkspaces()
 
     if (error) {
       set({ workspaces: [], activeWorkspace: null, error: error.message, loading: false })
@@ -57,32 +55,11 @@ export const useWorkspaceStore = create((set, get) => ({
 
   setActiveWorkspaceBySlug: async (slug) => {
     set({ loading: true })
-    const { data, error } = await supabase
-      .from('workspaces')
-      .select('*')
-      .eq('slug', slug)
-      .single()
+    const { data, error } = await workspaceService.getWorkspaceBySlug(slug)
 
     if (error) {
       set({ loading: false, error: error.message })
       return { error }
-    }
-
-    // Double check membership via another query if needed,
-    // but RLS should already handle this.
-    // However, the user wants a verification step.
-    const { data: member, error: memberError } = await supabase
-      .from('workspace_members')
-      .select('role')
-      .eq('workspace_id', data.id)
-      .eq('user_id', (await supabase.auth.getUser()).data.user.id)
-      .maybeSingle()
-
-    const isOwner = data.owner_id === (await supabase.auth.getUser()).data.user.id
-
-    if (!member && !isOwner) {
-      set({ loading: false, error: 'Access Denied' })
-      return { error: { message: 'Access Denied', status: 403 } }
     }
 
     set({ activeWorkspace: data, loading: false })
@@ -95,11 +72,7 @@ export const useWorkspaceStore = create((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: { message: 'Not authenticated' } }
 
-    const { data, error } = await supabase
-      .from('workspaces')
-      .insert([{ name, slug, owner_id: user.id }])
-      .select()
-      .single()
+    const { data, error } = await workspaceService.createWorkspace({ name, slug, owner_id: user.id })
 
     if (error) {
       set({ error: error.message })
@@ -116,55 +89,16 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   fetchWorkspaceMembers: async (workspaceId) => {
-    // 1. Fetch workspace to get owner_id
-    const { data: workspace, error: wsError } = await supabase
-      .from('workspaces')
-      .select('owner_id')
-      .eq('id', workspaceId)
-      .single()
+    const { data: members, error } = await workspaceService.fetchMembers(workspaceId)
 
-    if (wsError) return { error: wsError }
-
-    // 2. Fetch members
-    const { data: members, error: membersError } = await supabase
-      .from('workspace_members')
-      .select('*, profiles!workspace_members_user_id_fkey(*)')
-      .eq('workspace_id', workspaceId)
-
-    if (membersError) return { error: membersError }
-
-    // 3. Check if owner is already in members (they might be)
-    const isOwnerInMembers = members.some(m => m.user_id === workspace.owner_id)
-
-    if (!isOwnerInMembers) {
-      // Fetch owner profile
-      const { data: ownerProfile, error: ownerError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', workspace.owner_id)
-        .single()
-
-      if (!ownerError && ownerProfile) {
-        members.push({
-          workspace_id: workspaceId,
-          user_id: workspace.owner_id,
-          role: 'owner',
-          profiles: ownerProfile
-        })
-      }
-    }
+    if (error) return { error }
 
     set({ members })
     return { data: members }
   },
 
-  updateWorkspace: async (workspaceId, { name, slug }) => {
-    const { data, error } = await supabase
-      .from('workspaces')
-      .update({ name, slug })
-      .eq('id', workspaceId)
-      .select()
-      .single()
+  updateWorkspace: async (workspaceId, updates) => {
+    const { data, error } = await workspaceService.updateWorkspace(workspaceId, updates)
 
     if (error) return { error }
     set((state) => ({
@@ -175,10 +109,7 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   deleteWorkspace: async (workspaceId) => {
-    const { error } = await supabase
-      .from('workspaces')
-      .delete()
-      .eq('id', workspaceId)
+    const { error } = await workspaceService.deleteWorkspace(workspaceId)
 
     if (error) return { error }
     set((state) => ({
@@ -189,11 +120,7 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   updateMemberRole: async (workspaceId, userId, role) => {
-    const { error } = await supabase
-      .from('workspace_members')
-      .update({ role })
-      .eq('workspace_id', workspaceId)
-      .eq('user_id', userId)
+    const { error } = await workspaceService.updateMemberRole(workspaceId, userId, role)
 
     if (error) return { error }
     set((state) => ({
@@ -203,11 +130,7 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   removeMember: async (workspaceId, userId) => {
-    const { error } = await supabase
-      .from('workspace_members')
-      .delete()
-      .eq('workspace_id', workspaceId)
-      .eq('user_id', userId)
+    const { error } = await workspaceService.removeMember(workspaceId, userId)
 
     if (error) return { error }
     set((state) => ({
@@ -217,12 +140,7 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   transferOwnership: async (workspaceId, newOwnerId) => {
-    // This usually requires a specialized function or a transaction
-    // For now, we update the workspaces table
-    const { error } = await supabase
-      .from('workspaces')
-      .update({ owner_id: newOwnerId })
-      .eq('id', workspaceId)
+    const { error } = await workspaceService.transferOwnership(workspaceId, newOwnerId)
 
     if (error) return { error }
 
@@ -236,10 +154,7 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   fetchWorkspaceInvites: async (workspaceId) => {
-    const { data, error } = await supabase
-      .from('workspace_invites')
-      .select('*')
-      .eq('workspace_id', workspaceId)
+    const { data, error } = await workspaceService.fetchInvites(workspaceId)
 
     if (error) return { error }
     set({ invites: data })
@@ -247,11 +162,7 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   createWorkspaceInvite: async (workspaceId, email, role = 'member') => {
-    const { data, error } = await supabase
-      .from('workspace_invites')
-      .insert([{ workspace_id: workspaceId, email, role }])
-      .select()
-      .single()
+    const { data, error } = await workspaceService.createInvite(workspaceId, email, role)
 
     if (error) return { error }
     set((state) => ({ invites: [data, ...state.invites] }))
@@ -259,31 +170,16 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   deleteWorkspaceInvite: async (id) => {
-    const { error } = await supabase.from('workspace_invites').delete().eq('id', id)
+    const { error } = await workspaceService.deleteInvite(id)
     if (error) return { error }
     set((state) => ({ invites: state.invites.filter((i) => i.id !== id) }))
     return {}
   },
 
   acceptWorkspaceInvite: async (inviteId) => {
-    const { data: invite, error: fetchError } = await supabase
-      .from('workspace_invites')
-      .select('*')
-      .eq('id', inviteId)
-      .single()
-
-    if (fetchError) return { error: fetchError }
-
     const userId = (await supabase.auth.getUser()).data.user.id
+    const result = await workspaceService.acceptInvite(inviteId, userId)
 
-    const { error: memberError } = await supabase
-      .from('workspace_members')
-      .upsert([{ workspace_id: invite.workspace_id, user_id: userId, role: invite.role }], { onConflict: 'workspace_id, user_id' })
-
-    if (memberError) return { error: memberError }
-
-    await supabase.from('workspace_invites').delete().eq('id', inviteId)
-
-    return { workspaceId: invite.workspace_id }
+    return result
   },
 }))

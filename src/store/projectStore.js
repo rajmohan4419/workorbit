@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { projectService } from '../lib/services/projectService'
+import { sprintService } from '../lib/services/sprintService'
 
 export const useProjectStore = create((set, get) => ({
   projects: [],
@@ -26,11 +28,7 @@ export const useProjectStore = create((set, get) => ({
       return { data: [] }
     }
     set({ loading: true, error: null })
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .order('created_at', { ascending: false })
+    const { data, error } = await projectService.fetchProjects(workspaceId)
 
     if (error) {
       set({ projects: [], activeProject: null, error: error.message, loading: false })
@@ -55,11 +53,7 @@ export const useProjectStore = create((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: { message: 'Not authenticated' } }
 
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([{ name, description, owner_id: user.id, workspace_id: workspaceId }])
-      .select()
-      .single()
+    const { data, error } = await projectService.createProject({ name, description, owner_id: user.id, workspace_id: workspaceId })
 
     if (error) {
       set({ error: error.message })
@@ -76,12 +70,7 @@ export const useProjectStore = create((set, get) => ({
   },
 
   updateProject: async (id, updates) => {
-    const { data, error } = await supabase
-      .from('projects')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    const { data, error } = await projectService.updateProject(id, updates)
 
     if (error) {
       set({ error: error.message })
@@ -97,7 +86,7 @@ export const useProjectStore = create((set, get) => ({
   },
 
   deleteProject: async (id) => {
-    const { error } = await supabase.from('projects').delete().eq('id', id)
+    const { error } = await projectService.deleteProject(id)
     if (error) {
       set({ error: error.message })
       return { error }
@@ -112,10 +101,7 @@ export const useProjectStore = create((set, get) => ({
   },
 
   fetchMembers: async (projectId) => {
-    const { data, error } = await supabase
-      .from('project_members')
-      .select('*, profiles!project_members_user_id_fkey(*)')
-      .eq('project_id', projectId)
+    const { data, error } = await projectService.fetchMembers(projectId)
 
     if (error) return { error }
     set({ members: data })
@@ -123,10 +109,7 @@ export const useProjectStore = create((set, get) => ({
   },
 
   fetchInvites: async (projectId) => {
-    const { data, error } = await supabase
-      .from('project_invites')
-      .select('*')
-      .eq('project_id', projectId)
+    const { data, error } = await projectService.fetchInvites(projectId)
 
     if (error) return { error }
     set({ invites: data })
@@ -134,11 +117,7 @@ export const useProjectStore = create((set, get) => ({
   },
 
   fetchSprints: async (projectId) => {
-    const { data, error } = await supabase
-      .from('sprints')
-      .select('*')
-      .eq('project_id', projectId)
-      .order('start_date', { ascending: false })
+    const { data, error } = await sprintService.fetchSprints(projectId)
 
     if (error) return { error }
     set({ sprints: data })
@@ -151,11 +130,7 @@ export const useProjectStore = create((set, get) => ({
       return { error: { message: 'You cannot invite yourself.' } }
     }
 
-    const { data, error } = await supabase
-      .from('project_invites')
-      .insert([{ project_id: projectId, email, role }])
-      .select()
-      .single()
+    const { data, error } = await projectService.createInvite(projectId, email, role)
 
     if (error) return { error }
     set((state) => ({ invites: [data, ...state.invites] }))
@@ -163,33 +138,16 @@ export const useProjectStore = create((set, get) => ({
   },
 
   deleteInvite: async (id) => {
-    const { error } = await supabase.from('project_invites').delete().eq('id', id)
+    const { error } = await projectService.deleteInvite(id)
     if (error) return { error }
     set((state) => ({ invites: state.invites.filter((i) => i.id !== id) }))
     return {}
   },
 
   acceptInvite: async (inviteId) => {
-    // In a real app, this would involve a more complex flow (edge function or similar)
-    // For now, we'll simulate it by adding the user to project_members and deleting the invite
-    const { data: invite, error: fetchError } = await supabase
-      .from('project_invites')
-      .select('*')
-      .eq('id', inviteId)
-      .single()
-    
-    if (fetchError) return { error: fetchError }
-
     const userId = (await supabase.auth.getUser()).data.user.id
-
-    const { error: memberError } = await supabase
-      .from('project_members')
-      .upsert([{ project_id: invite.project_id, user_id: userId }], { onConflict: 'project_id, user_id' })
+    const result = await projectService.acceptInvite(inviteId, userId)
     
-    if (memberError) return { error: memberError }
-
-    await supabase.from('project_invites').delete().eq('id', inviteId)
-    
-    return { projectId: invite.project_id }
+    return result
   },
 }))
