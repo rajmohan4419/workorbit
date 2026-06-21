@@ -100,6 +100,7 @@ create table if not exists public.tasks (
 );
 
 -- Ensure explicit foreign key constraints exist for relationship detection
+-- Ensure explicit foreign key constraints exist for relationship detection (critical for PostgREST)
 alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
 alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null;
 
@@ -118,6 +119,10 @@ create table if not exists public.project_members (
 
   constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
+
+-- Ensure explicit foreign key constraints exist for relationship detection
+alter table public.project_members drop constraint if exists project_members_user_id_fkey;
+alter table public.project_members add constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
 drop trigger if exists tasks_updated_at on public.tasks;
 create trigger tasks_updated_at
@@ -398,6 +403,10 @@ create table if not exists public.task_comments (
   constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
+-- Ensure explicit foreign key constraints exist for relationship detection
+alter table public.task_comments drop constraint if exists task_comments_user_id_fkey;
+alter table public.task_comments add constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
 
 alter table public.task_comments enable row level security;
 
@@ -435,6 +444,10 @@ create table if not exists public.task_logs (
 
   constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null
 );
+
+-- Ensure explicit foreign key constraints exist for relationship detection
+alter table public.task_logs drop constraint if exists task_logs_user_id_fkey;
+alter table public.task_logs add constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null;
 
 alter table public.task_logs enable row level security;
 
@@ -492,6 +505,9 @@ create table if not exists public.project_invites (
   unique (project_id, email)
 );
 
+-- Ensure the role column exists for existing databases
+alter table public.project_invites add column if not exists role app_role not null default 'member';
+
 create or replace function public.check_self_invite()
 returns trigger as $$
 begin
@@ -514,7 +530,7 @@ alter table public.project_invites enable row level security;
 
 create policy "Users can view invites for projects they manage"
   on public.project_invites for select
-  using (public.can_manage_project(project_id) or email = (select email from auth.users where id = auth.uid()));
+  using (public.can_manage_project(project_id) or email = (auth.jwt() ->> 'email'));
 
 create policy "Admins and owners can create invites"
   on public.project_invites for insert
@@ -697,6 +713,10 @@ create table if not exists public.time_logs (
 
   constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
+
+-- Ensure explicit foreign key constraints exist for relationship detection
+alter table public.time_logs drop constraint if exists time_logs_user_id_fkey;
+alter table public.time_logs add constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
 alter table public.time_logs enable row level security;
 
