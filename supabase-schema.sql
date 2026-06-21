@@ -386,6 +386,7 @@ create table if not exists public.task_comments (
   constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
+
 alter table public.task_comments enable row level security;
 
 create policy "Users can view comments for tasks they can access"
