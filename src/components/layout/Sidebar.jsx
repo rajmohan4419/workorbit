@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, Users } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
@@ -13,6 +13,7 @@ const navItems = [
 ]
 
 export default function Sidebar() {
+  const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
@@ -88,18 +89,46 @@ export default function Sidebar() {
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
             <div className="mb-6 px-3">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Workspace</label>
-              <select
-                value={activeWorkspace?.id || ''}
-                onChange={(e) => {
-                  const ws = workspaces.find(w => w.id === e.target.value)
-                  if (ws) setActiveWorkspace(ws)
-                }}
-                className="w-full text-xs bg-gray-50 border border-gray-100 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {workspaces.map(ws => (
-                  <option key={ws.id} value={ws.id}>{ws.name}</option>
-                ))}
-              </select>
+              <div className="relative group">
+                <button
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl hover:border-indigo-200 transition-all group"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-5 h-5 bg-indigo-600 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                      {activeWorkspace?.name?.charAt(0).toUpperCase() || 'O'}
+                    </div>
+                    <span className="text-xs font-bold text-gray-700 truncate">{activeWorkspace?.name || 'Select Workspace'}</span>
+                  </div>
+                  <ChevronDown size={14} className="text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                </button>
+
+                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden z-50 opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible transition-all">
+                  <div className="max-h-48 overflow-y-auto py-1">
+                    {workspaces.map(ws => (
+                      <button
+                        key={ws.id}
+                        onClick={() => {
+                          setActiveWorkspace(ws)
+                          navigate(`/w/${ws.slug}`)
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${activeWorkspace?.id === ws.id ? 'text-indigo-600 font-bold bg-indigo-50/30' : 'text-gray-600'}`}
+                      >
+                        <span className="truncate">{ws.name}</span>
+                        {activeWorkspace?.id === ws.id && <div className="w-1 h-1 rounded-full bg-indigo-600" />}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-50 p-1">
+                    <Link
+                      to="/"
+                      className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    >
+                      <Plus size={12} />
+                      Switch Workspace
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {navItems.map(({ icon: Icon, label, to }) => {

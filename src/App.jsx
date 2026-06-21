@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate, Outlet, redirect } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useProjectStore } from './store/projectStore'
 import { useTaskStore } from './store/taskStore'
@@ -13,6 +13,9 @@ import UpcomingFeaturesPage from './pages/marketing/UpcomingFeaturesPage'
 import ProjectPage from './pages/ProjectPage'
 import MyTasksPage from './pages/MyTasksPage'
 import UsersPage from './pages/UsersPage'
+import WorkspaceSelectPage from './pages/WorkspaceSelectPage'
+import SettingsPage from './pages/SettingsPage'
+import ForbiddenPage from './pages/ForbiddenPage'
 import Sidebar from './components/layout/Sidebar'
 import SearchModal from './components/tasks/SearchModal'
 
@@ -50,21 +53,24 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <DashboardPage />,
-        loader: async () => {
-          await useTaskStore.getState().fetchGlobalTasks()
-          return null
-        }
+        element: <WorkspaceSelectPage />,
       },
       {
         path: 'w/:workspaceSlug',
         loader: async ({ params }) => {
           const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceSlug)
+          if (workspace.error) {
+            if (workspace.error.status === 403) {
+               throw new Response("Forbidden", { status: 403 });
+            }
+            return redirect('/')
+          }
           if (workspace.data) {
             await useProjectStore.getState().fetchProjects(workspace.data.id)
           }
           return null
         },
+        errorElement: <ForbiddenPage />,
         children: [
           {
             index: true,
@@ -77,7 +83,11 @@ const router = createBrowserRouter([
               await useTaskStore.getState().fetchTasks(params.id)
               return null
             }
-          }
+          },
+          {
+            path: 'settings',
+            element: <SettingsPage />
+          },
         ]
       },
       {
@@ -98,15 +108,6 @@ const router = createBrowserRouter([
           await useAuthStore.getState().fetchAllProfiles()
           return null
         }
-      },
-      {
-        path: 'settings',
-        element: (
-          <div className="p-6">
-            <h1 className="text-xl font-semibold text-gray-900 mb-2">Settings</h1>
-            <p className="text-gray-400 text-sm">Workspace settings coming soon.</p>
-          </div>
-        )
       },
       {
         path: '*',
@@ -131,8 +132,12 @@ const router = createBrowserRouter([
     element: <ContactPage />
   },
   {
-    path: '/upcoming',
+    path: '/upcoming-features',
     element: <UpcomingFeaturesPage />
+  },
+  {
+    path: '/forbidden',
+    element: <ForbiddenPage />
   }
 ])
 
