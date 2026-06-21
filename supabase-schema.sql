@@ -9,10 +9,10 @@ create extension if not exists "uuid-ossp";
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'app_role') then
-    create type app_role as enum ('admin', 'member', 'viewer');
+    create type app_role as enum ('admin', 'member', 'team_member');
   else
     alter type app_role add value if not exists 'member';
-    alter type app_role add value if not exists 'viewer';
+    alter type app_role add value if not exists 'team_member';
   end if;
 end
 $$;
@@ -30,6 +30,9 @@ create table if not exists public.profiles (
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
+
+-- Ensure the column exists for existing databases
+alter table public.profiles add column if not exists onboarding_completed boolean default false;
 
 -- ─────────────────────────────────────────────
 -- PROJECTS
@@ -85,18 +88,23 @@ create table if not exists public.tasks (
   status      task_status default 'todo',
   priority    task_priority default 'medium',
   due_date    date,
-  assigned_to uuid references public.profiles(id) on delete set null,
-  created_by  uuid references public.profiles(id) default auth.uid(),
+  assigned_to uuid,
+  created_by  uuid default auth.uid(),
   created_at  timestamptz default now(),
-  updated_at  timestamptz default now()
+  updated_at  timestamptz default now(),
+
+  constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null,
+  constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null
 );
 
 create table if not exists public.project_members (
   id          uuid primary key default uuid_generate_v4(),
   project_id  uuid references public.projects(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete cascade not null,
+  user_id     uuid not null,
   created_at  timestamptz default now(),
-  unique (project_id, user_id)
+  unique (project_id, user_id),
+
+  constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
 drop trigger if exists tasks_updated_at on public.tasks;
@@ -113,7 +121,7 @@ set search_path = public
 as $$
   select coalesce(
     (select role from public.profiles where id = auth.uid()),
-    'member'::app_role
+    'team_member'::app_role
   );
 $$;
 
@@ -175,7 +183,7 @@ security definer
 set search_path = public
 as $$
   select
-    public.current_app_role() = 'member'::app_role
+    public.current_app_role() = 'team_member'::app_role
     and public.can_access_project(new_project_id)
     and exists (
       select 1
@@ -208,7 +216,7 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
     case
-      when exists (select 1 from public.profiles) then 'member'::app_role
+      when exists (select 1 from public.profiles) then 'team_member'::app_role
       else 'admin'::app_role
     end
   )
@@ -238,7 +246,7 @@ select
   case
     when ordered_users.row_num = 1 and not exists (select 1 from public.profiles)
       then 'admin'::app_role
-    else 'member'::app_role
+    else 'team_member'::app_role
   end
 from ordered_users
 on conflict (id) do nothing;
@@ -284,7 +292,7 @@ drop policy if exists "Users can create projects" on public.projects;
 create policy "Users can create projects"
   on public.projects for insert
   with check (
-    (public.current_app_role() = 'admin'::app_role or public.current_app_role() = 'member'::app_role)
+    public.current_app_role() in ('admin'::app_role, 'team_member'::app_role)
     and auth.uid() = owner_id
   );
 
@@ -337,7 +345,7 @@ drop policy if exists "Members can update tasks" on public.tasks;
 create policy "Members can update tasks"
   on public.tasks for update
   using (
-    public.current_app_role() = 'member'::app_role
+    public.current_app_role() = 'team_member'::app_role
     and public.can_access_project(project_id)
   )
   with check (
@@ -372,10 +380,13 @@ create index if not exists project_members_user_id_idx on public.project_members
 create table if not exists public.task_comments (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  user_id     uuid default auth.uid(),
   content     text not null,
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+
+  constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
+
 
 alter table public.task_comments enable row level security;
 
@@ -405,11 +416,13 @@ create policy "Users can delete their own comments"
 create table if not exists public.task_logs (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete set null,
+  user_id     uuid,
   type        text not null,
   old_value   text,
   new_value   text,
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+
+  constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null
 );
 
 alter table public.task_logs enable row level security;
@@ -573,6 +586,11 @@ create policy "Users can manage task labels"
     select 1 from public.tasks
     where tasks.id = task_labels.task_id
       and public.can_access_project(tasks.project_id)
+  ))
+  with check (exists (
+    select 1 from public.tasks
+    where tasks.id = task_labels.task_id
+      and public.can_access_project(tasks.project_id)
   ));
 
 -- ─────────────────────────────────────────────
@@ -586,8 +604,14 @@ create table if not exists public.sprints (
   end_date    date not null,
   goal        text,
   status      text default 'planned', -- planned, active, completed
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
 );
+
+drop trigger if exists sprints_updated_at on public.sprints;
+create trigger sprints_updated_at
+  before update on public.sprints
+  for each row execute procedure public.handle_updated_at();
 
 alter table public.sprints enable row level security;
 
@@ -650,11 +674,13 @@ create policy "Users can delete their own attachments"
 create table if not exists public.time_logs (
   id          uuid primary key default uuid_generate_v4(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  user_id     uuid default auth.uid(),
   duration_seconds integer not null,
   description text,
   logged_at   date default current_date,
-  created_at  timestamptz default now()
+  created_at  timestamptz default now(),
+
+  constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
 );
 
 alter table public.time_logs enable row level security;
@@ -674,6 +700,10 @@ create policy "Users can log time"
     where tasks.id = time_logs.task_id
       and public.can_access_project(tasks.project_id)
   ));
+
+create policy "Users can delete their own time logs"
+  on public.time_logs for delete
+  using (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────
 -- NOTIFICATIONS

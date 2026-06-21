@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FolderOpen, AlertCircle, ArrowRight, Activity, TrendingUp, Heart } from 'lucide-react'
+import { FolderOpen, AlertCircle, ArrowRight, TrendingUp, Heart } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
-import { useTaskStore } from '../store/taskStore'
 import OnboardingChecklist from '../components/dashboard/OnboardingChecklist'
 import ActivityFeed from '../components/tasks/ActivityFeed'
 
@@ -12,28 +12,42 @@ export default function DashboardPage() {
   const loading = useProjectStore((state) => state.loading)
   const error = useProjectStore((state) => state.error)
   const user = useAuthStore((state) => state.user)
-  const searchResults = useTaskStore((state) => state.searchResults)
-  const fetchGlobalTasks = useTaskStore((state) => state.fetchGlobalTasks)
-
-  useEffect(() => {
-    fetchGlobalTasks()
-  }, [fetchGlobalTasks])
-
   const firstName = user?.email?.split('@')[0] || 'there'
 
-  const overdueTasks = searchResults.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done').length
+  const [overdueCount, setOverdueCount] = useState(0)
+  const [completedCount, setCompletedCount] = useState(0)
+  const [teamHealth, setTeamHealth] = useState(100)
 
-  const completedThisWeek = searchResults.filter(t => {
-    if (t.status !== 'done' || !t.updated_at) return false
-    const date = new Date(t.updated_at)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    return diff < 7 * 24 * 60 * 60 * 1000
-  }).length
+  useEffect(() => {
+    const fetchStats = async () => {
+      const now = new Date().toISOString()
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const teamHealth = searchResults.length === 0 ? 100 : Math.round(
-    (searchResults.filter(t => t.status === 'done' || !t.due_date || new Date(t.due_date) > new Date()).length / searchResults.length) * 100
-  )
+      const [overdue, completed, totalTasks, doneTasks, noDueTasks, futureDueTasks] = await Promise.all([
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).lt('due_date', now).neq('status', 'done'),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'done').gte('updated_at', oneWeekAgo),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'done'),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).is('due_date', null).neq('status', 'done'),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).gt('due_date', now).neq('status', 'done')
+      ])
+
+      if (overdue.count !== null) setOverdueCount(overdue.count)
+      if (completed.count !== null) setCompletedCount(completed.count)
+
+      const total = totalTasks.count || 0
+      if (total === 0) {
+        setTeamHealth(100)
+      } else {
+        const healthy = (doneTasks.count || 0) + (noDueTasks.count || 0) + (futureDueTasks.count || 0)
+        setTeamHealth(Math.round((healthy / total) * 100))
+      }
+    }
+    fetchStats()
+  }, [])
+
+  const overdueTasks = overdueCount
+  const completedThisWeek = completedCount
 
   return (
     <div className="p-6 max-w-5xl">
@@ -122,14 +136,7 @@ export default function DashboardPage() {
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Quick Activity</h2>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm min-h-[300px]">
-            {projects.length > 0 ? (
-              <ActivityFeed projectId={projects[0].id} />
-            ) : (
-              <div className="text-center py-12 text-gray-300">
-                <Activity size={32} className="mx-auto mb-2 opacity-20" />
-                <p className="text-xs">No activity to show</p>
-              </div>
-            )}
+            <ActivityFeed projectId={projects[0]?.id} />
           </div>
         </div>
       </div>

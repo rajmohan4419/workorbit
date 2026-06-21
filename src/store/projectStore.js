@@ -5,6 +5,7 @@ export const useProjectStore = create((set, get) => ({
   projects: [],
   members: [],
   invites: [],
+  sprints: [],
   activeProject: null,
   loading: false,
   error: null,
@@ -13,6 +14,7 @@ export const useProjectStore = create((set, get) => ({
     projects: [],
     members: [],
     invites: [],
+    sprints: [],
     activeProject: null,
     loading: false,
     error: null,
@@ -45,9 +47,12 @@ export const useProjectStore = create((set, get) => ({
   setActiveProject: (project) => set({ activeProject: project }),
 
   createProject: async ({ name, description }) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: { message: 'Not authenticated' } }
+
     const { data, error } = await supabase
       .from('projects')
-      .insert([{ name, description }])
+      .insert([{ name, description, owner_id: user.id }])
       .select()
       .single()
 
@@ -104,7 +109,7 @@ export const useProjectStore = create((set, get) => ({
   fetchMembers: async (projectId) => {
     const { data, error } = await supabase
       .from('project_members')
-      .select('*, profiles(*)')
+      .select('*, profiles!project_members_user_id_fkey(*)')
       .eq('project_id', projectId)
 
     if (error) return { error }
@@ -120,6 +125,18 @@ export const useProjectStore = create((set, get) => ({
 
     if (error) return { error }
     set({ invites: data })
+    return { data }
+  },
+
+  fetchSprints: async (projectId) => {
+    const { data, error } = await supabase
+      .from('sprints')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('start_date', { ascending: false })
+
+    if (error) return { error }
+    set({ sprints: data })
     return { data }
   },
 

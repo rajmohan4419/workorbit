@@ -58,7 +58,14 @@ export const useTaskStore = create((set, get) => ({
     set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
+      .select(`
+        *,
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
+        task_subtasks(id, is_completed),
+        task_comments(count),
+        task_attachments(count),
+        task_labels(labels(*))
+      `)
       .eq('project_id', projectId)
       .order('created_at', { ascending: true })
 
@@ -80,7 +87,15 @@ export const useTaskStore = create((set, get) => ({
     set({ tasks: [], loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
+      .select(`
+        *,
+        projects(name),
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
+        task_subtasks(id, is_completed),
+        task_comments(count),
+        task_attachments(count),
+        task_labels(labels(*))
+      `)
       .eq('assigned_to', userId)
       .order('due_date', { ascending: true, nullsFirst: false })
 
@@ -97,7 +112,15 @@ export const useTaskStore = create((set, get) => ({
     set({ loading: true, error: null })
     const { data, error } = await supabase
       .from('tasks')
-      .select('*, projects(name), profiles!tasks_assigned_to_fkey(full_name, avatar_path)')
+      .select(`
+        *,
+        projects(name),
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
+        task_subtasks(id, is_completed),
+        task_comments(count),
+        task_attachments(count),
+        task_labels(labels(*))
+      `)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -107,6 +130,14 @@ export const useTaskStore = create((set, get) => ({
 
     set({ searchResults: data, loading: false })
     return { data }
+  },
+
+  getTaskCount: async () => {
+    const { count, error } = await supabase
+      .from('tasks')
+      .select('*', { count: 'exact', head: true })
+    if (error) return 0
+    return count
   },
 
   createTask: async ({ title, description, status, priority, due_date, project_id, assigned_to }) => {
@@ -157,31 +188,33 @@ export const useTaskStore = create((set, get) => ({
       return { error }
     }
 
-    // Optimistic update
+    // Optimistic update (Immediate UI feedback)
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t)),
       error: null,
     }))
 
-    const { data, error } = await supabase
+    // Background update (Non-blocking)
+    supabase
       .from('tasks')
       .update({ status: newStatus })
       .eq('id', id)
       .select()
       .single()
+      .then(({ data, error }) => {
+        if (error) {
+          // Rollback if request fails
+          set({ tasks: previousTasks, error: error.message })
+        } else {
+          // Sync with server data (handles database triggers, e.g. activity logs)
+          set((state) => ({
+            tasks: state.tasks.map((t) => (t.id === id ? data : t)),
+            error: null,
+          }))
+        }
+      })
 
-    if (error) {
-      // Rollback
-      set({ tasks: previousTasks, error: error.message })
-      return { error }
-    }
-
-    // Update with actual server data (in case of other changes like triggers)
-    set((state) => ({
-      tasks: state.tasks.map((t) => (t.id === id ? data : t)),
-      error: null,
-    }))
-    return { data }
+    return { data: { ...currentTask, status: newStatus } }
   },
 
   deleteTask: async (id) => {
@@ -203,7 +236,7 @@ export const useTaskStore = create((set, get) => ({
     set({ comments: [] })
     const { data, error } = await supabase
       .from('task_comments')
-      .select('*, profiles(full_name, avatar_path)')
+      .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
       .eq('task_id', taskId)
       .order('created_at', { ascending: true })
 
@@ -216,7 +249,7 @@ export const useTaskStore = create((set, get) => ({
     const { data, error } = await supabase
       .from('task_comments')
       .insert([{ task_id: taskId, content }])
-      .select('*, profiles(full_name, avatar_path)')
+      .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
       .single()
 
     if (error) return { error }
@@ -235,7 +268,7 @@ export const useTaskStore = create((set, get) => ({
     set({ logs: [] })
     const { data, error } = await supabase
       .from('task_logs')
-      .select('*, profiles(full_name)')
+      .select('*, profiles!task_logs_user_id_fkey(full_name)')
       .eq('task_id', taskId)
       .order('created_at', { ascending: false })
 
@@ -345,7 +378,7 @@ export const useTaskStore = create((set, get) => ({
   fetchTimeLogs: async (taskId) => {
     const { data, error } = await supabase
       .from('time_logs')
-      .select('*, profiles(full_name)')
+      .select('*, profiles!time_logs_user_id_fkey(full_name)')
       .eq('task_id', taskId)
       .order('created_at', { ascending: false })
 
@@ -358,7 +391,7 @@ export const useTaskStore = create((set, get) => ({
     const { data, error } = await supabase
       .from('time_logs')
       .insert([{ task_id: taskId, duration_seconds: durationSeconds, description }])
-      .select('*, profiles(full_name)')
+      .select('*, profiles!time_logs_user_id_fkey(full_name)')
       .single()
 
     if (error) return { error }

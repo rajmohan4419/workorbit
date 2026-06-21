@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { Plus } from 'lucide-react'
 import { useTaskStore, STATUSES, STATUS_LABELS, canMoveToStatus } from '../../store/taskStore'
@@ -24,6 +24,7 @@ const dotColors = {
 
 export default function KanbanBoard({ projectId }) {
   const tasks = useTaskStore((state) => state.tasks)
+  const sprints = useProjectStore((state) => state.sprints)
   const moveTask = useTaskStore((state) => state.moveTask)
 
   useEffect(() => {
@@ -37,8 +38,15 @@ export default function KanbanBoard({ projectId }) {
   const project = projects.find(p => p.id === projectId)
   const [modalState, setModalState] = useState(null)
   const [draggingStatus, setDraggingStatus] = useState(null)
+  const [selectedSprintId, setSelectedSprintId] = useState('')
+
+  const filteredTasks = useMemo(() => {
+    if (!selectedSprintId) return tasks
+    return tasks.filter(task => task.sprint_id === selectedSprintId)
+  }, [tasks, selectedSprintId])
+
   const tasksByStatus = STATUSES.reduce((acc, status) => {
-    acc[status] = tasks.filter((task) => task.status === status)
+    acc[status] = filteredTasks.filter((task) => task.status === status)
     return acc
   }, {})
 
@@ -48,7 +56,7 @@ export default function KanbanBoard({ projectId }) {
     useTaskStore.setState({ error: null })
   }
 
-  const handleDragEnd = async ({ source, destination, draggableId }) => {
+  const handleDragEnd = ({ source, destination, draggableId }) => {
     setDraggingStatus(null)
 
     if (!destination || destination.droppableId === source.droppableId) return
@@ -58,13 +66,27 @@ export default function KanbanBoard({ projectId }) {
       return
     }
 
-    await moveTask(draggableId, destination.droppableId)
+    moveTask(draggableId, destination.droppableId)
   }
 
   const canCreate = canCreateTask(profile?.role, user?.id, project?.owner_id)
 
   return (
     <>
+      <div className="flex items-center gap-4 bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm self-start mb-4">
+        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Sprint Filter</label>
+        <select
+          value={selectedSprintId}
+          onChange={(e) => setSelectedSprintId(e.target.value)}
+          className="text-xs border-none bg-gray-50 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-gray-600 cursor-pointer"
+        >
+          <option value="">All Tasks</option>
+          {sprints.map(sprint => (
+            <option key={sprint.id} value={sprint.id}>{sprint.name}</option>
+          ))}
+        </select>
+      </div>
+
       <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex h-full flex-col gap-3">
           {storeError && (

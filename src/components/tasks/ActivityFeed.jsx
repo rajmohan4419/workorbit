@@ -10,12 +10,17 @@ export default function ActivityFeed({ projectId }) {
   useEffect(() => {
     const fetchActivities = async () => {
       setLoading(true)
-      const { data } = await supabase
+      let query = supabase
         .from('task_logs')
-        .select('*, profiles(full_name, avatar_path), tasks!inner(title, project_id)')
-        .eq('tasks.project_id', projectId)
+        .select('*, profiles!task_logs_user_id_fkey(full_name, avatar_path), tasks!inner(title, project_id)')
         .order('created_at', { ascending: false })
         .limit(20)
+
+      if (projectId) {
+        query = query.eq('tasks.project_id', projectId)
+      }
+
+      const { data } = await query
 
       if (data) setActivities(data)
       setLoading(false)
@@ -24,18 +29,21 @@ export default function ActivityFeed({ projectId }) {
     fetchActivities()
 
     // Subscribe to new logs
+    const channelId = projectId ? `project-activities-${projectId}` : 'global-activities'
     const channel = supabase
-      .channel(`project-activities-${projectId}`)
+      .channel(channelId)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'task_logs' }, async (payload) => {
         // Fetch full record with joins
         const { data: newLog } = await supabase
           .from('task_logs')
-          .select('*, profiles(full_name, avatar_path), tasks!inner(title, project_id)')
+          .select('*, profiles!task_logs_user_id_fkey(full_name, avatar_path), tasks!inner(title, project_id)')
           .eq('id', payload.new.id)
           .single()
 
-        if (newLog && newLog.tasks.project_id === projectId) {
-          setActivities(prev => [newLog, ...prev].slice(0, 20))
+        if (newLog) {
+          if (!projectId || newLog.tasks.project_id === projectId) {
+            setActivities(prev => [newLog, ...prev].slice(0, 20))
+          }
         }
       })
       .subscribe()
