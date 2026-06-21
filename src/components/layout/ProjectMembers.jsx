@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react'
 import { UserPlus, Mail, X, Loader2, Trash2 } from 'lucide-react'
 import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canInviteMembers } from '../../lib/permissions'
 
 export default function ProjectMembers({ projectId }) {
   const user = useAuthStore((state) => state.user)
   const profile = useAuthStore((state) => state.profile)
   const projects = useProjectStore((state) => state.projects)
-  const members = useProjectStore((state) => state.members)
-  const invites = useProjectStore((state) => state.invites)
-  const fetchMembers = useProjectStore((state) => state.fetchMembers)
-  const fetchInvites = useProjectStore((state) => state.fetchInvites)
-  const createInvite = useProjectStore((state) => state.createInvite)
-  const deleteInvite = useProjectStore((state) => state.deleteInvite)
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
+  const workspaceMembers = useWorkspaceStore((state) => state.members)
+  const workspaceInvites = useWorkspaceStore((state) => state.invites)
+  const fetchWorkspaceMembers = useWorkspaceStore((state) => state.fetchWorkspaceMembers)
+  const fetchWorkspaceInvites = useWorkspaceStore((state) => state.fetchWorkspaceInvites)
+  const createWorkspaceInvite = useWorkspaceStore((state) => state.createWorkspaceInvite)
+  const deleteWorkspaceInvite = useWorkspaceStore((state) => state.deleteWorkspaceInvite)
   
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [email, setEmail] = useState('')
@@ -22,19 +24,19 @@ export default function ProjectMembers({ projectId }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (projectId) {
-      fetchMembers(projectId)
-      fetchInvites(projectId)
+    if (activeWorkspace) {
+      fetchWorkspaceMembers(activeWorkspace.id)
+      fetchWorkspaceInvites(activeWorkspace.id)
     }
-  }, [projectId, fetchMembers, fetchInvites])
+  }, [activeWorkspace, fetchWorkspaceMembers, fetchWorkspaceInvites])
 
   const handleInvite = async (e) => {
     e.preventDefault()
-    if (!email.trim()) return
+    if (!email.trim() || !activeWorkspace) return
 
     setInviting(true)
     setError('')
-    const { error } = await createInvite(projectId, email.trim(), role)
+    const { error } = await createWorkspaceInvite(activeWorkspace.id, email.trim(), role)
     setInviting(false)
 
     if (error) {
@@ -52,37 +54,37 @@ export default function ProjectMembers({ projectId }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Members</h2>
+        <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Workspace Members</h2>
         {canInvite && (
           <button
             onClick={() => setIsInviteOpen(true)}
             className="flex items-center gap-2 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
           >
             <UserPlus size={14} />
-            Invite member
+            Invite to Workspace
           </button>
         )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {members.map((member) => (
+        {workspaceMembers.map((member) => (
           <div key={member.id} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl">
             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700">
               {member.profiles?.full_name?.slice(0, 2).toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{member.profiles?.full_name}</p>
-              <p className="text-[10px] text-gray-400 capitalize">{member.profiles?.role}</p>
+              <p className="text-[10px] text-gray-400 capitalize">{member.role}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {invites.length > 0 && (
+      {workspaceInvites.length > 0 && (
         <div className="pt-4 border-t border-gray-50">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Pending Invites</h3>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Pending Workspace Invites</h3>
           <div className="space-y-2">
-            {invites.map((invite) => (
+            {workspaceInvites.map((invite) => (
               <div key={invite.id} className="flex items-center justify-between p-3 bg-gray-50/50 border border-gray-100 rounded-xl border-dashed">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
@@ -92,7 +94,7 @@ export default function ProjectMembers({ projectId }) {
                 </div>
                 {canInvite && (
                   <button
-                    onClick={() => deleteInvite(invite.id)}
+                    onClick={() => deleteWorkspaceInvite?.(invite.id)}
                     className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 size={14} />
@@ -141,7 +143,7 @@ export default function ProjectMembers({ projectId }) {
                 >
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="owner">Owner</option>
                 </select>
               </div>
 

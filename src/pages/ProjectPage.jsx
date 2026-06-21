@@ -4,6 +4,7 @@ import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar } fro
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
 import { useTaskStore } from '../store/taskStore'
+import { useWorkspaceStore } from '../store/workspaceStore'
 import { canDeleteProject } from '../lib/permissions'
 import KanbanBoard from '../components/tasks/KanbanBoard'
 import TaskTable from '../components/tasks/TaskTable'
@@ -23,6 +24,7 @@ export default function ProjectPage() {
   const activeProject = useProjectStore((state) => state.activeProject)
   const deleteProject = useProjectStore((state) => state.deleteProject)
   const user = useAuthStore((state) => state.user)
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
   const tasks = useTaskStore((state) => state.tasks)
   const subscribeToProject = useTaskStore((state) => state.subscribeToProject)
   const resetTasks = useTaskStore((state) => state.reset)
@@ -46,7 +48,7 @@ export default function ProjectPage() {
   const handleDeleteProject = async () => {
     if (window.confirm('Are you sure you want to delete this project? All tasks will be permanently removed.')) {
       await deleteProject(id)
-      window.location.href = '/'
+      window.location.href = activeWorkspace ? `/w/${activeWorkspace.slug}` : '/'
     }
   }
 
@@ -54,7 +56,7 @@ export default function ProjectPage() {
     <div className="flex flex-col h-full">
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-gray-400 hover:text-gray-700 transition-colors">
+          <Link to={activeWorkspace ? `/w/${activeWorkspace.slug}` : "/"} className="text-gray-400 hover:text-gray-700 transition-colors">
             <ArrowLeft size={16} />
           </Link>
           <div>

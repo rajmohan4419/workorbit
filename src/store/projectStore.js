@@ -20,11 +20,16 @@ export const useProjectStore = create((set, get) => ({
     error: null,
   }),
 
-  fetchProjects: async () => {
+  fetchProjects: async (workspaceId) => {
+    if (!workspaceId) {
+      set({ projects: [], activeProject: null, loading: false })
+      return { data: [] }
+    }
     set({ loading: true, error: null })
     const { data, error } = await supabase
       .from('projects')
       .select('*')
+      .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -46,13 +51,13 @@ export const useProjectStore = create((set, get) => ({
 
   setActiveProject: (project) => set({ activeProject: project }),
 
-  createProject: async ({ name, description }) => {
+  createProject: async ({ name, description, workspaceId }) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: { message: 'Not authenticated' } }
 
     const { data, error } = await supabase
       .from('projects')
-      .insert([{ name, description, owner_id: user.id }])
+      .insert([{ name, description, owner_id: user.id, workspace_id: workspaceId }])
       .select()
       .single()
 
