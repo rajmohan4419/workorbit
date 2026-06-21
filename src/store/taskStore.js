@@ -60,7 +60,7 @@ export const useTaskStore = create((set, get) => ({
       .from('tasks')
       .select(`
         *,
-        profiles!assigned_to(id, full_name, avatar_path),
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
         task_subtasks(id, is_completed),
         task_comments(count),
         task_attachments(count),
@@ -90,7 +90,7 @@ export const useTaskStore = create((set, get) => ({
       .select(`
         *,
         projects(name),
-        profiles!assigned_to(id, full_name, avatar_path),
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
         task_subtasks(id, is_completed),
         task_comments(count),
         task_attachments(count),
@@ -115,7 +115,7 @@ export const useTaskStore = create((set, get) => ({
       .select(`
         *,
         projects(name),
-        profiles!assigned_to(id, full_name, avatar_path),
+        profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
         task_subtasks(id, is_completed),
         task_comments(count),
         task_attachments(count),
@@ -407,13 +407,32 @@ export const useTaskStore = create((set, get) => ({
         schema: 'public',
         table: 'tasks',
         filter: `project_id=eq.${projectId}`
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          set((state) => ({ tasks: [...state.tasks, payload.new] }))
-        } else if (payload.eventType === 'UPDATE') {
-          set((state) => ({
-            tasks: state.tasks.map((t) => (t.id === payload.new.id ? payload.new : t)),
-          }))
+      }, async (payload) => {
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const { data } = await supabase
+            .from('tasks')
+            .select(`
+              *,
+              profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
+              task_subtasks(id, is_completed),
+              task_comments(count),
+              task_attachments(count),
+              task_labels(labels(*))
+            `)
+            .eq('id', payload.new.id)
+            .single()
+
+          if (data) {
+            set((state) => {
+              const taskExists = state.tasks.find((t) => t.id === data.id)
+              if (payload.eventType === 'INSERT' && !taskExists) {
+                return { tasks: [...state.tasks, data] }
+              }
+              return {
+                tasks: state.tasks.map((t) => (t.id === data.id ? data : t)),
+              }
+            })
+          }
         } else if (payload.eventType === 'DELETE') {
           set((state) => ({
             tasks: state.tasks.filter((t) => t.id !== payload.old.id),
