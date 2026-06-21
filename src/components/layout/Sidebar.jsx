@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, Users } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canCreateProject } from '../../lib/permissions'
 
 const navItems = [
@@ -19,6 +20,9 @@ export default function Sidebar() {
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const createProject = useProjectStore((state) => state.createProject)
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
+  const workspaces = useWorkspaceStore((state) => state.workspaces)
+  const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace)
   const [projectsOpen, setProjectsOpen] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -29,10 +33,10 @@ export default function Sidebar() {
 
   const handleCreateProject = async (e) => {
     e.preventDefault()
-    if (!newName.trim()) return
+    if (!newName.trim() || !activeWorkspace) return
 
     setProjectError('')
-    const { error } = await createProject({ name: newName.trim() })
+    const { error } = await createProject({ name: newName.trim(), workspaceId: activeWorkspace.id })
 
     if (error) {
       setProjectError(error.message)
@@ -82,21 +86,40 @@ export default function Sidebar() {
           </div>
 
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-            {navItems.map(({ icon: Icon, label, to }) => (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  location.pathname === to
-                    ? 'bg-indigo-50 text-indigo-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+            <div className="mb-6 px-3">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Workspace</label>
+              <select
+                value={activeWorkspace?.id || ''}
+                onChange={(e) => {
+                  const ws = workspaces.find(w => w.id === e.target.value)
+                  if (ws) setActiveWorkspace(ws)
+                }}
+                className="w-full text-xs bg-gray-50 border border-gray-100 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <Icon size={16} />
-                {label}
-              </Link>
-            ))}
+                {workspaces.map(ws => (
+                  <option key={ws.id} value={ws.id}>{ws.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {navItems.map(({ icon: Icon, label, to }) => {
+              const fullTo = activeWorkspace ? `/w/${activeWorkspace.slug}${to === '/' ? '' : to}` : to
+              return (
+                <Link
+                  key={to}
+                  to={fullTo}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === fullTo
+                      ? 'bg-indigo-50 text-indigo-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon size={16} />
+                  {label}
+                </Link>
+              )
+            })}
 
             {profile?.role === 'admin' && (
               <Link
@@ -125,12 +148,13 @@ export default function Sidebar() {
               {projectsOpen && (
                 <div className="mt-1 space-y-0.5">
                   {projects.map((project) => {
-                    const isActive = location.pathname === `/project/${project.id}`
+                    const projectPath = activeWorkspace ? `/w/${activeWorkspace.slug}/project/${project.id}` : `/project/${project.id}`
+                    const isActive = location.pathname === projectPath
 
                     return (
                       <Link
                         key={project.id}
-                        to={`/project/${project.id}`}
+                        to={projectPath}
                         onClick={() => {
                           setActiveProject(project)
                           setMobileOpen(false)

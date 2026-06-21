@@ -1,8 +1,13 @@
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
+import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
 
 export default function AuthPage() {
+  const user = useAuthStore((state) => state.user)
+  if (user) return <Navigate to="/" replace />
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">

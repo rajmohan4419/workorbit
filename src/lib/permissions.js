@@ -1,13 +1,15 @@
 export const ROLE_LABELS = {
-  admin: 'Admin',
+  owner: 'Workspace Owner',
+  admin: 'Workspace Admin',
   member: 'Member',
   viewer: 'Viewer',
 }
 
 export const ROLE_DESCRIPTIONS = {
-  admin: 'Trusted team lead. Can manage projects, tasks, and invite members.',
-  member: 'Contributor. Can create tasks and edit assigned tasks.',
-  viewer: 'Stakeholder. Can view board and comment.',
+  owner: 'Full control over the workspace and all projects.',
+  admin: 'Workspace administrator. Can manage projects, members, and settings.',
+  member: 'Contributor. Can create tasks and projects.',
+  viewer: 'Read-only access. Can view board and comment.',
 }
 
 export function getRoleLabel(role) {
@@ -23,35 +25,35 @@ export function isOwner(userId, projectOwnerId) {
 }
 
 export function canCreateProject(role) {
-  return role === 'admin' || role === 'member'
+  return role === 'owner' || role === 'admin' || role === 'member'
 }
 
 export function canEditProject(role, userId, projectOwnerId) {
-  return role === 'admin' || isOwner(userId, projectOwnerId)
+  return role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)
 }
 
-export function canDeleteProject(userId, projectOwnerId) {
-  return isOwner(userId, projectOwnerId)
+export function canDeleteProject(role, userId, projectOwnerId) {
+  return role === 'owner' || isOwner(userId, projectOwnerId)
 }
 
 export function canInviteMembers(role, userId, projectOwnerId) {
-  return role === 'admin' || isOwner(userId, projectOwnerId)
+  return role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)
 }
 
-export function canManageRoles(userId, projectOwnerId) {
-  return isOwner(userId, projectOwnerId)
+export function canManageRoles(role, userId, projectOwnerId) {
+  return role === 'owner' || isOwner(userId, projectOwnerId)
 }
 
 export function canCreateTask(role, userId, projectOwnerId) {
-  return role === 'admin' || role === 'member' || isOwner(userId, projectOwnerId)
+  return role === 'owner' || role === 'admin' || role === 'member' || isOwner(userId, projectOwnerId)
 }
 
 export function canDeleteTask(role, userId, projectOwnerId) {
-  return role === 'admin' || isOwner(userId, projectOwnerId)
+  return role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)
 }
 
 export function canEditTaskMetadata(role, userId, taskCreatorId, taskAssigneeId, projectOwnerId) {
-  if (role === 'admin' || isOwner(userId, projectOwnerId)) return true
+  if (role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)) return true
   if (role === 'member' && (userId === taskCreatorId || userId === taskAssigneeId)) return true
   return false
 }

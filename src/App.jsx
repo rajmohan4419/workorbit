@@ -3,8 +3,13 @@ import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-rou
 import { useAuthStore } from './store/authStore'
 import { useProjectStore } from './store/projectStore'
 import { useTaskStore } from './store/taskStore'
+import { useWorkspaceStore } from './store/workspaceStore'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
+import FeaturesPage from './pages/marketing/FeaturesPage'
+import PricingPage from './pages/marketing/PricingPage'
+import ContactPage from './pages/marketing/ContactPage'
+import UpcomingFeaturesPage from './pages/marketing/UpcomingFeaturesPage'
 import ProjectPage from './pages/ProjectPage'
 import MyTasksPage from './pages/MyTasksPage'
 import UsersPage from './pages/UsersPage'
@@ -36,14 +41,12 @@ function AppShell() {
   )
 }
 
+const isAppSubdomain = window.location.hostname === 'app.orbitboard.in' || window.location.hostname === 'localhost'
+
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <ProtectedRoute><AppShell /></ProtectedRoute>,
-    loader: async () => {
-      await useProjectStore.getState().fetchProjects()
-      return null
-    },
+    element: isAppSubdomain ? <ProtectedRoute><AppShell /></ProtectedRoute> : <Navigate to="/features" replace />,
     children: [
       {
         index: true,
@@ -54,12 +57,28 @@ const router = createBrowserRouter([
         }
       },
       {
-        path: 'project/:id',
-        element: <ProjectPage />,
+        path: 'w/:workspaceSlug',
         loader: async ({ params }) => {
-          await useTaskStore.getState().fetchTasks(params.id)
+          const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceSlug)
+          if (workspace.data) {
+            await useProjectStore.getState().fetchProjects(workspace.data.id)
+          }
           return null
-        }
+        },
+        children: [
+          {
+            index: true,
+            element: <DashboardPage />,
+          },
+          {
+            path: 'project/:id',
+            element: <ProjectPage />,
+            loader: async ({ params }) => {
+              await useTaskStore.getState().fetchTasks(params.id)
+              return null
+            }
+          }
+        ]
       },
       {
         path: 'my-tasks',
@@ -97,7 +116,23 @@ const router = createBrowserRouter([
   },
   {
     path: '/auth',
-    element: <AuthPage />
+    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.orbitboard.in/auth" replace />
+  },
+  {
+    path: '/features',
+    element: <FeaturesPage />
+  },
+  {
+    path: '/pricing',
+    element: <PricingPage />
+  },
+  {
+    path: '/contact',
+    element: <ContactPage />
+  },
+  {
+    path: '/upcoming',
+    element: <UpcomingFeaturesPage />
   }
 ])
 

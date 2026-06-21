@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { useWorkspaceStore } from './workspaceStore'
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -44,6 +45,10 @@ export const useAuthStore = create((set) => ({
       const user = session?.user ?? null
       const profile = await fetchProfile(user?.id)
       set({ session, user, profile, loading: false })
+
+      if (user) {
+        useWorkspaceStore.getState().fetchWorkspaces()
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -51,6 +56,12 @@ export const useAuthStore = create((set) => ({
       const user = session?.user ?? null
       const profile = await fetchProfile(user?.id)
       set({ session, user, profile, loading: false })
+
+      if (user) {
+        useWorkspaceStore.getState().fetchWorkspaces()
+      } else {
+        useWorkspaceStore.getState().reset()
+      }
     })
 
     return () => {

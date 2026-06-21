@@ -35,6 +35,46 @@ create table if not exists public.profiles (
 alter table public.profiles add column if not exists onboarding_completed boolean default false;
 
 -- ─────────────────────────────────────────────
+-- WORKSPACES
+-- ─────────────────────────────────────────────
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'workspace_role') then
+    create type workspace_role as enum ('owner', 'admin', 'member');
+  end if;
+end
+$$;
+
+create table if not exists public.workspaces (
+  id          uuid primary key default uuid_generate_v4(),
+  name        text not null,
+  slug        text not null unique,
+  owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+create table if not exists public.workspace_members (
+  id           uuid primary key default uuid_generate_v4(),
+  workspace_id uuid references public.workspaces(id) on delete cascade not null,
+  user_id      uuid references public.profiles(id) on delete cascade not null,
+  role         workspace_role not null default 'member',
+  created_at   timestamptz default now(),
+  unique (workspace_id, user_id)
+);
+
+create table if not exists public.workspace_invites (
+  id           uuid primary key default uuid_generate_v4(),
+  workspace_id uuid references public.workspaces(id) on delete cascade not null,
+  email        text not null,
+  role         workspace_role not null default 'member',
+  invited_by   uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  status       text default 'pending',
+  created_at   timestamptz default now(),
+  unique (workspace_id, email)
+);
+
+-- ─────────────────────────────────────────────
 -- PROJECTS
 -- ─────────────────────────────────────────────
 create table if not exists public.projects (
@@ -42,6 +82,7 @@ create table if not exists public.projects (
   name        text not null,
   description text,
   owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  workspace_id uuid references public.workspaces(id) on delete cascade,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -100,6 +141,9 @@ create table if not exists public.tasks (
 );
 
 -- Ensure explicit foreign key constraints exist for relationship detection
+-- Ensure the workspace_id column exists
+alter table public.projects add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+
 -- Ensure explicit foreign key constraints exist for relationship detection (critical for PostgREST)
 alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
 alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null;
@@ -139,6 +183,41 @@ as $$
   select coalesce(
     (select role from public.profiles where id = auth.uid()),
     'member'::app_role
+  );
+$$;
+
+create or replace function public.current_workspace_role(target_workspace_id uuid)
+returns workspace_role
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from public.workspace_members
+  where workspace_id = target_workspace_id and user_id = auth.uid()
+  union all
+  select 'owner'::workspace_role from public.workspaces
+  where id = target_workspace_id and owner_id = auth.uid()
+  limit 1;
+$$;
+
+create or replace function public.can_access_workspace(target_workspace_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.workspaces
+    where id = target_workspace_id
+    and (
+      owner_id = auth.uid()
+      or exists (
+        select 1 from public.workspace_members
+        where workspace_id = target_workspace_id and user_id = auth.uid()
+      )
+    )
   );
 $$;
 
@@ -239,8 +318,53 @@ begin
   )
   on conflict (id) do nothing;
 
+  -- Create a default workspace for the new user
+  insert into public.workspaces (name, slug, owner_id)
+  values (
+    split_part(new.email, '@', 1) || '''s Workspace',
+    split_part(new.email, '@', 1) || '-' || left(uuid_generate_v4()::text, 4),
+    new.id
+  );
+
   return new;
 end;
+$$;
+
+-- Function to migrate existing projects to the owner's first workspace
+create or replace function public.migrate_existing_projects()
+returns void
+language plpgsql
+security definer
+as $$
+declare
+  proj record;
+  first_ws_id uuid;
+begin
+  for proj in select * from public.projects where workspace_id is null loop
+    select id into first_ws_id from public.workspaces where owner_id = proj.owner_id limit 1;
+    if (first_ws_id is not null) then
+      update public.projects set workspace_id = first_ws_id where id = proj.id;
+    end if;
+  end loop;
+end;
+$$;
+
+-- Migration for existing users: create workspaces and migrate projects
+do $$
+declare
+  prof record;
+  new_ws_id uuid;
+begin
+  for prof in select * from public.profiles loop
+    if not exists (select 1 from public.workspaces where owner_id = prof.id) then
+      insert into public.workspaces (name, slug, owner_id)
+      values (prof.full_name || '''s Workspace', lower(replace(prof.full_name, ' ', '-')) || '-' || left(prof.id::text, 4), prof.id)
+      returning id into new_ws_id;
+
+      update public.projects set workspace_id = new_ws_id where owner_id = prof.id and workspace_id is null;
+    end if;
+  end loop;
+end
 $$;
 
 drop trigger if exists on_auth_user_created on auth.users;
@@ -274,9 +398,11 @@ on conflict (id) do nothing;
 
 -- Projects: owners can CRUD their own projects
 alter table public.projects enable row level security;
-
 alter table public.profiles enable row level security;
 alter table public.project_members enable row level security;
+alter table public.workspaces enable row level security;
+alter table public.workspace_members enable row level security;
+alter table public.workspace_invites enable row level security;
 
 drop policy if exists "Users can view profiles" on public.profiles;
 create policy "Users can view profiles"
@@ -288,6 +414,72 @@ create policy "Users can view profiles"
       select 1 from public.project_members pm
       where pm.user_id = profiles.id
       and public.can_access_project(pm.project_id)
+    )
+    or exists (
+      select 1 from public.workspace_members wm
+      where wm.user_id = profiles.id
+      and exists (
+        select 1 from public.workspace_members wm2
+        where wm2.workspace_id = wm.workspace_id and wm2.user_id = auth.uid()
+      )
+    )
+  );
+
+-- Workspaces Policies
+drop policy if exists "Users can view workspaces they are members of" on public.workspaces;
+create policy "Users can view workspaces they are members of"
+  on public.workspaces for select
+  using (
+    exists (
+      select 1 from public.workspace_members
+      where workspace_id = workspaces.id and user_id = auth.uid()
+    )
+    or owner_id = auth.uid()
+  );
+
+drop policy if exists "Users can create workspaces" on public.workspaces;
+create policy "Users can create workspaces"
+  on public.workspaces for insert
+  with check (auth.uid() = owner_id);
+
+drop policy if exists "Owners and admins can update workspaces" on public.workspaces;
+create policy "Owners and admins can update workspaces"
+  on public.workspaces for update
+  using (
+    owner_id = auth.uid()
+    or exists (
+      select 1 from public.workspace_members
+      where workspace_id = workspaces.id and user_id = auth.uid() and role in ('owner', 'admin')
+    )
+  );
+
+-- Workspace Members Policies
+drop policy if exists "Users can view members of their workspaces" on public.workspace_members;
+create policy "Users can view members of their workspaces"
+  on public.workspace_members for select
+  using (
+    exists (
+      select 1 from public.workspace_members internal
+      where internal.workspace_id = workspace_members.workspace_id and internal.user_id = auth.uid()
+    )
+    or exists (
+      select 1 from public.workspaces
+      where id = workspace_members.workspace_id and owner_id = auth.uid()
+    )
+  );
+
+-- Workspace Invites Policies
+drop policy if exists "Users can view invites for their workspaces" on public.workspace_invites;
+create policy "Users can view invites for their workspaces"
+  on public.workspace_invites for select
+  using (
+    email = (auth.jwt() ->> 'email')
+    or exists (
+      select 1 from public.workspaces
+      where id = workspace_invites.workspace_id and (owner_id = auth.uid() or exists (
+        select 1 from public.workspace_members
+        where workspace_id = workspaces.id and user_id = auth.uid() and role in ('owner', 'admin')
+      ))
     )
   );
 

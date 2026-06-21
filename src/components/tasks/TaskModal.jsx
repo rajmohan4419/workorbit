@@ -3,6 +3,7 @@ import { X, Loader2, MessageSquare, History, Send, Trash2, CheckSquare, Plus, Ch
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useTaskStore, STATUSES, STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canEditTaskMetadata, canComment, canEditTaskStatus } from '../../lib/permissions'
 
 function getInitialForm(task, defaultStatus, currentUserId) {
@@ -22,7 +23,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const profile = useAuthStore((state) => state.profile)
   const projects = useProjectStore((state) => state.projects)
   const project = projects.find(p => p.id === projectId || p.id === task?.project_id)
-  const members = useProjectStore((state) => state.members)
+  const workspaceMembers = useWorkspaceStore((state) => state.members)
   const sprints = useProjectStore((state) => state.sprints)
   const fetchMembers = useProjectStore((state) => state.fetchMembers)
   const fetchSprints = useProjectStore((state) => state.fetchSprints)
@@ -390,9 +391,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                 className="w-full text-sm border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:text-gray-500"
               >
                 <option value="">Unassigned</option>
-                {members.map((member) => (
+                {workspaceMembers.map((member) => (
                   <option key={member.profiles.id} value={member.profiles.id}>
-                    {member.profiles.full_name} ({member.profiles.role})
+                    {member.profiles.full_name}
                   </option>
                 ))}
               </select>
