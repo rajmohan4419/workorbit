@@ -5,6 +5,7 @@ import { workspaceService } from '../lib/services/workspaceService'
 export const useWorkspaceStore = create((set, get) => ({
   workspaces: [],
   activeWorkspace: null,
+  currentUserRole: null,
   members: [],
   invites: [],
   loading: false,
@@ -13,6 +14,7 @@ export const useWorkspaceStore = create((set, get) => ({
   reset: () => set({
     workspaces: [],
     activeWorkspace: null,
+    currentUserRole: null,
     members: [],
     invites: [],
     loading: false,
@@ -45,27 +47,36 @@ export const useWorkspaceStore = create((set, get) => ({
     return { data }
   },
 
-  setActiveWorkspace: (workspace) => {
-    set({ activeWorkspace: workspace })
-    if (workspace) {
-      get().fetchWorkspaceMembers(workspace.id)
-      get().fetchWorkspaceInvites(workspace.id)
+  setActiveWorkspace: async (workspace) => {
+    if (!workspace) {
+      set({ activeWorkspace: null, currentUserRole: null })
+      return
+    }
+
+    // Refresh to get the latest role
+    const { data, role, error } = await workspaceService.getWorkspaceBySlug(workspace.slug)
+    if (!error) {
+      set({ activeWorkspace: data, currentUserRole: role })
+      get().fetchWorkspaceMembers(data.id)
+      get().fetchWorkspaceInvites(data.id)
+    } else {
+      set({ activeWorkspace: workspace, currentUserRole: 'viewer' })
     }
   },
 
   setActiveWorkspaceBySlug: async (slug) => {
     set({ loading: true })
-    const { data, error } = await workspaceService.getWorkspaceBySlug(slug)
+    const { data, role, error } = await workspaceService.getWorkspaceBySlug(slug)
 
     if (error) {
       set({ loading: false, error: error.message })
       return { error }
     }
 
-    set({ activeWorkspace: data, loading: false })
+    set({ activeWorkspace: data, currentUserRole: role, loading: false })
     get().fetchWorkspaceMembers(data.id)
     get().fetchWorkspaceInvites(data.id)
-    return { data }
+    return { data, role }
   },
 
   createWorkspace: async ({ name, slug }) => {

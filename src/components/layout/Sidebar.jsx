@@ -16,12 +16,12 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile)
   const signOut = useAuthStore((state) => state.signOut)
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const createProject = useProjectStore((state) => state.createProject)
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
+  const currentUserRole = useWorkspaceStore((state) => state.currentUserRole)
   const workspaces = useWorkspaceStore((state) => state.workspaces)
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace)
   const [projectsOpen, setProjectsOpen] = useState(true)
@@ -131,7 +131,7 @@ export default function Sidebar() {
               </div>
             </div>
 
-            {navItems.map((item) => {
+            {navItems.filter(item => !item.wsRelative || activeWorkspace).map((item) => {
               const Icon = item.icon
               const fullTo = activeWorkspace && item.wsRelative
                 ? `/w/${activeWorkspace.slug}${item.to}`
@@ -154,9 +154,9 @@ export default function Sidebar() {
               )
             })}
 
-            {profile?.role === 'admin' && (
+            {currentUserRole === 'owner' && (
               <Link
-                to="/users"
+                to={`/w/${activeWorkspace?.slug}/settings`}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   location.pathname === '/users'
@@ -169,92 +169,94 @@ export default function Sidebar() {
               </Link>
             )}
 
-            <div className="pt-4">
-              <button
-                onClick={() => setProjectsOpen(!projectsOpen)}
-                className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors"
-              >
-                <span>Projects</span>
-                <ChevronDown size={12} className={`transition-transform ${projectsOpen ? '' : '-rotate-90'}`} />
-              </button>
+            {activeWorkspace && (
+              <div className="pt-4">
+                <button
+                  onClick={() => setProjectsOpen(!projectsOpen)}
+                  className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors"
+                >
+                  <span>Projects</span>
+                  <ChevronDown size={12} className={`transition-transform ${projectsOpen ? '' : '-rotate-90'}`} />
+                </button>
 
-              {projectsOpen && (
-                <div className="mt-1 space-y-0.5">
-                  {projects.map((project) => {
-                    const projectPath = activeWorkspace ? `/w/${activeWorkspace.slug}/project/${project.id}` : `/project/${project.id}`
-                    const isActive = location.pathname === projectPath
+                {projectsOpen && (
+                  <div className="mt-1 space-y-0.5">
+                    {projects.map((project) => {
+                      const projectPath = `/w/${activeWorkspace.slug}/project/${project.id}`
+                      const isActive = location.pathname === projectPath
 
-                    return (
-                      <Link
-                        key={project.id}
-                        to={projectPath}
-                        onClick={() => {
-                          setActiveProject(project)
-                          setMobileOpen(false)
-                        }}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          isActive
-                            ? 'bg-indigo-50 text-indigo-700 font-medium'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      >
-                        <div className="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0" />
-                        <span className="truncate">{project.name}</span>
-                      </Link>
-                    )
-                  })}
-
-                  {canCreateProject(profile?.role) && (
-                    <>
-                      {creating ? (
-                        <form onSubmit={handleCreateProject} className="px-3 pt-1">
-                          <input
-                            autoFocus
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            placeholder="Project name"
-                            className="w-full text-sm border border-indigo-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Escape') {
-                                setCreating(false)
-                                setProjectError('')
-                              }
-                            }}
-                          />
-                          <div className="flex gap-2 mt-1.5">
-                            <button type="submit" className="text-xs text-indigo-600 font-medium hover:text-indigo-800">Add</button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCreating(false)
-                                setProjectError('')
-                              }}
-                              className="text-xs text-gray-400 hover:text-gray-600"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                          {projectError && (
-                            <p className="mt-2 text-xs text-red-500">{projectError}</p>
-                          )}
-                        </form>
-                      ) : (
-                        <button
+                      return (
+                        <Link
+                          key={project.id}
+                          to={projectPath}
                           onClick={() => {
-                            setCreating(true)
-                            setProjectError('')
+                            setActiveProject(project)
+                            setMobileOpen(false)
                           }}
-                          className="flex items-center gap-2 px-3 py-2 w-full text-sm text-gray-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-gray-50"
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            isActive
+                              ? 'bg-indigo-50 text-indigo-700 font-medium'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
                         >
-                          <Plus size={14} />
-                          New project
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                          <div className="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0" />
+                          <span className="truncate">{project.name}</span>
+                        </Link>
+                      )
+                    })}
+
+                    {canCreateProject(currentUserRole) && (
+                      <>
+                        {creating ? (
+                          <form onSubmit={handleCreateProject} className="px-3 pt-1">
+                            <input
+                              autoFocus
+                              value={newName}
+                              onChange={(e) => setNewName(e.target.value)}
+                              placeholder="Project name"
+                              className="w-full text-sm border border-indigo-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setCreating(false)
+                                  setProjectError('')
+                                }
+                              }}
+                            />
+                            <div className="flex gap-2 mt-1.5">
+                              <button type="submit" className="text-xs text-indigo-600 font-medium hover:text-indigo-800">Add</button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCreating(false)
+                                  setProjectError('')
+                                }}
+                                className="text-xs text-gray-400 hover:text-gray-600"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                            {projectError && (
+                              <p className="mt-2 text-xs text-red-500">{projectError}</p>
+                            )}
+                          </form>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setCreating(true)
+                              setProjectError('')
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 w-full text-sm text-gray-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-gray-50"
+                          >
+                            <Plus size={14} />
+                            New project
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
 
           <div className="px-3 py-4 border-t border-gray-100">

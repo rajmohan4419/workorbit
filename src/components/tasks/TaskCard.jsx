@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { Calendar, Trash2, Edit2, Check, X, MessageSquare, Paperclip, AlertCircle } from 'lucide-react'
 import { useTaskStore } from '../../store/taskStore'
-import { useProjectStore } from '../../store/projectStore'
 import { useAuthStore } from '../../store/authStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canDeleteTask, canEditTaskMetadata } from '../../lib/permissions'
 
 const priorityStyles = {
@@ -15,9 +15,7 @@ export default function TaskCard({ task, onOpen }) {
   const deleteTask = useTaskStore((state) => state.deleteTask)
   const updateTask = useTaskStore((state) => state.updateTask)
   const user = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile)
-  const projects = useProjectStore((state) => state.projects)
-  const project = projects.find(p => p.id === task.project_id)
+  const wsRole = useWorkspaceStore((state) => state.currentUserRole)
   const [deleting, setDeleting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -66,8 +64,8 @@ export default function TaskCard({ task, onOpen }) {
   }
 
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done'
-  const canDelete = canDeleteTask(profile?.role, user?.id, project?.owner_id)
-  const canEdit = canEditTaskMetadata(profile?.role, user?.id, task.created_by, task.assigned_to, project?.owner_id)
+  const canDelete = canDeleteTask(wsRole, user?.id, task.created_by)
+  const canEdit = canEditTaskMetadata(wsRole, user?.id, task.created_by, task.assigned_to)
 
   // Use pre-fetched data from task object
   const taskSubtasks = task.task_subtasks || []

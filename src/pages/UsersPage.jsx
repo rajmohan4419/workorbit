@@ -1,19 +1,23 @@
 import { useState } from 'react'
 import { Users, Shield, User, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import { useWorkspaceStore } from '../store/workspaceStore'
 
 export default function UsersPage() {
   const [updating, setUpdating] = useState(null)
 
-  const updateProfileRole = useAuthStore((state) => state.updateProfileRole)
-  const currentProfile = useAuthStore((state) => state.profile)
+  const updateMemberRole = useWorkspaceStore((state) => state.updateMemberRole)
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
+  const currentUserRole = useWorkspaceStore((state) => state.currentUserRole)
+  const currentUser = useAuthStore((state) => state.user)
   const profiles = useAuthStore((state) => state.profiles)
   const loading = useAuthStore((state) => state.loading)
   const error = useAuthStore((state) => state.error)
 
   const handleRoleChange = async (userId, newRole) => {
+    if (!activeWorkspace) return
     setUpdating(userId)
-    const { error } = await updateProfileRole(userId, newRole)
+    const { error } = await updateMemberRole(activeWorkspace.id, userId, newRole)
     setUpdating(null)
 
     if (error) {
@@ -66,8 +70,8 @@ export default function UsersPage() {
                       {profile.full_name?.slice(0, 2).toUpperCase() || 'U'}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{profile.full_name}</p>
-                      <p className="text-xs text-gray-400">{profile.id === currentProfile?.id ? 'You' : 'Workspace Member'}</p>
+                      <p className="text-sm font-medium text-gray-900">{profile.full_name || 'Unknown User'}</p>
+                      <p className="text-xs text-gray-400">{profile.id === currentUser?.id ? 'You' : (profile.email || 'Workspace Member')}</p>
                     </div>
                   </div>
                 </td>
@@ -82,17 +86,19 @@ export default function UsersPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  {currentProfile?.role === 'admin' && profile.id !== currentProfile.id ? (
-                    <select
-                      value={profile.role}
-                      disabled={updating === profile.id}
-                      onChange={(e) => handleRoleChange(profile.id, e.target.value)}
-                      className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-                    >
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
+                  {(currentUserRole === 'owner' || currentUserRole === 'admin') && profile.id !== currentUser?.id ? (
+                    <div className="flex items-center justify-end gap-2">
+                      <select
+                        value={profile.role}
+                        disabled={updating === profile.id}
+                        onChange={(e) => handleRoleChange(profile.id, e.target.value)}
+                        className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                      >
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    </div>
                   ) : (
                     <span className="text-xs text-gray-400 italic">No actions available</span>
                   )}

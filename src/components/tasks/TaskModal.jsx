@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useTaskStore, STATUSES, STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
-import { canEditTaskMetadata, canComment, canEditTaskStatus } from '../../lib/permissions'
+import { canEditTaskMetadata, canComment } from '../../lib/permissions'
 
 function getInitialForm(task, defaultStatus, currentUserId) {
   return {
@@ -23,9 +23,7 @@ function getInitialForm(task, defaultStatus, currentUserId) {
 
 export default function TaskModal({ task = null, projectId = null, defaultStatus = 'todo', onClose }) {
   const currentUser = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile)
-  const projects = useProjectStore((state) => state.projects)
-  const project = projects.find(p => p.id === projectId || p.id === task?.project_id)
+  const wsRole = useWorkspaceStore((state) => state.currentUserRole)
   const workspaceMembers = useWorkspaceStore((state) => state.members)
   const sprints = useProjectStore((state) => state.sprints)
   const fetchMembers = useProjectStore((state) => state.fetchMembers)
@@ -63,9 +61,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const addTimeLog = useTaskStore((state) => state.addTimeLog)
 
   const isEditing = Boolean(task)
-  const canEditMetadata = canEditTaskMetadata(profile?.role, currentUser?.id, task?.created_by, task?.assigned_to, project?.owner_id)
-  const canChangeStatus = canEditTaskStatus(profile?.role, currentUser?.id, task?.created_by, task?.assigned_to, project?.owner_id)
-  const canWriteComment = canComment(profile?.role)
+  const canEditMetadata = canEditTaskMetadata(wsRole, currentUser?.id, task?.created_by, task?.assigned_to)
+  const canChangeStatus = canEditTaskMetadata(wsRole, currentUser?.id, task?.created_by, task?.assigned_to)
+  const canWriteComment = canComment(wsRole)
   const [form, setForm] = useState(() => getInitialForm(task, defaultStatus, currentUser?.id))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
