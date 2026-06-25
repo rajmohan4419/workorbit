@@ -43,7 +43,7 @@ function AppShell() {
   )
 }
 
-const isAppSubdomain = window.location.hostname === 'app.workorbit.in' || window.location.hostname === 'localhost'
+const isAppSubdomain = window.location.hostname === 'app.orbitboard.in' || window.location.hostname === 'localhost'
 
 const router = createBrowserRouter([
   {
@@ -108,7 +108,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/auth',
-    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.workorbit.in/auth" replace />
+    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.orbitboard.in/auth" replace />
   },
   {
     path: '/features',

@@ -83,7 +83,7 @@ export default function Sidebar() {
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">O</span>
             </div>
-            <span className="font-semibold text-gray-900 text-sm">WorkOrbit</span>
+            <span className="font-semibold text-gray-900 text-sm">Orbit Board</span>
           </div>
 
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">

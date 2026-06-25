@@ -106,7 +106,7 @@ export default function SearchModal({ onClose }) {
           {!query.trim() ? (
             <div className="py-12 text-center">
               <Search size={40} className="mx-auto text-gray-200 mb-3" />
-              <p className="text-sm text-gray-400">Search for anything across WorkOrbit</p>
+              <p className="text-sm text-gray-400">Search for anything across Orbit Board</p>
             </div>
           ) : !hasResults ? (
             <div className="py-12 text-center">
