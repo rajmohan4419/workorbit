@@ -71,7 +71,7 @@ export default function SettingsPage() {
     await updateWorkspace(activeWorkspace.id, { name: name.trim(), slug: slug.trim() })
     setSaving(false)
     if (slug !== workspaceSlug) {
-      navigate(`/w/${slug}/settings`)
+      navigate(`/workspaces/${slug}/settings`)
     }
   }
 
@@ -251,7 +251,7 @@ export default function SettingsPage() {
                   <div>
                     <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Workspace Slug</label>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">orbitboard.in/w/</span>
+                      <span className="text-gray-400 text-sm">workorbit.in/workspaces/</span>
                       <input
                         value={slug}
                         onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}

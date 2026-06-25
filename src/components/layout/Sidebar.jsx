@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, Users } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
@@ -83,7 +83,7 @@ export default function Sidebar() {
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">O</span>
             </div>
-            <span className="font-semibold text-gray-900 text-sm">OrbitBoard</span>
+            <span className="font-semibold text-gray-900 text-sm">WorkOrbit</span>
           </div>
 
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
@@ -109,7 +109,7 @@ export default function Sidebar() {
                         key={ws.id}
                         onClick={() => {
                           setActiveWorkspace(ws)
-                          navigate(`/w/${ws.slug}`)
+                          navigate(`/workspaces/${ws.slug}`)
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${activeWorkspace?.id === ws.id ? 'text-indigo-600 font-bold bg-indigo-50/30' : 'text-gray-600'}`}
                       >
@@ -134,7 +134,7 @@ export default function Sidebar() {
             {navItems.filter(item => !item.wsRelative || activeWorkspace).map((item) => {
               const Icon = item.icon
               const fullTo = activeWorkspace && item.wsRelative
-                ? `/w/${activeWorkspace.slug}${item.to}`
+                ? `/workspaces/${activeWorkspace.slug}${item.to}`
                 : item.to
 
               return (
@@ -154,21 +154,6 @@ export default function Sidebar() {
               )
             })}
 
-            {currentUserRole === 'owner' && (
-              <Link
-                to={`/w/${activeWorkspace?.slug}/settings`}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  location.pathname === '/users'
-                    ? 'bg-indigo-50 text-indigo-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <Users size={16} />
-                User Management
-              </Link>
-            )}
-
             {activeWorkspace && (
               <div className="pt-4">
                 <button
@@ -182,7 +167,7 @@ export default function Sidebar() {
                 {projectsOpen && (
                   <div className="mt-1 space-y-0.5">
                     {projects.map((project) => {
-                      const projectPath = `/w/${activeWorkspace.slug}/project/${project.id}`
+                      const projectPath = `/workspaces/${activeWorkspace.slug}/projects/${project.id}`
                       const isActive = location.pathname === projectPath
 
                       return (

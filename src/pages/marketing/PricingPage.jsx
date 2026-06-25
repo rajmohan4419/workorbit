@@ -31,13 +31,13 @@ export default function PricingPage() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">O</span>
           </div>
-          <span className="font-bold text-gray-900 text-lg">OrbitBoard</span>
+          <span className="font-bold text-gray-900 text-lg">WorkOrbit</span>
         </Link>
         <div className="flex gap-6 items-center">
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-indigo-600">Pricing</Link>
           <Link to="/contact" className="text-sm font-medium text-gray-500 hover:text-gray-900">Contact</Link>
-          <a href="https://app.orbitboard.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
+          <a href="https://app.workorbit.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
         </div>
       </nav>
 
@@ -69,7 +69,7 @@ export default function PricingPage() {
                 ))}
               </div>
               <a
-                href="https://app.orbitboard.in/auth"
+                href="https://app.workorbit.in/auth"
                 className={`w-full py-4 rounded-xl text-center font-bold transition-all ${p.highlight ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200' : 'bg-gray-50 text-gray-900 hover:bg-gray-100'}`}
               >
                 {p.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
