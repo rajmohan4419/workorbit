@@ -7,9 +7,9 @@ import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canCreateProject } from '../../lib/permissions'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
-  { icon: CheckSquare, label: 'My tasks', to: '/my-tasks' },
-  { icon: Settings, label: 'Settings', to: '/settings' },
+  { icon: LayoutDashboard, label: 'Dashboard', to: '', wsRelative: true },
+  { icon: CheckSquare, label: 'My tasks', to: '/my-tasks', wsRelative: false },
+  { icon: Settings, label: 'Settings', to: '/settings', wsRelative: true },
 ]
 
 export default function Sidebar() {
@@ -131,21 +131,25 @@ export default function Sidebar() {
               </div>
             </div>
 
-            {navItems.map(({ icon: Icon, label, to }) => {
-              const fullTo = activeWorkspace ? `/w/${activeWorkspace.slug}${to === '/' ? '' : to}` : to
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const fullTo = activeWorkspace && item.wsRelative
+                ? `/w/${activeWorkspace.slug}${item.to}`
+                : item.to
+
               return (
                 <Link
-                  key={to}
+                  key={item.label}
                   to={fullTo}
                   onClick={() => setMobileOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === fullTo
+                    location.pathname === (fullTo || '/')
                       ? 'bg-indigo-50 text-indigo-700 font-medium'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <Icon size={16} />
-                  {label}
+                  {item.label}
                 </Link>
               )
             })}

@@ -24,6 +24,7 @@ export default function ProjectPage() {
   const activeProject = useProjectStore((state) => state.activeProject)
   const deleteProject = useProjectStore((state) => state.deleteProject)
   const user = useAuthStore((state) => state.user)
+  const profile = useAuthStore((state) => state.profile)
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
   const tasks = useTaskStore((state) => state.tasks)
   const subscribeToProject = useTaskStore((state) => state.subscribeToProject)
@@ -36,8 +37,9 @@ export default function ProjectPage() {
     setActiveProject(project)
 
     if (id) {
-      const unsubscribe = subscribeToProject(id)
-      return () => unsubscribe()
+      const result = subscribeToProject(id)
+      const unsubscribe = typeof result === 'function' ? result : result?.unsubscribe
+      return () => unsubscribe?.()
     } else {
       resetTasks()
     }
@@ -67,7 +69,7 @@ export default function ProjectPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {canDeleteProject(user?.id, project?.owner_id) && (
+          {canDeleteProject(profile?.role, user?.id, project?.owner_id) && (
             <button
               onClick={handleDeleteProject}
               className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"

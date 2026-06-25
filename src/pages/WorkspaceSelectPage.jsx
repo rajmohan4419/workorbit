@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Loader2, LogOut } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/authStore'
 
 export default function WorkspaceSelectPage() {
   const workspaces = useWorkspaceStore((state) => state.workspaces)
-  const fetchWorkspaces = useWorkspaceStore((state) => state.fetchWorkspaces)
+  const fetchWorkspaces = useWorkspaceStore(useCallback((state) => state.fetchWorkspaces, []))
   const loading = useWorkspaceStore((state) => state.loading)
   const user = useAuthStore((state) => state.user)
   const signOut = useAuthStore((state) => state.signOut)

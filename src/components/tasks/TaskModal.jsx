@@ -84,21 +84,36 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const [elapsedTime, setTimerSeconds] = useState(0)
   const fileInputRef = useRef(null)
   const timerIntervalRef = useRef(null)
+  const timerActiveRef = useRef(false)
+  const elapsedTimeRef = useRef(0)
+
+  useEffect(() => {
+    timerActiveRef.current = timerActive
+  }, [timerActive])
+
+  useEffect(() => {
+    elapsedTimeRef.current = elapsedTime
+  }, [elapsedTime])
 
   useEffect(() => {
     const handler = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', handler)
     return () => {
       window.removeEventListener('keydown', handler)
+    }
+  }, [onClose])
+
+  useEffect(() => {
+    return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
-        // Auto-save timer if active when closing
-        if (timerActive && elapsedTime > 0 && task?.id) {
-           addTimeLog(task.id, elapsedTime, 'Timer session (auto-saved)')
-        }
+      }
+      // Use refs to check current state in cleanup to avoid stale closures and excessive triggers
+      if (timerActiveRef.current && elapsedTimeRef.current > 0 && task?.id) {
+        addTimeLog(task.id, elapsedTimeRef.current, 'Timer session (auto-saved)')
       }
     }
-  }, [onClose, timerActive, elapsedTime, task?.id, addTimeLog])
+  }, [task?.id, addTimeLog])
 
   useEffect(() => {
     if (isEditing) {

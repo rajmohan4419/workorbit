@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { useWorkspaceStore } from './workspaceStore'
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   user: null,
   profile: null,
   profiles: [],
@@ -107,9 +107,17 @@ export const useAuthStore = create((set) => ({
     const userId = (await supabase.auth.getUser()).data.user?.id
     if (!userId) return { error: { message: 'Not authenticated' } }
 
+    const finalUpdates = { ...updates }
+    if (updates.first_name || updates.last_name) {
+      const currentProfile = get().profile
+      const firstName = updates.first_name ?? currentProfile?.first_name ?? ''
+      const lastName = updates.last_name ?? currentProfile?.last_name ?? ''
+      finalUpdates.full_name = `${firstName} ${lastName}`.trim()
+    }
+
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(finalUpdates)
       .eq('id', userId)
       .select()
       .single()

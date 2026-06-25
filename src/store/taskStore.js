@@ -20,7 +20,7 @@ export const NEXT_STATUS = {
 export const canMoveToStatus = (from, to) => {
   const fromIndex = STATUSES.indexOf(from)
   const toIndex = STATUSES.indexOf(to)
-  return fromIndex !== -1 && toIndex !== -1 && Math.abs(fromIndex - toIndex) === 1
+  return fromIndex !== -1 && toIndex !== -1
 }
 
 export const useTaskStore = create((set, get) => ({
@@ -159,9 +159,11 @@ export const useTaskStore = create((set, get) => ({
           // Rollback if request fails
           set({ tasks: previousTasks, error: error.message })
         } else {
-          // Sync with server data (handles database triggers, e.g. activity logs)
+          // Sync only relevant fields to avoid overwriting rich joined data with a flat object
           set((state) => ({
-            tasks: state.tasks.map((t) => (t.id === id ? data : t)),
+            tasks: state.tasks.map((t) =>
+              t.id === id ? { ...t, status: newStatus, updated_at: data.updated_at } : t
+            ),
             error: null,
           }))
         }

@@ -23,6 +23,8 @@ $$;
 create table if not exists public.profiles (
   id          uuid primary key references auth.users(id) on delete cascade,
   full_name   text,
+  first_name  text,
+  last_name   text,
   phone       text,
   avatar_path text,
   role        app_role not null default 'member',
@@ -31,8 +33,10 @@ create table if not exists public.profiles (
   updated_at  timestamptz default now()
 );
 
--- Ensure the column exists for existing databases
+-- Ensure the columns exist for existing databases
 alter table public.profiles add column if not exists onboarding_completed boolean default false;
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists last_name text;
 
 -- ─────────────────────────────────────────────
 -- WORKSPACES
@@ -346,7 +350,14 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  is_invited boolean;
 begin
+  -- Check if user is invited to any workspace
+  select exists (
+    select 1 from public.workspace_invites where email = new.email
+  ) into is_invited;
+
   insert into public.profiles (id, full_name, role)
   values (
     new.id,
@@ -358,13 +369,26 @@ begin
   )
   on conflict (id) do nothing;
 
-  -- Create a default workspace for the new user
-  insert into public.workspaces (name, slug, owner_id)
-  values (
-    split_part(new.email, '@', 1) || '''s Workspace',
-    split_part(new.email, '@', 1) || '-' || left(uuid_generate_v4()::text, 4),
-    new.id
-  );
+  -- Only create a default workspace if NOT invited
+  if not is_invited then
+    insert into public.workspaces (name, slug, owner_id)
+    values (
+      split_part(new.email, '@', 1) || '''s Workspace',
+      split_part(new.email, '@', 1) || '-' || left(uuid_generate_v4()::text, 4),
+      new.id
+    );
+  else
+    -- If invited, automatically accept the invites
+    insert into public.workspace_members (workspace_id, user_id, role)
+    select workspace_id, new.id, role
+    from public.workspace_invites
+    where email = new.email
+    on conflict (workspace_id, user_id) do update
+    set role = excluded.role;
+
+    -- Clean up invites
+    delete from public.workspace_invites where email = new.email;
+  end if;
 
   return new;
 end;
