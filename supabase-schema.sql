@@ -1,25 +1,39 @@
 -- =============================================
--- ProjectFlow — Supabase SQL Schema
--- Run this in your Supabase SQL Editor
+-- OrbitBoard — Supabase SQL Schema
 -- =============================================
 
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
+-- ─────────────────────────────────────────────
+-- TYPES & ENUMS
+-- ─────────────────────────────────────────────
+
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'app_role') then
     create type app_role as enum ('admin', 'member', 'viewer');
-  else
-    alter type app_role add value if not exists 'member';
-    alter type app_role add value if not exists 'viewer';
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'workspace_role') then
+    create type workspace_role as enum ('owner', 'admin', 'member', 'viewer');
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'task_status') then
+    create type task_status as enum ('todo', 'in_progress', 'in_review', 'done');
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'task_priority') then
+    create type task_priority as enum ('low', 'medium', 'high');
   end if;
 end
 $$;
 
 -- ─────────────────────────────────────────────
--- PROFILES
+-- TABLES
 -- ─────────────────────────────────────────────
+
+-- PROFILES
 create table if not exists public.profiles (
   id          uuid primary key references auth.users(id) on delete cascade,
   full_name   text,
@@ -33,33 +47,18 @@ create table if not exists public.profiles (
   updated_at  timestamptz default now()
 );
 
--- Ensure the columns exist for existing databases
-alter table public.profiles add column if not exists onboarding_completed boolean default false;
-alter table public.profiles add column if not exists first_name text;
-alter table public.profiles add column if not exists last_name text;
-
--- ─────────────────────────────────────────────
 -- WORKSPACES
--- ─────────────────────────────────────────────
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'workspace_role') then
-    create type workspace_role as enum ('owner', 'admin', 'member');
-  end if;
-end
-$$;
-
 create table if not exists public.workspaces (
   id          uuid primary key default uuid_generate_v4(),
   name        text not null,
   slug        text not null unique,
-  owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
-  workspace_plan text not null default 'free',
+  owner_id    uuid references public.profiles(id) on delete cascade not null,
+  workspace_plan text not null default 'free' check (workspace_plan in ('free', 'pro', 'business', 'enterprise')),
   created_at  timestamptz default now(),
-  updated_at  timestamptz default now(),
-  check (workspace_plan in ('free', 'pro', 'business', 'enterprise'))
+  updated_at  timestamptz default now()
 );
 
+-- WORKSPACE MEMBERS
 create table if not exists public.workspace_members (
   id           uuid primary key default uuid_generate_v4(),
   workspace_id uuid references public.workspaces(id) on delete cascade not null,
@@ -69,6 +68,7 @@ create table if not exists public.workspace_members (
   unique (workspace_id, user_id)
 );
 
+-- WORKSPACE INVITES
 create table if not exists public.workspace_invites (
   id           uuid primary key default uuid_generate_v4(),
   workspace_id uuid references public.workspaces(id) on delete cascade not null,
@@ -80,9 +80,7 @@ create table if not exists public.workspace_invites (
   unique (workspace_id, email)
 );
 
--- ─────────────────────────────────────────────
 -- PROJECTS
--- ─────────────────────────────────────────────
 create table if not exists public.projects (
   id          uuid primary key default uuid_generate_v4(),
   name        text not null,
@@ -93,50 +91,17 @@ create table if not exists public.projects (
   updated_at  timestamptz default now()
 );
 
--- Auto-update updated_at
-create or replace function public.handle_updated_at()
-returns trigger as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$ language plpgsql;
-
-drop trigger if exists projects_updated_at on public.projects;
-create trigger projects_updated_at
-  before update on public.projects
-  for each row execute procedure public.handle_updated_at();
-
-drop trigger if exists profiles_updated_at on public.profiles;
-create trigger profiles_updated_at
-  before update on public.profiles
-  for each row execute procedure public.handle_updated_at();
-
--- ─────────────────────────────────────────────
 -- TASKS
--- ─────────────────────────────────────────────
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'task_status') then
-    create type task_status as enum ('todo', 'in_progress', 'in_review', 'done');
-  end if;
-
-  if not exists (select 1 from pg_type where typname = 'task_priority') then
-    create type task_priority as enum ('low', 'medium', 'high');
-  end if;
-end
-$$;
-
 create table if not exists public.tasks (
   id          uuid primary key default uuid_generate_v4(),
-  project_id  uuid not null,
+  project_id  uuid references public.projects(id) on delete cascade not null,
   title       text not null,
   description text,
   status      task_status default 'todo',
   priority    task_priority default 'medium',
   due_date    date,
-  assigned_to uuid,
-  created_by  uuid default auth.uid(),
+  assigned_to uuid references public.profiles(id) on delete set null,
+  created_by  uuid references public.profiles(id) on delete set null default auth.uid(),
   sprint_id   uuid,
   story_points integer,
   estimate_hours numeric,
@@ -145,85 +110,127 @@ create table if not exists public.tasks (
   updated_at  timestamptz default now()
 );
 
--- ─────────────────────────────────────────────
--- EXPLICIT CONSTRAINTS (Critical for PostgREST Relationships)
--- ─────────────────────────────────────────────
+-- TASK COMMENTS
+create table if not exists public.task_comments (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  content     text not null,
+  created_at  timestamptz default now(),
+  constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+);
 
--- Workspaces
-alter table public.workspaces add column if not exists workspace_plan text not null default 'free' check (workspace_plan in ('free', 'pro', 'business', 'enterprise'));
+-- TASK ATTACHMENTS
+create table if not exists public.task_attachments (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  name        text not null,
+  file_path   text not null,
+  file_size   bigint,
+  content_type text,
+  created_at  timestamptz default now(),
+  constraint task_attachments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+);
 
--- Workspace Members
+-- TASK LOGS (Activity)
+create table if not exists public.task_logs (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete set null,
+  type        text not null,
+  old_value   text,
+  new_value   text,
+  created_at  timestamptz default now(),
+  constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null
+);
+
+-- NOTIFICATIONS
+create table if not exists public.notifications (
+  id          uuid primary key default uuid_generate_v4(),
+  user_id     uuid references public.profiles(id) on delete cascade not null,
+  type        text not null,
+  title       text not null,
+  content     text,
+  link        text,
+  read        boolean default false,
+  metadata    jsonb,
+  created_at  timestamptz default now()
+);
+
+-- SPRINTS
+create table if not exists public.sprints (
+  id          uuid primary key default uuid_generate_v4(),
+  project_id  uuid references public.projects(id) on delete cascade not null,
+  name        text not null,
+  start_date  date not null,
+  end_date    date not null,
+  goal        text,
+  status      text default 'planned' check (status in ('backlog', 'planned', 'active', 'completed')),
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+-- LABELS
+create table if not exists public.labels (
+  id          uuid primary key default uuid_generate_v4(),
+  project_id  uuid references public.projects(id) on delete cascade not null,
+  name        text not null,
+  color       text not null default '#4f46e5',
+  created_at  timestamptz default now(),
+  unique (project_id, name)
+);
+
+create table if not exists public.task_labels (
+  task_id  uuid references public.tasks(id) on delete cascade not null,
+  label_id uuid references public.labels(id) on delete cascade not null,
+  primary key (task_id, label_id)
+);
+
+-- SUBTASKS
+create table if not exists public.task_subtasks (
+  id           uuid primary key default uuid_generate_v4(),
+  task_id      uuid references public.tasks(id) on delete cascade not null,
+  title        text not null,
+  is_completed boolean default false,
+  created_at   timestamptz default now()
+);
+
+-- TIME LOGS
+create table if not exists public.time_logs (
+  id          uuid primary key default uuid_generate_v4(),
+  task_id     uuid references public.tasks(id) on delete cascade not null,
+  user_id     uuid references public.profiles(id) on delete cascade default auth.uid(),
+  duration_seconds integer not null,
+  description text,
+  logged_at   date default current_date,
+  created_at  timestamptz default now(),
+  constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+);
+
+-- DEPENDENCIES
+create table if not exists public.task_dependencies (
+  id              uuid primary key default uuid_generate_v4(),
+  task_id         uuid references public.tasks(id) on delete cascade not null,
+  depends_on_id   uuid references public.tasks(id) on delete cascade not null,
+  created_at      timestamptz default now(),
+  unique (task_id, depends_on_id),
+  check (task_id != depends_on_id)
+);
+
+-- Ensure named foreign keys for relationship detection (PostgREST)
 alter table public.workspace_members drop constraint if exists workspace_members_user_id_fkey;
 alter table public.workspace_members add constraint workspace_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
--- Projects
-alter table public.projects add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
-
--- Project Members
-create table if not exists public.project_members (
-  id          uuid primary key default uuid_generate_v4(),
-  project_id  uuid references public.projects(id) on delete cascade not null,
-  user_id     uuid not null,
-  created_at  timestamptz default now(),
-  unique (project_id, user_id)
-);
-alter table public.project_members drop constraint if exists project_members_user_id_fkey;
-alter table public.project_members add constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
-
--- Tasks
 alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
 alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null;
 
 alter table public.tasks drop constraint if exists tasks_created_by_fkey;
 alter table public.tasks add constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null;
 
-alter table public.tasks drop constraint if exists tasks_project_id_fkey;
-alter table public.tasks add constraint tasks_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade;
-
 -- ─────────────────────────────────────────────
--- TRIGGERS & FUNCTIONS
+-- HELPER FUNCTIONS
 -- ─────────────────────────────────────────────
-
-create or replace function public.check_workspace_owner_role()
-returns trigger as $$
-begin
-  if (new.role = 'owner') then
-    if exists (
-      select 1 from public.workspace_members
-      where workspace_id = new.workspace_id and role = 'owner' and id != new.id
-    ) or exists (
-      select 1 from public.workspaces
-      where id = new.workspace_id and owner_id != new.user_id
-    ) then
-      raise exception 'A workspace can only have one owner.';
-    end if;
-  end if;
-  return new;
-end;
-$$ language plpgsql;
-
-drop trigger if exists tr_check_workspace_owner_role on public.workspace_members;
-create trigger tr_check_workspace_owner_role
-  before insert or update on public.workspace_members
-  for each row execute procedure public.check_workspace_owner_role();
-
-drop trigger if exists tasks_updated_at on public.tasks;
-create trigger tasks_updated_at
-  before update on public.tasks
-  for each row execute procedure public.handle_updated_at();
-
-create or replace function public.current_app_role()
-returns app_role
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select coalesce(
-    (select role from public.profiles where id = auth.uid()),
-    'member'::app_role
-  );
-$$;
 
 create or replace function public.current_workspace_role(target_workspace_id uuid)
 returns workspace_role
@@ -271,16 +278,7 @@ as $$
     select 1
     from public.projects project
     where project.id = target_project_id
-      and (
-        project.owner_id = auth.uid()
-        or public.current_app_role() = 'admin'::app_role
-        or exists (
-          select 1
-          from public.project_members member
-          where member.project_id = project.id
-            and member.user_id = auth.uid()
-        )
-      )
+      and public.can_access_workspace(project.workspace_id)
   );
 $$;
 
@@ -295,468 +293,113 @@ as $$
     select 1
     from public.projects project
     where project.id = target_project_id
-      and (
-        project.owner_id = auth.uid()
-        or public.current_app_role() = 'admin'::app_role
-      )
+      and public.current_workspace_role(project.workspace_id) in ('owner', 'admin')
   );
 $$;
 
-create or replace function public.can_member_update_task(
-  task_id uuid,
-  new_project_id uuid,
-  new_title text,
-  new_description text,
-  new_priority task_priority,
-  new_due_date date,
-  new_assigned_to uuid
-)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select
-    public.current_app_role() = 'member'::app_role
-    and public.can_access_project(new_project_id)
-    and exists (
-      select 1
-      from public.tasks original
-      where original.id = task_id
-        and original.project_id = new_project_id
-        and (
-          original.created_by = auth.uid()
-          or original.assigned_to = auth.uid()
-          or (
-            original.title is not distinct from new_title
-            and original.description is not distinct from new_description
-            and original.priority is not distinct from new_priority
-            and original.due_date is not distinct from new_due_date
-            and original.assigned_to is not distinct from new_assigned_to
-          )
-        )
-    );
-$$;
-
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  is_invited boolean;
-  new_ws_id uuid;
-begin
-  -- Check if user is invited to any workspace
-  select exists (
-    select 1 from public.workspace_invites where email = new.email
-  ) into is_invited;
-
-  insert into public.profiles (id, full_name, role)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
-    case
-      when exists (select 1 from public.profiles) then 'member'::app_role
-      else 'admin'::app_role
-    end
-  )
-  on conflict (id) do nothing;
-
-  -- Only create a default workspace if NOT invited
-  if not is_invited then
-    insert into public.workspaces (name, slug, owner_id)
-    values (
-      split_part(new.email, '@', 1) || '''s Workspace',
-      split_part(new.email, '@', 1) || '-' || left(uuid_generate_v4()::text, 4),
-      new.id
-    )
-    returning id into new_ws_id;
-
-    -- Add owner to workspace_members
-    insert into public.workspace_members (workspace_id, user_id, role)
-    values (new_ws_id, new.id, 'owner');
-  else
-    -- If invited, automatically accept the invites
-    insert into public.workspace_members (workspace_id, user_id, role)
-    select workspace_id, new.id, role
-    from public.workspace_invites
-    where email = new.email
-    on conflict (workspace_id, user_id) do update
-    set role = excluded.role;
-
-    -- Clean up invites
-    delete from public.workspace_invites where email = new.email;
-  end if;
-
-  return new;
-end;
-$$;
-
--- Function to migrate existing projects to the owner's first workspace
-create or replace function public.migrate_existing_projects()
-returns void
-language plpgsql
-security definer
-as $$
-declare
-  proj record;
-  first_ws_id uuid;
-begin
-  for proj in select * from public.projects where workspace_id is null loop
-    select id into first_ws_id from public.workspaces where owner_id = proj.owner_id limit 1;
-    if (first_ws_id is not null) then
-      update public.projects set workspace_id = first_ws_id where id = proj.id;
-    end if;
-  end loop;
-end;
-$$;
-
--- Migration for existing users: create workspaces and migrate projects
-do $$
-declare
-  prof record;
-  new_ws_id uuid;
-begin
-  for prof in select * from public.profiles loop
-    if not exists (select 1 from public.workspaces where owner_id = prof.id) then
-      insert into public.workspaces (name, slug, owner_id)
-      values (coalesce(prof.full_name, 'User') || '''s Workspace', lower(replace(coalesce(prof.full_name, 'user'), ' ', '-')) || '-' || left(prof.id::text, 4), prof.id)
-      on conflict (slug) do update set updated_at = now() -- dummy update to get returning id
-      returning id into new_ws_id;
-
-      if (new_ws_id is not null) then
-        -- Add to workspace_members if missing
-        insert into public.workspace_members (workspace_id, user_id, role)
-        values (new_ws_id, prof.id, 'owner')
-        on conflict (workspace_id, user_id) do update set role = 'owner';
-
-        update public.projects set workspace_id = new_ws_id where owner_id = prof.id and workspace_id is null;
-      end if;
-    else
-      select id into new_ws_id from public.workspaces where owner_id = prof.id limit 1;
-
-      -- Ensure owner is in members table
-      insert into public.workspace_members (workspace_id, user_id, role)
-      values (new_ws_id, prof.id, 'owner')
-      on conflict (workspace_id, user_id) do update set role = 'owner';
-
-      update public.projects set workspace_id = new_ws_id where owner_id = prof.id and workspace_id is null;
-    end if;
-  end loop;
-end
-$$;
-
--- Apply NOT NULL constraint after migration
-alter table public.projects alter column workspace_id set not null;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
-
-with ordered_users as (
-  select
-    id,
-    email,
-    raw_user_meta_data,
-    row_number() over (order by created_at, id) as row_num
-  from auth.users
-)
-insert into public.profiles (id, full_name, role)
-select
-  ordered_users.id,
-  coalesce(ordered_users.raw_user_meta_data->>'full_name', split_part(ordered_users.email, '@', 1)),
-  case
-    when ordered_users.row_num = 1 and not exists (select 1 from public.profiles)
-      then 'admin'::app_role
-    else 'member'::app_role
-  end
-from ordered_users
-on conflict (id) do nothing;
-
 -- ─────────────────────────────────────────────
--- ROW LEVEL SECURITY (RLS)
+-- RLS POLICIES
 -- ─────────────────────────────────────────────
 
--- Projects: owners can CRUD their own projects
-alter table public.projects enable row level security;
 alter table public.profiles enable row level security;
-alter table public.project_members enable row level security;
 alter table public.workspaces enable row level security;
 alter table public.workspace_members enable row level security;
 alter table public.workspace_invites enable row level security;
-
-drop policy if exists "Users can view profiles" on public.profiles;
-create policy "Users can view profiles"
-  on public.profiles for select
-  using (
-    auth.uid() = id
-    or public.current_app_role() = 'admin'::app_role
-    or exists (
-      select 1 from public.project_members pm
-      where pm.user_id = profiles.id
-      and public.can_access_project(pm.project_id)
-    )
-    or exists (
-      select 1 from public.workspace_members wm
-      where wm.user_id = profiles.id
-      and exists (
-        select 1 from public.workspace_members wm2
-        where wm2.workspace_id = wm.workspace_id and wm2.user_id = auth.uid()
-      )
-    )
-  );
-
--- Workspaces Policies
-drop policy if exists "Users can view workspaces they are members of" on public.workspaces;
-create policy "Users can view workspaces they are members of"
-  on public.workspaces for select
-  using (
-    exists (
-      select 1 from public.workspace_members
-      where workspace_id = workspaces.id and user_id = auth.uid()
-    )
-    or owner_id = auth.uid()
-  );
-
-drop policy if exists "Users can create workspaces" on public.workspaces;
-create policy "Users can create workspaces"
-  on public.workspaces for insert
-  with check (auth.uid() = owner_id);
-
-drop policy if exists "Owners and admins can update workspaces" on public.workspaces;
-create policy "Owners and admins can update workspaces"
-  on public.workspaces for update
-  using (
-    owner_id = auth.uid()
-    or exists (
-      select 1 from public.workspace_members
-      where workspace_id = workspaces.id and user_id = auth.uid() and role in ('owner', 'admin')
-    )
-  );
-
--- Workspace Members Policies
-drop policy if exists "Users can view members of their workspaces" on public.workspace_members;
-create policy "Users can view members of their workspaces"
-  on public.workspace_members for select
-  using (
-    exists (
-      select 1 from public.workspace_members internal
-      where internal.workspace_id = workspace_members.workspace_id and internal.user_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.workspaces
-      where id = workspace_members.workspace_id and owner_id = auth.uid()
-    )
-  );
-
--- Workspace Invites Policies
-drop policy if exists "Users can view invites for their workspaces" on public.workspace_invites;
-create policy "Users can view invites for their workspaces"
-  on public.workspace_invites for select
-  using (
-    email = (auth.jwt() ->> 'email')
-    or exists (
-      select 1 from public.workspaces
-      where id = workspace_invites.workspace_id and (owner_id = auth.uid() or exists (
-        select 1 from public.workspace_members
-        where workspace_id = workspaces.id and user_id = auth.uid() and role in ('owner', 'admin')
-      ))
-    )
-  );
-
-drop policy if exists "Users can update profiles" on public.profiles;
-create policy "Users can update profiles"
-  on public.profiles for update
-  using (auth.uid() = id or public.current_app_role() = 'admin'::app_role)
-  with check (
-    (auth.uid() = id and role = public.current_app_role()) -- Users can't change their own role
-    or public.current_app_role() = 'admin'::app_role
-  );
-
-drop policy if exists "Users can view their own projects" on public.projects;
-create policy "Users can view their own projects"
-  on public.projects for select
-  using (public.can_access_project(id));
-
-drop policy if exists "Users can create projects" on public.projects;
-create policy "Users can create projects"
-  on public.projects for insert
-  with check (
-    public.current_app_role() in ('admin'::app_role, 'member'::app_role)
-    and auth.uid() = owner_id
-  );
-
-drop policy if exists "Users can update their own projects" on public.projects;
-create policy "Users can update their own projects"
-  on public.projects for update
-  using (public.can_manage_project(id))
-  with check (public.can_manage_project(id));
-
-drop policy if exists "Users can delete their own projects" on public.projects;
-create policy "Users can delete their own projects"
-  on public.projects for delete
-  using (public.can_manage_project(id));
-
-drop policy if exists "Users can view project members for accessible projects" on public.project_members;
-create policy "Users can view project members for accessible projects"
-  on public.project_members for select
-  using (public.can_access_project(project_id));
-
-drop policy if exists "Admins can manage project members" on public.project_members;
-create policy "Admins can manage project members"
-  on public.project_members for all
-  using (public.current_app_role() = 'admin'::app_role)
-  with check (public.current_app_role() = 'admin'::app_role);
-
--- Tasks: accessible to project owner
+alter table public.projects enable row level security;
 alter table public.tasks enable row level security;
-
-drop policy if exists "Users can view tasks in their projects" on public.tasks;
-create policy "Users can view tasks in their projects"
-  on public.tasks for select
-  using (public.can_access_project(project_id));
-
-drop policy if exists "Users can create tasks in their projects" on public.tasks;
-create policy "Users can create tasks in their projects"
-  on public.tasks for insert
-  with check (public.can_access_project(project_id));
-
-drop policy if exists "Admins and owners can update tasks" on public.tasks;
-create policy "Admins and owners can update tasks"
-  on public.tasks for update
-  using (public.can_manage_project(project_id));
-
-drop policy if exists "Members can update tasks" on public.tasks;
-create policy "Members can update tasks"
-  on public.tasks for update
-  using (
-    public.current_app_role() = 'member'::app_role
-    and public.can_access_project(project_id)
-  )
-  with check (
-    public.can_member_update_task(
-      id,
-      project_id,
-      title,
-      description,
-      priority,
-      due_date,
-      assigned_to
-    )
-  );
-
-drop policy if exists "Users can delete tasks in their projects" on public.tasks;
-create policy "Users can delete tasks in their projects"
-  on public.tasks for delete
-  using (public.can_manage_project(project_id));
-
--- ─────────────────────────────────────────────
--- TASK DEPENDENCIES
--- ─────────────────────────────────────────────
-create table if not exists public.task_dependencies (
-  id              uuid primary key default uuid_generate_v4(),
-  task_id         uuid references public.tasks(id) on delete cascade not null,
-  depends_on_id   uuid references public.tasks(id) on delete cascade not null,
-  created_at      timestamptz default now(),
-  unique (task_id, depends_on_id),
-  check (task_id != depends_on_id)
-);
-
-alter table public.task_dependencies enable row level security;
-
-create policy "Users can view task dependencies"
-  on public.task_dependencies for select
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_dependencies.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can manage task dependencies"
-  on public.task_dependencies for all
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_dependencies.task_id
-      and public.can_manage_project(tasks.project_id)
-  ));
-
--- ─────────────────────────────────────────────
--- INDEXES for performance
--- ─────────────────────────────────────────────
-create index if not exists tasks_project_id_idx on public.tasks(project_id);
-create index if not exists tasks_status_idx on public.tasks(status);
-create index if not exists projects_owner_id_idx on public.projects(owner_id);
-create index if not exists project_members_project_id_idx on public.project_members(project_id);
-create index if not exists project_members_user_id_idx on public.project_members(user_id);
-
--- ─────────────────────────────────────────────
--- TASK COMMENTS
--- ─────────────────────────────────────────────
-create table if not exists public.task_comments (
-  id          uuid primary key default uuid_generate_v4(),
-  task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid default auth.uid(),
-  content     text not null,
-  created_at  timestamptz default now()
-);
-
-alter table public.task_comments drop constraint if exists task_comments_user_id_fkey;
-alter table public.task_comments add constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
-
-
 alter table public.task_comments enable row level security;
-
-create policy "Users can view comments for tasks they can access"
-  on public.task_comments for select
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_comments.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can insert comments for tasks they can access"
-  on public.task_comments for insert
-  with check (exists (
-    select 1 from public.tasks
-    where tasks.id = task_comments.task_id
-      and public.can_access_project(tasks.project_id)
-  ) and auth.uid() = user_id);
-
-create policy "Users can delete their own comments"
-  on public.task_comments for delete
-  using (auth.uid() = user_id);
-
--- ─────────────────────────────────────────────
--- TASK LOGS (Activity)
--- ─────────────────────────────────────────────
-create table if not exists public.task_logs (
-  id          uuid primary key default uuid_generate_v4(),
-  task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid,
-  type        text not null,
-  old_value   text,
-  new_value   text,
-  created_at  timestamptz default now()
-);
-
-alter table public.task_logs drop constraint if exists task_logs_user_id_fkey;
-alter table public.task_logs add constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null;
-
+alter table public.task_attachments enable row level security;
+alter table public.task_subtasks enable row level security;
+alter table public.task_dependencies enable row level security;
 alter table public.task_logs enable row level security;
+alter table public.time_logs enable row level security;
+alter table public.sprints enable row level security;
+alter table public.labels enable row level security;
+alter table public.task_labels enable row level security;
+alter table public.notifications enable row level security;
 
-create policy "Users can view logs for tasks they can access"
-  on public.task_logs for select
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_logs.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
+-- Profiles
+create policy "Public profile view" on public.profiles for select using (true);
+create policy "Self profile update" on public.profiles for update using (auth.uid() = id);
 
--- Trigger to log status changes
+-- Workspaces
+create policy "Workspace view access" on public.workspaces for select using (public.can_access_workspace(id));
+create policy "Workspace creation" on public.workspaces for insert with check (auth.uid() = owner_id);
+create policy "Workspace update" on public.workspaces for update using (public.current_workspace_role(id) in ('owner', 'admin'));
+create policy "Workspace deletion" on public.workspaces for delete using (auth.uid() = owner_id);
+
+-- Workspace Members & Invites
+create policy "Member view" on public.workspace_members for select using (public.can_access_workspace(workspace_id));
+create policy "Member management" on public.workspace_members for all using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
+create policy "Invite view" on public.workspace_invites for select using (email = (auth.jwt() ->> 'email') or public.current_workspace_role(workspace_id) in ('owner', 'admin'));
+create policy "Invite management" on public.workspace_invites for all using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
+
+-- Projects
+create policy "Project view" on public.projects for select using (public.can_access_workspace(workspace_id));
+create policy "Project creation" on public.projects for insert with check (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
+create policy "Project update" on public.projects for update using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
+create policy "Project deletion" on public.projects for delete using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
+
+-- Tasks
+create policy "Task view" on public.tasks for select using (public.can_access_project(project_id));
+create policy "Task creation" on public.tasks for insert with check (public.can_access_project(project_id) and public.current_workspace_role((select workspace_id from public.projects where id = project_id)) in ('owner', 'admin', 'member'));
+create policy "Task update" on public.tasks for update using (public.can_access_project(project_id) and public.current_workspace_role((select workspace_id from public.projects where id = project_id)) in ('owner', 'admin', 'member'));
+create policy "Task deletion" on public.tasks for delete using (public.can_manage_project(project_id));
+
+-- Sub-entities
+create policy "Task sub-entity" on public.task_comments for all using (public.can_access_project((select project_id from public.tasks where id = task_id)));
+create policy "Task sub-entity att" on public.task_attachments for all using (public.can_access_project((select project_id from public.tasks where id = task_id)));
+create policy "Task sub-entity sub" on public.task_subtasks for all using (public.can_access_project((select project_id from public.tasks where id = task_id)));
+create policy "Task sub-entity dep" on public.task_dependencies for all using (public.can_access_project((select project_id from public.tasks where id = task_id)));
+create policy "Task sub-entity log" on public.task_logs for all using (public.can_access_project((select project_id from public.tasks where id = task_id)));
+create policy "Task sub-entity time" on public.time_logs for all using (public.can_access_project((select project_id from public.tasks where id = task_id)));
+create policy "Task sub-entity lab" on public.task_labels for all using (public.can_access_project((select project_id from public.tasks where id = task_id)));
+
+create policy "Proj sub-entity spr" on public.sprints for all using (public.can_access_project(project_id));
+create policy "Proj sub-entity lab" on public.labels for all using (public.can_access_project(project_id));
+
+-- Notifications
+create policy "Self notify" on public.notifications for all using (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────
+-- AUTOMATION & TRIGGERS
+-- ─────────────────────────────────────────────
+
+create or replace function public.handle_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger projects_updated_at before update on public.projects for each row execute procedure public.handle_updated_at();
+create trigger profiles_updated_at before update on public.profiles for each row execute procedure public.handle_updated_at();
+create trigger tasks_updated_at before update on public.tasks for each row execute procedure public.handle_updated_at();
+create trigger sprints_updated_at before update on public.sprints for each row execute procedure public.handle_updated_at();
+
+-- Workspace Owner constraint
+create or replace function public.check_workspace_owner_role()
+returns trigger as $$
+begin
+  if (new.role = 'owner') then
+    if exists (
+      select 1 from public.workspace_members
+      where workspace_id = new.workspace_id and role = 'owner' and id != new.id
+    ) or exists (
+      select 1 from public.workspaces
+      where id = new.workspace_id and owner_id != new.user_id
+    ) then
+      raise exception 'A workspace can only have one owner.';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger tr_check_workspace_owner_role before insert or update on public.workspace_members for each row execute procedure public.check_workspace_owner_role();
+
+-- ACTIVITY LOGGING TRIGGERS
 create or replace function public.log_task_status_change()
 returns trigger as $$
 begin
@@ -768,7 +411,8 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Trigger to log new comments
+create trigger tasks_status_log after update on public.tasks for each row execute procedure public.log_task_status_change();
+
 create or replace function public.log_new_comment()
 returns trigger as $$
 begin
@@ -778,281 +422,9 @@ begin
 end;
 $$ language plpgsql security definer;
 
-drop trigger if exists on_comment_logged on public.task_comments;
-create trigger on_comment_logged
-  after insert on public.task_comments
-  for each row execute procedure public.log_new_comment();
+create trigger on_comment_logged after insert on public.task_comments for each row execute procedure public.log_new_comment();
 
-drop trigger if exists tasks_status_log on public.tasks;
-create trigger tasks_status_log
-  after update on public.tasks
-  for each row execute procedure public.log_task_status_change();
-
--- ─────────────────────────────────────────────
--- PROJECT INVITES
--- ─────────────────────────────────────────────
-create table if not exists public.project_invites (
-  id          uuid primary key default uuid_generate_v4(),
-  project_id  uuid references public.projects(id) on delete cascade not null,
-  email       text not null,
-  role        app_role not null default 'member',
-  invited_by  uuid references public.profiles(id) on delete cascade not null default auth.uid(),
-  status      text default 'pending',
-  created_at  timestamptz default now(),
-  unique (project_id, email)
-);
-
-create or replace function public.check_self_invite()
-returns trigger as $$
-begin
-  if exists (
-    select 1 from auth.users
-    where id = new.invited_by and email = new.email
-  ) then
-    raise exception 'You cannot invite yourself.';
-  end if;
-  return new;
-end;
-$$ language plpgsql security definer;
-
-drop trigger if exists tr_check_self_invite on public.project_invites;
-create trigger tr_check_self_invite
-  before insert on public.project_invites
-  for each row execute procedure public.check_self_invite();
-
-alter table public.project_invites enable row level security;
-
-create policy "Users can view invites for projects they manage"
-  on public.project_invites for select
-  using (public.can_manage_project(project_id) or email = (auth.jwt() ->> 'email'));
-
-create policy "Admins and owners can create invites"
-  on public.project_invites for insert
-  with check (public.can_manage_project(project_id));
-
-create policy "Admins and owners can delete invites"
-  on public.project_invites for delete
-  using (public.can_manage_project(project_id));
-
--- ─────────────────────────────────────────────
--- SUBTASKS
--- ─────────────────────────────────────────────
-create table if not exists public.task_subtasks (
-  id           uuid primary key default uuid_generate_v4(),
-  task_id      uuid references public.tasks(id) on delete cascade not null,
-  title        text not null,
-  is_completed boolean default false,
-  created_at   timestamptz default now()
-);
-
-alter table public.task_subtasks enable row level security;
-
-create policy "Users can view subtasks for tasks they can access"
-  on public.task_subtasks for select
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_subtasks.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can manage subtasks for tasks they can access"
-  on public.task_subtasks for all
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_subtasks.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
--- ─────────────────────────────────────────────
--- LABELS
--- ─────────────────────────────────────────────
-create table if not exists public.labels (
-  id          uuid primary key default uuid_generate_v4(),
-  project_id  uuid references public.projects(id) on delete cascade not null,
-  name        text not null,
-  color       text not null default '#4f46e5',
-  created_at  timestamptz default now(),
-  unique (project_id, name)
-);
-
-alter table public.labels enable row level security;
-
-create policy "Users can view labels for projects they can access"
-  on public.labels for select
-  using (public.can_access_project(project_id));
-
-create policy "Admins and owners can manage labels"
-  on public.labels for all
-  using (public.can_manage_project(project_id));
-
-create table if not exists public.task_labels (
-  task_id  uuid references public.tasks(id) on delete cascade not null,
-  label_id uuid references public.labels(id) on delete cascade not null,
-  primary key (task_id, label_id)
-);
-
-alter table public.task_labels enable row level security;
-
-create policy "Users can view task labels"
-  on public.task_labels for select
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_labels.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can manage task labels"
-  on public.task_labels for all
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_labels.task_id
-      and public.can_access_project(tasks.project_id)
-  ))
-  with check (exists (
-    select 1 from public.tasks
-    where tasks.id = task_labels.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
--- ─────────────────────────────────────────────
--- SPRINTS
--- ─────────────────────────────────────────────
-create table if not exists public.sprints (
-  id          uuid primary key default uuid_generate_v4(),
-  project_id  uuid references public.projects(id) on delete cascade not null,
-  name        text not null,
-  start_date  date not null,
-  end_date    date not null,
-  goal        text,
-  status      text default 'planned', -- planned, active, completed
-  created_at  timestamptz default now(),
-  updated_at  timestamptz default now(),
-  check (status in ('backlog', 'planned', 'active', 'completed'))
-);
-
-drop trigger if exists sprints_updated_at on public.sprints;
-create trigger sprints_updated_at
-  before update on public.sprints
-  for each row execute procedure public.handle_updated_at();
-
-alter table public.sprints enable row level security;
-
-create policy "Users can view sprints for accessible projects"
-  on public.sprints for select
-  using (public.can_access_project(project_id));
-
-create policy "Admins and owners can manage sprints"
-  on public.sprints for all
-  using (public.can_manage_project(project_id));
-
--- Add sprint_id to tasks
-alter table public.tasks add column if not exists sprint_id uuid;
-alter table public.tasks drop constraint if exists tasks_sprint_id_fkey;
-alter table public.tasks add constraint tasks_sprint_id_fkey foreign key (sprint_id) references public.sprints(id) on delete set null;
-
--- ─────────────────────────────────────────────
--- ATTACHMENTS
--- ─────────────────────────────────────────────
-create table if not exists public.task_attachments (
-  id          uuid primary key default uuid_generate_v4(),
-  task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
-  name        text not null,
-  file_path   text not null,
-  file_size   bigint,
-  content_type text,
-  created_at  timestamptz default now()
-);
-
-alter table public.task_attachments drop constraint if exists task_attachments_user_id_fkey;
-alter table public.task_attachments add constraint task_attachments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
-
-alter table public.task_attachments enable row level security;
-
-create policy "Users can view attachments for accessible tasks"
-  on public.task_attachments for select
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = task_attachments.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can insert attachments"
-  on public.task_attachments for insert
-  with check (exists (
-    select 1 from public.tasks
-    where tasks.id = task_attachments.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can delete their own attachments"
-  on public.task_attachments for delete
-  using (auth.uid() = user_id);
-
--- ─────────────────────────────────────────────
--- TIME LOGS
--- ─────────────────────────────────────────────
-create table if not exists public.time_logs (
-  id          uuid primary key default uuid_generate_v4(),
-  task_id     uuid references public.tasks(id) on delete cascade not null,
-  user_id     uuid default auth.uid(),
-  duration_seconds integer not null,
-  description text,
-  logged_at   date default current_date,
-  created_at  timestamptz default now()
-);
-
-alter table public.time_logs drop constraint if exists time_logs_user_id_fkey;
-alter table public.time_logs add constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
-
-alter table public.time_logs enable row level security;
-
-create policy "Users can view time logs for accessible tasks"
-  on public.time_logs for select
-  using (exists (
-    select 1 from public.tasks
-    where tasks.id = time_logs.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can log time"
-  on public.time_logs for insert
-  with check (exists (
-    select 1 from public.tasks
-    where tasks.id = time_logs.task_id
-      and public.can_access_project(tasks.project_id)
-  ));
-
-create policy "Users can delete their own time logs"
-  on public.time_logs for delete
-  using (auth.uid() = user_id);
-
--- ─────────────────────────────────────────────
--- NOTIFICATIONS
--- ─────────────────────────────────────────────
-create table if not exists public.notifications (
-  id          uuid primary key default uuid_generate_v4(),
-  user_id     uuid references public.profiles(id) on delete cascade not null,
-  type        text not null,
-  title       text not null,
-  content     text,
-  link        text,
-  read        boolean default false,
-  metadata    jsonb,
-  created_at  timestamptz default now()
-);
-
-alter table public.notifications enable row level security;
-
-create policy "Users can view their own notifications"
-  on public.notifications for select
-  using (auth.uid() = user_id);
-
-create policy "Users can update their own notifications"
-  on public.notifications for update
-  using (auth.uid() = user_id);
-
--- Trigger for task assignment notification
+-- NOTIFICATION TRIGGERS
 create or replace function public.notify_task_assignment()
 returns trigger as $$
 begin
@@ -1070,12 +442,8 @@ begin
 end;
 $$ language plpgsql security definer;
 
-drop trigger if exists on_task_assigned on public.tasks;
-create trigger on_task_assigned
-  after update on public.tasks
-  for each row execute procedure public.notify_task_assignment();
+create trigger on_task_assigned after update on public.tasks for each row execute procedure public.notify_task_assignment();
 
--- Trigger for new comment notification
 create or replace function public.notify_new_comment()
 returns trigger as $$
 declare
@@ -1086,185 +454,124 @@ declare
 begin
   select title, project_id, assigned_to, created_by
   into task_title, task_project_id, task_assignee, task_owner
-  from public.tasks
-  where id = new.task_id;
+  from public.tasks where id = new.task_id;
 
-  -- Notify mentioned users
   insert into public.notifications (user_id, type, title, content, link)
   select p.id, 'task_mention', 'You were mentioned in a comment', 'In: ' || task_title, '/project/' || task_project_id
   from public.profiles p
-  where new.content ~ ('@' || p.full_name)
-    and p.id != new.user_id;
+  where new.content ~ ('@' || p.full_name) and p.id != new.user_id;
 
-  -- Notify assignee if not the commenter
   if (task_assignee is not null and task_assignee != new.user_id) then
     insert into public.notifications (user_id, type, title, content, link)
-    values (
-      task_assignee,
-      'new_comment',
-      'New comment on task',
-      'Someone commented on: ' || task_title,
-      '/project/' || task_project_id
-    );
-  end if;
-
-  -- Notify owner if not the commenter and not the assignee
-  if (task_owner is not null and task_owner != new.user_id and task_owner != coalesce(task_assignee, '00000000-0000-0000-0000-000000000000'::uuid)) then
-    insert into public.notifications (user_id, type, title, content, link)
-    values (
-      task_owner,
-      'new_comment',
-      'New comment on task',
-      'Someone commented on: ' || task_title,
-      '/project/' || task_project_id
-    );
+    values (task_assignee, 'new_comment', 'New comment on task', 'Someone commented on: ' || task_title, '/project/' || task_project_id);
   end if;
 
   return new;
 end;
 $$ language plpgsql security definer;
 
-drop trigger if exists on_comment_added on public.task_comments;
-create trigger on_comment_added
-  after insert on public.task_comments
-  for each row execute procedure public.notify_new_comment();
+create trigger on_comment_added after insert on public.task_comments for each row execute procedure public.notify_new_comment();
 
-create or replace function public.handle_project_member_added()
+-- NEW USER SIGNUP TRIGGER
+create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  invited_role app_role;
+  is_invited boolean;
+  new_ws_id uuid;
 begin
-  -- Find the invite for this user and project
-  select role into invited_role
-  from public.project_invites
-  where project_id = new.project_id
-    and email = (select email from auth.users where id = new.user_id)
-  limit 1;
+  select exists (select 1 from public.workspace_invites where email = new.email) into is_invited;
 
-  -- If an invite exists, update the user's role
-  if (invited_role is not null) then
-    update public.profiles
-    set role = invited_role
-    where id = new.user_id;
+  insert into public.profiles (id, full_name, role)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    case when exists (select 1 from public.profiles) then 'member'::app_role else 'admin'::app_role end
+  ) on conflict (id) do nothing;
+
+  if not is_invited then
+    insert into public.workspaces (name, slug, owner_id)
+    values (
+      split_part(new.email, '@', 1) || '''s Workspace',
+      split_part(new.email, '@', 1) || '-' || left(uuid_generate_v4()::text, 4),
+      new.id
+    ) returning id into new_ws_id;
+
+    insert into public.workspace_members (workspace_id, user_id, role)
+    values (new_ws_id, new.id, 'owner');
+  else
+    insert into public.workspace_members (workspace_id, user_id, role)
+    select workspace_id, new.id, role
+    from public.workspace_invites where email = new.email
+    on conflict (workspace_id, user_id) do update set role = excluded.role;
+
+    delete from public.workspace_invites where email = new.email;
   end if;
 
   return new;
 end;
 $$;
 
-drop trigger if exists on_project_member_added on public.project_members;
-create trigger on_project_member_added
-  after insert on public.project_members
-  for each row execute procedure public.handle_project_member_added();
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 
--- Trigger for project invite notification
-create or replace function public.notify_project_invite()
-returns trigger as $$
+-- ─────────────────────────────────────────────
+-- MIGRATIONS & FIXES
+-- ─────────────────────────────────────────────
+
+-- Ensure all users have a workspace and are in workspace_members
+do $$
 declare
-  target_user_id uuid;
-  project_name text;
+  prof record;
+  ws_id uuid;
 begin
-  select id into target_user_id
-  from auth.users
-  where email = new.email;
+  for prof in select * from public.profiles loop
+    if not exists (select 1 from public.workspace_members where user_id = prof.id) then
+      if not exists (select 1 from public.workspaces where owner_id = prof.id) then
+        insert into public.workspaces (name, slug, owner_id)
+        values (prof.full_name || '''s Workspace', lower(replace(prof.full_name, ' ', '-')) || '-' || left(prof.id::text, 4), prof.id)
+        on conflict (slug) do update set updated_at = now()
+        returning id into ws_id;
+      else
+        select id into ws_id from public.workspaces where owner_id = prof.id limit 1;
+      end if;
 
-  select name into project_name
-  from public.projects
-  where id = new.project_id;
+      insert into public.workspace_members (workspace_id, user_id, role)
+      values (ws_id, prof.id, 'owner')
+      on conflict (workspace_id, user_id) do nothing;
+    end if;
+  end loop;
+end
+$$;
 
-  if (target_user_id is not null) then
-    insert into public.notifications (user_id, type, title, content, link, metadata)
-    values (
-      target_user_id,
-      'project_invite',
-      'New project invite',
-      'You have been invited to join: ' || project_name,
-      null,
-      jsonb_build_object('inviteId', new.id, 'projectId', new.project_id)
-    );
-  end if;
-  return new;
-end;
-$$ language plpgsql security definer;
-
-drop trigger if exists on_project_invited on public.project_invites;
-create trigger on_project_invited
-  after insert on public.project_invites
-  for each row execute procedure public.notify_project_invite();
+-- Migrate projects without workspace_id
+do $$
+declare
+  proj record;
+  ws_id uuid;
+begin
+  for proj in select * from public.projects where workspace_id is null loop
+    select workspace_id into ws_id from public.workspace_members where user_id = proj.owner_id and role = 'owner' limit 1;
+    if ws_id is not null then
+      update public.projects set workspace_id = ws_id where id = proj.id;
+    end if;
+  end loop;
+end
+$$;
 
 -- ─────────────────────────────────────────────
 -- STORAGE
 -- ─────────────────────────────────────────────
-insert into storage.buckets (id, name, public)
-values ('avatars', 'avatars', true)
-on conflict (id) do update
-set public = excluded.public;
 
-insert into storage.buckets (id, name, public)
-values ('task-attachments', 'task-attachments', true)
-on conflict (id) do update
-set public = excluded.public;
+insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('task-attachments', 'task-attachments', true) on conflict (id) do nothing;
 
-drop policy if exists "Avatar images are publicly accessible" on storage.objects;
-create policy "Avatar images are publicly accessible"
-  on storage.objects for select
-  using (bucket_id = 'avatars');
+drop policy if exists "Avatar access" on storage.objects;
+create policy "Avatar access" on storage.objects for select using (bucket_id = 'avatars');
+create policy "Avatar upload" on storage.objects for insert with check (bucket_id = 'avatars' and auth.role() = 'authenticated' and (storage.foldername(name))[1] = auth.uid()::text);
 
-drop policy if exists "Users can upload their own avatar" on storage.objects;
-create policy "Users can upload their own avatar"
-  on storage.objects for insert
-  with check (
-    bucket_id = 'avatars'
-    and auth.role() = 'authenticated'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-drop policy if exists "Users can update their own avatar" on storage.objects;
-create policy "Users can update their own avatar"
-  on storage.objects for update
-  using (
-    bucket_id = 'avatars'
-    and auth.role() = 'authenticated'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  )
-  with check (
-    bucket_id = 'avatars'
-    and auth.role() = 'authenticated'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-drop policy if exists "Users can delete their own avatar" on storage.objects;
-create policy "Users can delete their own avatar"
-  on storage.objects for delete
-  using (
-    bucket_id = 'avatars'
-    and auth.role() = 'authenticated'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
--- Task Attachments Storage Policies
-drop policy if exists "Task attachments are accessible to project members" on storage.objects;
-create policy "Task attachments are accessible to project members"
-  on storage.objects for select
-  using (bucket_id = 'task-attachments');
-
-drop policy if exists "Users can upload task attachments" on storage.objects;
-create policy "Users can upload task attachments"
-  on storage.objects for insert
-  with check (
-    bucket_id = 'task-attachments'
-    and auth.role() = 'authenticated'
-  );
-
-drop policy if exists "Users can delete their own task attachments" on storage.objects;
-create policy "Users can delete their own task attachments"
-  on storage.objects for delete
-  using (
-    bucket_id = 'task-attachments'
-    and auth.role() = 'authenticated'
-    -- In a real app, we'd check if they own the attachment record in public.task_attachments
-  );
+create policy "Attachment access" on storage.objects for select using (bucket_id = 'task-attachments');
+create policy "Attachment upload" on storage.objects for insert with check (bucket_id = 'task-attachments' and auth.role() = 'authenticated');

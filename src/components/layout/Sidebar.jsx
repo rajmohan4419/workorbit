@@ -16,12 +16,12 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile)
   const signOut = useAuthStore((state) => state.signOut)
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const createProject = useProjectStore((state) => state.createProject)
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
+  const currentUserRole = useWorkspaceStore((state) => state.currentUserRole)
   const workspaces = useWorkspaceStore((state) => state.workspaces)
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace)
   const [projectsOpen, setProjectsOpen] = useState(true)
@@ -154,9 +154,9 @@ export default function Sidebar() {
               )
             })}
 
-            {profile?.role === 'admin' && (
+            {currentUserRole === 'owner' && (
               <Link
-                to="/users"
+                to={`/w/${activeWorkspace?.slug}/settings`}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                   location.pathname === '/users'
@@ -205,7 +205,7 @@ export default function Sidebar() {
                       )
                     })}
 
-                    {canCreateProject(profile?.role) && (
+                    {canCreateProject(currentUserRole) && (
                       <>
                         {creating ? (
                           <form onSubmit={handleCreateProject} className="px-3 pt-1">

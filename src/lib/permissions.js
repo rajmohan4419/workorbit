@@ -20,48 +20,57 @@ export function getRoleDescription(role) {
   return ROLE_DESCRIPTIONS[role] ?? ROLE_DESCRIPTIONS.member
 }
 
-export function isOwner(userId, projectOwnerId) {
-  return userId && projectOwnerId && userId === projectOwnerId
+export function isOwner(userId, ownerId) {
+  return userId && ownerId && userId === ownerId
 }
 
-export function canCreateProject(role) {
-  return role === 'owner' || role === 'admin' || role === 'member'
+// Workspace Permissions
+export function canCreateProject(wsRole) {
+  return wsRole === 'owner' || wsRole === 'admin'
 }
 
-export function canEditProject(role, userId, projectOwnerId) {
-  return role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)
+export function canManageWorkspace(wsRole) {
+  return wsRole === 'owner' || wsRole === 'admin'
 }
 
-export function canDeleteProject(role, userId, projectOwnerId) {
-  return role === 'owner' || isOwner(userId, projectOwnerId)
+export function canDeleteWorkspace(wsRole) {
+  return wsRole === 'owner'
 }
 
-export function canInviteMembers(role, userId, projectOwnerId) {
-  return role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)
+export function canInviteMembers(wsRole) {
+  return wsRole === 'owner' || wsRole === 'admin'
 }
 
-export function canManageRoles(role, userId, projectOwnerId) {
-  return role === 'owner' || isOwner(userId, projectOwnerId)
+// Project Permissions (Inherited from Workspace Role)
+export function canEditProject(wsRole) {
+  return wsRole === 'owner' || wsRole === 'admin'
 }
 
-export function canCreateTask(role, userId, projectOwnerId) {
-  return role === 'owner' || role === 'admin' || role === 'member' || isOwner(userId, projectOwnerId)
+export function canDeleteProject(wsRole) {
+  return wsRole === 'owner' || wsRole === 'admin'
 }
 
-export function canDeleteTask(role, userId, projectOwnerId) {
-  return role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)
+// Task Permissions
+export function canCreateTask(wsRole) {
+  return wsRole !== 'viewer'
 }
 
-export function canEditTaskMetadata(role, userId, taskCreatorId, taskAssigneeId, projectOwnerId) {
-  if (role === 'owner' || role === 'admin' || isOwner(userId, projectOwnerId)) return true
-  if (role === 'member' && (userId === taskCreatorId || userId === taskAssigneeId)) return true
+export function canEditTaskMetadata(wsRole, userId, taskCreatorId, taskAssigneeId) {
+  if (wsRole === 'owner' || wsRole === 'admin') return true
+  if (wsRole === 'member' && (userId === taskCreatorId || userId === taskAssigneeId)) return true
   return false
 }
 
-export function canEditTaskStatus(role, userId, taskCreatorId, taskAssigneeId, projectOwnerId) {
-  return canEditTaskMetadata(role, userId, taskCreatorId, taskAssigneeId, projectOwnerId)
+export function canDeleteTask(wsRole, userId, taskCreatorId) {
+  if (wsRole === 'owner' || wsRole === 'admin') return true
+  if (wsRole === 'member' && userId === taskCreatorId) return true
+  return false
 }
 
-export function canComment(role) {
-  return role === 'admin' || role === 'member' || role === 'viewer'
+export function canComment(wsRole) {
+  return wsRole !== 'viewer'
+}
+
+export function canManageSprints(wsRole) {
+  return wsRole === 'owner' || wsRole === 'admin'
 }

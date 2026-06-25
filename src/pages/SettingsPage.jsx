@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const { workspaceSlug } = useParams()
   const navigate = useNavigate()
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
+  const userRole = useWorkspaceStore((state) => state.currentUserRole)
   const members = useWorkspaceStore((state) => state.members)
   const updateWorkspace = useWorkspaceStore((state) => state.updateWorkspace)
   const deleteWorkspace = useWorkspaceStore((state) => state.deleteWorkspace)
@@ -40,8 +41,7 @@ export default function SettingsPage() {
   const [inviteRole, setInviteRole] = useState('member')
   const [sendingInvite, setSendingInvite] = useState(false)
 
-  const isOwner = activeWorkspace?.owner_id === currentUser?.id
-  const userRole = isOwner ? 'owner' : members.find(m => m.user_id === currentUser?.id)?.role
+  const isOwner = userRole === 'owner'
   const isAdmin = userRole === 'admin' || isOwner
 
   useEffect(() => {
