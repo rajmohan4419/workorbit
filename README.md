@@ -1,4 +1,4 @@
-# WorkOrbit — Free Project Management App
+# OrbitBoard — Free Project Management App
 
 Zero-cost stack: React + Vite + Tailwind → Vercel | Supabase (DB + Auth + Edge) | Cloudflare CDN
 

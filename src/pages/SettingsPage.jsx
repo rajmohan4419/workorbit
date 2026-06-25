@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { Settings, Users, Shield, Trash2, Save, UserMinus, ShieldAlert, AlertTriangle, User, Mail, Phone, Key, Plus, Loader2 } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useAuthStore } from '../store/authStore'
 import { getRoleLabel } from '../lib/permissions'
 
 export default function SettingsPage({ initialTab = 'general' }) {
-  const { workspaceId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
@@ -73,10 +72,11 @@ export default function SettingsPage({ initialTab = 'general' }) {
   const handleUpdate = async (e) => {
     e.preventDefault()
     if (!name.trim() || !slug.trim()) return
+    const oldSlug = activeWorkspace.slug
     setSaving(true)
     await updateWorkspace(activeWorkspace.id, { name: name.trim(), slug: slug.trim() })
     setSaving(false)
-    if (slug !== workspaceSlug) {
+    if (slug !== oldSlug) {
       navigate(`/workspaces/${slug}/settings`)
     }
   }

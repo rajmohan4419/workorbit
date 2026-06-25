@@ -1,22 +1,16 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, User, Shield } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canCreateProject } from '../../lib/permissions'
 
-const dashboardItems = [
+const navItems = [
   { icon: LayoutDashboard, label: 'Overview', to: '/dashboard' },
   { icon: CheckSquare, label: 'My tasks', to: '/my-tasks', wsRelative: true, wsTo: '/tasks' },
 ]
 
-const workspaceItems = [
-  { icon: PieChart, label: 'Overview', to: '' },
-  { icon: LayoutDashboard, label: 'Projects', to: '/projects' },
-  { icon: Users, label: 'Team', to: '/team' },
-  { icon: PieChart, label: 'Reports', to: '/reports' },
-]
 
 const settingsItems = [
   { icon: User, label: 'Profile', to: '/settings/profile' },
@@ -95,10 +89,10 @@ export default function Sidebar() {
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">O</span>
             </div>
-            <span className="font-semibold text-gray-900 text-sm">Orbit Board</span>
+            <span className="font-semibold text-gray-900 text-sm">orbitboard.in</span>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
             <div className="mb-2 px-3">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Workspace</label>
               <div className="relative group">
@@ -149,24 +143,22 @@ export default function Sidebar() {
                 ? `/workspaces/${activeWorkspace.slug}${item.to}`
                 : item.to
 
-                  return (
-                    <Link
-                      key={item.label}
-                      to={fullTo}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                        location.pathname === fullTo
-                          ? 'bg-indigo-50 text-indigo-700 font-medium'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      <Icon size={16} />
-                      {item.label}
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
+              return (
+                <Link
+                  key={item.label}
+                  to={fullTo}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    location.pathname === fullTo
+                      ? 'bg-indigo-50 text-indigo-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Icon size={16} />
+                  {item.label}
+                </Link>
+              )
+            })}
 
             {activeWorkspace && (
               <div>
@@ -283,7 +275,7 @@ export default function Sidebar() {
                 })}
               </div>
             </div>
-          </nav>
+          </div>
 
           <div className="px-3 py-4 border-t border-gray-100">
             <div className="flex items-center gap-3 px-3 py-2 mb-1">
