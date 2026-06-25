@@ -60,7 +60,7 @@ export default function SearchModal({ onClose }) {
       }
       if (e.key === 'Enter' && flatResults[selectedIndex]) {
         const item = flatResults[selectedIndex]
-        window.location.href = item.type === 'project' ? `/project/${item.id}` : `/project/${item.project_id}`
+        window.location.href = item.type === 'project' ? `/projects/${item.id}` : `/projects/${item.project_id}`
         onClose()
       }
     }
@@ -123,7 +123,7 @@ export default function SearchModal({ onClose }) {
                       return (
                         <Link
                           key={project.id}
-                          to={`/project/${project.id}`}
+                          to={`/projects/${project.id}`}
                           onClick={onClose}
                           className={`flex items-center justify-between px-3 py-2.5 rounded-xl group transition-colors ${
                             isSelected ? 'bg-indigo-50' : 'hover:bg-indigo-50'
@@ -157,7 +157,7 @@ export default function SearchModal({ onClose }) {
                       return (
                         <Link
                           key={task.id}
-                          to={`/project/${task.project_id}`}
+                          to={`/projects/${task.project_id}`}
                           onClick={onClose}
                           className={`flex items-center justify-between px-3 py-2.5 rounded-xl group transition-colors ${
                             isSelected ? 'bg-indigo-50' : 'hover:bg-indigo-50'

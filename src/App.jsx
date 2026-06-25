@@ -43,7 +43,7 @@ function AppShell() {
   )
 }
 
-const isAppSubdomain = window.location.hostname === 'app.orbitboard.in' || window.location.hostname === 'localhost'
+const isAppSubdomain = window.location.hostname === 'app.workorbit.in' || window.location.hostname === 'localhost'
 
 const router = createBrowserRouter([
   {
@@ -55,25 +55,7 @@ const router = createBrowserRouter([
         element: <WorkspaceSelectPage />,
       },
       {
-        path: 'dashboard',
-        element: <DashboardPage />,
-        loader: async () => {
-          const activeWorkspace = useWorkspaceStore.getState().activeWorkspace
-          if (!activeWorkspace) {
-            const { data } = await useWorkspaceStore.getState().fetchWorkspaces()
-            if (data && data.length > 0) {
-              const ws = data[0]
-              await useWorkspaceStore.getState().setActiveWorkspaceBySlug(ws.slug)
-              await useProjectStore.getState().fetchProjects(ws.id)
-            } else {
-              return redirect('/')
-            }
-          }
-          return null
-        }
-      },
-      {
-        path: 'workspaces/:workspaceId',
+        path: 'workspaces/:workspaceSlug',
         loader: async ({ params }) => {
           const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceId)
           if (workspace.error) {
@@ -94,53 +76,12 @@ const router = createBrowserRouter([
             element: <DashboardPage />,
           },
           {
-            path: 'projects',
-            element: <DashboardPage />, // Or a dedicated projects list page
-          },
-          {
-            path: 'projects/:projectId',
-            children: [
-              {
-                index: true,
-                element: <Navigate to="board" replace />,
-              },
-              {
-                path: 'board',
-                element: <ProjectPage />,
-                loader: async ({ params }) => {
-                  await useTaskStore.getState().fetchTasks(params.projectId)
-                  return null
-                }
-              },
-              {
-                path: 'list',
-                element: <ProjectPage />,
-                loader: async ({ params }) => {
-                  await useTaskStore.getState().fetchTasks(params.projectId)
-                  return null
-                }
-              },
-              {
-                path: 'calendar',
-                element: <ProjectPage />,
-                loader: async ({ params }) => {
-                  await useTaskStore.getState().fetchTasks(params.projectId)
-                  return null
-                }
-              },
-            ]
-          },
-          {
-            path: 'tasks',
-            element: <MyTasksPage />,
-          },
-          {
-            path: 'team',
-            element: <SettingsPage initialTab="members" />,
-          },
-          {
-            path: 'reports',
-            element: <div className="p-8">Reports (Coming Soon)</div>,
+            path: 'projects/:id',
+            element: <ProjectPage />,
+            loader: async ({ params }) => {
+              await useTaskStore.getState().fetchTasks(params.id)
+              return null
+            }
           },
           {
             path: 'settings',
@@ -184,7 +125,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/auth',
-    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.orbitboard.in/auth" replace />
+    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.workorbit.in/auth" replace />
   },
   {
     path: '/features',

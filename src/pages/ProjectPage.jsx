@@ -57,8 +57,8 @@ export default function ProjectPage() {
 
   const handleDeleteProject = async () => {
     if (window.confirm('Are you sure you want to delete this project? All tasks will be permanently removed.')) {
-      await deleteProject(projectId)
-      navigate(activeWorkspace ? `/workspaces/${activeWorkspace.slug}` : '/')
+      await deleteProject(id)
+      window.location.href = activeWorkspace ? `/workspaces/${activeWorkspace.slug}` : '/'
     }
   }
 

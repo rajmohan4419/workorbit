@@ -76,7 +76,7 @@ export default function SettingsPage({ initialTab = 'general' }) {
     setSaving(true)
     await updateWorkspace(activeWorkspace.id, { name: name.trim(), slug: slug.trim() })
     setSaving(false)
-    if (slug !== workspaceId) {
+    if (slug !== workspaceSlug) {
       navigate(`/workspaces/${slug}/settings`)
     }
   }

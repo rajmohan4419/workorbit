@@ -15,7 +15,7 @@ export default function ContactPage() {
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900">Pricing</Link>
           <Link to="/contact" className="text-sm font-medium text-indigo-600">Contact</Link>
-          <a href="https://app.orbitboard.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
+          <a href="https://app.workorbit.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
         </div>
       </nav>
 
@@ -32,7 +32,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Email us</h3>
-                  <p className="text-gray-500">support@orbitboard.in</p>
+                  <p className="text-gray-500">support@workorbit.in</p>
                 </div>
               </div>
               <div className="flex gap-4">

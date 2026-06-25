@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, Users, PieChart, User, Shield } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
@@ -143,14 +143,11 @@ export default function Sidebar() {
               </div>
             </div>
 
-            <div>
-              <label className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Dashboard</label>
-              <div className="space-y-0.5">
-                {dashboardItems.map((item) => {
-                  const Icon = item.icon
-                  const fullTo = activeWorkspace && item.wsRelative
-                    ? `/workspaces/${activeWorkspace.slug}${item.wsTo}`
-                    : item.to
+            {navItems.filter(item => !item.wsRelative || activeWorkspace).map((item) => {
+              const Icon = item.icon
+              const fullTo = activeWorkspace && item.wsRelative
+                ? `/workspaces/${activeWorkspace.slug}${item.to}`
+                : item.to
 
                   return (
                     <Link
@@ -173,33 +170,6 @@ export default function Sidebar() {
 
             {activeWorkspace && (
               <div>
-                <label className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Workspace</label>
-                <div className="space-y-0.5">
-                  {workspaceItems.map((item) => {
-                    const Icon = item.icon
-                    const fullTo = `/workspaces/${activeWorkspace.slug}${item.to}`
-                    return (
-                      <Link
-                        key={item.label}
-                        to={fullTo}
-                        onClick={() => setMobileOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          location.pathname === fullTo
-                            ? 'bg-indigo-50 text-indigo-700 font-medium'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      >
-                        <Icon size={16} />
-                        {item.label}
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {activeWorkspace && (
-              <div>
                 <button
                   onClick={() => setProjectsOpen(!projectsOpen)}
                   className="flex items-center justify-between w-full px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors"
@@ -210,9 +180,9 @@ export default function Sidebar() {
 
                 {projectsOpen && (
                   <div className="mt-1 space-y-0.5">
-                    {projects.slice(0, 5).map((project) => {
-                      const projectPath = `/workspaces/${activeWorkspace.slug}/projects/${project.id}/board`
-                      const isActive = location.pathname.startsWith(`/workspaces/${activeWorkspace.slug}/projects/${project.id}`)
+                    {projects.map((project) => {
+                      const projectPath = `/workspaces/${activeWorkspace.slug}/projects/${project.id}`
+                      const isActive = location.pathname === projectPath
 
                       return (
                         <Link
