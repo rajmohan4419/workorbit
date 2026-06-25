@@ -57,7 +57,7 @@ const router = createBrowserRouter([
       {
         path: 'workspaces/:workspaceSlug',
         loader: async ({ params }) => {
-          const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceSlug)
+          const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceId)
           if (workspace.error) {
             if (workspace.error.status === 403) {
                throw new Response("Forbidden", { status: 403 });
@@ -85,7 +85,24 @@ const router = createBrowserRouter([
           },
           {
             path: 'settings',
-            element: <SettingsPage />
+            element: <SettingsPage initialTab="general" />,
+          },
+        ]
+      },
+      {
+        path: 'settings',
+        children: [
+          {
+            path: 'profile',
+            element: <SettingsPage initialTab="profile" />,
+          },
+          {
+            path: 'workspace',
+            element: <SettingsPage initialTab="general" />,
+          },
+          {
+            path: 'billing',
+            element: <div className="p-8">Billing (Coming Soon)</div>,
           },
         ]
       },

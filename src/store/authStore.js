@@ -70,39 +70,6 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  fetchAllProfiles: async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('full_name', { ascending: true })
-
-    if (error) {
-      set({ error: error.message })
-      return { error }
-    }
-    set({ profiles: data, error: null })
-    return { data }
-  },
-
-  updateProfileRole: async (userId, role) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ role })
-      .eq('id', userId)
-      .select()
-      .single()
-
-    if (error) {
-      set({ error: error.message })
-      return { error }
-    }
-    set((state) => ({
-      profiles: state.profiles.map((p) => (p.id === userId ? data : p)),
-      error: null,
-    }))
-    return { data }
-  },
-
   updateProfile: async (updates) => {
     const userId = (await supabase.auth.getUser()).data.user?.id
     if (!userId) return { error: { message: 'Not authenticated' } }

@@ -1,5 +1,5 @@
 -- =============================================
--- OrbitBoard — Supabase SQL Schema
+-- WorkOrbit — Supabase SQL Schema
 -- =============================================
 
 -- Enable UUID extension

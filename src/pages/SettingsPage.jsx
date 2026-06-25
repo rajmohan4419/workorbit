@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import { Settings, Users, Shield, Trash2, Save, UserMinus, ShieldAlert, AlertTriangle, User, Mail, Phone, Key, Plus, Loader2 } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useAuthStore } from '../store/authStore'
 import { getRoleLabel } from '../lib/permissions'
 
-export default function SettingsPage() {
-  const { workspaceSlug } = useParams()
+export default function SettingsPage({ initialTab = 'general' }) {
+  const { workspaceId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
   const userRole = useWorkspaceStore((state) => state.currentUserRole)
   const members = useWorkspaceStore((state) => state.members)
@@ -22,7 +23,12 @@ export default function SettingsPage() {
   const currentProfile = useAuthStore((state) => state.profile)
   const updateProfile = useAuthStore((state) => state.updateProfile)
 
-  const [activeTab, setActiveTab] = useState('general')
+  const activeTab = useMemo(() => {
+    if (location.pathname.startsWith('/settings/profile')) return 'profile'
+    if (location.pathname.endsWith('/team')) return 'members'
+    if (location.pathname.startsWith('/settings/billing')) return 'billing'
+    return initialTab
+  }, [location.pathname, initialTab])
 
   // Workspace State
   const [name, setName] = useState(activeWorkspace?.name || '')
@@ -111,33 +117,44 @@ export default function SettingsPage() {
       <div className="flex gap-8">
         <aside className="w-48 flex-shrink-0">
           <nav className="flex flex-col gap-1">
-            <button
-              onClick={() => setActiveTab('general')}
+            <Link
+              to={activeWorkspace ? `/workspaces/${activeWorkspace.slug}/settings` : "/settings/workspace"}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'general' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               <Settings size={18} />
               General
-            </button>
-            <button
-              onClick={() => setActiveTab('profile')}
+            </Link>
+            <Link
+              to="/settings/profile"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'profile' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               <User size={18} />
               My Profile
-            </button>
-            <button
-              onClick={() => setActiveTab('members')}
+            </Link>
+            {activeWorkspace && (
+              <Link
+                to={`/workspaces/${activeWorkspace.slug}/team`}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === 'members' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
+                }`}
+              >
+                <Users size={18} />
+                Members
+              </Link>
+            )}
+            <Link
+              to="/settings/billing"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                activeTab === 'members' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
+                activeTab === 'billing' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
-              <Users size={18} />
-              Members
-            </button>
+              <Shield size={18} />
+              Billing
+            </Link>
           </nav>
         </aside>
 
