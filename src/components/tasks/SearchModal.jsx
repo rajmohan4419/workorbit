@@ -46,12 +46,6 @@ export default function SearchModal({ onClose }) {
     ]
   }, [results])
 
-  // No-op to reset index when query changes
-  const [prevQuery, setPrevQuery] = useState(query)
-  if (query !== prevQuery) {
-    setSelectedIndex(0)
-    setPrevQuery(query)
-  }
 
   useEffect(() => {
     const handler = (e) => {
@@ -91,7 +85,10 @@ export default function SearchModal({ onClose }) {
             className="flex-1 text-gray-900 placeholder-gray-400 outline-none text-lg"
             placeholder="Search projects and tasks..."
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => {
+              setQuery(e.target.value)
+              setSelectedIndex(0)
+            }}
           />
           {searching ? (
             <Loader2 className="animate-spin text-gray-300" size={18} />

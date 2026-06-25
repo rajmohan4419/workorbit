@@ -4,11 +4,13 @@ import { FolderOpen, AlertCircle, ArrowRight, TrendingUp, Heart } from 'lucide-r
 import { supabase } from '../lib/supabase'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
+import { useWorkspaceStore } from '../store/workspaceStore'
 import OnboardingChecklist from '../components/dashboard/OnboardingChecklist'
 import ActivityFeed from '../components/tasks/ActivityFeed'
 
 export default function DashboardPage() {
   const projects = useProjectStore((state) => state.projects)
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
   const loading = useProjectStore((state) => state.loading)
   const error = useProjectStore((state) => state.error)
   const user = useAuthStore((state) => state.user)
@@ -107,7 +109,7 @@ export default function DashboardPage() {
             {projects.map((project) => (
               <Link
                 key={project.id}
-                to={`/project/${project.id}`}
+                to={activeWorkspace ? `/w/${activeWorkspace.slug}/project/${project.id}` : `/project/${project.id}`}
                 className="group bg-white border border-gray-100 hover:border-indigo-200 rounded-xl p-5 transition-all hover:shadow-sm"
               >
                 <div className="flex items-start justify-between">
@@ -136,7 +138,7 @@ export default function DashboardPage() {
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Quick Activity</h2>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm min-h-[300px]">
-            <ActivityFeed projectId={projects[0]?.id} />
+            <ActivityFeed projectId={projects.length > 0 ? undefined : null} />
           </div>
         </div>
       </div>
