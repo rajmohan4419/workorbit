@@ -12,7 +12,6 @@ import ContactPage from './pages/marketing/ContactPage'
 import UpcomingFeaturesPage from './pages/marketing/UpcomingFeaturesPage'
 import ProjectPage from './pages/ProjectPage'
 import MyTasksPage from './pages/MyTasksPage'
-import UsersPage from './pages/UsersPage'
 import WorkspaceSelectPage from './pages/WorkspaceSelectPage'
 import SettingsPage from './pages/SettingsPage'
 import ForbiddenPage from './pages/ForbiddenPage'
@@ -56,9 +55,27 @@ const router = createBrowserRouter([
         element: <WorkspaceSelectPage />,
       },
       {
-        path: 'w/:workspaceSlug',
+        path: 'dashboard',
+        element: <DashboardPage />,
+        loader: async () => {
+          const activeWorkspace = useWorkspaceStore.getState().activeWorkspace
+          if (!activeWorkspace) {
+            const { data } = await useWorkspaceStore.getState().fetchWorkspaces()
+            if (data && data.length > 0) {
+              const ws = data[0]
+              await useWorkspaceStore.getState().setActiveWorkspaceBySlug(ws.slug)
+              await useProjectStore.getState().fetchProjects(ws.id)
+            } else {
+              return redirect('/')
+            }
+          }
+          return null
+        }
+      },
+      {
+        path: 'workspaces/:workspaceId',
         loader: async ({ params }) => {
-          const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceSlug)
+          const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceId)
           if (workspace.error) {
             if (workspace.error.status === 403) {
                throw new Response("Forbidden", { status: 403 });
@@ -77,16 +94,74 @@ const router = createBrowserRouter([
             element: <DashboardPage />,
           },
           {
-            path: 'project/:id',
-            element: <ProjectPage />,
-            loader: async ({ params }) => {
-              await useTaskStore.getState().fetchTasks(params.id)
-              return null
-            }
+            path: 'projects',
+            element: <DashboardPage />, // Or a dedicated projects list page
+          },
+          {
+            path: 'projects/:projectId',
+            children: [
+              {
+                index: true,
+                element: <Navigate to="board" replace />,
+              },
+              {
+                path: 'board',
+                element: <ProjectPage />,
+                loader: async ({ params }) => {
+                  await useTaskStore.getState().fetchTasks(params.projectId)
+                  return null
+                }
+              },
+              {
+                path: 'list',
+                element: <ProjectPage />,
+                loader: async ({ params }) => {
+                  await useTaskStore.getState().fetchTasks(params.projectId)
+                  return null
+                }
+              },
+              {
+                path: 'calendar',
+                element: <ProjectPage />,
+                loader: async ({ params }) => {
+                  await useTaskStore.getState().fetchTasks(params.projectId)
+                  return null
+                }
+              },
+            ]
+          },
+          {
+            path: 'tasks',
+            element: <MyTasksPage />,
+          },
+          {
+            path: 'team',
+            element: <SettingsPage initialTab="members" />,
+          },
+          {
+            path: 'reports',
+            element: <div className="p-8">Reports (Coming Soon)</div>,
           },
           {
             path: 'settings',
-            element: <SettingsPage />
+            element: <SettingsPage initialTab="general" />,
+          },
+        ]
+      },
+      {
+        path: 'settings',
+        children: [
+          {
+            path: 'profile',
+            element: <SettingsPage initialTab="profile" />,
+          },
+          {
+            path: 'workspace',
+            element: <SettingsPage initialTab="general" />,
+          },
+          {
+            path: 'billing',
+            element: <div className="p-8">Billing (Coming Soon)</div>,
           },
         ]
       },
@@ -98,14 +173,6 @@ const router = createBrowserRouter([
           if (user?.id) {
             await useTaskStore.getState().fetchAllUserTasks(user.id)
           }
-          return null
-        }
-      },
-      {
-        path: 'users',
-        element: <AdminRoute><UsersPage /></AdminRoute>,
-        loader: async () => {
-          await useAuthStore.getState().fetchAllProfiles()
           return null
         }
       },
@@ -152,12 +219,6 @@ function ProtectedRoute({ children }) {
   )
 
   if (!user) return <Navigate to="/auth" replace />
-  return children
-}
-
-function AdminRoute({ children }) {
-  const profile = useAuthStore((state) => state.profile)
-  if (profile?.role !== 'admin') return <Navigate to="/" replace />
   return children
 }
 

@@ -1,5 +1,5 @@
-import { useParams, Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
@@ -16,8 +16,16 @@ import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
 
 export default function ProjectPage() {
-  const { id } = useParams()
-  const [view, setView] = useState('board')
+  const { projectId } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const view = useMemo(() => {
+    const parts = location.pathname.split('/')
+    const lastPart = parts[parts.length - 1]
+    return ['board', 'list', 'timeline', 'activity', 'sprints', 'members', 'calendar'].includes(lastPart) ? lastPart : 'board'
+  }, [location.pathname])
+
   const [selectedTask, setSelectedTask] = useState(null)
   const projects = useProjectStore((state) => state.projects)
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
@@ -33,24 +41,24 @@ export default function ProjectPage() {
   const error = useTaskStore((state) => state.error)
 
   useEffect(() => {
-    const project = projects.find((item) => item.id === id) ?? null
+    const project = projects.find((item) => item.id === projectId) ?? null
     setActiveProject(project)
 
-    if (id) {
-      const result = subscribeToProject(id)
+    if (projectId) {
+      const result = subscribeToProject(projectId)
       const unsubscribe = typeof result === 'function' ? result : result?.unsubscribe
       return () => unsubscribe?.()
     } else {
       resetTasks()
     }
-  }, [id, projects, setActiveProject, resetTasks, subscribeToProject])
+  }, [projectId, projects, setActiveProject, resetTasks, subscribeToProject])
 
-  const project = activeProject?.id === id ? activeProject : projects.find((p) => p.id === id)
+  const project = activeProject?.id === projectId ? activeProject : projects.find((p) => p.id === projectId)
 
   const handleDeleteProject = async () => {
     if (window.confirm('Are you sure you want to delete this project? All tasks will be permanently removed.')) {
-      await deleteProject(id)
-      window.location.href = activeWorkspace ? `/w/${activeWorkspace.slug}` : '/'
+      await deleteProject(projectId)
+      navigate(activeWorkspace ? `/workspaces/${activeWorkspace.slug}` : '/')
     }
   }
 
@@ -58,7 +66,7 @@ export default function ProjectPage() {
     <div className="flex flex-col h-full">
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
-          <Link to={activeWorkspace ? `/w/${activeWorkspace.slug}` : "/"} className="text-gray-400 hover:text-gray-700 transition-colors">
+          <Link to={activeWorkspace ? `/workspaces/${activeWorkspace.slug}` : "/"} className="text-gray-400 hover:text-gray-700 transition-colors">
             <ArrowLeft size={16} />
           </Link>
           <div>
@@ -84,21 +92,22 @@ export default function ProjectPage() {
             {[
               { id: 'board', label: 'Board', icon: LayoutDashboard },
               { id: 'list', label: 'List', icon: LayoutDashboard },
+              { id: 'calendar', label: 'Calendar', icon: Calendar },
               { id: 'timeline', label: 'Timeline', icon: Calendar },
               { id: 'activity', label: 'Feed', icon: History },
               { id: 'sprints', label: 'Sprints', icon: Zap },
               { id: 'members', label: 'Members', icon: Users },
             ].map((v) => (
-              <button
+              <Link
                 key={v.id}
-                onClick={() => setView(v.id)}
+                to={`/workspaces/${activeWorkspace?.slug}/projects/${projectId}/${v.id}`}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0 ${
                   view === v.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 <v.icon size={14} />
                 <span className="hidden md:inline">{v.label}</span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -107,7 +116,7 @@ export default function ProjectPage() {
       <div className="flex-1 overflow-hidden p-6">
         {view === 'members' ? (
           <div className="max-w-3xl mx-auto">
-            <ProjectMembers projectId={id} />
+            <ProjectMembers projectId={projectId} />
           </div>
         ) : view === 'list' ? (
           <div className="h-full overflow-y-auto">
@@ -120,16 +129,20 @@ export default function ProjectPage() {
               Project Activity
             </h2>
             <div className="flex-1 overflow-y-auto">
-              <ActivityFeed projectId={id} />
+              <ActivityFeed projectId={projectId} />
             </div>
           </div>
         ) : view === 'sprints' ? (
           <div className="max-w-4xl mx-auto h-full overflow-y-auto">
-            <SprintBoard projectId={id} />
+            <SprintBoard projectId={projectId} />
           </div>
         ) : view === 'timeline' ? (
           <div className="h-full overflow-hidden">
             <TimelineView tasks={tasks} />
+          </div>
+        ) : view === 'calendar' ? (
+          <div className="h-full overflow-hidden p-8 text-center text-gray-400">
+             Calendar View (Coming Soon)
           </div>
         ) : (
           <>
@@ -144,7 +157,7 @@ export default function ProjectPage() {
                 {error}
               </div>
             ) : (
-              <KanbanBoard projectId={id} />
+              <KanbanBoard projectId={projectId} />
             )}
           </>
         )}
@@ -153,7 +166,7 @@ export default function ProjectPage() {
       {selectedTask && (
         <TaskModal
           task={selectedTask}
-          projectId={id}
+          projectId={projectId}
           onClose={() => setSelectedTask(null)}
         />
       )}

@@ -9,7 +9,7 @@ export default function ContactPage() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">O</span>
           </div>
-          <span className="font-bold text-gray-900 text-lg">OrbitBoard</span>
+          <span className="font-bold text-gray-900 text-lg">WorkOrbit</span>
         </Link>
         <div className="flex gap-6 items-center">
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
@@ -23,7 +23,7 @@ export default function ContactPage() {
         <div className="grid lg:grid-cols-2 gap-16">
           <div>
             <h1 className="text-4xl font-extrabold text-gray-900 mb-6 tracking-tight">Get in touch</h1>
-            <p className="text-xl text-gray-500 mb-12">Have questions about OrbitBoard? We're here to help you get the most out of your team's workflow.</p>
+            <p className="text-xl text-gray-500 mb-12">Have questions about WorkOrbit? We're here to help you get the most out of your team's workflow.</p>
 
             <div className="space-y-8">
               <div className="flex gap-4">

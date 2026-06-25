@@ -1,15 +1,27 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, Users } from 'lucide-react'
+import { LayoutDashboard, CheckSquare, Settings, LogOut, Plus, ChevronDown, Menu, X, Users, PieChart, User, Shield } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canCreateProject } from '../../lib/permissions'
 
-const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', to: '', wsRelative: true },
-  { icon: CheckSquare, label: 'My tasks', to: '/my-tasks', wsRelative: false },
-  { icon: Settings, label: 'Settings', to: '/settings', wsRelative: true },
+const dashboardItems = [
+  { icon: LayoutDashboard, label: 'Overview', to: '/dashboard' },
+  { icon: CheckSquare, label: 'My tasks', to: '/my-tasks', wsRelative: true, wsTo: '/tasks' },
+]
+
+const workspaceItems = [
+  { icon: PieChart, label: 'Overview', to: '' },
+  { icon: LayoutDashboard, label: 'Projects', to: '/projects' },
+  { icon: Users, label: 'Team', to: '/team' },
+  { icon: PieChart, label: 'Reports', to: '/reports' },
+]
+
+const settingsItems = [
+  { icon: User, label: 'Profile', to: '/settings/profile' },
+  { icon: Settings, label: 'Workspace', to: '/settings', wsRelative: true },
+  { icon: Shield, label: 'Billing', to: '/settings/billing' },
 ]
 
 export default function Sidebar() {
@@ -83,11 +95,11 @@ export default function Sidebar() {
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">O</span>
             </div>
-            <span className="font-semibold text-gray-900 text-sm">OrbitBoard</span>
+            <span className="font-semibold text-gray-900 text-sm">WorkOrbit</span>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-            <div className="mb-6 px-3">
+          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+            <div className="mb-2 px-3">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Workspace</label>
               <div className="relative group">
                 <button
@@ -95,7 +107,7 @@ export default function Sidebar() {
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-5 h-5 bg-indigo-600 rounded-md flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
-                      {activeWorkspace?.name?.charAt(0).toUpperCase() || 'O'}
+                      {activeWorkspace?.name?.charAt(0).toUpperCase() || 'W'}
                     </div>
                     <span className="text-xs font-bold text-gray-700 truncate">{activeWorkspace?.name || 'Select Workspace'}</span>
                   </div>
@@ -109,7 +121,7 @@ export default function Sidebar() {
                         key={ws.id}
                         onClick={() => {
                           setActiveWorkspace(ws)
-                          navigate(`/w/${ws.slug}`)
+                          navigate(`/workspaces/${ws.slug}`)
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${activeWorkspace?.id === ws.id ? 'text-indigo-600 font-bold bg-indigo-50/30' : 'text-gray-600'}`}
                       >
@@ -131,59 +143,76 @@ export default function Sidebar() {
               </div>
             </div>
 
-            {navItems.filter(item => !item.wsRelative || activeWorkspace).map((item) => {
-              const Icon = item.icon
-              const fullTo = activeWorkspace && item.wsRelative
-                ? `/w/${activeWorkspace.slug}${item.to}`
-                : item.to
+            <div>
+              <label className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Dashboard</label>
+              <div className="space-y-0.5">
+                {dashboardItems.map((item) => {
+                  const Icon = item.icon
+                  const fullTo = activeWorkspace && item.wsRelative
+                    ? `/workspaces/${activeWorkspace.slug}${item.wsTo}`
+                    : item.to
 
-              return (
-                <Link
-                  key={item.label}
-                  to={fullTo}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    location.pathname === (fullTo || '/')
-                      ? 'bg-indigo-50 text-indigo-700 font-medium'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon size={16} />
-                  {item.label}
-                </Link>
-              )
-            })}
+                  return (
+                    <Link
+                      key={item.label}
+                      to={fullTo}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        location.pathname === fullTo
+                          ? 'bg-indigo-50 text-indigo-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
 
-            {currentUserRole === 'owner' && (
-              <Link
-                to={`/w/${activeWorkspace?.slug}/settings`}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  location.pathname === '/users'
-                    ? 'bg-indigo-50 text-indigo-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <Users size={16} />
-                User Management
-              </Link>
+            {activeWorkspace && (
+              <div>
+                <label className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Workspace</label>
+                <div className="space-y-0.5">
+                  {workspaceItems.map((item) => {
+                    const Icon = item.icon
+                    const fullTo = `/workspaces/${activeWorkspace.slug}${item.to}`
+                    return (
+                      <Link
+                        key={item.label}
+                        to={fullTo}
+                        onClick={() => setMobileOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          location.pathname === fullTo
+                            ? 'bg-indigo-50 text-indigo-700 font-medium'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        <Icon size={16} />
+                        {item.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
             )}
 
             {activeWorkspace && (
-              <div className="pt-4">
+              <div>
                 <button
                   onClick={() => setProjectsOpen(!projectsOpen)}
-                  className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors"
+                  className="flex items-center justify-between w-full px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors"
                 >
-                  <span>Projects</span>
+                  <span>Quick Projects</span>
                   <ChevronDown size={12} className={`transition-transform ${projectsOpen ? '' : '-rotate-90'}`} />
                 </button>
 
                 {projectsOpen && (
                   <div className="mt-1 space-y-0.5">
-                    {projects.map((project) => {
-                      const projectPath = `/w/${activeWorkspace.slug}/project/${project.id}`
-                      const isActive = location.pathname === projectPath
+                    {projects.slice(0, 5).map((project) => {
+                      const projectPath = `/workspaces/${activeWorkspace.slug}/projects/${project.id}/board`
+                      const isActive = location.pathname.startsWith(`/workspaces/${activeWorkspace.slug}/projects/${project.id}`)
 
                       return (
                         <Link
@@ -257,6 +286,33 @@ export default function Sidebar() {
                 )}
               </div>
             )}
+
+            <div>
+              <label className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">Settings</label>
+              <div className="space-y-0.5">
+                {settingsItems.map((item) => {
+                  const Icon = item.icon
+                  const fullTo = activeWorkspace && item.wsRelative
+                    ? `/workspaces/${activeWorkspace.slug}${item.to}`
+                    : item.to
+                  return (
+                    <Link
+                      key={item.label}
+                      to={fullTo}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                        location.pathname === fullTo
+                          ? 'bg-indigo-50 text-indigo-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
           </nav>
 
           <div className="px-3 py-4 border-t border-gray-100">

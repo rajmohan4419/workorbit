@@ -23,7 +23,7 @@ export default function WorkspaceSelectPage() {
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-sm font-bold">O</span>
             </div>
-            <span className="font-bold text-gray-900 text-xl tracking-tight">OrbitBoard</span>
+            <span className="font-bold text-gray-900 text-xl tracking-tight">WorkOrbit</span>
           </div>
           <button
             onClick={() => signOut()}
@@ -48,7 +48,7 @@ export default function WorkspaceSelectPage() {
                 {workspaces.map((ws) => (
                   <Link
                     key={ws.id}
-                    to={`/w/${ws.slug}`}
+                    to={`/workspaces/${ws.slug}`}
                     className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-transparent hover:border-indigo-200 hover:bg-white transition-all group"
                   >
                     <div className="flex items-center gap-4">

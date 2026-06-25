@@ -18,7 +18,7 @@ export default function FeaturesPage() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">O</span>
           </div>
-          <span className="font-bold text-gray-900 text-lg">OrbitBoard</span>
+          <span className="font-bold text-gray-900 text-lg">WorkOrbit</span>
         </Link>
         <div className="flex gap-6 items-center">
           <Link to="/features" className="text-sm font-medium text-indigo-600">Features</Link>
@@ -48,7 +48,7 @@ export default function FeaturesPage() {
 
         <div className="mt-20 bg-indigo-50 rounded-3xl p-12 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to orbit?</h2>
-          <p className="text-indigo-600 font-medium mb-8 text-lg">Join thousands of teams delivering faster with OrbitBoard.</p>
+          <p className="text-indigo-600 font-medium mb-8 text-lg">Join thousands of teams delivering faster with WorkOrbit.</p>
           <a href="https://app.orbitboard.in/auth" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
             Get Started Free <ArrowRight size={20} />
           </a>
