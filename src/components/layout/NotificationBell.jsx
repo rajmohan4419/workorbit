@@ -107,7 +107,7 @@ export default function NotificationBell() {
                               if (!error) {
                                 await markAsRead(notification.id)
                                 await fetchProjects()
-                                navigate(`/project/${projectId}`)
+                                navigate(`/projects/${projectId}`)
                                 setIsOpen(false)
                               }
                             }}

@@ -9,13 +9,13 @@ export default function ContactPage() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">O</span>
           </div>
-          <span className="font-bold text-gray-900 text-lg">OrbitBoard</span>
+          <span className="font-bold text-gray-900 text-lg">WorkOrbit</span>
         </Link>
         <div className="flex gap-6 items-center">
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900">Pricing</Link>
           <Link to="/contact" className="text-sm font-medium text-indigo-600">Contact</Link>
-          <a href="https://app.orbitboard.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
+          <a href="https://app.workorbit.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
         </div>
       </nav>
 
@@ -23,7 +23,7 @@ export default function ContactPage() {
         <div className="grid lg:grid-cols-2 gap-16">
           <div>
             <h1 className="text-4xl font-extrabold text-gray-900 mb-6 tracking-tight">Get in touch</h1>
-            <p className="text-xl text-gray-500 mb-12">Have questions about OrbitBoard? We're here to help you get the most out of your team's workflow.</p>
+            <p className="text-xl text-gray-500 mb-12">Have questions about WorkOrbit? We're here to help you get the most out of your team's workflow.</p>
 
             <div className="space-y-8">
               <div className="flex gap-4">
@@ -32,7 +32,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Email us</h3>
-                  <p className="text-gray-500">support@orbitboard.in</p>
+                  <p className="text-gray-500">support@workorbit.in</p>
                 </div>
               </div>
               <div className="flex gap-4">

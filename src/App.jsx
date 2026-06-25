@@ -12,7 +12,6 @@ import ContactPage from './pages/marketing/ContactPage'
 import UpcomingFeaturesPage from './pages/marketing/UpcomingFeaturesPage'
 import ProjectPage from './pages/ProjectPage'
 import MyTasksPage from './pages/MyTasksPage'
-import UsersPage from './pages/UsersPage'
 import WorkspaceSelectPage from './pages/WorkspaceSelectPage'
 import SettingsPage from './pages/SettingsPage'
 import ForbiddenPage from './pages/ForbiddenPage'
@@ -44,7 +43,7 @@ function AppShell() {
   )
 }
 
-const isAppSubdomain = window.location.hostname === 'app.orbitboard.in' || window.location.hostname === 'localhost'
+const isAppSubdomain = window.location.hostname === 'app.workorbit.in' || window.location.hostname === 'localhost'
 
 const router = createBrowserRouter([
   {
@@ -56,7 +55,7 @@ const router = createBrowserRouter([
         element: <WorkspaceSelectPage />,
       },
       {
-        path: 'w/:workspaceSlug',
+        path: 'workspaces/:workspaceSlug',
         loader: async ({ params }) => {
           const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceSlug)
           if (workspace.error) {
@@ -77,7 +76,7 @@ const router = createBrowserRouter([
             element: <DashboardPage />,
           },
           {
-            path: 'project/:id',
+            path: 'projects/:id',
             element: <ProjectPage />,
             loader: async ({ params }) => {
               await useTaskStore.getState().fetchTasks(params.id)
@@ -102,14 +101,6 @@ const router = createBrowserRouter([
         }
       },
       {
-        path: 'users',
-        element: <AdminRoute><UsersPage /></AdminRoute>,
-        loader: async () => {
-          await useAuthStore.getState().fetchAllProfiles()
-          return null
-        }
-      },
-      {
         path: '*',
         element: <Navigate to="/" replace />
       }
@@ -117,7 +108,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/auth',
-    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.orbitboard.in/auth" replace />
+    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.workorbit.in/auth" replace />
   },
   {
     path: '/features',
@@ -152,12 +143,6 @@ function ProtectedRoute({ children }) {
   )
 
   if (!user) return <Navigate to="/auth" replace />
-  return children
-}
-
-function AdminRoute({ children }) {
-  const profile = useAuthStore((state) => state.profile)
-  if (profile?.role !== 'admin') return <Navigate to="/" replace />
   return children
 }
 

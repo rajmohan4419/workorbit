@@ -109,7 +109,7 @@ export default function DashboardPage() {
             {projects.map((project) => (
               <Link
                 key={project.id}
-                to={activeWorkspace ? `/w/${activeWorkspace.slug}/project/${project.id}` : `/project/${project.id}`}
+                to={activeWorkspace ? `/workspaces/${activeWorkspace.slug}/projects/${project.id}` : `/projects/${project.id}`}
                 className="group bg-white border border-gray-100 hover:border-indigo-200 rounded-xl p-5 transition-all hover:shadow-sm"
               >
                 <div className="flex items-start justify-between">

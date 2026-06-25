@@ -41,14 +41,14 @@ export default function OnboardingChecklist() {
       label: 'Add your first task',
       completed: taskCount > 0,
       description: 'Break down your project into actionable tasks.',
-      link: projects.length > 0 ? `/project/${projects[0].id}` : null
+      link: projects.length > 0 ? `/projects/${projects[0].id}` : null
     },
     {
       id: 'invite',
       label: 'Invite a teammate',
       completed: hasTeammates,
       description: 'Collaboration is better together.',
-      link: projects.length > 0 ? `/project/${projects[0].id}` : null
+      link: projects.length > 0 ? `/projects/${projects[0].id}` : null
     }
   ]
 
