@@ -23,7 +23,7 @@ export default function WorkspaceSelectPage() {
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-sm font-bold">O</span>
             </div>
-            <span className="font-bold text-gray-900 text-xl tracking-tight">WorkOrbit</span>
+            <span className="font-bold text-gray-900 text-xl tracking-tight">Orbit Board</span>
           </div>
           <button
             onClick={() => signOut()}

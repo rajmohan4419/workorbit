@@ -16,7 +16,7 @@ export default function AuthPage() {
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-sm font-bold">O</span>
             </div>
-            <span className="text-xl font-semibold text-gray-900">WorkOrbit</span>
+            <span className="text-xl font-semibold text-gray-900">Orbit Board</span>
           </div>
           <p className="text-gray-500 text-sm">Manage your work, your way</p>
         </div>

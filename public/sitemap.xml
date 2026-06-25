@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://workorbit.in/features</loc>
+    <loc>https://orbitboard.in/features</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://workorbit.in/pricing</loc>
+    <loc>https://orbitboard.in/pricing</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://workorbit.in/contact</loc>
+    <loc>https://orbitboard.in/contact</loc>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://workorbit.in/upcoming-features</loc>
+    <loc>https://orbitboard.in/upcoming-features</loc>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://app.workorbit.in/</loc>
+    <loc>https://app.orbitboard.in/</loc>
     <priority>0.9</priority>
   </url>
 </urlset>
