@@ -660,6 +660,7 @@ create policy "Attachment upload" on storage.objects for insert with check (buck
 -- GRANTS
 grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
+grant all on public.workspace_members to anon, authenticated;
 grant all on all sequences in schema public to anon, authenticated;
 grant all on all functions in schema public to anon, authenticated;
 
