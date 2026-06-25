@@ -23,6 +23,8 @@ $$;
 create table if not exists public.profiles (
   id          uuid primary key references auth.users(id) on delete cascade,
   full_name   text,
+  first_name  text,
+  last_name   text,
   phone       text,
   avatar_path text,
   role        app_role not null default 'member',
@@ -31,8 +33,10 @@ create table if not exists public.profiles (
   updated_at  timestamptz default now()
 );
 
--- Ensure the column exists for existing databases
+-- Ensure the columns exist for existing databases
 alter table public.profiles add column if not exists onboarding_completed boolean default false;
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists last_name text;
 
 -- ─────────────────────────────────────────────
 -- WORKSPACES
