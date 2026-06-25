@@ -6,7 +6,7 @@
 create extension if not exists "uuid-ossp";
 
 -- ─────────────────────────────────────────────
--- TYPES & ENUMS
+-- 1. TYPES & ENUMS
 -- ─────────────────────────────────────────────
 
 do $$
@@ -30,7 +30,7 @@ end
 $$;
 
 -- ─────────────────────────────────────────────
--- TABLES
+-- 2. TABLES
 -- ─────────────────────────────────────────────
 
 -- PROFILES
@@ -137,8 +137,7 @@ create table if not exists public.task_comments (
   task_id     uuid references public.tasks(id) on delete cascade not null,
   user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   content     text not null,
-  created_at  timestamptz default now(),
-  constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+  created_at  timestamptz default now()
 );
 
 -- TASK ATTACHMENTS
@@ -150,8 +149,7 @@ create table if not exists public.task_attachments (
   file_path   text not null,
   file_size   bigint,
   content_type text,
-  created_at  timestamptz default now(),
-  constraint task_attachments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+  created_at  timestamptz default now()
 );
 
 -- TASK LOGS (Activity)
@@ -162,8 +160,7 @@ create table if not exists public.task_logs (
   type        text not null,
   old_value   text,
   new_value   text,
-  created_at  timestamptz default now(),
-  constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null
+  created_at  timestamptz default now()
 );
 
 -- NOTIFICATIONS
@@ -225,8 +222,7 @@ create table if not exists public.time_logs (
   duration_seconds integer not null,
   description text,
   logged_at   date default current_date,
-  created_at  timestamptz default now(),
-  constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+  created_at  timestamptz default now()
 );
 
 -- DEPENDENCIES
@@ -238,6 +234,30 @@ create table if not exists public.task_dependencies (
   unique (task_id, depends_on_id),
   check (task_id != depends_on_id)
 );
+
+-- ─────────────────────────────────────────────
+-- 3. SCHEMA EVOLUTION & CONSTRAINTS
+-- ─────────────────────────────────────────────
+
+-- Profiles
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists last_name text;
+
+-- Workspaces
+alter table public.workspaces add column if not exists workspace_plan text not null default 'free' check (workspace_plan in ('free', 'pro', 'business', 'enterprise'));
+
+-- Projects
+alter table public.projects add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+
+-- Tasks
+alter table public.tasks add column if not exists story_points integer;
+alter table public.tasks add column if not exists estimate_hours numeric;
+alter table public.tasks add column if not exists is_blocked boolean default false;
+
+-- Nudge roles for PostgREST cache
+alter table public.workspace_members add column if not exists role workspace_role not null default 'member';
+alter table public.workspace_invites add column if not exists role workspace_role not null default 'member';
+alter table public.project_invites add column if not exists role workspace_role not null default 'member';
 
 -- Ensure named foreign keys for relationship detection (PostgREST)
 alter table public.workspace_members drop constraint if exists workspace_members_user_id_fkey;
@@ -252,8 +272,20 @@ alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assi
 alter table public.tasks drop constraint if exists tasks_created_by_fkey;
 alter table public.tasks add constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null;
 
+alter table public.task_comments drop constraint if exists task_comments_user_id_fkey;
+alter table public.task_comments add constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
+alter table public.task_attachments drop constraint if exists task_attachments_user_id_fkey;
+alter table public.task_attachments add constraint task_attachments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
+alter table public.task_logs drop constraint if exists task_logs_user_id_fkey;
+alter table public.task_logs add constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null;
+
+alter table public.time_logs drop constraint if exists time_logs_user_id_fkey;
+alter table public.time_logs add constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
 -- ─────────────────────────────────────────────
--- HELPER FUNCTIONS
+-- 4. HELPER FUNCTIONS
 -- ─────────────────────────────────────────────
 
 create or replace function public.current_workspace_role(target_workspace_id uuid)
@@ -322,7 +354,7 @@ as $$
 $$;
 
 -- ─────────────────────────────────────────────
--- RLS POLICIES
+-- 5. RLS POLICIES
 -- ─────────────────────────────────────────────
 
 alter table public.profiles enable row level security;
@@ -394,7 +426,7 @@ create policy "Proj sub-entity lab" on public.labels for all using (public.can_a
 create policy "Self notify" on public.notifications for all using (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────
--- AUTOMATION & TRIGGERS
+-- 6. AUTOMATION & TRIGGERS
 -- ─────────────────────────────────────────────
 
 create or replace function public.handle_updated_at()
@@ -551,7 +583,7 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 
 -- ─────────────────────────────────────────────
--- MIGRATIONS & FIXES
+-- 7. MIGRATIONS & FIXES
 -- ─────────────────────────────────────────────
 
 -- Ensure all users have a workspace and are in workspace_members
@@ -609,16 +641,10 @@ end
 $$;
 
 -- ─────────────────────────────────────────────
--- POSTGREST SCHEMA CACHE NUDGES
--- These statements ensure that any newly added columns are picked up by the PostgREST schema cache
--- which can sometimes become stale, causing PGRST205 errors.
-alter table public.workspace_members add column if not exists role workspace_role not null default 'member';
-alter table public.workspace_invites add column if not exists role workspace_role not null default 'member';
-alter table public.project_invites add column if not exists role workspace_role not null default 'member';
-
--- STORAGE
+-- 8. PERMISSIONS & CACHE RELOAD
 -- ─────────────────────────────────────────────
 
+-- STORAGE
 insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('task-attachments', 'task-attachments', true) on conflict (id) do nothing;
 
@@ -626,5 +652,16 @@ drop policy if exists "Avatar access" on storage.objects;
 create policy "Avatar access" on storage.objects for select using (bucket_id = 'avatars');
 create policy "Avatar upload" on storage.objects for insert with check (bucket_id = 'avatars' and auth.role() = 'authenticated' and (storage.foldername(name))[1] = auth.uid()::text);
 
+drop policy if exists "Attachment access" on storage.objects;
 create policy "Attachment access" on storage.objects for select using (bucket_id = 'task-attachments');
+drop policy if exists "Attachment upload" on storage.objects;
 create policy "Attachment upload" on storage.objects for insert with check (bucket_id = 'task-attachments' and auth.role() = 'authenticated');
+
+-- GRANTS
+grant usage on schema public to anon, authenticated;
+grant all on all tables in schema public to anon, authenticated;
+grant all on all sequences in schema public to anon, authenticated;
+grant all on all functions in schema public to anon, authenticated;
+
+-- RELOAD CACHE
+notify pgrst, 'reload schema';
