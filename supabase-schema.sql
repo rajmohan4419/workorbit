@@ -91,6 +91,27 @@ create table if not exists public.projects (
   updated_at  timestamptz default now()
 );
 
+-- PROJECT MEMBERS
+create table if not exists public.project_members (
+  id           uuid primary key default uuid_generate_v4(),
+  project_id   uuid references public.projects(id) on delete cascade not null,
+  user_id      uuid references public.profiles(id) on delete cascade not null,
+  created_at   timestamptz default now(),
+  unique (project_id, user_id)
+);
+
+-- PROJECT INVITES
+create table if not exists public.project_invites (
+  id           uuid primary key default uuid_generate_v4(),
+  project_id   uuid references public.projects(id) on delete cascade not null,
+  email        text not null,
+  role         workspace_role not null default 'member',
+  invited_by   uuid references public.profiles(id) on delete cascade not null default auth.uid(),
+  status       text default 'pending',
+  created_at   timestamptz default now(),
+  unique (project_id, email)
+);
+
 -- TASKS
 create table if not exists public.tasks (
   id          uuid primary key default uuid_generate_v4(),
@@ -222,6 +243,9 @@ create table if not exists public.task_dependencies (
 alter table public.workspace_members drop constraint if exists workspace_members_user_id_fkey;
 alter table public.workspace_members add constraint workspace_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
+alter table public.project_members drop constraint if exists project_members_user_id_fkey;
+alter table public.project_members add constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
 alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
 alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null;
 
@@ -305,6 +329,8 @@ alter table public.profiles enable row level security;
 alter table public.workspaces enable row level security;
 alter table public.workspace_members enable row level security;
 alter table public.workspace_invites enable row level security;
+alter table public.project_members enable row level security;
+alter table public.project_invites enable row level security;
 alter table public.projects enable row level security;
 alter table public.tasks enable row level security;
 alter table public.task_comments enable row level security;
@@ -333,6 +359,12 @@ create policy "Member view" on public.workspace_members for select using (public
 create policy "Member management" on public.workspace_members for all using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
 create policy "Invite view" on public.workspace_invites for select using (email = (auth.jwt() ->> 'email') or public.current_workspace_role(workspace_id) in ('owner', 'admin'));
 create policy "Invite management" on public.workspace_invites for all using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
+
+-- Project Members & Invites
+create policy "Proj member view" on public.project_members for select using (public.can_access_project(project_id));
+create policy "Proj member management" on public.project_members for all using (public.can_manage_project(project_id));
+create policy "Proj invite view" on public.project_invites for select using (email = (auth.jwt() ->> 'email') or public.can_manage_project(project_id));
+create policy "Proj invite management" on public.project_invites for all using (public.can_manage_project(project_id));
 
 -- Projects
 create policy "Project view" on public.projects for select using (public.can_access_workspace(workspace_id));
@@ -547,6 +579,20 @@ begin
 end
 $$;
 
+-- Ensure all project owners are in project_members
+do $$
+declare
+  proj record;
+begin
+  for proj in select * from public.projects loop
+    if not exists (select 1 from public.project_members where project_id = proj.id and user_id = proj.owner_id) then
+      insert into public.project_members (project_id, user_id)
+      values (proj.id, proj.owner_id);
+    end if;
+  end loop;
+end
+$$;
+
 -- Migrate projects without workspace_id
 do $$
 declare
@@ -563,6 +609,13 @@ end
 $$;
 
 -- ─────────────────────────────────────────────
+-- POSTGREST SCHEMA CACHE NUDGES
+-- These statements ensure that any newly added columns are picked up by the PostgREST schema cache
+-- which can sometimes become stale, causing PGRST205 errors.
+alter table public.workspace_members add column if not exists role workspace_role not null default 'member';
+alter table public.workspace_invites add column if not exists role workspace_role not null default 'member';
+alter table public.project_invites add column if not exists role workspace_role not null default 'member';
+
 -- STORAGE
 -- ─────────────────────────────────────────────
 
