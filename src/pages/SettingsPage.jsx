@@ -46,11 +46,23 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (currentProfile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFirstName(currentProfile.first_name || '')
+
       setLastName(currentProfile.last_name || '')
+
       setPhone(currentProfile.phone || '')
     }
   }, [currentProfile])
+
+  useEffect(() => {
+    if (activeWorkspace) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setName(activeWorkspace.name || '')
+
+      setSlug(activeWorkspace.slug || '')
+    }
+  }, [activeWorkspace])
 
   const handleUpdate = async (e) => {
     e.preventDefault()
@@ -358,11 +370,11 @@ export default function SettingsPage() {
                   <div key={member.user_id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-all">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold">
-                        {member.profiles?.full_name?.charAt(0).toUpperCase()}
+                        {member.profiles?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                       <div>
                         <div className="font-bold text-gray-900 flex items-center gap-2">
-                          {member.profiles?.full_name}
+                          {member.profiles?.full_name || 'Unknown User'}
                           {member.user_id === currentUser.id && <span className="px-1.5 py-0.5 rounded-md bg-gray-100 text-[10px] text-gray-500 font-black uppercase tracking-widest">You</span>}
                         </div>
                         <div className="text-xs text-gray-400 font-medium">{member.role === 'owner' ? 'Owner' : getRoleLabel(member.role)}</div>

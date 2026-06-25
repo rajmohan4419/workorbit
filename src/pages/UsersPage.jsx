@@ -66,8 +66,8 @@ export default function UsersPage() {
                       {profile.full_name?.slice(0, 2).toUpperCase() || 'U'}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{profile.full_name}</p>
-                      <p className="text-xs text-gray-400">{profile.id === currentProfile?.id ? 'You' : 'Workspace Member'}</p>
+                      <p className="text-sm font-medium text-gray-900">{profile.full_name || 'Unknown User'}</p>
+                      <p className="text-xs text-gray-400">{profile.id === currentProfile?.id ? 'You' : (profile.email || 'Workspace Member')}</p>
                     </div>
                   </div>
                 </td>
@@ -83,16 +83,18 @@ export default function UsersPage() {
                 </td>
                 <td className="px-6 py-4 text-right">
                   {currentProfile?.role === 'admin' && profile.id !== currentProfile.id ? (
-                    <select
-                      value={profile.role}
-                      disabled={updating === profile.id}
-                      onChange={(e) => handleRoleChange(profile.id, e.target.value)}
-                      className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-                    >
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
+                    <div className="flex items-center justify-end gap-2">
+                      <select
+                        value={profile.role}
+                        disabled={updating === profile.id}
+                        onChange={(e) => handleRoleChange(profile.id, e.target.value)}
+                        className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                      >
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    </div>
                   ) : (
                     <span className="text-xs text-gray-400 italic">No actions available</span>
                   )}

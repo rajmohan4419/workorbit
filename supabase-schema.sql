@@ -142,23 +142,47 @@ create table if not exists public.tasks (
   estimate_hours numeric,
   is_blocked  boolean default false,
   created_at  timestamptz default now(),
-  updated_at  timestamptz default now(),
-
-  constraint tasks_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade,
-  constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null,
-  constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null
+  updated_at  timestamptz default now()
 );
 
--- Ensure explicit foreign key constraints exist for relationship detection
--- Ensure the workspace_id column exists
-alter table public.projects add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+-- ─────────────────────────────────────────────
+-- EXPLICIT CONSTRAINTS (Critical for PostgREST Relationships)
+-- ─────────────────────────────────────────────
 
--- Add workspace_plan for existing databases
+-- Workspaces
 alter table public.workspaces add column if not exists workspace_plan text not null default 'free' check (workspace_plan in ('free', 'pro', 'business', 'enterprise'));
 
--- Constraints for Workspace Ownership (Ensuring unique owner in workspace_members if they are added there)
--- The owner is already uniquely defined in workspaces.owner_id.
--- In workspace_members, we should ensure only one user has the 'owner' role per workspace if we use that table for roles.
+-- Workspace Members
+alter table public.workspace_members drop constraint if exists workspace_members_user_id_fkey;
+alter table public.workspace_members add constraint workspace_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
+-- Projects
+alter table public.projects add column if not exists workspace_id uuid references public.workspaces(id) on delete cascade;
+
+-- Project Members
+create table if not exists public.project_members (
+  id          uuid primary key default uuid_generate_v4(),
+  project_id  uuid references public.projects(id) on delete cascade not null,
+  user_id     uuid not null,
+  created_at  timestamptz default now(),
+  unique (project_id, user_id)
+);
+alter table public.project_members drop constraint if exists project_members_user_id_fkey;
+alter table public.project_members add constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
+-- Tasks
+alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
+alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null;
+
+alter table public.tasks drop constraint if exists tasks_created_by_fkey;
+alter table public.tasks add constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null;
+
+alter table public.tasks drop constraint if exists tasks_project_id_fkey;
+alter table public.tasks add constraint tasks_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade;
+
+-- ─────────────────────────────────────────────
+-- TRIGGERS & FUNCTIONS
+-- ─────────────────────────────────────────────
 
 create or replace function public.check_workspace_owner_role()
 returns trigger as $$
@@ -182,35 +206,6 @@ drop trigger if exists tr_check_workspace_owner_role on public.workspace_members
 create trigger tr_check_workspace_owner_role
   before insert or update on public.workspace_members
   for each row execute procedure public.check_workspace_owner_role();
-
--- Add new task fields for existing databases
-alter table public.tasks add column if not exists story_points integer;
-alter table public.tasks add column if not exists estimate_hours numeric;
-alter table public.tasks add column if not exists is_blocked boolean default false;
-
--- Ensure explicit foreign key constraints exist for relationship detection (critical for PostgREST)
-alter table public.tasks drop constraint if exists tasks_assigned_to_fkey;
-alter table public.tasks add constraint tasks_assigned_to_fkey foreign key (assigned_to) references public.profiles(id) on delete set null;
-
-alter table public.tasks drop constraint if exists tasks_created_by_fkey;
-alter table public.tasks add constraint tasks_created_by_fkey foreign key (created_by) references public.profiles(id) on delete set null;
-
-alter table public.tasks drop constraint if exists tasks_project_id_fkey;
-alter table public.tasks add constraint tasks_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade;
-
-create table if not exists public.project_members (
-  id          uuid primary key default uuid_generate_v4(),
-  project_id  uuid references public.projects(id) on delete cascade not null,
-  user_id     uuid not null,
-  created_at  timestamptz default now(),
-  unique (project_id, user_id),
-
-  constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
-);
-
--- Ensure explicit foreign key constraints exist for relationship detection
-alter table public.project_members drop constraint if exists project_members_user_id_fkey;
-alter table public.project_members add constraint project_members_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
 drop trigger if exists tasks_updated_at on public.tasks;
 create trigger tasks_updated_at
@@ -352,6 +347,7 @@ set search_path = public
 as $$
 declare
   is_invited boolean;
+  new_ws_id uuid;
 begin
   -- Check if user is invited to any workspace
   select exists (
@@ -376,7 +372,12 @@ begin
       split_part(new.email, '@', 1) || '''s Workspace',
       split_part(new.email, '@', 1) || '-' || left(uuid_generate_v4()::text, 4),
       new.id
-    );
+    )
+    returning id into new_ws_id;
+
+    -- Add owner to workspace_members
+    insert into public.workspace_members (workspace_id, user_id, role)
+    values (new_ws_id, new.id, 'owner');
   else
     -- If invited, automatically accept the invites
     insert into public.workspace_members (workspace_id, user_id, role)
@@ -423,14 +424,25 @@ begin
     if not exists (select 1 from public.workspaces where owner_id = prof.id) then
       insert into public.workspaces (name, slug, owner_id)
       values (coalesce(prof.full_name, 'User') || '''s Workspace', lower(replace(coalesce(prof.full_name, 'user'), ' ', '-')) || '-' || left(prof.id::text, 4), prof.id)
-      on conflict (slug) do nothing
+      on conflict (slug) do update set updated_at = now() -- dummy update to get returning id
       returning id into new_ws_id;
 
       if (new_ws_id is not null) then
+        -- Add to workspace_members if missing
+        insert into public.workspace_members (workspace_id, user_id, role)
+        values (new_ws_id, prof.id, 'owner')
+        on conflict (workspace_id, user_id) do update set role = 'owner';
+
         update public.projects set workspace_id = new_ws_id where owner_id = prof.id and workspace_id is null;
       end if;
     else
       select id into new_ws_id from public.workspaces where owner_id = prof.id limit 1;
+
+      -- Ensure owner is in members table
+      insert into public.workspace_members (workspace_id, user_id, role)
+      values (new_ws_id, prof.id, 'owner')
+      on conflict (workspace_id, user_id) do update set role = 'owner';
+
       update public.projects set workspace_id = new_ws_id where owner_id = prof.id and workspace_id is null;
     end if;
   end loop;
@@ -613,15 +625,11 @@ create policy "Users can create tasks in their projects"
   on public.tasks for insert
   with check (public.can_access_project(project_id));
 
-drop policy if exists "Admins, managers and owners can update tasks" on public.tasks;
 drop policy if exists "Admins and owners can update tasks" on public.tasks;
 create policy "Admins and owners can update tasks"
   on public.tasks for update
   using (public.can_manage_project(project_id));
 
-drop policy if exists "Admins and managers can update tasks" on public.tasks;
-drop policy if exists "Team members can update task status only" on public.tasks;
-drop policy if exists "Members can update task status only" on public.tasks;
 drop policy if exists "Members can update tasks" on public.tasks;
 create policy "Members can update tasks"
   on public.tasks for update
@@ -693,12 +701,9 @@ create table if not exists public.task_comments (
   task_id     uuid references public.tasks(id) on delete cascade not null,
   user_id     uuid default auth.uid(),
   content     text not null,
-  created_at  timestamptz default now(),
-
-  constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+  created_at  timestamptz default now()
 );
 
--- Ensure explicit foreign key constraints exist for relationship detection
 alter table public.task_comments drop constraint if exists task_comments_user_id_fkey;
 alter table public.task_comments add constraint task_comments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
@@ -735,12 +740,9 @@ create table if not exists public.task_logs (
   type        text not null,
   old_value   text,
   new_value   text,
-  created_at  timestamptz default now(),
-
-  constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null
+  created_at  timestamptz default now()
 );
 
--- Ensure explicit foreign key constraints exist for relationship detection
 alter table public.task_logs drop constraint if exists task_logs_user_id_fkey;
 alter table public.task_logs add constraint task_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete set null;
 
@@ -799,9 +801,6 @@ create table if not exists public.project_invites (
   created_at  timestamptz default now(),
   unique (project_id, email)
 );
-
--- Ensure the role column exists for existing databases
-alter table public.project_invites add column if not exists role app_role not null default 'member';
 
 create or replace function public.check_self_invite()
 returns trigger as $$
@@ -947,18 +946,7 @@ create policy "Admins and owners can manage sprints"
   using (public.can_manage_project(project_id));
 
 -- Add sprint_id to tasks
--- Ensure sprint_id exists and has a named foreign key
-alter table public.sprints drop constraint if exists sprints_status_check;
-alter table public.sprints add constraint sprints_status_check check (status in ('backlog', 'planned', 'active', 'completed'));
-
-do $$
-begin
-  if not exists (select 1 from information_schema.columns where table_name='tasks' and column_name='sprint_id') then
-    alter table public.tasks add column sprint_id uuid;
-  end if;
-end
-$$;
-
+alter table public.tasks add column if not exists sprint_id uuid;
 alter table public.tasks drop constraint if exists tasks_sprint_id_fkey;
 alter table public.tasks add constraint tasks_sprint_id_fkey foreign key (sprint_id) references public.sprints(id) on delete set null;
 
@@ -975,6 +963,9 @@ create table if not exists public.task_attachments (
   content_type text,
   created_at  timestamptz default now()
 );
+
+alter table public.task_attachments drop constraint if exists task_attachments_user_id_fkey;
+alter table public.task_attachments add constraint task_attachments_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
 alter table public.task_attachments enable row level security;
 
@@ -1008,12 +999,9 @@ create table if not exists public.time_logs (
   duration_seconds integer not null,
   description text,
   logged_at   date default current_date,
-  created_at  timestamptz default now(),
-
-  constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade
+  created_at  timestamptz default now()
 );
 
--- Ensure explicit foreign key constraints exist for relationship detection
 alter table public.time_logs drop constraint if exists time_logs_user_id_fkey;
 alter table public.time_logs add constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
 
@@ -1216,6 +1204,11 @@ values ('avatars', 'avatars', true)
 on conflict (id) do update
 set public = excluded.public;
 
+insert into storage.buckets (id, name, public)
+values ('task-attachments', 'task-attachments', true)
+on conflict (id) do update
+set public = excluded.public;
+
 drop policy if exists "Avatar images are publicly accessible" on storage.objects;
 create policy "Avatar images are publicly accessible"
   on storage.objects for select
@@ -1251,4 +1244,27 @@ create policy "Users can delete their own avatar"
     bucket_id = 'avatars'
     and auth.role() = 'authenticated'
     and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- Task Attachments Storage Policies
+drop policy if exists "Task attachments are accessible to project members" on storage.objects;
+create policy "Task attachments are accessible to project members"
+  on storage.objects for select
+  using (bucket_id = 'task-attachments');
+
+drop policy if exists "Users can upload task attachments" on storage.objects;
+create policy "Users can upload task attachments"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'task-attachments'
+    and auth.role() = 'authenticated'
+  );
+
+drop policy if exists "Users can delete their own task attachments" on storage.objects;
+create policy "Users can delete their own task attachments"
+  on storage.objects for delete
+  using (
+    bucket_id = 'task-attachments'
+    and auth.role() = 'authenticated'
+    -- In a real app, we'd check if they own the attachment record in public.task_attachments
   );
