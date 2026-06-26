@@ -12,7 +12,7 @@ export default function ActivityFeed({ projectId }) {
       setLoading(true)
       let query = supabase
         .from('task_logs')
-        .select('*, profiles!user_id(full_name, avatar_path), tasks!inner(title, project_id)')
+        .select('*, profiles!task_logs_user_id_fkey(full_name, avatar_path), tasks!inner(title, project_id)')
         .order('created_at', { ascending: false })
         .limit(20)
 
@@ -36,7 +36,7 @@ export default function ActivityFeed({ projectId }) {
         // Fetch full record with joins
         const { data: newLog } = await supabase
           .from('task_logs')
-          .select('*, profiles!user_id(full_name, avatar_path), tasks!inner(title, project_id)')
+          .select('*, profiles!task_logs_user_id_fkey(full_name, avatar_path), tasks!inner(title, project_id)')
           .eq('id', payload.new.id)
           .single()
 
