@@ -57,7 +57,7 @@ const router = createBrowserRouter([
       {
         path: 'workspaces/:workspaceSlug',
         loader: async ({ params }) => {
-          const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceId)
+          const workspace = await useWorkspaceStore.getState().setActiveWorkspaceBySlug(params.workspaceSlug)
           if (workspace.error) {
             if (workspace.error.status === 403) {
                throw new Response("Forbidden", { status: 403 });
