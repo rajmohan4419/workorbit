@@ -26,6 +26,7 @@ export default function KanbanBoard({ projectId }) {
   const tasks = useTaskStore((state) => state.tasks)
   const sprints = useProjectStore((state) => state.sprints)
   const moveTask = useTaskStore((state) => state.moveTask)
+  console.log("Kanban projectId:", projectId)
 
   useEffect(() => {
     // Subscribe to task updates (moved from ProjectPage for better scoping if needed,
