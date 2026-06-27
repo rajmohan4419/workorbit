@@ -1,23 +1,71 @@
-import { useState, useEffect } from 'react'
-import { Zap, Calendar, Target, Plus, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Zap, Calendar, Target, Plus, ChevronRight, X, Loader2 } from 'lucide-react'
 import { useTaskStore } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
+import { sprintService } from '../../lib/services/sprintService'
 
 export default function SprintBoard({ projectId }) {
   const [sprints, setSprints] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
   const tasks = useTaskStore((state) => state.tasks)
   const fetchSprints = useProjectStore((state) => state.fetchSprints)
 
-  useEffect(() => {
-    const loadSprints = async () => {
-      setLoading(true)
-      const { data } = await fetchSprints(projectId)
-      if (data) setSprints(data)
-      setLoading(false)
-    }
-    loadSprints()
+  const [form, setForm] = useState({
+    name: '',
+    start_date: '',
+    end_date: '',
+    goal: ''
+  })
+
+  const loadSprints = useCallback(async () => {
+    setLoading(true)
+    const { data } = await fetchSprints(projectId)
+    if (data) setSprints(data)
+    setLoading(false)
   }, [projectId, fetchSprints])
+
+  useEffect(() => {
+    let ignore = false;
+    const init = async () => {
+      if (!ignore) {
+        await loadSprints();
+      }
+    }
+    init();
+    return () => { ignore = true; };
+  }, [loadSprints])
+
+  const handleCreateSprint = async (e) => {
+    e.preventDefault()
+    if (!form.name || !form.start_date || !form.end_date) {
+      setError('Please fill in all required fields.')
+      return
+    }
+
+    setCreating(true)
+    setError('')
+    const { error: createError } = await sprintService.createSprint({
+      project_id: projectId,
+      name: form.name,
+      start_date: form.start_date,
+      end_date: form.end_date,
+      goal: form.goal,
+      status: 'planned'
+    })
+
+    if (createError) {
+      setError(createError.message)
+      setCreating(false)
+    } else {
+      await loadSprints()
+      setCreating(false)
+      setShowCreateModal(false)
+      setForm({ name: '', start_date: '', end_date: '', goal: '' })
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -29,11 +77,95 @@ export default function SprintBoard({ projectId }) {
           </h2>
           <p className="text-xs text-gray-500">Manage iterations and project velocity</p>
         </div>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors">
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors"
+        >
           <Plus size={14} />
           Plan Sprint
         </button>
       </div>
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Plan New Sprint</h3>
+              <button onClick={() => setShowCreateModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSprint} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Sprint Name *</label>
+                <input
+                  required
+                  value={form.name}
+                  onChange={e => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g. Sprint 1, Q1 Iteration"
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Start Date *</label>
+                  <input
+                    required
+                    type="date"
+                    value={form.start_date}
+                    onChange={e => setForm({ ...form, start_date: e.target.value })}
+                    className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">End Date *</label>
+                  <input
+                    required
+                    type="date"
+                    value={form.end_date}
+                    onChange={e => setForm({ ...form, end_date: e.target.value })}
+                    className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Goal</label>
+                <textarea
+                  value={form.goal}
+                  onChange={e => setForm({ ...form, goal: e.target.value })}
+                  placeholder="What are we achieving this sprint?"
+                  rows={3}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                />
+              </div>
+
+              {error && <p className="text-xs text-red-500">{error}</p>}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {creating && <Loader2 size={16} className="animate-spin" />}
+                  Create Sprint
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4">
         {loading ? (

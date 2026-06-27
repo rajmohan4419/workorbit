@@ -1,16 +1,19 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Search, X, Folder, CheckSquare, ArrowRight, Loader2 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTaskStore } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 
 export default function SearchModal({ onClose }) {
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const searchResults = useTaskStore((state) => state.searchResults)
   const fetchGlobalTasks = useTaskStore((state) => state.fetchGlobalTasks)
   const projects = useProjectStore((state) => state.projects)
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
 
   useEffect(() => {
     const initSearch = async () => {
@@ -29,7 +32,10 @@ export default function SearchModal({ onClose }) {
     const filteredProjects = projects.filter(p =>
       p.name.toLowerCase().includes(q) ||
       p.description?.toLowerCase().includes(q)
-    ).slice(0, 5)
+    ).slice(0, 5).map(p => ({
+      ...p,
+      workspace_slug: activeWorkspace?.slug
+    }))
 
     const filteredTasks = searchResults.filter(t =>
       t.title.toLowerCase().includes(q) ||
@@ -37,7 +43,7 @@ export default function SearchModal({ onClose }) {
     ).slice(0, 10)
 
     return { projects: filteredProjects, tasks: filteredTasks }
-  }, [query, projects, searchResults])
+  }, [query, projects, searchResults, activeWorkspace?.slug])
 
   const flatResults = useMemo(() => {
     return [
@@ -60,13 +66,26 @@ export default function SearchModal({ onClose }) {
       }
       if (e.key === 'Enter' && flatResults[selectedIndex]) {
         const item = flatResults[selectedIndex]
-        window.location.href = item.type === 'project' ? `/projects/${item.id}` : `/projects/${item.project_id}`
+        const workspaceSlug = item.type === 'project'
+          ? item.workspace_slug
+          : item.projects?.workspaces?.slug
+
+        if (workspaceSlug) {
+          const path = item.type === 'project'
+            ? `/workspaces/${workspaceSlug}/projects/${item.id}`
+            : `/workspaces/${workspaceSlug}/projects/${item.project_id}`
+          navigate(path)
+        } else {
+          // Fallback if slug missing
+          const path = item.type === 'project' ? `/projects/${item.id}` : `/projects/${item.project_id}`
+          navigate(path)
+        }
         onClose()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onClose, flatResults, selectedIndex])
+  }, [onClose, flatResults, selectedIndex, navigate])
 
   const hasResults = results.projects.length > 0 || results.tasks.length > 0
 
@@ -123,7 +142,7 @@ export default function SearchModal({ onClose }) {
                       return (
                         <Link
                           key={project.id}
-                          to={`/projects/${project.id}`}
+                          to={`/workspaces/${project.workspace_slug}/projects/${project.id}`}
                           onClick={onClose}
                           className={`flex items-center justify-between px-3 py-2.5 rounded-xl group transition-colors ${
                             isSelected ? 'bg-indigo-50' : 'hover:bg-indigo-50'
@@ -157,7 +176,7 @@ export default function SearchModal({ onClose }) {
                       return (
                         <Link
                           key={task.id}
-                          to={`/projects/${task.project_id}`}
+                          to={`/workspaces/${task.projects?.workspaces?.slug || activeWorkspace?.slug}/projects/${task.project_id}`}
                           onClick={onClose}
                           className={`flex items-center justify-between px-3 py-2.5 rounded-xl group transition-colors ${
                             isSelected ? 'bg-indigo-50' : 'hover:bg-indigo-50'

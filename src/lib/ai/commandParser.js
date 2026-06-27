@@ -10,8 +10,8 @@ export const parseCommand = (prompt) => {
   const lowercasePrompt = prompt.toLowerCase().trim()
 
   // 1. Create Project
-  if (lowercasePrompt.startsWith('create project')) {
-    const name = prompt.slice(14).trim()
+  if (lowercasePrompt.startsWith('create project') || lowercasePrompt.startsWith('add project')) {
+    const name = prompt.replace(/^(create project|add project)/i, '').trim()
     return {
       type: 'CREATE_PROJECT',
       payload: { name }
@@ -19,10 +19,10 @@ export const parseCommand = (prompt) => {
   }
 
   // 2. Create Tasks
-  const taskMatch = lowercasePrompt.match(/create (\d+) tasks? (?:for|in) (.*)/)
-  if (taskMatch) {
-    const count = parseInt(taskMatch[1])
-    const context = taskMatch[2].trim()
+  const taskCountMatch = lowercasePrompt.match(/^(?:create|add) (\d+) tasks? (?:for|in) (.*)/)
+  if (taskCountMatch) {
+    const count = parseInt(taskCountMatch[1])
+    const context = taskCountMatch[2].trim()
     return {
       type: 'CREATE_TASKS',
       payload: {
@@ -33,14 +33,32 @@ export const parseCommand = (prompt) => {
     }
   }
 
+  const singleTaskMatch = lowercasePrompt.match(/^(?:new task|add task|create task):? (.*) (?:for|in) (.*)/)
+  if (singleTaskMatch) {
+     const title = singleTaskMatch[1].trim()
+     const context = singleTaskMatch[2].trim()
+     return {
+       type: 'CREATE_TASKS',
+       payload: {
+         count: 1,
+         context,
+         titles: [title]
+       }
+     }
+  }
+
   // 3. Plan Sprint
-  if (lowercasePrompt.includes('plan sprint')) {
-    const context = lowercasePrompt.replace('plan sprint', '').replace('for', '').trim()
+  if (lowercasePrompt.includes('plan sprint') || lowercasePrompt.includes('schedule sprint')) {
+    const context = lowercasePrompt
+      .replace(/plan sprint|schedule sprint/g, '')
+      .replace('for', '')
+      .trim()
+
     return {
       type: 'PLAN_SPRINT',
       payload: {
-        name: `Sprint for ${context || 'Release'}`,
-        goal: `Complete ${context || 'objectives'}`
+        name: context ? `Sprint: ${context}` : 'New Sprint',
+        goal: context ? `Complete ${context}` : 'Sprint objectives'
       }
     }
   }

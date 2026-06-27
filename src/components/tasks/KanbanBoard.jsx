@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { Plus } from 'lucide-react'
 import { useTaskStore, STATUSES, STATUS_LABELS, canMoveToStatus } from '../../store/taskStore'
@@ -26,12 +26,7 @@ export default function KanbanBoard({ projectId }) {
   const tasks = useTaskStore((state) => state.tasks)
   const sprints = useProjectStore((state) => state.sprints)
   const moveTask = useTaskStore((state) => state.moveTask)
-  console.log("Kanban projectId:", projectId)
 
-  useEffect(() => {
-    // Subscribe to task updates (moved from ProjectPage for better scoping if needed,
-    // but ProjectPage handles it for the whole project state)
-  }, [])
   const storeError = useTaskStore((state) => state.error)
   const profile = useAuthStore((state) => state.profile)
   const user = useAuthStore((state) => state.user)
