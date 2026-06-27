@@ -16,7 +16,7 @@ import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
 
 export default function ProjectPage() {
-  const { projectId } = useParams()
+  const { id : projectId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
 
