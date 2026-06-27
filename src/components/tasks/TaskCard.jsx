@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import { Calendar, Trash2, Edit2, Check, X, MessageSquare, Paperclip, AlertCircle } from 'lucide-react'
 import { useTaskStore } from '../../store/taskStore'
 import { useAuthStore } from '../../store/authStore'
@@ -11,7 +11,7 @@ const priorityStyles = {
   low: 'bg-gray-50 text-gray-500 border-gray-100',
 }
 
-export default function TaskCard({ task, onOpen }) {
+const TaskCard = memo(function TaskCard({ task, onOpen }) {
   const deleteTask = useTaskStore((state) => state.deleteTask)
   const updateTask = useTaskStore((state) => state.updateTask)
   const user = useAuthStore((state) => state.user)
@@ -214,4 +214,6 @@ export default function TaskCard({ task, onOpen }) {
       )}
     </div>
   )
-}
+})
+
+export default TaskCard
