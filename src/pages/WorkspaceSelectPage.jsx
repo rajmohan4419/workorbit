@@ -1,19 +1,30 @@
-import { useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Loader2, LogOut } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useAuthStore } from '../store/authStore'
 
 export default function WorkspaceSelectPage() {
   const workspaces = useWorkspaceStore((state) => state.workspaces)
-  const fetchWorkspaces = useWorkspaceStore(useCallback((state) => state.fetchWorkspaces, []))
+  const fetchWorkspaces = useWorkspaceStore((state) => state.fetchWorkspaces)
   const loading = useWorkspaceStore((state) => state.loading)
   const user = useAuthStore((state) => state.user)
   const signOut = useAuthStore((state) => state.signOut)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    fetchWorkspaces()
-  }, [fetchWorkspaces])
+  const load = async () => {
+    const { data, error } = await fetchWorkspaces()
+
+    if (error) return
+
+    if (data?.length === 1) {
+      navigate(`/workspaces/${data[0].slug}`, { replace: true })
+    }
+  }
+
+  load()
+}, [fetchWorkspaces, navigate])
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
