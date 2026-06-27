@@ -1,0 +1,3 @@
+## 2025-05-15 - [React Compiler vs Manual Memoization]
+**Learning:** The React Compiler (enabled in this project) is sensitive to manual memoization (`useCallback`, `useMemo`). If manual memoization is used, the dependency array must exactly match what the compiler expects, otherwise it will skip optimization for that component and throw a lint error (`react-hooks/preserve-manual-memoization`).
+**Action:** When adding `useCallback` or `useMemo` in this codebase, ensure all external variables (including state setters like `setModalState`) are included in the dependency array to satisfy the compiler's preservation rules.

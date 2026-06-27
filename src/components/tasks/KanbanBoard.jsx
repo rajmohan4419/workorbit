@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { Plus } from 'lucide-react'
 import { useTaskStore, STATUSES, STATUS_LABELS, canMoveToStatus } from '../../store/taskStore'
@@ -45,10 +45,19 @@ export default function KanbanBoard({ projectId }) {
     return tasks.filter(task => task.sprint_id === selectedSprintId)
   }, [tasks, selectedSprintId])
 
-  const tasksByStatus = STATUSES.reduce((acc, status) => {
-    acc[status] = filteredTasks.filter((task) => task.status === status)
-    return acc
-  }, {})
+  // Memoize tasks grouped by status to avoid re-filtering on every render
+  const tasksByStatus = useMemo(() => {
+    return STATUSES.reduce((acc, status) => {
+      acc[status] = filteredTasks.filter((task) => task.status === status)
+      return acc
+    }, {})
+  }, [filteredTasks])
+
+  // Stable callback for TaskCard to prevent unnecessary re-renders of memoized TaskCards
+  const handleOpenTask = useCallback((selectedTask) => {
+    useTaskStore.setState({ error: null })
+    setModalState({ type: 'edit', task: selectedTask })
+  }, [setModalState])
 
   const handleDragStart = ({ draggableId }) => {
     const task = tasks.find((item) => item.id === draggableId)
@@ -144,10 +153,7 @@ export default function KanbanBoard({ projectId }) {
                               >
                                 <TaskCard
                                   task={task}
-                                  onOpen={(selectedTask) => {
-                                    useTaskStore.setState({ error: null })
-                                    setModalState({ type: 'edit', task: selectedTask })
-                                  }}
+                                  onOpen={handleOpenTask}
                                 />
                               </div>
                             )}
