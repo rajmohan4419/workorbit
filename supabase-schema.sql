@@ -627,16 +627,29 @@ $$;
 
 -- Migrate projects without workspace_id
 do $$
-declare
-  proj record;
-  ws_id uuid;
 begin
-  for proj in select * from public.projects where workspace_id is null loop
-    select workspace_id into ws_id from public.workspace_members where user_id = proj.owner_id and role = 'owner' limit 1;
-    if ws_id is not null then
-      update public.projects set workspace_id = ws_id where id = proj.id;
-    end if;
-  end loop;
+  -- Fallback 1: Use workspace_members
+  update public.projects p
+  set workspace_id = (
+    select wm.workspace_id
+    from public.workspace_members wm
+    where wm.user_id = p.owner_id and wm.role = 'owner'
+    limit 1
+  )
+  where p.workspace_id is null;
+
+  -- Fallback 2: Use workspaces table directly
+  update public.projects p
+  set workspace_id = (
+    select w.id
+    from public.workspaces w
+    where w.owner_id = p.owner_id
+    limit 1
+  )
+  where p.workspace_id is null;
+
+  -- Now enforce NOT NULL using dynamic SQL to avoid compilation issues
+  execute 'alter table public.projects alter column workspace_id set not null';
 end
 $$;
 
@@ -661,6 +674,9 @@ create policy "Attachment upload" on storage.objects for insert with check (buck
 grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
 grant all on public.workspace_members to anon, authenticated;
+grant all on public.workspace_invites to anon, authenticated;
+grant all on public.project_members to anon, authenticated;
+grant all on public.project_invites to anon, authenticated;
 grant all on all sequences in schema public to anon, authenticated;
 grant all on all functions in schema public to anon, authenticated;
 
