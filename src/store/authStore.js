@@ -46,12 +46,15 @@ export const useAuthStore = create((set, get) => ({
       try {
         const profile = await fetchProfile(user?.id)
         set({ session, user, profile, loading: false })
-      } catch {
+      } catch (err) {
+        console.error('Error in session fetchProfile:', err)
         set({ session, user, profile: null, loading: false })
       }
 
       if (user) {
         useWorkspaceStore.getState().fetchWorkspaces()
+      } else {
+        set({ loading: false })
       }
     })
 
@@ -62,7 +65,8 @@ export const useAuthStore = create((set, get) => ({
       try {
         const profile = await fetchProfile(user?.id)
         set({ session, user, profile, loading: false })
-      } catch {
+      } catch (err) {
+        console.error('Error in authChange fetchProfile:', err)
         set({ session, user, profile: null, loading: false })
       }
 
@@ -70,6 +74,7 @@ export const useAuthStore = create((set, get) => ({
         useWorkspaceStore.getState().fetchWorkspaces()
       } else {
         useWorkspaceStore.getState().reset()
+        set({ loading: false })
       }
     })
 

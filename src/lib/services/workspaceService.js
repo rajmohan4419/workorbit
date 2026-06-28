@@ -33,14 +33,6 @@ export const workspaceService = {
     return { data: workspace, role: isOwner ? 'owner' : member?.role }
   },
 
-  async createWorkspace({ name, slug, owner_id }) {
-    return await supabase
-      .from('workspaces')
-      .insert([{ name, slug, owner_id }])
-      .select()
-      .single()
-  },
-
   async fetchMembers(workspaceId) {
     const { data: workspace, error: wsError } = await supabase
       .from('workspaces')
