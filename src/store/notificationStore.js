@@ -40,9 +40,13 @@ export const useNotificationStore = create((set) => ({
   },
 
   markAllAsRead: async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: { message: 'Not authenticated' } }
+
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
+      .eq('user_id', user.id)
       .eq('read', false)
 
     if (error) return { error }

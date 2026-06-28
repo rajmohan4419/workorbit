@@ -145,8 +145,9 @@ export const useProjectStore = create((set, get) => ({
   },
 
   acceptInvite: async (inviteId) => {
-    const userId = (await supabase.auth.getUser()).data.user.id
-    const result = await projectService.acceptInvite(inviteId, userId)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: { message: 'Session expired. Please log in again.' } }
+    const result = await projectService.acceptInvite(inviteId, user.id)
     
     return result
   },

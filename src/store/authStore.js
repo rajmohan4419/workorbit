@@ -34,30 +34,6 @@ export const useAuthStore = create((set, get) => ({
       }
     }
 
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (!active) return
-
-      if (error) {
-        set({ session: null, user: null, profile: null, loading: false })
-        return
-      }
-
-      const user = session?.user ?? null
-      try {
-        const profile = await fetchProfile(user?.id)
-        set({ session, user, profile, loading: false })
-      } catch (err) {
-        console.error('Error in session fetchProfile:', err)
-        set({ session, user, profile: null, loading: false })
-      }
-
-      if (user) {
-        useWorkspaceStore.getState().fetchWorkspaces()
-      } else {
-        set({ loading: false })
-      }
-    })
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!active) return
       const user = session?.user ?? null
