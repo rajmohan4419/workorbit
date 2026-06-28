@@ -37,7 +37,7 @@ export default function AuthPage() {
                 },
               },
             }}
-            providers={['google', 'github']}
+            providers={['google']}
             redirectTo={`${window.location.origin}/`}
           />
         </div>

@@ -50,24 +50,25 @@ export default function SettingsPage({ initialTab = 'general' }) {
   const isAdmin = userRole === 'admin' || isOwner
 
   useEffect(() => {
-    if (currentProfile) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFirstName(currentProfile.first_name || '')
-
-      setLastName(currentProfile.last_name || '')
-
-      setPhone(currentProfile.phone || '')
+    if (currentProfile && !firstName && !lastName && !phone) {
+      const timer = setTimeout(() => {
+        setFirstName(currentProfile.first_name || '')
+        setLastName(currentProfile.last_name || '')
+        setPhone(currentProfile.phone || '')
+      }, 0)
+      return () => clearTimeout(timer)
     }
-  }, [currentProfile])
+  }, [currentProfile, firstName, lastName, phone])
 
   useEffect(() => {
-    if (activeWorkspace) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setName(activeWorkspace.name || '')
-
-      setSlug(activeWorkspace.slug || '')
+    if (activeWorkspace && !name && !slug) {
+      const timer = setTimeout(() => {
+        setName(activeWorkspace.name || '')
+        setSlug(activeWorkspace.slug || '')
+      }, 0)
+      return () => clearTimeout(timer)
     }
-  }, [activeWorkspace])
+  }, [activeWorkspace, name, slug])
 
   const handleUpdate = async (e) => {
     e.preventDefault()
@@ -422,7 +423,11 @@ export default function SettingsPage({ initialTab = 'general' }) {
 
                       {isOwner && member.user_id !== currentUser.id && (
                         <button
-                          onClick={() => transferOwnership(activeWorkspace.id, member.user_id)}
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to transfer workspace ownership to ${member.profiles?.full_name || 'this user'}? You will lose owner permissions.`)) {
+                              transferOwnership(activeWorkspace.id, member.user_id)
+                            }
+                          }}
                           className="px-3 py-1.5 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
                         >
                           Make Owner

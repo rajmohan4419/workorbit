@@ -14,7 +14,8 @@ export default function DashboardPage() {
   const loading = useProjectStore((state) => state.loading)
   const error = useProjectStore((state) => state.error)
   const user = useAuthStore((state) => state.user)
-  const firstName = user?.email?.split('@')[0] || 'there'
+  const profile = useAuthStore((state) => state.profile)
+  const firstName = profile?.first_name || user?.email?.split('@')[0] || 'there'
 
   const [overdueCount, setOverdueCount] = useState(0)
   const [completedCount, setCompletedCount] = useState(0)
@@ -22,16 +23,24 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (projects.length === 0) {
+        setOverdueCount(0)
+        setCompletedCount(0)
+        setTeamHealth(100)
+        return
+      }
+
+      const projectIds = projects.map(p => p.id)
       const now = new Date().toISOString()
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
       const [overdue, completed, totalTasks, doneTasks, noDueTasks, futureDueTasks] = await Promise.all([
-        supabase.from('tasks').select('id', { count: 'exact', head: true }).lt('due_date', now).neq('status', 'done'),
-        supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'done').gte('updated_at', oneWeekAgo),
-        supabase.from('tasks').select('id', { count: 'exact', head: true }),
-        supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'done'),
-        supabase.from('tasks').select('id', { count: 'exact', head: true }).is('due_date', null).neq('status', 'done'),
-        supabase.from('tasks').select('id', { count: 'exact', head: true }).gt('due_date', now).neq('status', 'done')
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).lt('due_date', now).neq('status', 'done'),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).eq('status', 'done').gte('updated_at', oneWeekAgo),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).eq('status', 'done'),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).is('due_date', null).neq('status', 'done'),
+        supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).gt('due_date', now).neq('status', 'done')
       ])
 
       if (overdue.count !== null) setOverdueCount(overdue.count)
@@ -46,7 +55,7 @@ export default function DashboardPage() {
       }
     }
     fetchStats()
-  }, [])
+  }, [projects])
 
   const overdueTasks = overdueCount
   const completedThisWeek = completedCount

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { CheckCircle2, Clock, AlertCircle, Calendar, Tag } from 'lucide-react'
 import { useTaskStore, STATUS_LABELS } from '../store/taskStore'
 import TaskModal from '../components/tasks/TaskModal'
@@ -15,8 +15,13 @@ export default function MyTasksPage() {
   const error = useTaskStore((state) => state.error)
   const [selectedTask, setSelectedTask] = useState(null)
 
-  const overdueCount = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done').length
-  const completedCount = tasks.filter(t => t.status === 'done').length
+  const overdueCount = useMemo(() =>
+    tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done').length
+  , [tasks])
+
+  const completedCount = useMemo(() =>
+    tasks.filter(t => t.status === 'done').length
+  , [tasks])
 
   return (
     <div className="p-6 max-w-5xl mx-auto">

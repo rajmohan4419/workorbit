@@ -43,6 +43,20 @@ function AppShell() {
   )
 }
 
+function ProtectedRoute({ children }) {
+  const user = useAuthStore((state) => state.user)
+  const loading = useAuthStore((state) => state.loading)
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+
+  if (!user) return <Navigate to="/auth" replace />
+  return children
+}
+
 const isAppSubdomain = window.location.hostname === 'app.orbitboard.in' || window.location.hostname === 'localhost'
 
 const router = createBrowserRouter([
@@ -81,7 +95,16 @@ const router = createBrowserRouter([
             loader: async ({ params }) => {
               await useTaskStore.getState().fetchTasks(params.id)
               return null
-            }
+            },
+            children: [
+              { path: 'board', element: <ProjectPage /> },
+              { path: 'list', element: <ProjectPage /> },
+              { path: 'calendar', element: <ProjectPage /> },
+              { path: 'timeline', element: <ProjectPage /> },
+              { path: 'activity', element: <ProjectPage /> },
+              { path: 'sprints', element: <ProjectPage /> },
+              { path: 'members', element: <ProjectPage /> },
+            ]
           },
           {
             path: 'settings',
@@ -148,20 +171,6 @@ const router = createBrowserRouter([
     element: <ForbiddenPage />
   }
 ])
-
-function ProtectedRoute({ children }) {
-  const user = useAuthStore((state) => state.user)
-  const loading = useAuthStore((state) => state.loading)
-
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
-
-  if (!user) return <Navigate to="/auth" replace />
-  return children
-}
 
 export default function App() {
   const init = useAuthStore((state) => state.init)

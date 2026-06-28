@@ -19,24 +19,21 @@ export default function WorkspaceSelectPage() {
     let timeoutId
 
     const load = async () => {
-      const { data, error } = await fetchWorkspaces()
-
-      if (error) return
-
-      if (data?.length === 1) {
-        navigate(`/workspaces/${data[0].slug}`, { replace: true })
+      if (workspaces.length === 1) {
+        navigate(`/workspaces/${workspaces[0].slug}`, { replace: true })
         return
       }
 
-      if (data?.length === 0 && retryCount < maxRetries) {
+      if (workspaces.length === 0 && retryCount < maxRetries) {
         retryCount++
+        await fetchWorkspaces()
         timeoutId = setTimeout(load, 2000)
       }
     }
 
     load()
     return () => clearTimeout(timeoutId)
-  }, [fetchWorkspaces, navigate])
+  }, [workspaces, fetchWorkspaces, navigate])
 
   useEffect(() => {
     const timer = setTimeout(() => {

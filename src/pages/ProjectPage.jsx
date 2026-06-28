@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
-import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar } from 'lucide-react'
+import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { useAuthStore } from '../store/authStore'
 import { useTaskStore } from '../store/taskStore'
@@ -45,8 +45,7 @@ export default function ProjectPage() {
     setActiveProject(project)
 
     if (projectId) {
-      const result = subscribeToProject(projectId)
-      const unsubscribe = typeof result === 'function' ? result : result?.unsubscribe
+      const unsubscribe = subscribeToProject(projectId)
       return () => unsubscribe?.()
     } else {
       resetTasks()
@@ -91,9 +90,9 @@ export default function ProjectPage() {
           <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl max-w-[200px] sm:max-w-none overflow-x-auto no-scrollbar">
             {[
               { id: 'board', label: 'Board', icon: LayoutDashboard },
-              { id: 'list', label: 'List', icon: LayoutDashboard },
+              { id: 'list', label: 'List', icon: List },
               { id: 'calendar', label: 'Calendar', icon: Calendar },
-              { id: 'timeline', label: 'Timeline', icon: Calendar },
+              { id: 'timeline', label: 'Timeline', icon: GanttChartSquare },
               { id: 'activity', label: 'Feed', icon: History },
               { id: 'sprints', label: 'Sprints', icon: Zap },
               { id: 'members', label: 'Members', icon: Users },

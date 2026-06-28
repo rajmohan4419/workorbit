@@ -31,11 +31,11 @@ export const useWorkspaceStore = create((set, get) => ({
     }
 
     const activeWorkspaceId = get().activeWorkspace?.id
-    const activeWorkspace = data.find((w) => w.id === activeWorkspaceId) || data[0] || null
+    const activeWorkspace = data.find((w) => w.id === activeWorkspaceId) || null
 
     set({
       workspaces: data,
-      activeWorkspace,
+      activeWorkspace: activeWorkspace || (activeWorkspaceId ? null : (data[0] || null)),
       error: null,
       loading: false,
     })
@@ -168,8 +168,9 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   acceptWorkspaceInvite: async (inviteId) => {
-    const userId = (await supabase.auth.getUser()).data.user.id
-    const result = await workspaceService.acceptInvite(inviteId, userId)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: { message: 'Session expired. Please log in again.' } }
+    const result = await workspaceService.acceptInvite(inviteId, user.id)
 
     return result
   },

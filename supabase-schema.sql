@@ -580,20 +580,25 @@ create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   new_ws_id uuid;
   clean_slug text;
+  user_email text;
 begin
+  user_email := coalesce(new.email, new.id::text);
   -- Generate a clean slug from email
-  clean_slug := lower(regexp_replace(split_part(new.email, '@', 1), '[^a-zA-Z0-9]', '', 'g'));
+  clean_slug := lower(regexp_replace(split_part(user_email, '@', 1), '[^a-zA-Z0-9]', '', 'g'));
+  if (clean_slug = '') then
+    clean_slug := 'user-' || left(new.id::text, 8);
+  end if;
 
   -- Create Profile
   insert into public.profiles (id, full_name, first_name, last_name, role)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1), 'New User'),
     new.raw_user_meta_data->>'first_name',
     new.raw_user_meta_data->>'last_name',
     case when exists (select 1 from public.profiles) then 'member'::app_role else 'admin'::app_role end
@@ -605,7 +610,7 @@ begin
   -- Always create a default personal workspace for every new user
   insert into public.workspaces (name, slug, owner_id)
   values (
-    split_part(new.email, '@', 1) || '''s Workspace',
+    coalesce(split_part(new.email, '@', 1), 'Personal') || '''s Workspace',
     clean_slug || '-' || left(uuid_generate_v4()::text, 4),
     new.id
   ) returning id into new_ws_id;
@@ -615,13 +620,15 @@ begin
   values (new_ws_id, new.id, 'owner');
 
   -- If they have pending invites, join those workspaces as well
-  insert into public.workspace_members (workspace_id, user_id, role)
-  select workspace_id, new.id, role
-  from public.workspace_invites where email = new.email
-  on conflict (workspace_id, user_id) do update set role = excluded.role;
+  if (new.email is not null) then
+    insert into public.workspace_members (workspace_id, user_id, role)
+    select workspace_id, new.id, role
+    from public.workspace_invites where email = new.email
+    on conflict (workspace_id, user_id) do update set role = excluded.role;
 
-  -- Clean up invites
-  delete from public.workspace_invites where email = new.email;
+    -- Clean up invites
+    delete from public.workspace_invites where email = new.email;
+  end if;
 
   return new;
 end;
@@ -644,7 +651,11 @@ begin
     if not exists (select 1 from public.workspace_members where user_id = prof.id) then
       if not exists (select 1 from public.workspaces where owner_id = prof.id) then
         insert into public.workspaces (name, slug, owner_id)
-        values (prof.full_name || '''s Workspace', lower(replace(prof.full_name, ' ', '-')) || '-' || left(prof.id::text, 4), prof.id)
+        values (
+          coalesce(prof.full_name, 'New User') || '''s Workspace',
+          lower(replace(coalesce(prof.full_name, 'user-' || left(prof.id::text, 8)), ' ', '-')) || '-' || left(prof.id::text, 4),
+          prof.id
+        )
         on conflict (slug) do update set updated_at = now()
         returning id into ws_id;
       else

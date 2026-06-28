@@ -156,8 +156,13 @@ export const useTaskStore = create((set, get) => ({
     taskService.updateTask(id, { status: newStatus })
       .then(({ data, error }) => {
         if (error) {
-          // Rollback if request fails
-          set({ tasks: previousTasks, error: error.message })
+          // Rollback only the affected task if request fails
+          set((state) => ({
+            tasks: state.tasks.map((t) =>
+              t.id === id ? { ...t, status: currentTask.status } : t
+            ),
+            error: error.message
+          }))
         } else {
           // Sync only relevant fields to avoid overwriting rich joined data with a flat object
           set((state) => ({
@@ -314,6 +319,9 @@ export const useTaskStore = create((set, get) => ({
   },
 
   subscribeToProject: (projectId) => {
+    // Remove existing channel for this project if it exists to avoid collisions
+    supabase.removeChannel(supabase.channel(`project-updates-${projectId}`))
+
     const channel = supabase
       .channel(`project-updates-${projectId}`)
       .on('postgres_changes', {
