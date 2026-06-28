@@ -189,6 +189,10 @@ create table if not exists public.sprints (
   updated_at  timestamptz default now()
 );
 
+-- Sprint Foreign Key on Tasks
+alter table public.tasks drop constraint if exists tasks_sprint_id_fkey;
+alter table public.tasks add constraint tasks_sprint_id_fkey foreign key (sprint_id) references public.sprints(id) on delete set null;
+
 -- LABELS
 create table if not exists public.labels (
   id          uuid primary key default uuid_generate_v4(),
@@ -253,6 +257,11 @@ alter table public.projects add column if not exists workspace_id uuid reference
 alter table public.tasks add column if not exists story_points integer;
 alter table public.tasks add column if not exists estimate_hours numeric;
 alter table public.tasks add column if not exists is_blocked boolean default false;
+alter table public.tasks add column if not exists sprint_id uuid;
+
+-- Tasks Sprint FK (Evolution)
+alter table public.tasks drop constraint if exists tasks_sprint_id_fkey;
+alter table public.tasks add constraint tasks_sprint_id_fkey foreign key (sprint_id) references public.sprints(id) on delete set null;
 
 -- Nudge roles for PostgREST cache
 alter table public.workspace_members add column if not exists role workspace_role not null default 'member';
@@ -283,6 +292,36 @@ alter table public.task_logs add constraint task_logs_user_id_fkey foreign key (
 
 alter table public.time_logs drop constraint if exists time_logs_user_id_fkey;
 alter table public.time_logs add constraint time_logs_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
+alter table public.workspace_invites drop constraint if exists workspace_invites_invited_by_fkey;
+alter table public.workspace_invites add constraint workspace_invites_invited_by_fkey foreign key (invited_by) references public.profiles(id) on delete cascade;
+
+alter table public.project_invites drop constraint if exists project_invites_invited_by_fkey;
+alter table public.project_invites add constraint project_invites_invited_by_fkey foreign key (invited_by) references public.profiles(id) on delete cascade;
+
+alter table public.notifications drop constraint if exists notifications_user_id_fkey;
+alter table public.notifications add constraint notifications_user_id_fkey foreign key (user_id) references public.profiles(id) on delete cascade;
+
+alter table public.task_dependencies drop constraint if exists task_dependencies_depends_on_id_fkey;
+alter table public.task_dependencies add constraint task_dependencies_depends_on_id_fkey foreign key (depends_on_id) references public.tasks(id) on delete cascade;
+
+alter table public.task_labels drop constraint if exists task_labels_task_id_fkey;
+alter table public.task_labels add constraint task_labels_task_id_fkey foreign key (task_id) references public.tasks(id) on delete cascade;
+
+alter table public.task_labels drop constraint if exists task_labels_label_id_fkey;
+alter table public.task_labels add constraint task_labels_label_id_fkey foreign key (label_id) references public.labels(id) on delete cascade;
+
+alter table public.projects drop constraint if exists projects_workspace_id_fkey;
+alter table public.projects add constraint projects_workspace_id_fkey foreign key (workspace_id) references public.workspaces(id) on delete cascade;
+
+alter table public.tasks drop constraint if exists tasks_project_id_fkey;
+alter table public.tasks add constraint tasks_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade;
+
+alter table public.sprints drop constraint if exists sprints_project_id_fkey;
+alter table public.sprints add constraint sprints_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade;
+
+alter table public.labels drop constraint if exists labels_project_id_fkey;
+alter table public.labels add constraint labels_project_id_fkey foreign key (project_id) references public.projects(id) on delete cascade;
 
 -- ─────────────────────────────────────────────
 -- 4. HELPER FUNCTIONS
@@ -549,12 +588,17 @@ declare
 begin
   select exists (select 1 from public.workspace_invites where email = new.email) into is_invited;
 
-  insert into public.profiles (id, full_name, role)
+  insert into public.profiles (id, full_name, first_name, last_name, role)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    new.raw_user_meta_data->>'first_name',
+    new.raw_user_meta_data->>'last_name',
     case when exists (select 1 from public.profiles) then 'member'::app_role else 'admin'::app_role end
-  ) on conflict (id) do nothing;
+  ) on conflict (id) do update set
+    full_name = excluded.full_name,
+    first_name = coalesce(profiles.first_name, excluded.first_name),
+    last_name = coalesce(profiles.last_name, excluded.last_name);
 
   if not is_invited then
     insert into public.workspaces (name, slug, owner_id)
