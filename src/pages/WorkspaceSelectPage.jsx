@@ -1,30 +1,66 @@
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, Loader2, LogOut } from 'lucide-react'
+import { ArrowRight, Loader2, LogOut, Plus } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useAuthStore } from '../store/authStore'
 
 export default function WorkspaceSelectPage() {
   const workspaces = useWorkspaceStore((state) => state.workspaces)
   const fetchWorkspaces = useWorkspaceStore((state) => state.fetchWorkspaces)
+  const createWorkspace = useWorkspaceStore((state) => state.createWorkspace)
   const loading = useWorkspaceStore((state) => state.loading)
   const user = useAuthStore((state) => state.user)
   const signOut = useAuthStore((state) => state.signOut)
   const navigate = useNavigate()
+  const [showCreateFallback, setShowCreateFallback] = React.useState(false)
+  const [isCreating, setIsCreating] = React.useState(false)
 
   useEffect(() => {
-  const load = async () => {
-    const { data, error } = await fetchWorkspaces()
+    let retryCount = 0
+    const maxRetries = 5
+    let timeoutId
 
-    if (error) return
+    const load = async () => {
+      const { data, error } = await fetchWorkspaces()
 
-    if (data?.length === 1) {
-      navigate(`/workspaces/${data[0].slug}`, { replace: true })
+      if (error) return
+
+      if (data?.length === 1) {
+        navigate(`/workspaces/${data[0].slug}`, { replace: true })
+        return
+      }
+
+      if (data?.length === 0 && retryCount < maxRetries) {
+        retryCount++
+        timeoutId = setTimeout(load, 2000)
+      }
     }
-  }
 
-  load()
-}, [fetchWorkspaces, navigate])
+    load()
+    return () => clearTimeout(timeoutId)
+  }, [fetchWorkspaces, navigate])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (workspaces.length === 0) {
+        setShowCreateFallback(true)
+      }
+    }, 10000)
+    return () => clearTimeout(timer)
+  }, [workspaces.length])
+
+  const handleManualCreate = async () => {
+    setIsCreating(true)
+    const emailPrefix = user?.email?.split('@')[0] || 'user'
+    const name = `${emailPrefix}'s Workspace`
+    const slug = `${emailPrefix}-${Math.random().toString(36).substring(2, 6)}`
+
+    const { data, error } = await createWorkspace({ name, slug })
+    if (!error && data) {
+      navigate(`/workspaces/${data.slug}`, { replace: true })
+    }
+    setIsCreating(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
@@ -50,7 +86,7 @@ export default function WorkspaceSelectPage() {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome back</h1>
             <p className="text-gray-500 text-sm mb-8">Select a workspace to continue.</p>
 
-            {loading ? (
+            {loading && workspaces.length === 0 ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="animate-spin text-indigo-600" size={32} />
               </div>
@@ -74,6 +110,26 @@ export default function WorkspaceSelectPage() {
                     <ArrowRight size={18} className="text-gray-300 group-hover:text-indigo-600 transition-colors" />
                   </Link>
                 ))}
+
+                {workspaces.length === 0 && !loading && !showCreateFallback && (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-gray-500">Setting up your workspace...</p>
+                  </div>
+                )}
+
+                {showCreateFallback && workspaces.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-gray-500 mb-4">Still waiting for your workspace to be ready?</p>
+                    <button
+                      onClick={handleManualCreate}
+                      disabled={isCreating}
+                      className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all disabled:opacity-50"
+                    >
+                      {isCreating ? <Loader2 className="animate-spin" size={20} /> : <Plus size={20} />}
+                      Create Workspace Manually
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
