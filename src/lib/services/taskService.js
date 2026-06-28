@@ -21,7 +21,7 @@ export const taskService = {
       .from('tasks')
       .select(`
         *,
-        projects(name),
+        projects(name, workspaces(slug)),
         profiles!tasks_assigned_to_fkey(id, full_name, avatar_path),
         task_subtasks(id, is_completed),
         task_comments(count),
