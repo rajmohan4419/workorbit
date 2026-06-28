@@ -45,11 +45,20 @@ export const projectService = {
   },
 
   async createInvite(projectId, email, role) {
-    return await supabase
+    const { data, error } = await supabase
       .from('project_invites')
       .insert([{ project_id: projectId, email, role }])
       .select()
       .single()
+
+    if (!error && data) {
+      // Trigger invitation email
+      supabase.functions.invoke('send-invitation', {
+        body: { inviteId: data.id, type: 'project' }
+      })
+    }
+
+    return { data, error }
   },
 
   async deleteInvite(id) {

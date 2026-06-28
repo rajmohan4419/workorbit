@@ -118,11 +118,20 @@ export const workspaceService = {
   },
 
   async createInvite(workspaceId, email, role) {
-    return await supabase
+    const { data, error } = await supabase
       .from('workspace_invites')
       .insert([{ workspace_id: workspaceId, email, role }])
       .select()
       .single()
+
+    if (!error && data) {
+      // Trigger invitation email
+      supabase.functions.invoke('send-invitation', {
+        body: { inviteId: data.id, type: 'workspace' }
+      })
+    }
+
+    return { data, error }
   },
 
   async deleteInvite(id) {
