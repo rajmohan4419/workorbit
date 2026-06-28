@@ -33,7 +33,7 @@ export default function WorkspaceSelectPage() {
 
     load()
     return () => clearTimeout(timeoutId)
-  }, [workspaces.length, fetchWorkspaces, navigate])
+  }, [workspaces, fetchWorkspaces, navigate])
 
   useEffect(() => {
     const timer = setTimeout(() => {

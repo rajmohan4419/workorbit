@@ -269,7 +269,7 @@ export default function SettingsPage({ initialTab = 'general' }) {
                   <div>
                     <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Workspace Slug</label>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">app.orbitboard.in/workspaces/</span>
+                      <span className="text-gray-400 text-sm">{window.location.host}/workspaces/</span>
                       <input
                         value={slug}
                         onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}

@@ -57,7 +57,7 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-const isAppSubdomain = window.location.hostname === 'app.orbitboard.in' || window.location.hostname === 'localhost'
+const isAppSubdomain = !['orbitboard.in', 'www.orbitboard.in'].includes(window.location.hostname)
 
 const router = createBrowserRouter([
   {
@@ -148,7 +148,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/auth',
-    element: isAppSubdomain ? <AuthPage /> : <Navigate to="https://app.orbitboard.in/auth" replace />
+    element: <AuthPage />
   },
   {
     path: '/features',
