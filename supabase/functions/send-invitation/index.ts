@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? ''
     )
 
     const { inviteId, type } = await req.json()
@@ -69,8 +69,10 @@ serve(async (req) => {
 
     // Email Sending Logic (Configurable via Environment Variables)
     // Here we use Resend as a default example of an email provider API
-    const EMAIL_API_KEY = Deno.env.get('RESEND_API_KEY') || Deno.env.get('EMAIL_API_KEY')
+    const EMAIL_API_KEY = Deno.env.get('RESEND_API_KEY')
     const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'OrbitBoard <notifications@orbitboard.in>'
+
+console.log('RESEND_API_KEY present:', !!EMAIL_API_KEY)
 
     if (!EMAIL_API_KEY) {
       console.error('Email API key not configured')
