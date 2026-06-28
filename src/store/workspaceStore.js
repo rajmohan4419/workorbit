@@ -79,26 +79,6 @@ export const useWorkspaceStore = create((set, get) => ({
     return { data, role }
   },
 
-  createWorkspace: async ({ name, slug }) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: { message: 'Not authenticated' } }
-
-    const { data, error } = await workspaceService.createWorkspace({ name, slug, owner_id: user.id })
-
-    if (error) {
-      set({ error: error.message })
-      return { error }
-    }
-
-    set((state) => ({
-      workspaces: [data, ...state.workspaces],
-      activeWorkspace: data,
-      error: null,
-    }))
-
-    return { data }
-  },
-
   fetchWorkspaceMembers: async (workspaceId) => {
     const { data: members, error } = await workspaceService.fetchMembers(workspaceId)
 

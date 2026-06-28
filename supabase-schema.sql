@@ -421,7 +421,7 @@ create policy "Self profile update" on public.profiles for update using (auth.ui
 
 -- Workspaces
 create policy "Workspace view access" on public.workspaces for select using (public.can_access_workspace(id));
-create policy "Workspace creation" on public.workspaces for insert with check (auth.uid() = owner_id);
+-- Workspace creation is handled by handle_new_user trigger only (security definer)
 create policy "Workspace update" on public.workspaces for update using (public.current_workspace_role(id) in ('owner', 'admin'));
 create policy "Workspace deletion" on public.workspaces for delete using (auth.uid() = owner_id);
 
@@ -583,11 +583,13 @@ security definer
 set search_path = public
 as $$
 declare
-  is_invited boolean;
   new_ws_id uuid;
+  clean_slug text;
 begin
-  select exists (select 1 from public.workspace_invites where email = new.email) into is_invited;
+  -- Generate a clean slug from email
+  clean_slug := lower(regexp_replace(split_part(new.email, '@', 1), '[^a-zA-Z0-9]', '', 'g'));
 
+  -- Create Profile
   insert into public.profiles (id, full_name, first_name, last_name, role)
   values (
     new.id,
@@ -600,24 +602,26 @@ begin
     first_name = coalesce(profiles.first_name, excluded.first_name),
     last_name = coalesce(profiles.last_name, excluded.last_name);
 
-  if not is_invited then
-    insert into public.workspaces (name, slug, owner_id)
-    values (
-      split_part(new.email, '@', 1) || '''s Workspace',
-      split_part(new.email, '@', 1) || '-' || left(uuid_generate_v4()::text, 4),
-      new.id
-    ) returning id into new_ws_id;
+  -- Always create a default personal workspace for every new user
+  insert into public.workspaces (name, slug, owner_id)
+  values (
+    split_part(new.email, '@', 1) || '''s Workspace',
+    clean_slug || '-' || left(uuid_generate_v4()::text, 4),
+    new.id
+  ) returning id into new_ws_id;
 
-    insert into public.workspace_members (workspace_id, user_id, role)
-    values (new_ws_id, new.id, 'owner');
-  else
-    insert into public.workspace_members (workspace_id, user_id, role)
-    select workspace_id, new.id, role
-    from public.workspace_invites where email = new.email
-    on conflict (workspace_id, user_id) do update set role = excluded.role;
+  -- Add user as owner of their new workspace
+  insert into public.workspace_members (workspace_id, user_id, role)
+  values (new_ws_id, new.id, 'owner');
 
-    delete from public.workspace_invites where email = new.email;
-  end if;
+  -- If they have pending invites, join those workspaces as well
+  insert into public.workspace_members (workspace_id, user_id, role)
+  select workspace_id, new.id, role
+  from public.workspace_invites where email = new.email
+  on conflict (workspace_id, user_id) do update set role = excluded.role;
+
+  -- Clean up invites
+  delete from public.workspace_invites where email = new.email;
 
   return new;
 end;
