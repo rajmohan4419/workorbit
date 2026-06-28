@@ -49,7 +49,7 @@ create table if not exists public.profiles (
 
 -- WORKSPACES
 create table if not exists public.workspaces (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   name        text not null,
   slug        text not null unique,
   owner_id    uuid references public.profiles(id) on delete cascade not null,
@@ -60,7 +60,7 @@ create table if not exists public.workspaces (
 
 -- WORKSPACE MEMBERS
 create table if not exists public.workspace_members (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   workspace_id uuid references public.workspaces(id) on delete cascade not null,
   user_id      uuid references public.profiles(id) on delete cascade not null,
   role         workspace_role not null default 'member',
@@ -70,7 +70,7 @@ create table if not exists public.workspace_members (
 
 -- WORKSPACE INVITES
 create table if not exists public.workspace_invites (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   workspace_id uuid references public.workspaces(id) on delete cascade not null,
   email        text not null,
   role         workspace_role not null default 'member',
@@ -82,7 +82,7 @@ create table if not exists public.workspace_invites (
 
 -- PROJECTS
 create table if not exists public.projects (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   name        text not null,
   description text,
   owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
@@ -93,7 +93,7 @@ create table if not exists public.projects (
 
 -- PROJECT MEMBERS
 create table if not exists public.project_members (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   project_id   uuid references public.projects(id) on delete cascade not null,
   user_id      uuid references public.profiles(id) on delete cascade not null,
   created_at   timestamptz default now(),
@@ -102,7 +102,7 @@ create table if not exists public.project_members (
 
 -- PROJECT INVITES
 create table if not exists public.project_invites (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   project_id   uuid references public.projects(id) on delete cascade not null,
   email        text not null,
   role         workspace_role not null default 'member',
@@ -114,7 +114,7 @@ create table if not exists public.project_invites (
 
 -- TASKS
 create table if not exists public.tasks (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   project_id  uuid references public.projects(id) on delete cascade not null,
   title       text not null,
   description text,
@@ -133,7 +133,7 @@ create table if not exists public.tasks (
 
 -- TASK COMMENTS
 create table if not exists public.task_comments (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
   user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   content     text not null,
@@ -142,7 +142,7 @@ create table if not exists public.task_comments (
 
 -- TASK ATTACHMENTS
 create table if not exists public.task_attachments (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
   user_id     uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   name        text not null,
@@ -154,7 +154,7 @@ create table if not exists public.task_attachments (
 
 -- TASK LOGS (Activity)
 create table if not exists public.task_logs (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
   user_id     uuid references public.profiles(id) on delete set null,
   type        text not null,
@@ -165,7 +165,7 @@ create table if not exists public.task_logs (
 
 -- NOTIFICATIONS
 create table if not exists public.notifications (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid references public.profiles(id) on delete cascade not null,
   type        text not null,
   title       text not null,
@@ -178,7 +178,7 @@ create table if not exists public.notifications (
 
 -- SPRINTS
 create table if not exists public.sprints (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   project_id  uuid references public.projects(id) on delete cascade not null,
   name        text not null,
   start_date  date not null,
@@ -195,7 +195,7 @@ alter table public.tasks add constraint tasks_sprint_id_fkey foreign key (sprint
 
 -- LABELS
 create table if not exists public.labels (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   project_id  uuid references public.projects(id) on delete cascade not null,
   name        text not null,
   color       text not null default '#4f46e5',
@@ -211,7 +211,7 @@ create table if not exists public.task_labels (
 
 -- SUBTASKS
 create table if not exists public.task_subtasks (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   task_id      uuid references public.tasks(id) on delete cascade not null,
   title        text not null,
   is_completed boolean default false,
@@ -220,7 +220,7 @@ create table if not exists public.task_subtasks (
 
 -- TIME LOGS
 create table if not exists public.time_logs (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   task_id     uuid references public.tasks(id) on delete cascade not null,
   user_id     uuid references public.profiles(id) on delete cascade default auth.uid(),
   duration_seconds integer not null,
@@ -231,7 +231,7 @@ create table if not exists public.time_logs (
 
 -- DEPENDENCIES
 create table if not exists public.task_dependencies (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   task_id         uuid references public.tasks(id) on delete cascade not null,
   depends_on_id   uuid references public.tasks(id) on delete cascade not null,
   created_at      timestamptz default now(),
@@ -598,9 +598,20 @@ begin
   insert into public.profiles (id, full_name, first_name, last_name, role)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1), 'New User'),
-    new.raw_user_meta_data->>'first_name',
-    new.raw_user_meta_data->>'last_name',
+    coalesce(
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name',
+      split_part(new.email, '@', 1),
+      'New User'
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'first_name',
+      new.raw_user_meta_data->>'given_name'
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'last_name',
+      new.raw_user_meta_data->>'family_name'
+    ),
     case when exists (select 1 from public.profiles) then 'member'::app_role else 'admin'::app_role end
   ) on conflict (id) do update set
     full_name = excluded.full_name,
@@ -611,7 +622,7 @@ begin
   insert into public.workspaces (name, slug, owner_id)
   values (
     coalesce(split_part(new.email, '@', 1), 'Personal') || '''s Workspace',
-    clean_slug || '-' || left(uuid_generate_v4()::text, 4),
+    clean_slug || '-' || left(gen_random_uuid()::text, 8),
     new.id
   ) returning id into new_ws_id;
 
