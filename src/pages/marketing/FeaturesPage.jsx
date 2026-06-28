@@ -24,7 +24,7 @@ export default function FeaturesPage() {
           <Link to="/features" className="text-sm font-medium text-indigo-600">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900">Pricing</Link>
           <Link to="/contact" className="text-sm font-medium text-gray-500 hover:text-gray-900">Contact</Link>
-          <a href="https://app.orbitboard.in/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
+          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</Link>
         </div>
       </nav>
 
@@ -49,9 +49,9 @@ export default function FeaturesPage() {
         <div className="mt-20 bg-indigo-50 rounded-3xl p-12 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to orbit?</h2>
           <p className="text-indigo-600 font-medium mb-8 text-lg">Join thousands of teams delivering faster with Orbit Board.</p>
-          <a href="https://app.orbitboard.in/auth" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+          <Link to="/auth" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
             Get Started Free <ArrowRight size={20} />
-          </a>
+          </Link>
         </div>
       </div>
     </div>
