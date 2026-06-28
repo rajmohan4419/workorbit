@@ -7,8 +7,8 @@ import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canCreateProject } from '../../lib/permissions'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Overview', to: '/dashboard' },
-  { icon: CheckSquare, label: 'My tasks', to: '/my-tasks', wsRelative: true, wsTo: '/tasks' },
+  { icon: LayoutDashboard, label: 'Overview', to: '', wsRelative: true },
+  { icon: CheckSquare, label: 'My tasks', to: '/my-tasks' },
 ]
 
 
@@ -89,7 +89,7 @@ export default function Sidebar() {
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">O</span>
             </div>
-            <span className="font-semibold text-gray-900 text-sm">orbitboard.in</span>
+            <span className="font-semibold text-gray-900 text-sm">OrbitBoard</span>
           </div>
 
           <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
