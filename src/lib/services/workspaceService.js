@@ -126,7 +126,7 @@ export const workspaceService = {
 
     if (!error && data) {
       // Trigger invitation email
-      supabase.functions.invoke('send-invitation', {
+      supabase.functions.invoke('invite-member', {
         body: { inviteId: data.id, type: 'workspace' }
       })
     }
