@@ -17,10 +17,10 @@ export const workspaceService = {
 
     if (error) return { error }
 
-    // Manual membership check as requested
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: { message: 'Not authenticated' } }
+    if (!user) return { data: workspace } // Still return workspace if RLS permits (though RLS should handle auth)
 
+    // Role detection still needed for UI/Permissions, but we rely on RLS for the actual data access
     const { data: member } = await supabase
       .from('workspace_members')
       .select('role')
@@ -30,11 +30,7 @@ export const workspaceService = {
 
     const isOwner = workspace.owner_id === user.id
 
-    if (!member && !isOwner) {
-      return { error: { message: 'Access Denied', status: 403 } }
-    }
-
-    return { data: workspace, role: isOwner ? 'owner' : member.role }
+    return { data: workspace, role: isOwner ? 'owner' : member?.role }
   },
 
   async createWorkspace({ name, slug, owner_id }) {
