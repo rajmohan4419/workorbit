@@ -14,6 +14,22 @@ export const useAuthStore = create((set, get) => ({
     let active = true
     set({ loading: true })
 
+    // Fetch initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return
+      if (!session) {
+        set({ loading: false })
+        return
+      }
+
+      const user = session.user
+      fetchProfile(user.id).then(profile => {
+        if (!active) return
+        set({ session, user, profile, loading: false })
+        useWorkspaceStore.getState().fetchWorkspaces()
+      })
+    })
+
     const fetchProfile = async (userId) => {
       if (!userId) return null
       try {

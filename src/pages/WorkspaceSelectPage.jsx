@@ -12,9 +12,9 @@ export default function WorkspaceSelectPage() {
   const signOut = useAuthStore((state) => state.signOut)
   const navigate = useNavigate()
   const [showCreateFallback, setShowCreateFallback] = React.useState(false)
+  const retryCountRef = React.useRef(0)
 
   useEffect(() => {
-    let retryCount = 0
     const maxRetries = 5
     let timeoutId
 
@@ -24,8 +24,8 @@ export default function WorkspaceSelectPage() {
         return
       }
 
-      if (workspaces.length === 0 && retryCount < maxRetries) {
-        retryCount++
+      if (workspaces.length === 0 && retryCountRef.current < maxRetries) {
+        retryCountRef.current++
         await fetchWorkspaces()
         timeoutId = setTimeout(load, 2000)
       }
@@ -33,7 +33,7 @@ export default function WorkspaceSelectPage() {
 
     load()
     return () => clearTimeout(timeoutId)
-  }, [workspaces, fetchWorkspaces, navigate])
+  }, [workspaces.length, fetchWorkspaces, navigate])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,7 +42,7 @@ export default function WorkspaceSelectPage() {
       }
     }, 10000)
     return () => clearTimeout(timer)
-  }, [workspaces.length])
+  }, [workspaces])
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
