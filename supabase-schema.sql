@@ -715,14 +715,35 @@ drop policy if exists "Attachment upload" on storage.objects;
 create policy "Attachment upload" on storage.objects for insert with check (bucket_id = 'task-attachments' and auth.role() = 'authenticated');
 
 -- GRANTS
+-- Revoke all from public/anon to start from a secure baseline
+revoke all on all tables in schema public from anon, authenticated;
+revoke all on all functions in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+
 grant usage on schema public to anon, authenticated;
-grant all on all tables in schema public to anon, authenticated;
-grant all on public.workspace_members to anon, authenticated;
-grant all on public.workspace_invites to anon, authenticated;
-grant all on public.project_members to anon, authenticated;
-grant all on public.project_invites to anon, authenticated;
-grant all on all sequences in schema public to anon, authenticated;
-grant all on all functions in schema public to anon, authenticated;
+
+-- Allow authenticated users to perform CRUD operations on all tables
+-- (Access is still restricted by RLS policies)
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+grant execute on all functions in schema public to authenticated;
+
+-- Allow anonymous users to only read profiles (e.g. for workspace invites/discovery)
+grant select on public.profiles to anon;
+
+-- Explicitly ensure RLS is enabled for all existing tables in public schema
+do $$
+declare
+  rec record;
+begin
+  for rec in
+    select tablename
+    from pg_tables
+    where schemaname = 'public'
+  loop
+    execute format('alter table public.%I enable row level security', rec.tablename);
+  end loop;
+end $$;
 
 -- RELOAD CACHE
 notify pgrst, 'reload schema';

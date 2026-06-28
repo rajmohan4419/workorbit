@@ -43,8 +43,12 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const user = session?.user ?? null
-      const profile = await fetchProfile(user?.id)
-      set({ session, user, profile, loading: false })
+      try {
+        const profile = await fetchProfile(user?.id)
+        set({ session, user, profile, loading: false })
+      } catch {
+        set({ session, user, profile: null, loading: false })
+      }
 
       if (user) {
         useWorkspaceStore.getState().fetchWorkspaces()
@@ -54,8 +58,13 @@ export const useAuthStore = create((set, get) => ({
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!active) return
       const user = session?.user ?? null
-      const profile = await fetchProfile(user?.id)
-      set({ session, user, profile, loading: false })
+
+      try {
+        const profile = await fetchProfile(user?.id)
+        set({ session, user, profile, loading: false })
+      } catch {
+        set({ session, user, profile: null, loading: false })
+      }
 
       if (user) {
         useWorkspaceStore.getState().fetchWorkspaces()
