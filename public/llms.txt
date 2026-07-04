@@ -1,0 +1,22 @@
+# OrbitBoard - Project Management for Indian Startups
+
+OrbitBoard is a high-velocity project management platform designed specifically for founders and fast-moving teams.
+
+## Key Features
+- Workspace isolation for multiple projects/teams
+- Real-time Kanban boards and Sprint planning
+- AI-powered command parser for natural language task creation
+- India-first billing and GST support
+- Built for speed and zero-friction workflows
+
+## Navigation
+- [Home](https://orbitboard.in/) - Main marketing page
+- [Features](https://orbitboard.in/features) - Detailed product capabilities
+- [Pricing](https://orbitboard.in/pricing) - Transparent plans from Free to Enterprise
+- [Contact](https://orbitboard.in/contact) - Get in touch with our team
+- [Upcoming Features](https://orbitboard.in/upcoming-features) - Product roadmap
+
+## Tech Stack
+- Frontend: React (Vite), Tailwind CSS
+- Backend: Supabase (Auth, Database, Edge Functions, Real-time)
+- Infrastructure: Vercel / Cloudflare

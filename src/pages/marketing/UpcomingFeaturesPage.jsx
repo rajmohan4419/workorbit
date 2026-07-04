@@ -4,7 +4,7 @@ import SEO from '../../components/layout/SEO'
 
 export default function UpcomingFeaturesPage() {
   return (
-    <div className="bg-white">
+    <div className="bg-brand-warm min-h-screen">
       <SEO
         title="Upcoming Features - The Future of Project Management"
         description="Discover the future of OrbitBoard, including AI-powered workflows, natural language commands, and automated sprints."
@@ -18,10 +18,10 @@ export default function UpcomingFeaturesPage() {
           <span className="font-bold text-gray-900 text-lg">orbitboard.in</span>
         </Link>
         <div className="flex gap-6 items-center">
-          <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
-          <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900">Pricing</Link>
+          <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Features</Link>
+          <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Pricing</Link>
           <Link to="/upcoming-features" className="text-sm font-medium text-indigo-600">What's Next</Link>
-          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</Link>
+          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all">Sign In</Link>
         </div>
       </nav>
 
@@ -114,7 +114,7 @@ export default function UpcomingFeaturesPage() {
               placeholder="Enter your work email"
               className="px-6 py-4 rounded-2xl bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-80"
             />
-            <button className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+            <button className="bg-brand-accent text-white px-8 py-4 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2">
               Join Waitlist <ArrowRight size={20} />
             </button>
           </div>

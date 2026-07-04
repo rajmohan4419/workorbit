@@ -6,6 +6,7 @@ import { useTaskStore } from './store/taskStore'
 import { useWorkspaceStore } from './store/workspaceStore'
 import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
+import HomePage from './pages/marketing/HomePage'
 import FeaturesPage from './pages/marketing/FeaturesPage'
 import PricingPage from './pages/marketing/PricingPage'
 import ContactPage from './pages/marketing/ContactPage'
@@ -79,7 +80,7 @@ function RootRedirect() {
     )
   }
 
-  return <Navigate to="/features" replace />
+  return <HomePage />
 }
 
 const router = createBrowserRouter([
