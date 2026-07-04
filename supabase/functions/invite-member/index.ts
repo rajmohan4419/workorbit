@@ -18,27 +18,63 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? ''
     )
 
-    const { inviteId, type } = await req.json()
+    const body = await req.json()
+    console.log('Received request:', JSON.stringify(body))
 
-    if (!inviteId || !type) {
-      throw new Error('inviteId and type are required')
+    let { inviteId, type, email, workspace_id, project_id } = body
+
+    // Auto-detect type if missing
+    if (!type) {
+      if (workspace_id) type = 'workspace'
+      else if (project_id) type = 'project'
     }
 
+    let invite = null
     const table = type === 'workspace' ? 'workspace_invites' : 'project_invites'
+
+    if (inviteId) {
+      // Fetch invite details by ID
+      const { data, error } = await supabaseClient
+        .from(table)
+        .select('*')
+        .eq('id', inviteId)
+        .single()
+
+      if (error || !data) {
+        console.error('Error fetching invite by ID:', error)
+        throw new Error('Invite not found')
+      }
+      invite = data
+    } else if (email && (workspace_id || project_id)) {
+      // Fetch invite details by Email and Entity ID
+      const entityIdField = type === 'workspace' ? 'workspace_id' : 'project_id'
+      const entityId = workspace_id || project_id
+
+      const { data, error } = await supabaseClient
+        .from(table)
+        .select('*')
+        .eq('email', email)
+        .eq(entityIdField, entityId)
+        .single()
+
+      if (error || !data) {
+        console.error('Error fetching invite by email/entity:', error)
+        throw new Error('Invite not found for the provided email and entity')
+      }
+      invite = data
+      inviteId = invite.id // Ensure we have the ID for the link
+    } else {
+      // Throw the specific error reported by the user if neither ID nor correct email/ws_id pair provided
+      if (type === 'workspace' || workspace_id) {
+        throw new Error('email and workspace_id are required')
+      } else if (type === 'project' || project_id) {
+        throw new Error('email and project_id are required')
+      }
+      throw new Error('inviteId or (email and workspace_id/project_id) are required')
+    }
+
     const entityTable = type === 'workspace' ? 'workspaces' : 'projects'
     const entityIdField = type === 'workspace' ? 'workspace_id' : 'project_id'
-
-    // Fetch invite details
-    const { data: invite, error: inviteError } = await supabaseClient
-      .from(table)
-      .select('*')
-      .eq('id', inviteId)
-      .single()
-
-    if (inviteError || !invite) {
-      console.error('Error fetching invite:', inviteError)
-      throw new Error('Invite not found')
-    }
 
     // Fetch workspace/project details
     const { data: entity, error: entityError } = await supabaseClient
@@ -68,11 +104,8 @@ serve(async (req) => {
     const inviteLink = `https://app.orbitboard.in/auth?inviteId=${inviteId}&type=${type}&email=${encodeURIComponent(invite.email)}`
 
     // Email Sending Logic (Configurable via Environment Variables)
-    // Here we use Resend as a default example of an email provider API
     const EMAIL_API_KEY = Deno.env.get('RESEND_API_KEY')
     const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'OrbitBoard <notifications@orbitboard.in>'
-
-console.log('RESEND_API_KEY present:', !!EMAIL_API_KEY)
 
     if (!EMAIL_API_KEY) {
       console.error('Email API key not configured')
