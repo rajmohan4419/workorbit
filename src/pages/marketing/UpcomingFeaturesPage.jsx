@@ -1,9 +1,15 @@
 import { Link } from 'react-router-dom'
 import { Sparkles, Brain, Zap, ArrowRight, Star, Check } from 'lucide-react'
+import SEO from '../../components/layout/SEO'
 
 export default function UpcomingFeaturesPage() {
   return (
     <div className="bg-white">
+      <SEO
+        title="Upcoming Features - The Future of Project Management"
+        description="Discover the future of OrbitBoard, including AI-powered workflows, natural language commands, and automated sprints."
+        canonical="https://orbitboard.in/upcoming-features"
+      />
       <nav className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">

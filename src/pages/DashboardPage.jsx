@@ -22,8 +22,10 @@ export default function DashboardPage() {
   const [teamHealth, setTeamHealth] = useState(100)
 
   useEffect(() => {
+    let active = true
     const fetchStats = async () => {
       if (projects.length === 0) {
+        if (!active) return
         setOverdueCount(0)
         setCompletedCount(0)
         setTeamHealth(100)
@@ -43,6 +45,8 @@ export default function DashboardPage() {
         supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).gt('due_date', now).neq('status', 'done')
       ])
 
+      if (!active) return
+
       if (overdue.count !== null) setOverdueCount(overdue.count)
       if (completed.count !== null) setCompletedCount(completed.count)
 
@@ -55,6 +59,7 @@ export default function DashboardPage() {
       }
     }
     fetchStats()
+    return () => { active = false }
   }, [projects])
 
   const overdueTasks = overdueCount
@@ -147,7 +152,7 @@ export default function DashboardPage() {
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Quick Activity</h2>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm min-h-[300px]">
-            <ActivityFeed projectId={projects.length > 0 ? undefined : null} />
+            <ActivityFeed projectId={undefined} />
           </div>
         </div>
       </div>

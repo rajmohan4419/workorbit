@@ -2,7 +2,6 @@ import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
-import { useAuthStore } from '../store/authStore'
 import { useTaskStore } from '../store/taskStore'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { canDeleteProject } from '../lib/permissions'
@@ -31,8 +30,7 @@ export default function ProjectPage() {
   const setActiveProject = useProjectStore((state) => state.setActiveProject)
   const activeProject = useProjectStore((state) => state.activeProject)
   const deleteProject = useProjectStore((state) => state.deleteProject)
-  const user = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile)
+  const wsRole = useWorkspaceStore((state) => state.currentUserRole)
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
   const tasks = useTaskStore((state) => state.tasks)
   const subscribeToProject = useTaskStore((state) => state.subscribeToProject)
@@ -76,7 +74,7 @@ export default function ProjectPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {canDeleteProject(profile?.role, user?.id, project?.owner_id) && (
+          {canDeleteProject(wsRole) && (
             <button
               onClick={handleDeleteProject}
               className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
+import SEO from '../../components/layout/SEO'
 
 export default function PricingPage() {
   const plans = [
@@ -26,6 +27,11 @@ export default function PricingPage() {
 
   return (
     <div className="bg-white">
+      <SEO
+        title="Pricing - Simple and Transparent"
+        description="OrbitBoard pricing plans for teams of all sizes. Start for free and upgrade as you grow with our Pro and Enterprise plans."
+        canonical="https://orbitboard.in/pricing"
+      />
       <nav className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
