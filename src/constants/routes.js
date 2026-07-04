@@ -1,0 +1,17 @@
+export const ROUTES = {
+  HOME: '/',
+  AUTH: '/auth',
+  FEATURES: '/features',
+  PRICING: '/pricing',
+  CONTACT: '/contact',
+  UPCOMING: '/upcoming-features',
+  FORBIDDEN: '/forbidden',
+  WORKSPACES: '/workspaces',
+  DASHBOARD: '/workspaces/:workspaceSlug',
+  PROJECT: '/workspaces/:workspaceSlug/projects/:id',
+  MY_TASKS: '/my-tasks',
+  SETTINGS: '/workspaces/:workspaceSlug/settings',
+  PROFILE_SETTINGS: '/settings/profile',
+  WORKSPACE_SETTINGS: '/settings/workspace',
+  BILLING_SETTINGS: '/settings/billing',
+};
