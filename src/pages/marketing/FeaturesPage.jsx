@@ -13,7 +13,7 @@ export default function FeaturesPage() {
   ]
 
   return (
-    <div className="bg-white">
+    <div className="bg-brand-warm">
       <SEO
         title="Features - Powerful Tools for Productive Teams"
         description="Explore the powerful features of OrbitBoard, including Kanban boards, sprint planning, and real-time collaboration."
@@ -55,7 +55,7 @@ export default function FeaturesPage() {
         <div className="mt-20 bg-indigo-50 rounded-3xl p-12 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to orbit?</h2>
           <p className="text-indigo-600 font-medium mb-8 text-lg">Join thousands of teams delivering faster with Orbit Board.</p>
-          <Link to="/auth" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+          <Link to="/auth" className="inline-flex items-center gap-2 bg-brand-accent text-white px-8 py-4 rounded-xl text-lg font-bold hover:opacity-90 transition-all shadow-lg shadow-orange-200">
             Get Started Free <ArrowRight size={20} />
           </Link>
         </div>

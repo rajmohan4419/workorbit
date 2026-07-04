@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-accent: #F97316;
+  --color-brand-warm: #FAFAF9;
+
+  /* Blending indigo toward violet: #4F46E5 (Indigo 600) -> #7C3AED (Violet 600) */
+  --color-indigo-50: #F5F3FF;
+  --color-indigo-100: #EDE9FE;
+  --color-indigo-200: #DDD6FE;
+  --color-indigo-300: #C4B5FD;
+  --color-indigo-400: #A78BFA;
+  --color-indigo-500: #8B5CF6;
+  --color-indigo-600: #7C3AED;
+  --color-indigo-700: #6D28D9;
+  --color-indigo-800: #5B21B6;
+  --color-indigo-900: #4C1D95;
+  --color-indigo-950: #2E1065;
+}
+
 * {
   box-sizing: border-box;
 }

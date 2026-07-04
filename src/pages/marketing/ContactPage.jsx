@@ -4,7 +4,7 @@ import SEO from '../../components/layout/SEO'
 
 export default function ContactPage() {
   return (
-    <div className="bg-white">
+    <div className="bg-brand-warm min-h-screen">
       <SEO
         title="Contact Us - We're Here to Help"
         description="Get in touch with the OrbitBoard team for support, sales inquiries, or feedback."
@@ -18,10 +18,10 @@ export default function ContactPage() {
           <span className="font-bold text-gray-900 text-lg">orbitboard.in</span>
         </Link>
         <div className="flex gap-6 items-center">
-          <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
-          <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900">Pricing</Link>
+          <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Features</Link>
+          <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Pricing</Link>
           <Link to="/contact" className="text-sm font-medium text-indigo-600">Contact</Link>
-          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</Link>
+          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all">Sign In</Link>
         </div>
       </nav>
 
@@ -29,11 +29,11 @@ export default function ContactPage() {
         <div className="grid lg:grid-cols-2 gap-16">
           <div>
             <h1 className="text-4xl font-extrabold text-gray-900 mb-6 tracking-tight">Get in touch</h1>
-            <p className="text-xl text-gray-500 mb-12">Have questions about Orbit Board? We're here to help you get the most out of your team's workflow.</p>
+            <p className="text-xl text-gray-500 mb-12">Have questions about OrbitBoard? We're here to help you get the most out of your team's workflow.</p>
 
             <div className="space-y-8">
               <div className="flex gap-4">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-white text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-gray-100">
                   <Mail size={24} />
                 </div>
                 <div>
@@ -42,7 +42,7 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-white text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-gray-100">
                   <MessageSquare size={24} />
                 </div>
                 <div>
@@ -51,7 +51,7 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="flex gap-4">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-white text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border border-gray-100">
                   <MapPin size={24} />
                 </div>
                 <div>
@@ -62,27 +62,27 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100">
-            <form className="space-y-6">
+          <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-indigo-50/50">
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">First Name</label>
-                  <input className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="John" />
+                  <input className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="John" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Last Name</label>
-                  <input className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="Doe" />
+                  <input className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="Doe" />
                 </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Work Email</label>
-                <input className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="john@company.com" />
+                <input className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="john@company.com" />
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Message</label>
-                <textarea rows={5} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none" placeholder="How can we help you?" />
+                <textarea rows={5} className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none" placeholder="How can we help you?" />
               </div>
-              <button className="w-full bg-indigo-600 text-white rounded-xl py-4 text-lg font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+              <button className="w-full bg-brand-accent text-white rounded-xl py-4 text-lg font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-200">
                 <Send size={20} />
                 Send Message
               </button>

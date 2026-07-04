@@ -26,12 +26,44 @@ export default function PricingPage() {
   ]
 
   return (
-    <div className="bg-white">
+    <div className="bg-brand-warm">
       <SEO
         title="Pricing - Simple and Transparent"
         description="OrbitBoard pricing plans for teams of all sizes. Start for free and upgrade as you grow with our Pro and Enterprise plans."
         canonical="https://orbitboard.in/pricing"
       />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Is there a free trial?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "OrbitBoard has a forever-free plan for up to 3 projects. No credit card required to start."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I cancel anytime?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, you can cancel your subscription at any time from your billing settings."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do you offer discounts for startups?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Our Pro plan is already priced for startups. For early-stage teams, our free plan is often all you need."
+              }
+            }
+          ]
+        })}
+      </script>
       <nav className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
@@ -76,7 +108,7 @@ export default function PricingPage() {
               </div>
               <Link
                 to="/auth"
-                className={`w-full py-4 rounded-xl text-center font-bold transition-all ${p.highlight ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200' : 'bg-gray-50 text-gray-900 hover:bg-gray-100'}`}
+                className={`w-full py-4 rounded-xl text-center font-bold transition-all ${p.highlight ? 'bg-brand-accent text-white hover:opacity-90 shadow-lg shadow-orange-200' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'}`}
               >
                 {p.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
               </Link>

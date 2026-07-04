@@ -1,0 +1,55 @@
+<svg width="700" height="560" viewBox="0 0 700 560" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#EEF2FF"/>
+      <stop offset="100%" stop-color="#EEF2FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="350" cy="280" r="260" fill="url(#glow)"/>
+
+  <!-- Orbit rings -->
+  <ellipse cx="350" cy="280" rx="230" ry="150" fill="none" stroke="#E0E7FF" stroke-width="1.5"/>
+  <ellipse cx="350" cy="280" rx="170" ry="230" fill="none" stroke="#E0E7FF" stroke-width="1.5" transform="rotate(20 350 280)"/>
+  <ellipse cx="350" cy="280" rx="120" ry="120" fill="none" stroke="#C7D2FE" stroke-width="1.5"/>
+
+  <!-- Central goal node -->
+  <circle cx="350" cy="280" r="46" fill="url(#ringGrad)"/>
+  <rect x="330" y="262" width="40" height="8" rx="4" fill="#ffffff"/>
+  <rect x="330" y="278" width="28" height="8" rx="4" fill="#ffffff" opacity="0.85"/>
+  <rect x="330" y="294" width="34" height="8" rx="4" fill="#ffffff" opacity="0.7"/>
+
+  <!-- Orbiting task nodes -->
+  <g>
+    <circle cx="580" cy="280" r="26" fill="#ffffff" stroke="#4F46E5" stroke-width="2"/>
+    <path d="M570 280 l7 7 l14 -16" fill="none" stroke="#4F46E5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g>
+    <circle cx="180" cy="200" r="22" fill="#ffffff" stroke="#7C3AED" stroke-width="2"/>
+    <path d="M172 200 l5 5 l11 -12" fill="none" stroke="#7C3AED" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g>
+    <circle cx="480" cy="440" r="20" fill="#F97316"/>
+    <circle cx="480" cy="440" r="6" fill="#ffffff"/>
+  </g>
+
+  <g>
+    <circle cx="200" cy="410" r="18" fill="#ffffff" stroke="#C7D2FE" stroke-width="2"/>
+    <circle cx="200" cy="410" r="6" fill="#A5B4FC"/>
+  </g>
+
+  <g>
+    <circle cx="470" cy="110" r="16" fill="#10B981"/>
+    <path d="M463 110 l4 4 l9 -9" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- connecting motion trails -->
+  <path d="M350 280 Q 460 240 580 280" fill="none" stroke="#C7D2FE" stroke-width="1.5" stroke-dasharray="3 6"/>
+  <path d="M350 280 Q 260 230 180 200" fill="none" stroke="#DDD6FE" stroke-width="1.5" stroke-dasharray="3 6"/>
+</svg>
