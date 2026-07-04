@@ -53,7 +53,7 @@ export const projectService = {
 
     if (!error && data) {
       // Trigger invitation email
-      supabase.functions.invoke('send-invitation', {
+      supabase.functions.invoke('invite-member', {
         body: { inviteId: data.id, type: 'project' }
       }).catch(err => {
         console.error('Error sending project invitation email:', err)
