@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Check, ArrowRight } from 'lucide-react'
+import SEO from '../../components/layout/SEO'
 
 export default function FeaturesPage() {
   const features = [
@@ -13,6 +14,11 @@ export default function FeaturesPage() {
 
   return (
     <div className="bg-white">
+      <SEO
+        title="Features - Powerful Tools for Productive Teams"
+        description="Explore the powerful features of OrbitBoard, including Kanban boards, sprint planning, and real-time collaboration."
+        canonical="https://orbitboard.in/features"
+      />
       <nav className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">

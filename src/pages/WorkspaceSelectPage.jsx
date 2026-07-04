@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Loader2, LogOut } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useAuthStore } from '../store/authStore'
+import SEO from '../components/layout/SEO'
 
 export default function WorkspaceSelectPage() {
   const workspaces = useWorkspaceStore((state) => state.workspaces)
@@ -46,6 +47,11 @@ export default function WorkspaceSelectPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+      <SEO
+        title="Select Workspace"
+        description="Choose your workspace to start managing projects and tasks with OrbitBoard."
+        canonical="https://orbitboard.in/"
+      />
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">

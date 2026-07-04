@@ -1,9 +1,15 @@
 import { Link } from 'react-router-dom'
 import { Mail, MessageSquare, MapPin, Send } from 'lucide-react'
+import SEO from '../../components/layout/SEO'
 
 export default function ContactPage() {
   return (
     <div className="bg-white">
+      <SEO
+        title="Contact Us - We're Here to Help"
+        description="Get in touch with the OrbitBoard team for support, sales inquiries, or feedback."
+        canonical="https://orbitboard.in/contact"
+      />
       <nav className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
