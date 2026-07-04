@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { authService } from '../lib/services/authService'
+import { notificationService } from '../lib/services/notificationService'
 
 export const useNotificationStore = create((set) => ({
   notifications: [],
@@ -8,11 +9,7 @@ export const useNotificationStore = create((set) => ({
 
   fetchNotifications: async () => {
     set({ loading: true })
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20)
+    const { data, error } = await notificationService.fetchNotifications()
 
     if (error) return { error }
     
@@ -25,10 +22,7 @@ export const useNotificationStore = create((set) => ({
   },
 
   markAsRead: async (id) => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', id)
+    const { error } = await notificationService.markAsRead(id)
 
     if (error) return { error }
     
@@ -40,14 +34,10 @@ export const useNotificationStore = create((set) => ({
   },
 
   markAllAsRead: async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authService.getUser()
     if (!user) return { error: { message: 'Not authenticated' } }
 
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('user_id', user.id)
-      .eq('read', false)
+    const { error } = await notificationService.markAllAsRead(user.id)
 
     if (error) return { error }
     

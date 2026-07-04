@@ -100,9 +100,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   getTaskCount: async () => {
-    const { count, error } = await supabase
-      .from('tasks')
-      .select('*', { count: 'exact', head: true })
+    const { count, error } = await taskService.getTaskCount()
     if (error) return 0
     return count
   },
@@ -273,9 +271,7 @@ export const useTaskStore = create((set, get) => ({
     const fileName = `${taskId}/${Math.random()}.${fileExt}`
     const filePath = `${fileName}`
 
-    const { error: uploadError } = await supabase.storage
-      .from('task-attachments')
-      .upload(filePath, file)
+    const { error: uploadError } = await taskService.uploadAttachment(filePath, file)
 
     if (uploadError) return { error: uploadError }
 
@@ -293,7 +289,7 @@ export const useTaskStore = create((set, get) => ({
   },
 
   deleteAttachment: async (id, filePath) => {
-    await supabase.storage.from('task-attachments').remove([filePath])
+    await taskService.removeAttachment(filePath)
     const { error } = await taskService.deleteAttachment(id)
     if (error) return { error }
     set((state) => ({

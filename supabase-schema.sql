@@ -516,6 +516,17 @@ $$ language plpgsql security definer;
 
 create trigger tasks_status_log after update on public.tasks for each row execute procedure public.log_task_status_change();
 
+create or replace function public.log_task_creation()
+returns trigger as $$
+begin
+  insert into public.task_logs (task_id, user_id, type, new_value)
+  values (new.id, auth.uid(), 'task_created', new.title);
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger tasks_creation_log after insert on public.tasks for each row execute procedure public.log_task_creation();
+
 create or replace function public.log_new_comment()
 returns trigger as $$
 begin
@@ -574,6 +585,34 @@ end;
 $$ language plpgsql security definer;
 
 create trigger on_comment_added after insert on public.task_comments for each row execute procedure public.notify_new_comment();
+
+create or replace function public.notify_workspace_invite()
+returns trigger as $$
+begin
+  insert into public.notifications (user_id, type, title, content, metadata)
+  select p.id, 'workspace_invite', 'Workspace Invitation', 'You have been invited to join a workspace.', jsonb_build_object('inviteId', new.id, 'workspaceId', new.workspace_id)
+  from public.profiles p
+  where p.id = (select id from public.profiles where lower(full_name) = lower(new.email) or id::text = new.email limit 1); -- Best effort matching if user exists
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_workspace_invite after insert on public.workspace_invites for each row execute procedure public.notify_workspace_invite();
+
+create or replace function public.notify_project_invite()
+returns trigger as $$
+begin
+  insert into public.notifications (user_id, type, title, content, metadata)
+  select p.id, 'project_invite', 'Project Invitation', 'You have been invited to join a project.', jsonb_build_object('inviteId', new.id, 'projectId', new.project_id)
+  from public.profiles p
+  where p.id = (select id from public.profiles where lower(full_name) = lower(new.email) or id::text = new.email limit 1);
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_project_invite after insert on public.project_invites for each row execute procedure public.notify_project_invite();
 
 -- NEW USER SIGNUP TRIGGER
 create or replace function public.handle_new_user()

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { authService } from '../lib/services/authService'
 import { useWorkspaceStore } from './workspaceStore'
 
 export const useAuthStore = create((set, get) => ({
@@ -14,28 +14,18 @@ export const useAuthStore = create((set, get) => ({
     let active = true
     set({ loading: true })
 
-    const fetchProfile = async (userId) => {
+    const handleProfileFetch = async (userId) => {
       if (!userId) return null
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single()
-        
-        if (error) {
-          console.error('Error fetching profile:', error.message)
-          return null
-        }
-        return data
-      } catch (err) {
-        console.error('Unexpected error fetching profile:', err)
+      const { data, error } = await authService.fetchProfile(userId)
+      if (error) {
+        console.error('Error fetching profile:', error.message)
         return null
       }
+      return data
     }
 
     // Fetch initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authService.getSession().then(({ data: { session } }) => {
       if (!active) return
       if (!session) {
         set({ loading: false })
@@ -43,19 +33,19 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const user = session.user
-      fetchProfile(user.id).then(profile => {
+      handleProfileFetch(user.id).then(profile => {
         if (!active) return
         set({ session, user, profile, loading: false })
         useWorkspaceStore.getState().fetchWorkspaces()
       })
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = authService.onAuthStateChange(async (_event, session) => {
       if (!active) return
       const user = session?.user ?? null
 
       try {
-        const profile = await fetchProfile(user?.id)
+        const profile = await handleProfileFetch(user?.id)
         set({ session, user, profile, loading: false })
       } catch (err) {
         console.error('Error in authChange fetchProfile:', err)
@@ -77,7 +67,8 @@ export const useAuthStore = create((set, get) => ({
   },
 
   updateProfile: async (updates) => {
-    const userId = (await supabase.auth.getUser()).data.user?.id
+    const { data: { user } } = await authService.getUser()
+    const userId = user?.id
     if (!userId) return { error: { message: 'Not authenticated' } }
 
     const finalUpdates = { ...updates }
@@ -88,12 +79,7 @@ export const useAuthStore = create((set, get) => ({
       finalUpdates.full_name = `${firstName} ${lastName}`.trim()
     }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(finalUpdates)
-      .eq('id', userId)
-      .select()
-      .single()
+    const { data, error } = await authService.updateProfile(userId, finalUpdates)
 
     if (error) {
       set({ error: error.message })
@@ -109,7 +95,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   signOut: async () => {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await authService.signOut()
     if (error) return { error }
     set({ user: null, profile: null, session: null })
     return {}
