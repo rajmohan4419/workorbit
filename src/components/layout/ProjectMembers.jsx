@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react'
 import { UserPlus, Mail, X, Loader2, Trash2 } from 'lucide-react'
 import { useProjectStore } from '../../store/projectStore'
-import { useAuthStore } from '../../store/authStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canInviteMembers } from '../../lib/permissions'
 
 export default function ProjectMembers({ projectId }) {
-  const user = useAuthStore((state) => state.user)
-  const profile = useAuthStore((state) => state.profile)
-  const projects = useProjectStore((state) => state.projects)
+  const wsRole = useWorkspaceStore((state) => state.currentUserRole)
   const projectMembers = useProjectStore((state) => state.members)
   const projectInvites = useProjectStore((state) => state.invites)
   const fetchProjectMembers = useProjectStore((state) => state.fetchMembers)
@@ -46,8 +44,7 @@ export default function ProjectMembers({ projectId }) {
     }
   }
 
-  const project = projects.find(p => p.id === projectId)
-  const canInvite = canInviteMembers(profile?.role, user?.id, project?.owner_id)
+  const canInvite = canInviteMembers(wsRole)
 
   return (
     <div className="space-y-6">

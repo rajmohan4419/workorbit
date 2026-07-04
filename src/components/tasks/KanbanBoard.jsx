@@ -3,7 +3,7 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { Plus } from 'lucide-react'
 import { useTaskStore, STATUSES, STATUS_LABELS, canMoveToStatus } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
-import { useAuthStore } from '../../store/authStore'
+import { useWorkspaceStore } from '../../store/workspaceStore'
 import { canCreateTask } from '../../lib/permissions'
 import TaskCard from './TaskCard'
 import TaskModal from './TaskModal'
@@ -28,10 +28,7 @@ export default function KanbanBoard({ projectId }) {
   const moveTask = useTaskStore((state) => state.moveTask)
 
   const storeError = useTaskStore((state) => state.error)
-  const profile = useAuthStore((state) => state.profile)
-  const user = useAuthStore((state) => state.user)
-  const projects = useProjectStore((state) => state.projects)
-  const project = projects.find(p => p.id === projectId)
+  const wsRole = useWorkspaceStore((state) => state.currentUserRole)
   const [modalState, setModalState] = useState(null)
   const [draggingStatus, setDraggingStatus] = useState(null)
   const [selectedSprintId, setSelectedSprintId] = useState('')
@@ -74,7 +71,7 @@ export default function KanbanBoard({ projectId }) {
     moveTask(draggableId, destination.droppableId)
   }
 
-  const canCreate = canCreateTask(profile?.role, user?.id, project?.owner_id)
+  const canCreate = canCreateTask(wsRole)
 
   return (
     <>

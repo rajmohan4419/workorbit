@@ -128,6 +128,8 @@ export const workspaceService = {
       // Trigger invitation email
       supabase.functions.invoke('send-invitation', {
         body: { inviteId: data.id, type: 'workspace' }
+      }).catch(err => {
+        console.error('Error sending workspace invitation email:', err)
       })
     }
 

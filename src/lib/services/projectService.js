@@ -55,6 +55,8 @@ export const projectService = {
       // Trigger invitation email
       supabase.functions.invoke('send-invitation', {
         body: { inviteId: data.id, type: 'project' }
+      }).catch(err => {
+        console.error('Error sending project invitation email:', err)
       })
     }
 

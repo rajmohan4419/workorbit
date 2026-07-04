@@ -1,6 +1,11 @@
 /**
  * Command Parser translates natural language prompts into structured JSON.
- * This is a rule-based mock implementation that handles common scenarios requested:
+ *
+ * NOTE: This is currently a rule-based regex implementation.
+ * Future iterations will replace this with a true LLM call (e.g. Claude 3.5 Sonnet)
+ * to handle complex reasoning and unstructured commands.
+ *
+ * Handles common scenarios requested:
  * - "Create project [Name]"
  * - "Create [Number] tasks for [Context/Project]"
  * - "Plan sprint for [Context]"
