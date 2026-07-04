@@ -219,5 +219,47 @@ export const taskService = {
       .delete()
       .eq('task_id', taskId)
       .eq('depends_on_id', dependsOnId)
+  },
+
+  async getTaskCount() {
+    return await supabase
+      .from('tasks')
+      .select('*', { count: 'exact', head: true })
+  },
+
+  async uploadAttachment(filePath, file) {
+    return await supabase.storage
+      .from('task-attachments')
+      .upload(filePath, file)
+  },
+
+  async removeAttachment(filePath) {
+    return await supabase.storage.from('task-attachments').remove([filePath])
+  },
+
+  async searchAll(query) {
+    const q = `%${query}%`
+
+    const [tasks, projects] = await Promise.all([
+      supabase
+        .from('tasks')
+        .select(`
+          *,
+          projects(name, workspaces(slug)),
+          profiles!tasks_assigned_to_fkey(full_name, avatar_path)
+        `)
+        .or(`title.ilike.${q},description.ilike.${q}`)
+        .limit(10),
+      supabase
+        .from('projects')
+        .select('*, workspaces(slug)')
+        .or(`name.ilike.${q},description.ilike.${q}`)
+        .limit(5)
+    ])
+
+    return {
+      tasks: tasks.data || [],
+      projects: projects.data || []
+    }
   }
 }

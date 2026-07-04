@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { authService } from '../lib/services/authService'
 import { projectService } from '../lib/services/projectService'
 import { sprintService } from '../lib/services/sprintService'
 
@@ -50,7 +50,7 @@ export const useProjectStore = create((set, get) => ({
   setActiveProject: (project) => set({ activeProject: project }),
 
   createProject: async ({ name, description, workspaceId }) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authService.getUser()
     if (!user) return { error: { message: 'Not authenticated' } }
 
     const { data, error } = await projectService.createProject({ name, description, owner_id: user.id, workspace_id: workspaceId })
@@ -125,7 +125,7 @@ export const useProjectStore = create((set, get) => ({
   },
 
   createInvite: async (projectId, email, role = 'member') => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authService.getUser()
     if (user?.email === email) {
       return { error: { message: 'You cannot invite yourself.' } }
     }
@@ -145,7 +145,7 @@ export const useProjectStore = create((set, get) => ({
   },
 
   acceptInvite: async (inviteId) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authService.getUser()
     if (!user) return { error: { message: 'Session expired. Please log in again.' } }
     const result = await projectService.acceptInvite(inviteId, user.id)
     

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { authService } from '../lib/services/authService'
 import { workspaceService } from '../lib/services/workspaceService'
 
 export const useWorkspaceStore = create((set, get) => ({
@@ -168,7 +168,7 @@ export const useWorkspaceStore = create((set, get) => ({
   },
 
   acceptWorkspaceInvite: async (inviteId) => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authService.getUser()
     if (!user) return { error: { message: 'Session expired. Please log in again.' } }
     const result = await workspaceService.acceptInvite(inviteId, user.id)
 
