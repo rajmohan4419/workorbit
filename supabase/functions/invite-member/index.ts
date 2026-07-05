@@ -21,14 +21,18 @@ serve(async (req) => {
       )
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? ''
+
+    const authClient = createClient(supabaseUrl, supabaseServiceKey, {
+      global: { headers: { Authorization: authHeader } }
+    })
+
+    // Create an admin client to bypass RLS
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey)
 
     // Validate the JWT
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
+    const { data: { user }, error: authError } = await authClient.auth.getUser()
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
@@ -42,7 +46,7 @@ serve(async (req) => {
     let { inviteId, type, email, workspace_id, project_id } = body
 
     // Rate limiting: Check if user has sent too many invites recently
-    const { count, error: countError } = await supabaseClient
+    const { count, error: countError } = await adminClient
       .from(type === 'workspace' || workspace_id ? 'workspace_invites' : 'project_invites')
       .select('*', { count: 'exact', head: true })
       .eq('invited_by', user.id)
@@ -66,7 +70,7 @@ serve(async (req) => {
 
     if (inviteId) {
       // Fetch invite details by ID
-      const { data, error } = await supabaseClient
+      const { data, error } = await adminClient
         .from(table)
         .select('*')
         .eq('id', inviteId)
@@ -74,7 +78,7 @@ serve(async (req) => {
 
       if (error || !data) {
         console.error('Error fetching invite by ID:', error)
-        throw new Error('Invite not found')
+        throw new Error('Invitation not found')
       }
       invite = data
     } else if (email && (workspace_id || project_id)) {
@@ -82,7 +86,7 @@ serve(async (req) => {
       const entityIdField = type === 'workspace' ? 'workspace_id' : 'project_id'
       const entityId = workspace_id || project_id
 
-      const { data, error } = await supabaseClient
+      const { data, error } = await adminClient
         .from(table)
         .select('*')
         .eq('email', email)
@@ -91,7 +95,7 @@ serve(async (req) => {
 
       if (error || !data) {
         console.error('Error fetching invite by email/entity:', error)
-        throw new Error('Invite not found for the provided email and entity')
+        throw new Error('Invitation not found for the provided email and entity')
       }
       invite = data
       inviteId = invite.id // Ensure we have the ID for the link
@@ -109,7 +113,7 @@ serve(async (req) => {
     const entityIdField = type === 'workspace' ? 'workspace_id' : 'project_id'
 
     // Fetch workspace/project details
-    const { data: entity, error: entityError } = await supabaseClient
+    const { data: entity, error: entityError } = await adminClient
       .from(entityTable)
       .select('name')
       .eq('id', invite[entityIdField])
@@ -121,7 +125,7 @@ serve(async (req) => {
     }
 
     // Fetch inviter details
-    const { data: inviter, error: inviterError } = await supabaseClient
+    const { data: inviter, error: inviterError } = await adminClient
       .from('profiles')
       .select('full_name')
       .eq('id', invite.invited_by)
