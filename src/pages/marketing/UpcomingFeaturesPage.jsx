@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Sparkles, Brain, Zap, ArrowRight, Star, Check } from 'lucide-react'
 import SEO from '../../components/layout/SEO'
+import { getAppUrl } from '../../lib/utils/domain'
 
 export default function UpcomingFeaturesPage() {
   return (
@@ -21,7 +22,7 @@ export default function UpcomingFeaturesPage() {
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Pricing</Link>
           <Link to="/upcoming-features" className="text-sm font-medium text-indigo-600">What's Next</Link>
-          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all">Sign In</Link>
+          <a href={getAppUrl('/auth')} className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all">Sign In</a>
         </div>
       </nav>
 

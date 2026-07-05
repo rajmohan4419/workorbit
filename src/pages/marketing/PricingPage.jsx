@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import SEO from '../../components/layout/SEO'
+import { getAppUrl } from '../../lib/utils/domain'
 
 export default function PricingPage() {
   const plans = [
@@ -75,7 +76,7 @@ export default function PricingPage() {
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-indigo-600">Pricing</Link>
           <Link to="/contact" className="text-sm font-medium text-gray-500 hover:text-gray-900">Contact</Link>
-          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</Link>
+          <a href={getAppUrl('/auth')} className="text-sm font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700">Sign In</a>
         </div>
       </nav>
 
@@ -106,12 +107,12 @@ export default function PricingPage() {
                   </div>
                 ))}
               </div>
-              <Link
-                to="/auth"
+              <a
+                href={getAppUrl('/auth')}
                 className={`w-full py-4 rounded-xl text-center font-bold transition-all ${p.highlight ? 'bg-brand-accent text-white hover:opacity-90 shadow-lg shadow-orange-200' : 'bg-white text-gray-900 hover:bg-gray-50 border border-gray-200'}`}
               >
                 {p.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
-              </Link>
+              </a>
             </div>
           ))}
         </div>

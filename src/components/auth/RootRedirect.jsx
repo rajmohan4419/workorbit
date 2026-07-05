@@ -1,11 +1,10 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import AppShell from '../layout/AppShell';
 import ProtectedRoute from '../auth/ProtectedRoute';
+import { isAppSubdomain, isMarketingDomain, redirectToApp } from '../../lib/utils/domain';
 
 const HomePage = lazy(() => import('../../pages/marketing/HomePage'));
-
-const isAppSubdomain = !['orbitboard.in', 'www.orbitboard.in'].includes(window.location.hostname);
 
 export const LoadingSpinner = () => (
   <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -17,9 +16,17 @@ export default function RootRedirect() {
   const user = useAuthStore((state) => state.user);
   const loading = useAuthStore((state) => state.loading);
 
+  useEffect(() => {
+    // If we're on the marketing domain but authenticated, redirect to the app domain
+    if (isMarketingDomain && user && !loading) {
+      redirectToApp('/');
+    }
+  }, [user, loading]);
+
   if (loading) return <LoadingSpinner />;
 
-  if (user || isAppSubdomain) {
+  // If we're on the app subdomain (or authenticated), show the app shell
+  if (isAppSubdomain || user) {
     return (
       <ProtectedRoute>
         <AppShell />
@@ -27,6 +34,7 @@ export default function RootRedirect() {
     );
   }
 
+  // Otherwise, if we're on the marketing domain, show the homepage
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <HomePage />
