@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { X, Loader2, MessageSquare, History, Send, Trash2, CheckSquare, Plus, Check, Paperclip, Clock, Play, Square, FileText, Edit2, Download } from 'lucide-react'
+import { X, Loader2, MessageSquare, History, Send, Trash2, CheckSquare, Plus, Check, Paperclip, Clock, Play, Square, FileText, Edit2, Download, FileSpreadsheet, File } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useTaskStore, STATUSES, STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
@@ -84,6 +84,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const [uploading, setUploading] = useState(false)
   const [timerActive, setTimerActive] = useState(false)
   const [elapsedTime, setTimerSeconds] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef(null)
   const timerIntervalRef = useRef(null)
   const timerActiveRef = useRef(false)
@@ -206,11 +207,39 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+    uploadFile(file)
+  }
+
+  const uploadFile = async (file) => {
     setUploading(true)
     const wsId = activeWorkspace?.id || task?.projects?.workspace_id
     const pId = task?.project_id || projectId
     await uploadAttachment(task.id, file, wsId, pId)
     setUploading(false)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) uploadFile(file)
+  }
+
+  const getFileIcon = (contentType) => {
+    if (contentType?.startsWith('image/')) return null
+    if (contentType?.includes('pdf')) return <FileText size={16} className="text-red-500" />
+    if (contentType?.includes('excel') || contentType?.includes('spreadsheetml')) return <FileSpreadsheet size={16} className="text-emerald-500" />
+    if (contentType?.includes('word') || contentType?.includes('officedocument.wordprocessingml')) return <FileText size={16} className="text-blue-500" />
+    return <File size={16} className="text-gray-500" />
   }
 
   const handleSave = async () => {
@@ -598,53 +627,38 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
           )}
 
           {isEditing && activeTab === 'comments' && (
-            <div className="space-y-6">
-              <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
+            <div className="flex flex-col h-[50vh]">
+              <div className="flex-1 space-y-6 overflow-y-auto pr-2 mb-4 scrollbar-thin">
                 {comments.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
-                    <MessageSquare size={32} className="mx-auto mb-2 opacity-20" />
-                    <p className="text-sm">No comments yet. Start the conversation!</p>
+                  <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                      <MessageSquare size={32} className="opacity-20" />
+                    </div>
+                    <p className="text-sm font-medium">No comments yet</p>
+                    <p className="text-xs opacity-70">Start the conversation below</p>
                   </div>
                 ) : (
                   comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 group">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 flex-shrink-0">
+                    <div key={comment.id} className={`flex gap-3 group ${comment.user_id === currentUser?.id ? 'flex-row-reverse' : ''}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 shadow-sm ${
+                        comment.user_id === currentUser?.id ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-100 text-gray-600'
+                      }`}>
                         {comment.profiles?.full_name?.slice(0, 2).toUpperCase() || 'U'}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-gray-900">{comment.profiles?.full_name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-400">
-                              {new Date(comment.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            {comment.user_id === currentUser?.id && editingCommentId !== comment.id && (
-                              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
-                                <button
-                                  onClick={() => {
-                                    setEditingCommentId(comment.id)
-                                    setEditCommentContent(comment.content)
-                                  }}
-                                  className="p-1 text-gray-300 hover:text-indigo-600 transition-all rounded"
-                                >
-                                  <Edit2 size={12} />
-                                </button>
-                                <button
-                                  onClick={() => deleteComment(comment.id)}
-                                  className="p-1 text-gray-300 hover:text-red-500 transition-all rounded"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                      <div className={`flex-1 max-w-[85%] ${comment.user_id === currentUser?.id ? 'text-right' : ''}`}>
+                        <div className={`flex items-center gap-2 mb-1 ${comment.user_id === currentUser?.id ? 'flex-row-reverse' : ''}`}>
+                          <span className="text-[11px] font-bold text-gray-900">{comment.profiles?.full_name}</span>
+                          <span className="text-[9px] text-gray-400">
+                            {new Date(comment.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
+
                         {editingCommentId === comment.id ? (
-                          <div className="mt-2">
+                          <div className="mt-2 text-left">
                             <textarea
                               value={editCommentContent}
                               onChange={(e) => setEditCommentContent(e.target.value)}
-                              className="w-full text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                              className="w-full text-sm text-gray-600 border border-indigo-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white shadow-inner"
                               rows={2}
                             />
                             <div className="flex justify-end gap-2 mt-2">
@@ -656,16 +670,40 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                               </button>
                               <button
                                 onClick={() => handleUpdateComment(comment.id)}
-                                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 px-2 py-1"
+                                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 px-2 py-1 bg-indigo-50 rounded-md"
                               >
                                 Update
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+                          <div className={`relative inline-block px-4 py-2.5 rounded-2xl text-sm shadow-sm transition-all group-hover:shadow-md ${
+                            comment.user_id === currentUser?.id
+                              ? 'bg-indigo-600 text-white rounded-tr-none text-left'
+                              : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none text-left'
+                          }`}>
                             {renderCommentContent(comment.content)}
-                          </p>
+
+                            {comment.user_id === currentUser?.id && (
+                              <div className={`absolute top-0 -left-12 opacity-0 group-hover:opacity-100 flex flex-col gap-1 transition-opacity`}>
+                                <button
+                                  onClick={() => {
+                                    setEditingCommentId(comment.id)
+                                    setEditCommentContent(comment.content)
+                                  }}
+                                  className="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-indigo-600 shadow-sm"
+                                >
+                                  <Edit2 size={10} />
+                                </button>
+                                <button
+                                  onClick={() => deleteComment(comment.id)}
+                                  className="p-1.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-red-500 shadow-sm"
+                                >
+                                  <Trash2 size={10} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -674,22 +712,31 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
               </div>
 
               {canWriteComment && (
-                <form onSubmit={handleAddComment} className="relative">
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment... (use @name to mention)"
-                    rows={3}
-                    className="w-full text-sm text-gray-600 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none pr-12"
-                  />
-                  <button
-                    type="submit"
-                    disabled={commenting || !newComment.trim()}
-                    className="absolute bottom-3 right-3 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                  >
-                    {commenting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                  </button>
-                </form>
+                <div className="mt-auto border-t border-gray-100 pt-4 bg-white">
+                  <form onSubmit={handleAddComment} className="relative flex items-end gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-100 focus-within:border-indigo-200 focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all">
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Type your message..."
+                      rows={1}
+                      className="flex-1 text-sm text-gray-700 bg-transparent border-none focus:ring-0 resize-none py-2 px-2 max-h-32"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleAddComment(e)
+                        }
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={commenting || !newComment.trim()}
+                      className="p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:bg-gray-300 shadow-md shadow-indigo-200 flex-shrink-0"
+                    >
+                      {commenting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                    </button>
+                  </form>
+                  <p className="text-[10px] text-gray-400 mt-2 px-2">Press Enter to send, Shift+Enter for new line</p>
+                </div>
               )}
             </div>
           )}
@@ -764,16 +811,20 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                     <div key={file.id} className="space-y-2">
                       <div className="flex items-center justify-between gap-3 group px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-600 shadow-sm overflow-hidden">
+                          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0">
                             {file.content_type?.startsWith('image/') ? (
                               <img src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/task-attachments/${file.file_path}`} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <FileText size={16} />
+                              getFileIcon(file.content_type)
                             )}
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                            <p className="text-[10px] text-gray-400">{(file.file_size / 1024).toFixed(1)} KB</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[10px] text-gray-400">{(file.file_size / 1024).toFixed(1)} KB</p>
+                              <span className="text-[10px] text-gray-300">•</span>
+                              <p className="text-[10px] text-gray-400 uppercase">{file.content_type?.split('/')[1] || 'FILE'}</p>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -812,21 +863,43 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
               </div>
 
               {canEditMetadata && (
-                <div className="flex justify-center">
+                <div className="space-y-2">
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                     className="hidden"
                   />
-                  <button
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center gap-2 text-gray-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+                    className={`
+                      w-full py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 transition-all cursor-pointer
+                      ${isDragging
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-600 scale-[0.99]'
+                        : 'border-gray-200 text-gray-400 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                      }
+                      ${uploading ? 'opacity-50 pointer-events-none' : ''}
+                    `}
                   >
-                    {uploading ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
-                    <span className="text-xs font-bold uppercase tracking-wider">Upload File</span>
-                  </button>
+                    {uploading ? (
+                      <Loader2 size={32} className="animate-spin" />
+                    ) : (
+                      <>
+                        <div className={`p-3 rounded-full ${isDragging ? 'bg-indigo-100' : 'bg-gray-50 group-hover:bg-indigo-100'}`}>
+                          <Paperclip size={24} />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-bold uppercase tracking-wider">
+                            {isDragging ? 'Drop to upload' : 'Click or drag file to upload'}
+                          </p>
+                          <p className="text-xs opacity-70 mt-1">Support Images, PDFs, Excel, Word</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

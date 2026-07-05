@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [teamHealth, setTeamHealth] = useState(100)
   const [workload, setWorkload] = useState([])
   const [upcomingTasks, setUpcomingTasks] = useState({ today: [], tomorrow: [], week: [] })
+  const [recentProjects, setRecentProjects] = useState([])
 
   useEffect(() => {
     let active = true
@@ -49,14 +50,15 @@ export default function DashboardPage() {
       const nextWeekStr = nextWeek.toISOString().split('T')[0]
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-      const [overdue, completed, totalTasks, doneTasks, noDueTasks, futureDueTasks, allActiveTasks] = await Promise.all([
+      const [overdue, completed, totalTasks, doneTasks, noDueTasks, futureDueTasks, allActiveTasks, recentlyActive] = await Promise.all([
         supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).lt('due_date', todayStr).neq('status', 'done'),
         supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).eq('status', 'done').gte('updated_at', oneWeekAgo),
         supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds),
         supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).eq('status', 'done'),
         supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).is('due_date', null).neq('status', 'done'),
         supabase.from('tasks').select('id', { count: 'exact', head: true }).in('project_id', projectIds).gt('due_date', todayStr).neq('status', 'done'),
-        supabase.from('tasks').select('*, profiles!tasks_assigned_to_fkey(full_name)').in('project_id', projectIds).neq('status', 'done').order('due_date', { ascending: true })
+        supabase.from('tasks').select('*, profiles!tasks_assigned_to_fkey(full_name)').in('project_id', projectIds).neq('status', 'done').order('due_date', { ascending: true }),
+        supabase.from('projects').select('*, tasks(count)').in('id', projectIds).order('updated_at', { ascending: false }).limit(4)
       ])
 
       if (!active) return
@@ -92,6 +94,10 @@ export default function DashboardPage() {
           else if (t.due_date > tomorrowStr && t.due_date <= nextWeekStr) upcoming.week.push(t)
         })
         setUpcomingTasks(upcoming)
+      }
+
+      if (recentlyActive.data) {
+        setRecentProjects(recentlyActive.data)
       }
     }
     fetchStats()
@@ -135,53 +141,86 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Your projects</h2>
+        <div className="lg:col-span-2 space-y-8">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Recently active</h2>
+            </div>
+            {recentProjects.length === 0 ? (
+              <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center text-gray-400 italic text-sm">
+                No recent activity
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {recentProjects.map(project => (
+                  <Link
+                    key={project.id}
+                    to={`/workspaces/${activeWorkspace?.slug}/projects/${project.id}`}
+                    className="group bg-white border border-gray-100 rounded-2xl p-5 hover:border-indigo-200 transition-all hover:shadow-sm"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{project.name}</h3>
+                        <p className="text-xs text-gray-400 mt-1">{project.tasks?.[0]?.count || 0} tasks</p>
+                      </div>
+                      <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-indigo-50 transition-colors">
+                        <ArrowRight size={14} className="text-gray-300 group-hover:text-indigo-500" />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
-        {error ? (
-          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider">All projects</h2>
+            </div>
+
+            {error ? (
+              <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </div>
+            ) : loading ? (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-24 bg-gray-50 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : projects.length === 0 ? (
+              <div className="text-center py-16 text-gray-300">
+                <FolderOpen size={40} className="mx-auto mb-3" />
+                <p className="text-sm">No projects yet. Create one from the sidebar.</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    to={activeWorkspace ? `/workspaces/${activeWorkspace.slug}/projects/${project.id}` : `/projects/${project.id}`}
+                    className="group bg-white border border-gray-100 hover:border-indigo-200 rounded-xl p-5 transition-all hover:shadow-sm"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-800 group-hover:text-indigo-700 transition-colors">{project.name}</h3>
+                        {project.description && (
+                          <p className="text-xs text-gray-400 mt-1 line-clamp-2">{project.description}</p>
+                        )}
+                      </div>
+                      <ArrowRight size={15} className="text-gray-300 group-hover:text-indigo-400 transition-colors flex-shrink-0 mt-0.5" />
+                    </div>
+                    <div className="mt-4 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                      <span className="text-xs text-gray-400">
+                        Created {new Date(project.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        ) : loading ? (
-          <div className="grid sm:grid-cols-2 gap-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-gray-50 rounded-xl animate-pulse" />
-            ))}
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-16 text-gray-300">
-            <FolderOpen size={40} className="mx-auto mb-3" />
-            <p className="text-sm">No projects yet. Create one from the sidebar.</p>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                to={activeWorkspace ? `/workspaces/${activeWorkspace.slug}/projects/${project.id}` : `/projects/${project.id}`}
-                className="group bg-white border border-gray-100 hover:border-indigo-200 rounded-xl p-5 transition-all hover:shadow-sm"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-medium text-gray-800 group-hover:text-indigo-700 transition-colors">{project.name}</h3>
-                    {project.description && (
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">{project.description}</p>
-                    )}
-                  </div>
-                  <ArrowRight size={15} className="text-gray-300 group-hover:text-indigo-400 transition-colors flex-shrink-0 mt-0.5" />
-                </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-indigo-400" />
-                  <span className="text-xs text-gray-400">
-                    Created {new Date(project.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
         </div>
 
         <div className="lg:col-span-1 space-y-8">

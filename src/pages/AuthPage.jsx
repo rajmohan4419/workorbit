@@ -1,11 +1,24 @@
+import { useEffect } from 'react'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 
 export default function AuthPage() {
   const user = useAuthStore((state) => state.user)
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    const inviteId = searchParams.get('inviteId')
+    const type = searchParams.get('type')
+    const email = searchParams.get('email')
+
+    if (inviteId && type && email) {
+      localStorage.setItem('pendingInvite', JSON.stringify({ inviteId, type, email }))
+    }
+  }, [searchParams])
+
   if (user) return <Navigate to="/" replace />
 
   return (

@@ -12,7 +12,10 @@ export const useNotificationStore = create((set) => ({
     set({ loading: true })
     const { data, error } = await notificationService.fetchNotifications()
 
-    if (error) return { error }
+    if (error) {
+      set({ loading: false })
+      return { error }
+    }
     
     set({ 
       notifications: data, 

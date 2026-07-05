@@ -279,7 +279,7 @@ export const taskService = {
   async searchAll(query) {
     const q = `%${query}%`
 
-    const [tasks, projects] = await Promise.all([
+    const [tasks, projects, members, comments] = await Promise.all([
       supabase
         .from('tasks')
         .select(`
@@ -293,12 +293,28 @@ export const taskService = {
         .from('projects')
         .select('*, workspaces(slug)')
         .or(`name.ilike.${q},description.ilike.${q}`)
+        .limit(5),
+      supabase
+        .from('profiles')
+        .select('*')
+        .or(`full_name.ilike.${q},first_name.ilike.${q},last_name.ilike.${q}`)
+        .limit(5),
+      supabase
+        .from('task_comments')
+        .select(`
+          *,
+          tasks(title, project_id, projects(name, workspaces(slug))),
+          profiles!task_comments_user_id_fkey(full_name)
+        `)
+        .ilike('content', q)
         .limit(5)
     ])
 
     return {
       tasks: tasks.data || [],
-      projects: projects.data || []
+      projects: projects.data || [],
+      members: members.data || [],
+      comments: comments.data || []
     }
   }
 }
