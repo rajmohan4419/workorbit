@@ -56,12 +56,24 @@ export const taskService = {
   },
 
   async updateTask(id, updates) {
-    return await supabase
+    // Fetch old state to avoid redundant notifications
+    const { data: oldTask } = await supabase.from('tasks').select('assigned_to').eq('id', id).single()
+
+    const { data, error } = await supabase
       .from('tasks')
       .update(updates)
       .eq('id', id)
       .select()
       .single()
+
+    if (!error && data && updates.assigned_to && updates.assigned_to !== oldTask?.assigned_to) {
+      // Trigger email for new assignment
+      supabase.functions.invoke('task-notifications', {
+        body: { type: 'assignment', taskId: id, userId: updates.assigned_to }
+      }).catch(console.error)
+    }
+
+    return { data, error }
   },
 
   async deleteTask(id) {
@@ -77,15 +89,42 @@ export const taskService = {
   },
 
   async addComment(taskId, content) {
-    return await supabase
+    const { data, error } = await supabase
       .from('task_comments')
       .insert([{ task_id: taskId, content }])
       .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
       .single()
+
+    if (!error && data && content.includes('@')) {
+      // Find mentioned users (simplified: search profiles by name)
+      // In a real app, this would be more robust.
+      const mentions = content.match(/@(\w+)/g) || []
+      for (const mention of mentions) {
+        const name = mention.substring(1)
+        supabase.from('profiles').select('id').ilike('full_name', `%${name}%`).limit(1).then(({ data: users }) => {
+          if (users && users[0]) {
+            supabase.functions.invoke('task-notifications', {
+              body: { type: 'mention', taskId, userId: users[0].id, content }
+            }).catch(console.error)
+          }
+        })
+      }
+    }
+
+    return { data, error }
   },
 
   async deleteComment(id) {
     return await supabase.from('task_comments').delete().eq('id', id)
+  },
+
+  async updateComment(id, content) {
+    return await supabase
+      .from('task_comments')
+      .update({ content })
+      .eq('id', id)
+      .select('*, profiles!task_comments_user_id_fkey(full_name, avatar_path)')
+      .single()
   },
 
   async fetchLogs(taskId) {

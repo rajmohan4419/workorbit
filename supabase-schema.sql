@@ -518,6 +518,19 @@ $$ language plpgsql security definer;
 
 create trigger tasks_status_log after update on public.tasks for each row execute procedure public.log_task_status_change();
 
+create or replace function public.log_task_due_date_change()
+returns trigger as $$
+begin
+  if (old.due_date is distinct from new.due_date) then
+    insert into public.task_logs (task_id, user_id, type, old_value, new_value)
+    values (new.id, auth.uid(), 'due_date_change', old.due_date::text, new.due_date::text);
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger tasks_due_date_log after update on public.tasks for each row execute procedure public.log_task_due_date_change();
+
 create or replace function public.log_task_creation()
 returns trigger as $$
 begin
@@ -541,6 +554,50 @@ $$ language plpgsql security definer;
 create trigger on_comment_logged after insert on public.task_comments for each row execute procedure public.log_new_comment();
 
 -- NOTIFICATION TRIGGERS
+create or replace function public.notify_task_completed()
+returns trigger as $$
+declare
+  task_creator uuid;
+begin
+  if (new.status = 'done' and old.status != 'done') then
+    select created_by into task_creator from public.tasks where id = new.id;
+
+    if (task_creator is not null and task_creator != auth.uid()) then
+      insert into public.notifications (user_id, type, title, content, link)
+      values (
+        task_creator,
+        'task_completed',
+        'Task completed',
+        'Task completed: ' || new.title,
+        '/project/' || new.project_id
+      );
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_task_completed after update on public.tasks for each row execute procedure public.notify_task_completed();
+
+create or replace function public.notify_workspace_role_change()
+returns trigger as $$
+begin
+  if (old.role is distinct from new.role) then
+    insert into public.notifications (user_id, type, title, content, metadata)
+    values (
+      new.user_id,
+      'role_change',
+      'Workspace Role Updated',
+      'Your role has been changed to ' || new.role || '.',
+      jsonb_build_object('workspaceId', new.workspace_id, 'newRole', new.role)
+    );
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_workspace_role_change after update on public.workspace_members for each row execute procedure public.notify_workspace_role_change();
+
 create or replace function public.notify_task_assignment()
 returns trigger as $$
 begin
@@ -572,14 +629,25 @@ begin
   into task_title, task_project_id, task_assignee, task_owner
   from public.tasks where id = new.task_id;
 
+  -- Notify mentioned users
   insert into public.notifications (user_id, type, title, content, link)
   select p.id, 'task_mention', 'You were mentioned in a comment', 'In: ' || task_title, '/project/' || task_project_id
   from public.profiles p
-  where new.content ~ ('@' || p.full_name) and p.id != new.user_id;
+  where new.content ~ ('@' || p.full_name) and p.id != new.user_id
+  on conflict do nothing;
 
+  -- Notify assignee
   if (task_assignee is not null and task_assignee != new.user_id) then
     insert into public.notifications (user_id, type, title, content, link)
-    values (task_assignee, 'new_comment', 'New comment on task', 'Someone commented on: ' || task_title, '/project/' || task_project_id);
+    values (task_assignee, 'new_comment', 'New comment on task', 'Someone commented on: ' || task_title, '/project/' || task_project_id)
+    on conflict do nothing;
+  end if;
+
+  -- Notify task owner/creator
+  if (task_owner is not null and task_owner != new.user_id and task_owner != coalesce(task_assignee, '00000000-0000-0000-0000-000000000000'::uuid)) then
+    insert into public.notifications (user_id, type, title, content, link)
+    values (task_owner, 'new_comment', 'New comment on task', 'Someone commented on: ' || task_title, '/project/' || task_project_id)
+    on conflict do nothing;
   end if;
 
   return new;

@@ -207,6 +207,27 @@ export const useTaskStore = create((set, get) => ({
     return { data }
   },
 
+  updateComment: async (id, content) => {
+    const previousComments = get().comments
+
+    // Optimistic update
+    set((state) => ({
+      comments: state.comments.map(c => c.id === id ? { ...c, content } : c)
+    }))
+
+    const { data, error } = await taskService.updateComment(id, content)
+
+    if (error) {
+      set({ comments: previousComments })
+      return { error }
+    }
+
+    set((state) => ({
+      comments: state.comments.map(c => c.id === id ? data : c)
+    }))
+    return { data }
+  },
+
   deleteComment: async (id) => {
     const { error } = await taskService.deleteComment(id)
     if (error) return { error }
@@ -266,10 +287,14 @@ export const useTaskStore = create((set, get) => ({
     return { data }
   },
 
-  uploadAttachment: async (taskId, file) => {
+  uploadAttachment: async (taskId, file, workspaceId, projectId) => {
     const fileExt = file.name.split('.').pop()
-    const fileName = `${taskId}/${Math.random()}.${fileExt}`
-    const filePath = `${fileName}`
+    const randomName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+
+    // Path: workspace-id/project-id/task-id/filename
+    const filePath = workspaceId && projectId
+      ? `${workspaceId}/${projectId}/${taskId}/${randomName}`
+      : `${taskId}/${randomName}`
 
     const { error: uploadError } = await taskService.uploadAttachment(filePath, file)
 
