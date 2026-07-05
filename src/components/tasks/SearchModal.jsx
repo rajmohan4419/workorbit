@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Search, X, Folder, CheckSquare, ArrowRight, Loader2, Plus, LayoutGrid, UserPlus } from 'lucide-react'
+import { Search, X, Folder, CheckSquare, ArrowRight, Loader2, Plus, LayoutGrid, UserPlus, User, MessageSquare } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import { taskService } from '../../lib/services/taskService'
@@ -16,7 +16,7 @@ export default function SearchModal({ onClose }) {
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [results, setResults] = useState({ projects: [], tasks: [] })
+  const [results, setResults] = useState({ projects: [], tasks: [], members: [], comments: [] })
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
 
   useEffect(() => {
@@ -48,7 +48,9 @@ export default function SearchModal({ onClose }) {
     return [
       ...filteredCommands.map(c => ({ ...c, type: 'command' })),
       ...results.projects.map(p => ({ ...p, type: 'project' })),
-      ...results.tasks.map(t => ({ ...t, type: 'task' }))
+      ...results.tasks.map(t => ({ ...t, type: 'task' })),
+      ...results.members.map(m => ({ ...m, type: 'member' })),
+      ...results.comments.map(c => ({ ...c, type: 'comment' }))
     ]
   }, [filteredCommands, results])
 
@@ -84,17 +86,30 @@ export default function SearchModal({ onClose }) {
           return
         }
 
+        if (item.type === 'member') {
+          // No specific member page yet, maybe profile?
+          return
+        }
+
         const workspaceSlug = item.type === 'project'
           ? item.workspaces?.slug || activeWorkspace?.slug
-          : item.projects?.workspaces?.slug || activeWorkspace?.slug
+          : item.type === 'task'
+            ? item.projects?.workspaces?.slug || activeWorkspace?.slug
+            : item.tasks?.projects?.workspaces?.slug || activeWorkspace?.slug
 
         if (workspaceSlug) {
           const path = item.type === 'project'
             ? `/workspaces/${workspaceSlug}/projects/${item.id}`
-            : `/workspaces/${workspaceSlug}/projects/${item.project_id}`
+            : item.type === 'task'
+              ? `/workspaces/${workspaceSlug}/projects/${item.project_id}`
+              : `/workspaces/${workspaceSlug}/projects/${item.tasks?.project_id}`
           navigate(path)
         } else {
-          const path = item.type === 'project' ? `/projects/${item.id}` : `/projects/${item.project_id}`
+          const path = item.type === 'project'
+            ? `/projects/${item.id}`
+            : item.type === 'task'
+              ? `/projects/${item.project_id}`
+              : `/projects/${item.tasks?.project_id}`
           navigate(path)
         }
         onClose()
@@ -104,7 +119,7 @@ export default function SearchModal({ onClose }) {
     return () => window.removeEventListener('keydown', handler)
   }, [onClose, flatResults, selectedIndex, navigate, activeWorkspace?.slug])
 
-  const hasResults = results.projects.length > 0 || results.tasks.length > 0
+  const hasResults = results.projects.length > 0 || results.tasks.length > 0 || results.members.length > 0 || results.comments.length > 0
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] px-4" onClick={onClose}>
@@ -205,6 +220,73 @@ export default function SearchModal({ onClose }) {
                           </div>
                         </button>
                        )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {results.members.length > 0 && (
+                <div>
+                  <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Members</h3>
+                  <div className="space-y-1">
+                    {results.members.map((member, idx) => {
+                      const isSelected = selectedIndex === (idx + filteredCommands.length + results.projects.length + results.tasks.length)
+                      return (
+                        <div
+                          key={member.id}
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl group transition-colors cursor-default ${
+                            isSelected ? 'bg-indigo-50' : 'hover:bg-indigo-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {member.avatar_path ? (
+                              <img src={member.avatar_path} className="w-8 h-8 rounded-lg object-cover" alt="" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500">
+                                <User size={16} />
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{member.full_name}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {results.comments.length > 0 && (
+                <div>
+                  <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Comments</h3>
+                  <div className="space-y-1">
+                    {results.comments.map((comment, idx) => {
+                      const isSelected = selectedIndex === (idx + filteredCommands.length + results.projects.length + results.tasks.length + results.members.length)
+                      const wsSlug = comment.tasks?.projects?.workspaces?.slug || activeWorkspace?.slug
+                      return (
+                        <Link
+                          key={comment.id}
+                          to={`/workspaces/${wsSlug}/projects/${comment.tasks?.project_id}`}
+                          onClick={onClose}
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl group transition-colors ${
+                            isSelected ? 'bg-indigo-50' : 'hover:bg-indigo-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                              <MessageSquare size={16} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 line-clamp-1">{comment.content}</p>
+                              <p className="text-xs text-gray-400">
+                                in <span className="font-medium text-indigo-400">{comment.tasks?.title}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowRight size={14} className={`text-gray-300 transition-all ${isSelected ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'}`} />
+                        </Link>
+                      )
                     })}
                   </div>
                 </div>

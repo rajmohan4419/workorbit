@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import SearchModal from '../tasks/SearchModal';
+import PendingInviteHandler from '../auth/PendingInviteHandler';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 
 export default function AppShell() {
@@ -40,6 +41,7 @@ export default function AppShell() {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
+      <PendingInviteHandler />
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
       <main className="flex-1 overflow-y-auto">
         <Outlet />

@@ -780,6 +780,23 @@ begin
 
     -- Clean up invites
     delete from public.workspace_invites where email = new.email;
+
+    -- Join projects as well
+    insert into public.project_members (project_id, user_id)
+    select project_id, new.id
+    from public.project_invites where email = new.email
+    on conflict (project_id, user_id) do nothing;
+
+    -- Ensure they are in the workspace for those projects
+    insert into public.workspace_members (workspace_id, user_id, role)
+    select p.workspace_id, new.id, pi.role
+    from public.project_invites pi
+    join public.projects p on p.id = pi.project_id
+    where pi.email = new.email
+    on conflict (workspace_id, user_id) do nothing;
+
+    -- Clean up project invites
+    delete from public.project_invites where email = new.email;
   end if;
 
   return new;

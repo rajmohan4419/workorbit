@@ -165,7 +165,7 @@ export const useTaskStore = create((set, get) => ({
           // Sync only relevant fields to avoid overwriting rich joined data with a flat object
           set((state) => ({
             tasks: state.tasks.map((t) =>
-              t.id === id ? { ...t, status: newStatus, updated_at: data.updated_at } : t
+              t.id === id ? { ...t, status: newStatus, updated_at: data.updated_at, assigned_to: data.assigned_to } : t
             ),
             error: null,
           }))
