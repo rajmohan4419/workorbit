@@ -115,6 +115,7 @@ export const workspaceService = {
       .from('workspace_invites')
       .select('*')
       .eq('workspace_id', workspaceId)
+      .gt('expires_at', new Date().toISOString())
   },
 
   async createInvite(workspaceId, email, role) {
@@ -145,9 +146,12 @@ export const workspaceService = {
       .from('workspace_invites')
       .select('*')
       .eq('id', inviteId)
+      .gt('expires_at', new Date().toISOString())
       .single()
 
-    if (fetchError) return { error: fetchError }
+    if (fetchError) {
+      return { error: { message: 'Invitation has expired or does not exist.' } }
+    }
 
     const { error: memberError } = await supabase
       .from('workspace_members')
