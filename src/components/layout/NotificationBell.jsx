@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Check, Circle } from 'lucide-react'
+import { Bell, Check, Circle, CheckCircle2, Calendar, ShieldCheck, MessageSquare, UserPlus } from 'lucide-react'
 import { useNotificationStore } from '../../store/notificationStore'
 import { useProjectStore } from '../../store/projectStore'
 import { Link, useNavigate } from 'react-router-dom'
@@ -22,6 +22,18 @@ export default function NotificationBell() {
     const interval = setInterval(fetchNotifications, 60000)
     return () => clearInterval(interval)
   }, [fetchNotifications])
+
+  const getIcon = (type) => {
+    switch (type) {
+      case 'task_completed': return <CheckCircle2 size={14} className="text-emerald-500" />
+      case 'due_date_change': return <Calendar size={14} className="text-amber-500" />
+      case 'role_change': return <ShieldCheck size={14} className="text-indigo-500" />
+      case 'task_assignment': return <UserPlus size={14} className="text-blue-500" />
+      case 'new_comment':
+      case 'task_mention': return <MessageSquare size={14} className="text-purple-500" />
+      default: return <Bell size={14} className="text-gray-400" />
+    }
+  }
 
   return (
     <div className="relative">
@@ -65,11 +77,12 @@ export default function NotificationBell() {
                     key={notification.id}
                     className={`px-4 py-3 hover:bg-gray-50 transition-colors flex gap-3 ${!notification.read ? 'bg-indigo-50/30' : ''}`}
                   >
-                    <div className="pt-1 flex-shrink-0">
-                      {!notification.read ? (
-                        <Circle size={8} className="fill-indigo-500 text-indigo-500" />
-                      ) : (
-                        <div className="w-2 h-2" />
+                    <div className="pt-1 flex-shrink-0 flex flex-col items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center">
+                        {getIcon(notification.type)}
+                      </div>
+                      {!notification.read && (
+                        <Circle size={6} className="fill-indigo-500 text-indigo-500" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

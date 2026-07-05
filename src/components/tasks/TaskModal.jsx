@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { X, Loader2, MessageSquare, History, Send, Trash2, CheckSquare, Plus, Check, Paperclip, Clock, Play, Square, FileText } from 'lucide-react'
+import { X, Loader2, MessageSquare, History, Send, Trash2, CheckSquare, Plus, Check, Paperclip, Clock, Play, Square, FileText, Edit2, Download } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectStore } from '../../store/projectStore'
 import { useTaskStore, STATUSES, STATUS_LABELS, PRIORITIES } from '../../store/taskStore'
@@ -23,6 +23,7 @@ function getInitialForm(task, defaultStatus, currentUserId) {
 
 export default function TaskModal({ task = null, projectId = null, defaultStatus = 'todo', onClose }) {
   const currentUser = useAuthStore((state) => state.user)
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
   const wsRole = useWorkspaceStore((state) => state.currentUserRole)
   const workspaceMembers = useWorkspaceStore((state) => state.members)
   const sprints = useProjectStore((state) => state.sprints)
@@ -32,6 +33,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const updateTask = useTaskStore((state) => state.updateTask)
   const fetchComments = useTaskStore((state) => state.fetchComments)
   const addComment = useTaskStore((state) => state.addComment)
+  const updateComment = useTaskStore((state) => state.updateComment)
   const deleteComment = useTaskStore((state) => state.deleteComment)
   const fetchLogs = useTaskStore((state) => state.fetchLogs)
   const comments = useTaskStore((state) => state.comments)
@@ -71,6 +73,8 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const [activeTab, setActiveTab] = useState('details')
   const [newComment, setNewComment] = useState('')
   const [commenting, setCommenting] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editCommentContent, setEditCommentContent] = useState('')
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
   const [addingSubtask, setAddingSubtask] = useState(false)
   const [showLabelPicker, setShowLabelPicker] = useState(false)
@@ -146,6 +150,25 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     }
   }
 
+  const handleUpdateComment = async (id) => {
+    if (!editCommentContent.trim()) return
+    const { error } = await updateComment(id, editCommentContent.trim())
+    if (!error) {
+      setEditingCommentId(null)
+      setEditCommentContent('')
+    }
+  }
+
+  const renderCommentContent = (content) => {
+    const parts = content.split(/(@\w+)/g)
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        return <span key={i} className="text-indigo-600 font-bold bg-indigo-50 px-1 rounded">{part}</span>
+      }
+      return part
+    })
+  }
+
   const handleAddSubtask = async (e) => {
     e.preventDefault()
     if (!newSubtaskTitle.trim()) return
@@ -184,7 +207,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    await uploadAttachment(task.id, file)
+    const wsId = activeWorkspace?.id || task?.projects?.workspace_id
+    const pId = task?.project_id || projectId
+    await uploadAttachment(task.id, file, wsId, pId)
     setUploading(false)
   }
 
@@ -593,17 +618,55 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                             <span className="text-[10px] text-gray-400">
                               {new Date(comment.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            {comment.user_id === currentUser?.id && (
-                              <button
-                                onClick={() => deleteComment(comment.id)}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-gray-300 hover:text-red-500 transition-all rounded"
-                              >
-                                <Trash2 size={12} />
-                              </button>
+                            {comment.user_id === currentUser?.id && editingCommentId !== comment.id && (
+                              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    setEditingCommentId(comment.id)
+                                    setEditCommentContent(comment.content)
+                                  }}
+                                  className="p-1 text-gray-300 hover:text-indigo-600 transition-all rounded"
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                                <button
+                                  onClick={() => deleteComment(comment.id)}
+                                  className="p-1 text-gray-300 hover:text-red-500 transition-all rounded"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{comment.content}</p>
+                        {editingCommentId === comment.id ? (
+                          <div className="mt-2">
+                            <textarea
+                              value={editCommentContent}
+                              onChange={(e) => setEditCommentContent(e.target.value)}
+                              className="w-full text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                              rows={2}
+                            />
+                            <div className="flex justify-end gap-2 mt-2">
+                              <button
+                                onClick={() => setEditingCommentId(null)}
+                                className="text-[10px] font-bold text-gray-400 hover:text-gray-600 px-2 py-1"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleUpdateComment(comment.id)}
+                                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 px-2 py-1"
+                              >
+                                Update
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+                            {renderCommentContent(comment.content)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))
@@ -698,24 +761,51 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
                   </div>
                 ) : (
                   attachments.map((file) => (
-                    <div key={file.id} className="flex items-center justify-between gap-3 group px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-600 shadow-sm">
-                          <FileText size={16} />
+                    <div key={file.id} className="space-y-2">
+                      <div className="flex items-center justify-between gap-3 group px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-600 shadow-sm overflow-hidden">
+                            {file.content_type?.startsWith('image/') ? (
+                              <img src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/task-attachments/${file.file_path}`} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <FileText size={16} />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                            <p className="text-[10px] text-gray-400">{(file.file_size / 1024).toFixed(1)} KB</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                          <p className="text-[10px] text-gray-400">{(file.file_size / 1024).toFixed(1)} KB</p>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/task-attachments/${file.file_path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors"
+                            title="Download"
+                          >
+                            <Download size={14} />
+                          </a>
+                          {canEditMetadata && (
+                            <button
+                              onClick={() => deleteAttachment(file.id, file.file_path)}
+                              className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => deleteAttachment(file.id, file.file_path)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                      {file.content_type?.startsWith('image/') && (
+                        <div className="px-4 pb-2">
+                           <img
+                            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/task-attachments/${file.file_path}`}
+                            alt={file.name}
+                            className="rounded-lg border border-gray-100 max-h-48 w-auto mx-auto object-contain shadow-sm"
+                           />
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
