@@ -5,6 +5,7 @@ import { notificationService } from '../lib/services/notificationService'
 export const useNotificationStore = create((set) => ({
   notifications: [],
   unreadCount: 0,
+  preferences: null,
   loading: false,
 
   fetchNotifications: async () => {
@@ -45,6 +46,31 @@ export const useNotificationStore = create((set) => ({
       notifications: state.notifications.map(n => ({ ...n, read: true })),
       unreadCount: 0
     }))
+    return {}
+  },
+
+  deleteNotification: async (id) => {
+    const { error } = await notificationService.deleteNotification(id)
+    if (error) return { error }
+
+    set((state) => {
+      const notification = state.notifications.find(n => n.id === id)
+      return {
+        notifications: state.notifications.filter(n => n.id !== id),
+        unreadCount: notification && !notification.read ? Math.max(0, state.unreadCount - 1) : state.unreadCount
+      }
+    })
+    return {}
+  },
+
+  updatePreferences: async (preferences) => {
+    const { data: { user } } = await authService.getUser()
+    if (!user) return { error: { message: 'Not authenticated' } }
+
+    const { error } = await notificationService.updatePreferences(user.id, preferences)
+    if (error) return { error }
+
+    set({ preferences })
     return {}
   }
 }))

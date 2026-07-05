@@ -20,6 +20,10 @@ export function getRoleDescription(role) {
   return ROLE_DESCRIPTIONS[role] ?? ROLE_DESCRIPTIONS.member
 }
 
+export function isWorkspaceOwner(role) {
+  return role === 'owner'
+}
+
 export function isOwner(userId, ownerId) {
   return userId && ownerId && userId === ownerId
 }

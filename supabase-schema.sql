@@ -42,6 +42,7 @@ create table if not exists public.profiles (
   phone       text,
   avatar_path text,
   role        app_role not null default 'member',
+  notification_preferences jsonb not null default '{"assignment": true, "mention": true, "due_date": true, "comment": true, "workspace": true, "system": true}'::jsonb,
   onboarding_completed boolean default false,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
@@ -162,6 +163,7 @@ create table if not exists public.task_logs (
   type        text not null,
   old_value   text,
   new_value   text,
+  metadata    jsonb,
   created_at  timestamptz default now()
 );
 
@@ -530,6 +532,36 @@ end;
 $$ language plpgsql security definer;
 
 create trigger tasks_due_date_log after update on public.tasks for each row execute procedure public.log_task_due_date_change();
+
+create or replace function public.log_task_assignment_change()
+returns trigger as $$
+declare
+  old_assignee_name text;
+  new_assignee_name text;
+begin
+  if (old.assigned_to is distinct from new.assigned_to) then
+    if (old.assigned_to is not null) then
+      select full_name into old_assignee_name from public.profiles where id = old.assigned_to;
+    end if;
+    if (new.assigned_to is not null) then
+      select full_name into new_assignee_name from public.profiles where id = new.assigned_to;
+    end if;
+
+    insert into public.task_logs (task_id, user_id, type, old_value, new_value, metadata)
+    values (
+      new.id,
+      auth.uid(),
+      'assignment_change',
+      old.assigned_to::text,
+      new.assigned_to::text,
+      jsonb_build_object('old_name', old_assignee_name, 'new_name', new_assignee_name)
+    );
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger tasks_assignment_log after update on public.tasks for each row execute procedure public.log_task_assignment_change();
 
 create or replace function public.log_task_creation()
 returns trigger as $$

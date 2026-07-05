@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { Settings, Users, Shield, Trash2, Save, UserMinus, ShieldAlert, AlertTriangle, User, Mail, Phone, Key, Plus, Loader2 } from 'lucide-react'
+import { Settings, Users, Shield, Trash2, Save, UserMinus, ShieldAlert, AlertTriangle, User, Mail, Phone, Key, Plus, Loader2, Bell } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useAuthStore } from '../store/authStore'
-import { getRoleLabel } from '../lib/permissions'
+import { useNotificationStore } from '../store/notificationStore'
+import { getRoleLabel, canManageWorkspace, isWorkspaceOwner } from '../lib/permissions'
 
 export default function SettingsPage({ initialTab = 'general' }) {
   const navigate = useNavigate()
@@ -22,12 +23,26 @@ export default function SettingsPage({ initialTab = 'general' }) {
   const currentProfile = useAuthStore((state) => state.profile)
   const updateProfile = useAuthStore((state) => state.updateProfile)
 
+  // Notification Preferences State
+  const updatePreferences = useNotificationStore((state) => state.updatePreferences)
+  const [prefs, setPrefs] = useState(currentProfile?.notification_preferences || {
+    assignment: true,
+    mention: true,
+    due_date: true,
+    comment: true,
+    workspace: true,
+    system: true
+  })
+  const [savingPrefs, setSavingPrefs] = useState(false)
+
   const activeTab = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('tab')) return params.get('tab')
     if (location.pathname.startsWith('/settings/profile')) return 'profile'
     if (location.pathname.endsWith('/team')) return 'members'
     if (location.pathname.startsWith('/settings/billing')) return 'billing'
     return initialTab
-  }, [location.pathname, initialTab])
+  }, [location.pathname, location.search, initialTab])
 
   // Workspace State
   const [name, setName] = useState(activeWorkspace?.name || '')
@@ -46,8 +61,8 @@ export default function SettingsPage({ initialTab = 'general' }) {
   const [inviteRole, setInviteRole] = useState('member')
   const [sendingInvite, setSendingInvite] = useState(false)
 
-  const isOwner = userRole === 'owner'
-  const isAdmin = userRole === 'admin' || isOwner
+  const isOwner = isWorkspaceOwner(userRole)
+  const isAdmin = canManageWorkspace(userRole)
 
   useEffect(() => {
     if (currentProfile && !firstName && !lastName && !phone) {
@@ -147,6 +162,15 @@ export default function SettingsPage({ initialTab = 'general' }) {
                 Members
               </Link>
             )}
+            <button
+              onClick={() => navigate('/settings?tab=notifications')}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === 'notifications' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              <Bell size={18} />
+              Notifications
+            </button>
             <Link
               to="/settings/billing"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
@@ -247,6 +271,58 @@ export default function SettingsPage({ initialTab = 'general' }) {
                       ))}
                     </div>
                   </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="space-y-8">
+              <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Notification Preferences</h2>
+                    <p className="text-sm text-gray-500">Choose what activities you want to be notified about.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {Object.entries({
+                    assignment: { title: 'Task Assignments', desc: 'When someone assigns a task to you.' },
+                    mention: { title: 'Mentions', desc: 'When someone mentions you in a comment.' },
+                    due_date: { title: 'Due Date Changes', desc: 'When a task due date is changed.' },
+                    comment: { title: 'Comments', desc: 'When someone comments on a task you are involved in.' },
+                    workspace: { title: 'Workspace Activity', desc: 'Invites and role changes in your workspaces.' },
+                    system: { title: 'System Alerts', desc: 'Important system updates and task completions.' }
+                  }).map(([key, info]) => (
+                    <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                      <div className="flex-1">
+                        <h3 className="text-sm font-bold text-gray-900">{info.title}</h3>
+                        <p className="text-xs text-gray-500">{info.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => setPrefs(prev => ({ ...prev, [key]: !prev[key] }))}
+                        className={`w-12 h-6 rounded-full p-1 transition-colors ${prefs[key] ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                      >
+                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${prefs[key] ? 'translate-x-6' : ''}`} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <button
+                    onClick={async () => {
+                      setSavingPrefs(true)
+                      await updatePreferences(prefs)
+                      setSavingPrefs(false)
+                    }}
+                    disabled={savingPrefs}
+                    className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50"
+                  >
+                    {savingPrefs ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                    Save Preferences
+                  </button>
                 </div>
               </section>
             </div>
@@ -395,7 +471,7 @@ export default function SettingsPage({ initialTab = 'general' }) {
                           {member.profiles?.full_name || 'Unknown User'}
                           {member.user_id === currentUser.id && <span className="px-1.5 py-0.5 rounded-md bg-gray-100 text-[10px] text-gray-500 font-black uppercase tracking-widest">You</span>}
                         </div>
-                        <div className="text-xs text-gray-400 font-medium">{member.role === 'owner' ? 'Owner' : getRoleLabel(member.role)}</div>
+                        <div className="text-xs text-gray-400 font-medium">{isWorkspaceOwner(member.role) ? 'Owner' : getRoleLabel(member.role)}</div>
                       </div>
                     </div>
 

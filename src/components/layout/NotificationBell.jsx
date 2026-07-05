@@ -1,17 +1,29 @@
-import { useState, useEffect } from 'react'
-import { Bell, Check, Circle, CheckCircle2, Calendar, ShieldCheck, MessageSquare, UserPlus } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Bell, Check, Circle, CheckCircle2, Calendar, ShieldCheck, MessageSquare, UserPlus, Trash2, Settings } from 'lucide-react'
 import { useNotificationStore } from '../../store/notificationStore'
 import { useProjectStore } from '../../store/projectStore'
 import { Link, useNavigate } from 'react-router-dom'
 
+const CATEGORIES = {
+  all: { label: 'All', types: [] },
+  assignment: { label: 'Assignments', types: ['task_assignment'] },
+  mention: { label: 'Mentions', types: ['task_mention'] },
+  comment: { label: 'Comments', types: ['new_comment'] },
+  due_date: { label: 'Due Dates', types: ['due_date_change'] },
+  workspace: { label: 'Workspace', types: ['role_change', 'workspace_invite', 'project_invite'] },
+  system: { label: 'System', types: ['task_completed'] }
+}
+
 export default function NotificationBell() {
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState('all')
   const notifications = useNotificationStore((state) => state.notifications)
   const unreadCount = useNotificationStore((state) => state.unreadCount)
   const fetchNotifications = useNotificationStore((state) => state.fetchNotifications)
   const markAsRead = useNotificationStore((state) => state.markAsRead)
   const markAllAsRead = useNotificationStore((state) => state.markAllAsRead)
+  const deleteNotification = useNotificationStore((state) => state.deleteNotification)
   const acceptInvite = useProjectStore((state) => state.acceptInvite)
   const fetchProjects = useProjectStore((state) => state.fetchProjects)
   const [processing, setProcessing] = useState(null)
@@ -22,6 +34,11 @@ export default function NotificationBell() {
     const interval = setInterval(fetchNotifications, 60000)
     return () => clearInterval(interval)
   }, [fetchNotifications])
+
+  const filteredNotifications = useMemo(() => {
+    if (activeCategory === 'all') return notifications
+    return notifications.filter(n => CATEGORIES[activeCategory].types.includes(n.type))
+  }, [notifications, activeCategory])
 
   const getIcon = (type) => {
     switch (type) {
@@ -53,29 +70,63 @@ export default function NotificationBell() {
         <>
           <div className="fixed inset-0 z-[100]" onClick={() => setIsOpen(false)} />
           <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-[101] overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-900">Notifications</span>
-              {unreadCount > 0 && (
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-900">Notifications</span>
+                {unreadCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-[10px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+                  >
+                    Mark all read
+                  </button>
+                )}
                 <button
-                  onClick={markAllAsRead}
-                  className="text-[10px] font-medium text-indigo-600 hover:text-indigo-700"
+                  onClick={() => {
+                    navigate('/settings?tab=notifications')
+                    setIsOpen(false)
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  Mark all as read
+                  <Settings size={14} />
                 </button>
-              )}
+              </div>
             </div>
 
-            <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
-              {notifications.length === 0 ? (
+            <div className="px-2 py-2 border-b border-gray-100 flex gap-1 overflow-x-auto no-scrollbar bg-white">
+              {Object.entries(CATEGORIES).map(([key, { label }]) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveCategory(key)}
+                  className={`px-3 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all ${
+                    activeCategory === key
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="max-h-[400px] overflow-y-auto divide-y divide-gray-50">
+              {filteredNotifications.length === 0 ? (
                 <div className="px-4 py-8 text-center text-gray-400">
                   <Bell size={32} className="mx-auto mb-2 opacity-20" />
                   <p className="text-xs">No notifications yet</p>
                 </div>
               ) : (
-                notifications.map((notification) => (
+                filteredNotifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`px-4 py-3 hover:bg-gray-50 transition-colors flex gap-3 ${!notification.read ? 'bg-indigo-50/30' : ''}`}
+                    className={`px-4 py-3 hover:bg-gray-50 transition-colors flex gap-3 relative group ${!notification.read ? 'bg-indigo-50/30' : ''}`}
                   >
                     <div className="pt-1 flex-shrink-0 flex flex-col items-center gap-2">
                       <div className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center">
@@ -96,17 +147,30 @@ export default function NotificationBell() {
                         <span className="text-[10px] text-gray-400">
                           {new Date(notification.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
-                        {!notification.read && (
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!notification.read && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                markAsRead(notification.id)
+                              }}
+                              className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                              title="Mark as read"
+                            >
+                              <Check size={12} />
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              markAsRead(notification.id)
+                              deleteNotification(notification.id)
                             }}
-                            className="p-1 text-gray-300 hover:text-indigo-600 transition-colors"
+                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Delete"
                           >
-                            <Check size={12} />
+                            <Trash2 size={12} />
                           </button>
-                        )}
+                        </div>
                       </div>
                       {notification.type === 'project_invite' && !notification.read && (
                         <div className="mt-3 flex gap-2">
