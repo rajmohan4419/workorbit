@@ -76,6 +76,7 @@ create table if not exists public.workspace_invites (
   role         workspace_role not null default 'member',
   invited_by   uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   status       text default 'pending',
+  expires_at   timestamptz default now() + interval '7 days',
   created_at   timestamptz default now(),
   unique (workspace_id, email)
 );
@@ -108,6 +109,7 @@ create table if not exists public.project_invites (
   role         workspace_role not null default 'member',
   invited_by   uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   status       text default 'pending',
+  expires_at   timestamptz default now() + interval '7 days',
   created_at   timestamptz default now(),
   unique (project_id, email)
 );
@@ -768,7 +770,7 @@ $$;
 
 -- STORAGE
 insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true) on conflict (id) do nothing;
-insert into storage.buckets (id, name, public) values ('task-attachments', 'task-attachments', true) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('task-attachments', 'task-attachments', false) on conflict (id) do nothing;
 
 drop policy if exists "Avatar access" on storage.objects;
 create policy "Avatar access" on storage.objects for select using (bucket_id = 'avatars');

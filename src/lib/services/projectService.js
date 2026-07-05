@@ -42,6 +42,7 @@ export const projectService = {
       .from('project_invites')
       .select('*')
       .eq('project_id', projectId)
+      .gt('expires_at', new Date().toISOString())
   },
 
   async createInvite(projectId, email, role) {
@@ -72,9 +73,12 @@ export const projectService = {
       .from('project_invites')
       .select('*')
       .eq('id', inviteId)
+      .gt('expires_at', new Date().toISOString())
       .single()
 
-    if (fetchError) return { error: fetchError }
+    if (fetchError) {
+      return { error: { message: 'Invitation has expired or does not exist.' } }
+    }
 
     const { error: memberError } = await supabase
       .from('project_members')

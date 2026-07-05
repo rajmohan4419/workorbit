@@ -13,15 +13,47 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SECRET_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
     )
+
+    // Validate the JWT
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
 
     const body = await req.json()
     console.log('Received request:', JSON.stringify(body))
 
     let { inviteId, type, email, workspace_id, project_id } = body
+
+    // Rate limiting: Check if user has sent too many invites recently
+    const { count, error: countError } = await supabaseClient
+      .from(type === 'workspace' || workspace_id ? 'workspace_invites' : 'project_invites')
+      .select('*', { count: 'exact', head: true })
+      .eq('invited_by', user.id)
+      .gt('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
+
+    if (!countError && count && count >= 20) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
+      )
+    }
 
     // Auto-detect type if missing
     if (!type) {
