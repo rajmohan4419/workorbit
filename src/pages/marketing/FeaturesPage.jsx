@@ -24,7 +24,7 @@ export default function FeaturesPage() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">O</span>
           </div>
-          <span className="font-bold text-gray-900 text-lg">orbitboard.in</span>
+          <span className="font-bold text-gray-900 text-lg">OrbitBoard</span>
         </Link>
         <div className="flex gap-6 items-center">
           <Link to="/features" className="text-sm font-medium text-indigo-600">Features</Link>
