@@ -24,6 +24,20 @@ export const notificationService = {
       .eq('read', false)
   },
 
+  async deleteNotification(id) {
+    return await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id)
+  },
+
+  async updatePreferences(userId, preferences) {
+    return await supabase
+      .from('profiles')
+      .update({ notification_preferences: preferences })
+      .eq('id', userId)
+  },
+
   async createNotification(notificationData) {
     return await supabase
       .from('notifications')

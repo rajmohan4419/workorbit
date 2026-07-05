@@ -87,6 +87,18 @@ export default function ActivityFeed({ projectId }) {
                 <>
                   commented on <span className="font-medium text-indigo-600">"{log.tasks?.title}"</span>: <span className="italic text-gray-400">"{log.new_value}..."</span>
                 </>
+              ) : log.type === 'assignment_change' ? (
+                <>
+                  reassigned <span className="font-medium text-indigo-600">"{log.tasks?.title}"</span> from <span className="font-medium">{log.metadata?.old_name || 'Unassigned'}</span> to <span className="font-medium text-indigo-600">{log.metadata?.new_name || 'Unassigned'}</span>
+                </>
+              ) : log.type === 'task_created' ? (
+                <>
+                  created task <span className="font-medium text-indigo-600">"{log.tasks?.title}"</span>
+                </>
+              ) : log.type === 'due_date_change' ? (
+                <>
+                  changed due date for <span className="font-medium text-indigo-600">"{log.tasks?.title}"</span> to <span className="font-medium">{log.new_value || 'None'}</span>
+                </>
               ) : (
                 <>performed an action on <span className="font-medium text-indigo-600">"{log.tasks?.title}"</span></>
               )}
