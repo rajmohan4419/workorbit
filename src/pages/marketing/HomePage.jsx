@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, CheckCircle2, Rocket, Zap, Shield } from 'lucide-react'
 import SEO from '../../components/layout/SEO'
+import { getAppUrl } from '../../lib/utils/domain'
 import heroIllustration from '../../assets/hero-illustration.svg'
 
 export default function HomePage() {
@@ -24,7 +25,7 @@ export default function HomePage() {
           <Link to="/features" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Features</Link>
           <Link to="/pricing" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Pricing</Link>
           <Link to="/contact" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Contact</Link>
-          <Link to="/auth" className="text-sm font-bold text-white bg-indigo-600 px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">Sign In</Link>
+          <a href={getAppUrl('/auth')} className="text-sm font-bold text-white bg-indigo-600 px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">Sign In</a>
         </div>
       </nav>
 
@@ -42,9 +43,9 @@ export default function HomePage() {
             Stop fighting with complex tools. OrbitBoard is the high-velocity project hub for teams that need to build, ship, and scale without the friction.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/auth" className="inline-flex items-center justify-center gap-2 bg-brand-accent text-white px-8 py-4 rounded-2xl text-lg font-bold hover:opacity-90 transition-all shadow-xl shadow-orange-200">
+            <a href={getAppUrl('/auth')} className="inline-flex items-center justify-center gap-2 bg-brand-accent text-white px-8 py-4 rounded-2xl text-lg font-bold hover:opacity-90 transition-all shadow-xl shadow-orange-200">
               Get Started Free <ArrowRight size={20} />
-            </Link>
+            </a>
             <Link to="/features" className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-2xl text-lg font-bold hover:bg-gray-50 transition-all">
               See How It Works
             </Link>
@@ -115,9 +116,9 @@ export default function HomePage() {
           <p className="text-indigo-200 text-lg lg:text-xl mb-10 max-w-2xl mx-auto relative z-10">
             Join the community of ambitious Indian founders who are delivering faster with OrbitBoard.
           </p>
-          <Link to="/auth" className="inline-flex items-center gap-2 bg-brand-accent text-white px-10 py-5 rounded-2xl text-xl font-bold hover:opacity-90 transition-all shadow-2xl shadow-black/20 relative z-10">
+          <a href={getAppUrl('/auth')} className="inline-flex items-center gap-2 bg-brand-accent text-white px-10 py-5 rounded-2xl text-xl font-bold hover:opacity-90 transition-all shadow-2xl shadow-black/20 relative z-10">
             Launch Your Workspace <ArrowRight size={24} />
-          </Link>
+          </a>
         </div>
       </section>
 
