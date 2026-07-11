@@ -89,6 +89,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
   const timerIntervalRef = useRef(null)
   const timerActiveRef = useRef(false)
   const elapsedTimeRef = useRef(0)
+  const savedTimeoutRef = useRef(null)
 
   useEffect(() => {
     timerActiveRef.current = timerActive
@@ -110,6 +111,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
+      }
+      if (savedTimeoutRef.current) {
+        clearTimeout(savedTimeoutRef.current)
       }
       // Use refs to check current state in cleanup to avoid stale closures and excessive triggers
       if (timerActiveRef.current && elapsedTimeRef.current > 0 && task?.id) {
@@ -284,7 +288,7 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     }
 
     setSaved(true)
-    setTimeout(() => {
+    savedTimeoutRef.current = setTimeout(() => {
       setSaved(false)
       onClose()
     }, 1500)
