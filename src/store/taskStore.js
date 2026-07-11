@@ -340,9 +340,6 @@ export const useTaskStore = create((set, get) => ({
   },
 
   subscribeToProject: (projectId) => {
-    // Remove existing channel for this project if it exists to avoid collisions
-    supabase.removeChannel(supabase.channel(`project-updates-${projectId}`))
-
     const channel = supabase
       .channel(`project-updates-${projectId}`)
       .on('postgres_changes', {
