@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
-import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare } from 'lucide-react'
+import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare, FileText, Share2, Globe } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { useTaskStore } from '../store/taskStore'
 import { useWorkspaceStore } from '../store/workspaceStore'
@@ -11,6 +11,7 @@ import TaskModal from '../components/tasks/TaskModal'
 import ActivityFeed from '../components/tasks/ActivityFeed'
 import SprintBoard from '../components/tasks/SprintBoard'
 import TimelineView from '../components/tasks/TimelineView'
+import ProjectDigest from '../components/tasks/ProjectDigest'
 import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
 
@@ -22,7 +23,7 @@ export default function ProjectPage() {
   const view = useMemo(() => {
     const parts = location.pathname.split('/')
     const lastPart = parts[parts.length - 1]
-    return ['board', 'list', 'timeline', 'activity', 'sprints', 'members', 'calendar'].includes(lastPart) ? lastPart : 'board'
+    return ['board', 'list', 'timeline', 'activity', 'sprints', 'members', 'calendar', 'digest'].includes(lastPart) ? lastPart : 'board'
   }, [location.pathname])
 
   const [selectedTask, setSelectedTask] = useState(null)
@@ -51,6 +52,11 @@ export default function ProjectPage() {
   }, [projectId, projects, setActiveProject, resetTasks, subscribeToProject])
 
   const project = activeProject?.id === projectId ? activeProject : projects.find((p) => p.id === projectId)
+  const updateProject = useProjectStore(state => state.updateProject)
+
+  const handleTogglePublic = async () => {
+    await updateProject(projectId, { is_public: !project?.is_public })
+  }
 
   const handleDeleteProject = async () => {
     if (window.confirm('Are you sure you want to delete this project? All tasks will be permanently removed.')) {
@@ -83,6 +89,33 @@ export default function ProjectPage() {
               <Trash2 size={16} />
             </button>
           )}
+          <button
+            onClick={handleTogglePublic}
+            className={`p-1.5 rounded-lg transition-all flex items-center gap-2 border ${
+              project?.is_public
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                : 'text-gray-400 hover:text-gray-600 border-transparent hover:border-gray-200'
+            }`}
+            title={project?.is_public ? 'Roadmap is Public' : 'Roadmap is Private'}
+          >
+            {project?.is_public ? <Globe size={16} /> : <Share2 size={16} />}
+            {project?.is_public && <span className="text-[10px] font-bold uppercase tracking-wider hidden md:inline">Public</span>}
+          </button>
+
+          {project?.is_public && (
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/public/projects/${projectId}`
+                navigator.clipboard.writeText(url)
+                alert('Public roadmap link copied to clipboard!')
+              }}
+              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-indigo-100"
+              title="Copy Public Link"
+            >
+              <Share2 size={16} />
+            </button>
+          )}
+
           <NotificationBell />
           <div className="w-px h-6 bg-gray-100 mx-1" />
           <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl max-w-[200px] sm:max-w-none overflow-x-auto no-scrollbar">
@@ -92,6 +125,7 @@ export default function ProjectPage() {
               { id: 'calendar', label: 'Calendar', icon: Calendar },
               { id: 'timeline', label: 'Timeline', icon: GanttChartSquare },
               { id: 'activity', label: 'Feed', icon: History },
+              { id: 'digest', label: 'Digest', icon: FileText },
               { id: 'sprints', label: 'Sprints', icon: Zap },
               { id: 'members', label: 'Members', icon: Users },
             ].map((v) => (
@@ -136,6 +170,10 @@ export default function ProjectPage() {
         ) : view === 'timeline' ? (
           <div className="h-full overflow-hidden">
             <TimelineView tasks={tasks} />
+          </div>
+        ) : view === 'digest' ? (
+          <div className="max-w-5xl mx-auto h-full overflow-y-auto">
+            <ProjectDigest projectId={projectId} />
           </div>
         ) : view === 'calendar' ? (
           <div className="h-full overflow-hidden p-8 text-center text-gray-400">

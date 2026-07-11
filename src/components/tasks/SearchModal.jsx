@@ -1,11 +1,16 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Search, X, Folder, CheckSquare, ArrowRight, Loader2, Plus, LayoutGrid, UserPlus, User, MessageSquare } from 'lucide-react'
+import { Search, X, Folder, CheckSquare, ArrowRight, Loader2, Plus, LayoutGrid, UserPlus, User, MessageSquare, Sparkles, FileText } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useWorkspaceStore } from '../../store/workspaceStore'
+import { useTaskStore } from '../../store/taskStore'
+import { useProjectStore } from '../../store/projectStore'
 import { taskService } from '../../lib/services/taskService'
+import { parseCommand } from '../../lib/ai/commandParser'
+import MeetingNotesModal from './MeetingNotesModal'
 
 const COMMANDS = [
   { id: 'create-task', title: 'Create Task', icon: Plus, shortcut: 'T' },
+  { id: 'meeting-notes', title: 'Paste Meeting Notes', icon: FileText, shortcut: 'N' },
   { id: 'all-tasks', title: 'My Tasks', icon: CheckSquare, shortcut: 'M' },
   { id: 'switch-workspace', title: 'Switch Workspace', icon: LayoutGrid, shortcut: 'W' },
   { id: 'invite-member', title: 'Invite Member', icon: UserPlus, shortcut: 'I' },
@@ -15,9 +20,11 @@ export default function SearchModal({ onClose }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [searching, setSearching] = useState(false)
+  const [showMeetingNotes, setShowMeetingNotes] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [results, setResults] = useState({ projects: [], tasks: [], members: [], comments: [] })
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
+  const activeProject = useProjectStore((state) => state.activeProject)
 
   useEffect(() => {
     if (!query.trim()) {
@@ -44,15 +51,26 @@ export default function SearchModal({ onClose }) {
     return COMMANDS.filter(c => c.title.toLowerCase().includes(query.toLowerCase()))
   }, [query])
 
+  const aiCommand = useMemo(() => {
+    if (!query.trim() || query.length < 5) return null
+    const cmd = parseCommand(query)
+    if (cmd.type !== 'UNKNOWN') return cmd
+    return null
+  }, [query])
+
   const flatResults = useMemo(() => {
-    return [
+    const list = [
       ...filteredCommands.map(c => ({ ...c, type: 'command' })),
       ...results.projects.map(p => ({ ...p, type: 'project' })),
       ...results.tasks.map(t => ({ ...t, type: 'task' })),
       ...results.members.map(m => ({ ...m, type: 'member' })),
       ...results.comments.map(c => ({ ...c, type: 'comment' }))
     ]
-  }, [filteredCommands, results])
+    if (aiCommand) {
+      list.unshift({ ...aiCommand, id: 'ai-command', type: 'ai' })
+    }
+    return list
+  }, [filteredCommands, results, aiCommand])
 
 
   useEffect(() => {
@@ -69,10 +87,19 @@ export default function SearchModal({ onClose }) {
       if (e.key === 'Enter' && flatResults[selectedIndex]) {
         const item = flatResults[selectedIndex]
 
+        if (item.type === 'ai') {
+          useTaskStore.getState().executeCommand(item)
+          onClose()
+          return
+        }
+
         if (item.type === 'command') {
           if (item.id === 'create-task') {
             // Logic to open task modal could go here, for now just close
             onClose()
+          } else if (item.id === 'meeting-notes') {
+            setShowMeetingNotes(true)
+            return
           } else if (item.id === 'all-tasks') {
             navigate('/my-tasks')
             onClose()
@@ -122,6 +149,7 @@ export default function SearchModal({ onClose }) {
   const hasResults = results.projects.length > 0 || results.tasks.length > 0 || results.members.length > 0 || results.comments.length > 0
 
   return (
+    <>
     <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] px-4" onClick={onClose}>
       <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" />
 
@@ -192,12 +220,42 @@ export default function SearchModal({ onClose }) {
             </div>
           )}
 
-          {query.trim() && !hasResults && filteredCommands.length === 0 ? (
+          {query.trim() && !hasResults && filteredCommands.length === 0 && !aiCommand ? (
             <div className="py-12 text-center">
               <p className="text-sm text-gray-500">No results found for "{query}"</p>
             </div>
           ) : (
             <div className="space-y-4 p-2">
+              {aiCommand && (
+                <div>
+                  <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">AI Quick Actions</h3>
+                  <button
+                    onClick={() => {
+                      useTaskStore.getState().executeCommand(aiCommand)
+                      onClose()
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-3 rounded-xl group transition-colors border border-indigo-100 ${
+                      selectedIndex === 0 ? 'bg-indigo-50 border-indigo-200' : 'hover:bg-indigo-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
+                        <Sparkles size={16} />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-bold text-gray-900">
+                          {aiCommand.type === 'CREATE_TASK_RICH' ? `Create task: ${aiCommand.payload.title}` :
+                           aiCommand.type === 'CREATE_PROJECT' ? `Create project: ${aiCommand.payload.name}` :
+                           aiCommand.type === 'PLAN_SPRINT' ? `Plan sprint: ${aiCommand.payload.name}` : 'Execute AI Command'}
+                        </p>
+                        <p className="text-[10px] text-indigo-500 font-medium">Press Enter to execute</p>
+                      </div>
+                    </div>
+                    <ArrowRight size={14} className="text-indigo-400" />
+                  </button>
+                </div>
+              )}
+
               {filteredCommands.length > 0 && query.trim() && (
                 <div>
                   <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Actions</h3>
@@ -378,5 +436,16 @@ export default function SearchModal({ onClose }) {
         </div>
       </div>
     </div>
+
+    {showMeetingNotes && (
+      <MeetingNotesModal
+        projectId={activeProject?.id || activeWorkspace?.projects?.[0]?.id}
+        onClose={() => {
+          setShowMeetingNotes(false)
+          onClose()
+        }}
+      />
+    )}
+    </>
   )
 }

@@ -87,6 +87,7 @@ create table if not exists public.projects (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   description text,
+  is_public   boolean default false,
   owner_id    uuid references public.profiles(id) on delete cascade not null default auth.uid(),
   workspace_id uuid references public.workspaces(id) on delete cascade not null,
   created_at  timestamptz default now(),
@@ -442,13 +443,16 @@ create policy "Proj invite view" on public.project_invites for select using (ema
 create policy "Proj invite management" on public.project_invites for all using (public.can_manage_project(project_id));
 
 -- Projects
-create policy "Project view" on public.projects for select using (public.can_access_workspace(workspace_id));
+create policy "Project view" on public.projects for select using (is_public or public.can_access_workspace(workspace_id));
 create policy "Project creation" on public.projects for insert with check (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
 create policy "Project update" on public.projects for update using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
 create policy "Project deletion" on public.projects for delete using (public.current_workspace_role(workspace_id) in ('owner', 'admin'));
 
 -- Tasks
-create policy "Task view" on public.tasks for select using (public.can_access_project(project_id));
+create policy "Task view" on public.tasks for select using (
+  (select is_public from public.projects where id = project_id)
+  or public.can_access_project(project_id)
+);
 create policy "Task creation" on public.tasks for insert with check (public.can_access_project(project_id) and public.current_workspace_role((select workspace_id from public.projects where id = project_id)) in ('owner', 'admin', 'member'));
 create policy "Task update" on public.tasks for update using (public.can_access_project(project_id) and public.current_workspace_role((select workspace_id from public.projects where id = project_id)) in ('owner', 'admin', 'member'));
 create policy "Task deletion" on public.tasks for delete using (public.can_manage_project(project_id));

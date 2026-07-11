@@ -15,6 +15,7 @@ const ProjectPage = lazy(() => import('../pages/ProjectPage'));
 const MyTasksPage = lazy(() => import('../pages/MyTasksPage'));
 const WorkspaceSelectPage = lazy(() => import('../pages/WorkspaceSelectPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const PublicProjectPage = lazy(() => import('../pages/PublicProjectPage'));
 const ForbiddenPage = lazy(() => import('../pages/ForbiddenPage'));
 const AuthPage = lazy(() => import('../pages/AuthPage'));
 
@@ -107,6 +108,7 @@ const router = createBrowserRouter([
                   { path: 'calendar', element: <ProjectPage /> },
                   { path: 'timeline', element: <ProjectPage /> },
                   { path: 'activity', element: <ProjectPage /> },
+                  { path: 'digest', element: <ProjectPage /> },
                   { path: 'sprints', element: <ProjectPage /> },
                   { path: 'members', element: <ProjectPage /> },
                 ]
@@ -172,6 +174,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingSpinner />}>
             <AuthPage />
+          </Suspense>
+        )
+      },
+      {
+        path: '/public/projects/:id',
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <PublicProjectPage />
           </Suspense>
         )
       },

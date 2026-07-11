@@ -244,6 +244,13 @@ export const taskService = {
       .eq('task_id', taskId)
   },
 
+  async fetchProjectDependencies(projectId) {
+    return await supabase
+      .from('task_dependencies')
+      .select('*, tasks!task_id(project_id)')
+      .eq('tasks.project_id', projectId)
+  },
+
   async addDependency(taskId, dependsOnId) {
     return await supabase
       .from('task_dependencies')

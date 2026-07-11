@@ -25,6 +25,7 @@ export const canMoveToStatus = (from, to) => {
 
 export const useTaskStore = create((set, get) => ({
   tasks: [],
+  dependencies: [],
   searchResults: [],
   comments: [],
   logs: [],
@@ -38,6 +39,7 @@ export const useTaskStore = create((set, get) => ({
 
   reset: () => set({
     tasks: [],
+    dependencies: [],
     searchResults: [],
     comments: [],
     logs: [],
@@ -52,20 +54,28 @@ export const useTaskStore = create((set, get) => ({
 
   fetchTasks: async (projectId) => {
     if (!projectId) {
-      set({ tasks: [], loading: false, error: null })
+      set({ tasks: [], dependencies: [], loading: false, error: null })
       return { data: [] }
     }
 
-    set({ tasks: [], loading: true, error: null })
-    const { data, error } = await taskService.fetchTasks(projectId)
+    set({ tasks: [], dependencies: [], loading: true, error: null })
+    const [tasksRes, depsRes] = await Promise.all([
+      taskService.fetchTasks(projectId),
+      taskService.fetchProjectDependencies(projectId)
+    ])
 
-    if (error) {
-      set({ tasks: [], error: error.message, loading: false })
-      return { error }
+    if (tasksRes.error) {
+      set({ tasks: [], error: tasksRes.error.message, loading: false })
+      return { error: tasksRes.error }
     }
 
-    set({ tasks: data, error: null, loading: false })
-    return { data }
+    set({
+      tasks: tasksRes.data,
+      dependencies: depsRes.data || [],
+      error: null,
+      loading: false
+    })
+    return { data: tasksRes.data }
   },
 
   fetchAllUserTasks: async (userId) => {
@@ -115,6 +125,65 @@ export const useTaskStore = create((set, get) => ({
 
     set((state) => ({ tasks: [...state.tasks, data], error: null }))
     return { data }
+  },
+
+  executeCommand: async (command, context = {}) => {
+    const { type, payload } = command
+
+    if (type === 'CREATE_TASK_RICH') {
+      const { title, priority, assigneeName, dueDate } = payload
+      const projectId = context.projectId || get().tasks[0]?.project_id
+
+      if (!projectId) return { error: 'No project context found' }
+
+      let assigned_to = null
+      if (assigneeName) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('full_name', `%${assigneeName}%`)
+          .limit(1)
+        if (profiles && profiles[0]) assigned_to = profiles[0].id
+      }
+
+      // Very basic date parsing for demo purposes
+      let due_date = null
+      if (dueDate) {
+        if (dueDate.toLowerCase().includes('today')) {
+          due_date = new Date().toISOString().split('T')[0]
+        } else if (dueDate.toLowerCase().includes('tomorrow')) {
+          const d = new Date()
+          d.setDate(d.getDate() + 1)
+          due_date = d.toISOString().split('T')[0]
+        } else if (dueDate.toLowerCase().includes('friday')) {
+          const d = new Date()
+          d.setDate(d.getDate() + (5 + 7 - d.getDay()) % 7)
+          due_date = d.toISOString().split('T')[0]
+        }
+      }
+
+      return get().createTask({
+        project_id: projectId,
+        title,
+        priority,
+        assigned_to,
+        due_date
+      })
+    }
+
+    if (type === 'CREATE_TASKS') {
+      const results = []
+      for (const title of payload.titles) {
+        const res = await get().createTask({
+          project_id: context.projectId,
+          title
+        })
+        results.push(res)
+      }
+      return results
+    }
+
+    return { error: 'Command type not supported' }
   },
 
   updateTask: async (id, updates) => {
