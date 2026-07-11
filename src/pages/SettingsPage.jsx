@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { Settings, Users, Shield, Trash2, Save, UserMinus, ShieldAlert, AlertTriangle, User, Mail, Phone, Key, Plus, Loader2, Bell } from 'lucide-react'
+import { Settings, Users, Shield, Trash2, Save, UserMinus, ShieldAlert, AlertTriangle, User, Mail, Phone, Key, Plus, Loader2, Bell, CreditCard, Zap, ExternalLink, CheckCircle2, XCircle } from 'lucide-react'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { useAuthStore } from '../store/authStore'
 import { useNotificationStore } from '../store/notificationStore'
 import { getRoleLabel, canManageWorkspace, isWorkspaceOwner } from '../lib/permissions'
+import { billingService } from '../lib/services/billingService'
 
 export default function SettingsPage({ initialTab = 'general' }) {
   const navigate = useNavigate()
@@ -60,6 +61,11 @@ export default function SettingsPage({ initialTab = 'general' }) {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('member')
   const [sendingInvite, setSendingInvite] = useState(false)
+
+  // Billing State
+  const [startingCheckout, setStartingCheckout] = useState(false)
+  const [checkoutError, setCheckoutError] = useState(null)
+  const checkoutStatus = useMemo(() => new URLSearchParams(location.search).get('checkout'), [location.search])
 
   const isOwner = isWorkspaceOwner(userRole)
   const isAdmin = canManageWorkspace(userRole)
@@ -121,6 +127,25 @@ export default function SettingsPage({ initialTab = 'general' }) {
     await createWorkspaceInvite(activeWorkspace.id, inviteEmail.trim(), inviteRole)
     setInviteEmail('')
     setSendingInvite(false)
+  }
+
+  const handleUpgrade = async () => {
+    if (!activeWorkspace) return
+    setCheckoutError(null)
+    setStartingCheckout(true)
+    const { data, error } = await billingService.createCheckoutSession(activeWorkspace.id)
+    setStartingCheckout(false)
+
+    // supabase.functions.invoke() resolves { error } for network/edge failures,
+    // but a 4xx/5xx JSON body from our own function lands in `data.error` instead
+    // -- both need to be checked, or a failure here would look like nothing happened.
+    if (error || data?.error) {
+      setCheckoutError(data?.error || error?.message || 'Something went wrong starting checkout.')
+      return
+    }
+    if (data?.url) {
+      window.location.href = data.url
+    }
   }
 
   return (
@@ -514,6 +539,90 @@ export default function SettingsPage({ initialTab = 'general' }) {
                 ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'billing' && (
+            <div className="space-y-8">
+              {checkoutStatus === 'success' && (
+                <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-2xl px-5 py-4 text-sm font-bold">
+                  <CheckCircle2 size={18} />
+                  Payment successful! Your workspace will update to Pro shortly.
+                </div>
+              )}
+              {checkoutStatus === 'cancelled' && (
+                <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 text-amber-800 rounded-2xl px-5 py-4 text-sm font-bold">
+                  <XCircle size={18} />
+                  Checkout was cancelled. No charge was made.
+                </div>
+              )}
+              {checkoutError && (
+                <div className="flex items-center gap-3 bg-rose-50 border border-rose-100 text-rose-800 rounded-2xl px-5 py-4 text-sm font-bold">
+                  <XCircle size={18} />
+                  {checkoutError}
+                </div>
+              )}
+
+              <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Current Plan</h2>
+                    <p className="text-sm text-gray-500">Manage your workspace's subscription.</p>
+                  </div>
+                  <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
+                    activeWorkspace?.workspace_plan === 'free' || !activeWorkspace?.workspace_plan
+                      ? 'bg-gray-100 text-gray-600'
+                      : 'bg-indigo-50 text-indigo-700'
+                  }`}>
+                    {activeWorkspace?.workspace_plan || 'free'}
+                  </span>
+                </div>
+
+                {(activeWorkspace?.workspace_plan === 'free' || !activeWorkspace?.workspace_plan) ? (
+                  <div className="bg-gray-50 rounded-2xl p-6 flex items-center justify-between gap-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                        <Zap size={16} className="text-indigo-600" />
+                        Upgrade to Pro
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                        Unlimited projects, advanced reports, AI Task Mode, and priority support — $19/month.
+                      </p>
+                      {!isAdmin && (
+                        <p className="text-xs text-rose-500 mt-2 font-bold">Only a workspace owner or admin can upgrade this workspace.</p>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={handleUpgrade}
+                        disabled={startingCheckout}
+                        className="flex-shrink-0 flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50"
+                      >
+                        {startingCheckout ? <Loader2 className="animate-spin" size={18} /> : <CreditCard size={18} />}
+                        Upgrade to Pro
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-indigo-50 rounded-2xl p-6 flex items-center justify-between gap-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-indigo-900">You're on the {activeWorkspace.workspace_plan} plan</h3>
+                      {activeWorkspace?.stripe_current_period_end && (
+                        <p className="text-xs text-indigo-700/70 mt-1">
+                          Renews on {new Date(activeWorkspace.stripe_current_period_end).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <a
+                      href="mailto:support@orbitboard.in?subject=Manage%20my%20subscription"
+                      className="flex-shrink-0 flex items-center gap-2 bg-white text-indigo-700 border border-indigo-200 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-indigo-100/50 transition-all"
+                    >
+                      <ExternalLink size={16} />
+                      Manage subscription
+                    </a>
+                  </div>
+                )}
+              </section>
             </div>
           )}
         </main>
