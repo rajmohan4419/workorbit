@@ -1,7 +1,10 @@
 import { useState, useMemo } from 'react'
-import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, Clock, AlertTriangle } from 'lucide-react'
+import { calculateCriticalPath } from '../../lib/utils/criticalPath'
+import { useTaskStore } from '../../store/taskStore'
 
 export default function TimelineView({ tasks }) {
+  const dependencies = useTaskStore(state => state.dependencies)
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const daysInMonth = useMemo(() => {
@@ -10,6 +13,10 @@ export default function TimelineView({ tasks }) {
     const days = new Date(year, month + 1, 0).getDate()
     return Array.from({ length: days }, (_, i) => new Date(year, month, i + 1))
   }, [currentMonth])
+
+  const { criticalPathIds } = useMemo(() => {
+    return calculateCriticalPath(tasks, dependencies)
+  }, [tasks, dependencies])
 
   const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
   const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
@@ -53,11 +60,15 @@ export default function TimelineView({ tasks }) {
             {tasks.filter(t => t.due_date).map(task => {
               const dueDate = new Date(task.due_date)
               const isThisMonth = dueDate.getMonth() === currentMonth.getMonth() && dueDate.getFullYear() === currentMonth.getFullYear()
+              const isCritical = criticalPathIds.includes(task.id)
 
               return (
                 <div key={task.id} className="flex group hover:bg-gray-50/50 transition-colors">
                   <div className="w-48 sticky left-0 z-10 bg-white group-hover:bg-gray-50/50 border-r border-gray-50 p-4 min-w-0">
-                    <p className="text-xs font-medium text-gray-700 truncate">{task.title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-xs font-medium truncate ${isCritical ? 'text-orange-600' : 'text-gray-700'}`}>{task.title}</p>
+                      {isCritical && <AlertTriangle size={12} className="text-orange-500 flex-shrink-0" title="Critical Path" />}
+                    </div>
                   </div>
                   <div className="flex relative h-12 items-center">
                     {daysInMonth.map(day => (
@@ -65,13 +76,17 @@ export default function TimelineView({ tasks }) {
                     ))}
                     {isThisMonth && (
                       <div
-                        className="absolute h-6 rounded-full bg-indigo-500/10 border border-indigo-200 flex items-center px-2 shadow-sm"
+                        className={`absolute h-6 rounded-full flex items-center px-2 shadow-sm border ${
+                          isCritical
+                            ? 'bg-orange-500/10 border-orange-200 animate-pulse'
+                            : 'bg-indigo-500/10 border-indigo-200'
+                        }`}
                         style={{
                           left: `${(dueDate.getDate() - 1) * 40 + 4}px`,
                           width: '32px' // Simplified: just showing the point for now
                         }}
                       >
-                        <div className="w-2 h-2 rounded-full bg-indigo-600" />
+                        <div className={`w-2 h-2 rounded-full ${isCritical ? 'bg-orange-600' : 'bg-indigo-600'}`} />
                       </div>
                     )}
                   </div>
