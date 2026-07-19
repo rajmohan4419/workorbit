@@ -8,7 +8,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.supabase.co https://*.resend.com; connect-src 'self' https://*.supabase.co https://*.resend.com; font-src 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.supabase.co https://*.resend.com; connect-src 'self' https://*.supabase.co https://*.resend.com https://logs-prod-028.grafana.net; font-src 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
         },
         {
           "key": "Strict-Transport-Security",
