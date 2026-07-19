@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore'
 import { useNotificationStore } from '../store/notificationStore'
 import { getRoleLabel, canManageWorkspace, isWorkspaceOwner } from '../lib/permissions'
 import { billingService } from '../lib/services/billingService'
+import { supabase } from '../lib/supabase'
 
 export default function SettingsPage({ initialTab = 'general' }) {
   const navigate = useNavigate()
@@ -35,6 +36,66 @@ export default function SettingsPage({ initialTab = 'general' }) {
     system: true
   })
   const [savingPrefs, setSavingPrefs] = useState(false)
+
+  // Nudged members state
+  const [nudgedUsers, setNudgedUsers] = useState({})
+
+  // Email alerts test states
+  const [testingEmails, setTestingEmails] = useState({})
+
+  const handleNudgeMember = async (memberId) => {
+    setNudgedUsers(prev => ({ ...prev, [memberId]: 'sending' }))
+    try {
+      const { error } = await supabase.functions.invoke('user-emails', {
+        body: {
+          type: 'nudge',
+          userId: memberId,
+          senderName: currentProfile?.full_name || 'Your teammate'
+        }
+      })
+      if (error) throw error
+      setNudgedUsers(prev => ({ ...prev, [memberId]: 'sent' }))
+      setTimeout(() => {
+        setNudgedUsers(prev => ({ ...prev, [memberId]: null }))
+      }, 3000)
+    } catch (err) {
+      console.error('Nudge failed:', err)
+      setNudgedUsers(prev => ({ ...prev, [memberId]: 'error' }))
+      setTimeout(() => {
+        setNudgedUsers(prev => ({ ...prev, [memberId]: null }))
+      }, 3000)
+    }
+  }
+
+  const handleSendTestEmail = async (type) => {
+    setTestingEmails(prev => ({ ...prev, [type]: 'sending' }))
+    try {
+      const payload = { type }
+      if (type === 'nudge') {
+        payload.senderName = 'Alex Mercer (Design Lead)'
+      } else if (type === 'overdue') {
+        payload.taskTitle = 'Design Responsive Dashboard UI'
+        payload.dueDate = '07/17/2026' // Overdue test date
+        payload.projectName = 'OrbitBoard Revamp'
+        payload.workspaceSlug = activeWorkspace?.slug || 'personal'
+        payload.projectId = '11111111-1111-1111-1111-111111111111'
+      }
+
+      const { error } = await supabase.functions.invoke('user-emails', { body: payload })
+      if (error) throw error
+
+      setTestingEmails(prev => ({ ...prev, [type]: 'sent' }))
+      setTimeout(() => {
+        setTestingEmails(prev => ({ ...prev, [type]: null }))
+      }, 3000)
+    } catch (err) {
+      console.error('Test email failed:', err)
+      setTestingEmails(prev => ({ ...prev, [type]: 'error' }))
+      setTimeout(() => {
+        setTestingEmails(prev => ({ ...prev, [type]: null }))
+      }, 3000)
+    }
+  }
 
   const activeTab = useMemo(() => {
     const params = new URLSearchParams(location.search)
@@ -350,6 +411,69 @@ export default function SettingsPage({ initialTab = 'general' }) {
                   </button>
                 </div>
               </section>
+
+              {/* Email Alerts Test Center */}
+              <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm mt-8">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Zap className="text-amber-500" size={20} />
+                    Email Alerts Test Center
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Instantly simulate and send test OrbitBoard email alerts directly to your registered email (<strong>{currentUser?.email}</strong>).
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    {
+                      id: 'welcome',
+                      title: 'Welcome Email',
+                      desc: 'Contains the complete list of features styled with OrbitBoard brand colors.',
+                      btnText: 'Send Welcome Email'
+                    },
+                    {
+                      id: 'nudge',
+                      title: 'Team Nudge Email',
+                      desc: 'Simulates a teammate sending you a nudge to complete active tasks.',
+                      btnText: 'Send Nudge Email'
+                    },
+                    {
+                      id: 'we-miss-you',
+                      title: '"We Miss You" Email',
+                      desc: 'Reactivation alert with our newly shipped capabilities and features.',
+                      btnText: 'Send We Miss You Email'
+                    },
+                    {
+                      id: 'overdue',
+                      title: 'Overdue Task Alert',
+                      desc: 'Milestone reminder highlighting an overdue task with detailed metadata.',
+                      btnText: 'Send Overdue Alert'
+                    }
+                  ].map((test) => (
+                    <div key={test.id} className="p-5 border border-gray-100 bg-gray-50/50 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-900 mb-1">{test.title}</h3>
+                        <p className="text-xs text-gray-500 mb-4">{test.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => handleSendTestEmail(test.id)}
+                        disabled={testingEmails[test.id] === 'sending'}
+                        className={`w-full text-center px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                          testingEmails[test.id] === 'sent'
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100'
+                            : testingEmails[test.id] === 'error'
+                            ? 'bg-rose-600 text-white'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
+                        }`}
+                      >
+                        {testingEmails[test.id] === 'sending' && <Loader2 size={12} className="animate-spin" />}
+                        {testingEmails[test.id] === 'sending' ? 'Sending...' : testingEmails[test.id] === 'sent' ? 'Sent!' : testingEmails[test.id] === 'error' ? 'Failed!' : test.btnText}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </div>
           )}
 
@@ -501,6 +625,30 @@ export default function SettingsPage({ initialTab = 'general' }) {
                     </div>
 
                     <div className="flex items-center gap-3">
+                      {member.user_id !== currentUser.id && (
+                        <button
+                          onClick={() => handleNudgeMember(member.user_id)}
+                          disabled={nudgedUsers[member.user_id] === 'sending'}
+                          className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
+                            nudgedUsers[member.user_id] === 'sent'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : nudgedUsers[member.user_id] === 'error'
+                              ? 'bg-rose-50 text-rose-700'
+                              : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100/70'
+                          }`}
+                        >
+                          {nudgedUsers[member.user_id] === 'sending' ? (
+                            <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Nudging</span>
+                          ) : nudgedUsers[member.user_id] === 'sent' ? (
+                            'Nudged!'
+                          ) : nudgedUsers[member.user_id] === 'error' ? (
+                            'Failed'
+                          ) : (
+                            'Nudge'
+                          )}
+                        </button>
+                      )}
+
                       {isAdmin && member.user_id !== currentUser.id && member.role !== 'owner' && (
                         <>
                           <select
