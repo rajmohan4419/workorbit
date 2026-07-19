@@ -24,7 +24,9 @@ import {
   Shield,
   Cpu,
   Info,
-  X
+  X,
+  History,
+  RotateCcw
 } from 'lucide-react'
 import { useWorkspaceStore } from '../../store/workspaceStore'
 import { useProjectStore } from '../../store/projectStore'
@@ -92,6 +94,81 @@ const ACTION_TYPES = [
   { id: 'Remove Label', label: 'Remove Label', desc: 'Removes a label from the task', icon: Tag, color: 'text-red-500 bg-red-50' },
 ]
 
+const AUTOMATION_TEMPLATES = [
+  {
+    id: 'tmpl-bug-qa',
+    name: '⭐ Assign Bug to QA',
+    description: 'Automatically assigns newly created tasks with "bug" in the title or description directly to QA.',
+    active: true,
+    trigger: 'Task Created',
+    matchType: 'AND',
+    conditions: [{ field: 'status', operator: 'equals', value: 'todo' }],
+    actions: [{ type: 'Assign User', config: { userId: '' } }],
+    elseActions: [],
+    enableElse: false
+  },
+  {
+    id: 'tmpl-notify-manager',
+    name: '⭐ Notify Manager',
+    description: 'Sends an automated high priority notification alert when a critical blocker task is set.',
+    active: true,
+    trigger: 'Task Updated',
+    matchType: 'AND',
+    conditions: [{ field: 'is_blocked', operator: 'equals', value: 'true' }],
+    actions: [{ type: 'Send Notification', config: { title: 'Project Blocked!', message: 'Task blocker active' } }],
+    elseActions: [],
+    enableElse: false
+  },
+  {
+    id: 'tmpl-auto-archive',
+    name: '⭐ Auto Archive',
+    description: 'Soft-archives tasks automatically once status transitions to completed column.',
+    active: true,
+    trigger: 'Status Changed',
+    matchType: 'AND',
+    conditions: [{ field: 'status', operator: 'equals', value: 'done' }],
+    actions: [{ type: 'Archive Task', config: {} }],
+    elseActions: [],
+    enableElse: false
+  },
+  {
+    id: 'tmpl-high-escalation',
+    name: '⭐ High Priority Escalation',
+    description: 'Instantly increases priority level and schedules a strict one day due timeline.',
+    active: true,
+    trigger: 'Due Date Changed',
+    matchType: 'AND',
+    conditions: [{ field: 'priority', operator: 'equals', value: 'high' }],
+    actions: [{ type: 'Set Priority', config: { priority: 'high' } }],
+    elseActions: [],
+    enableElse: false
+  },
+  {
+    id: 'tmpl-sprint-completion',
+    name: '⭐ Sprint Completion',
+    description: 'Bulk cleans and marks remaining tasks in closed sprint to To Do column.',
+    active: true,
+    trigger: 'Sprint Closed',
+    matchType: 'AND',
+    conditions: [{ field: 'status', operator: 'not_equals', value: 'done' }],
+    actions: [{ type: 'Change Status', config: { status: 'todo' } }],
+    elseActions: [],
+    enableElse: false
+  },
+  {
+    id: 'tmpl-reminder-due',
+    name: '⭐ Reminder Before Due',
+    description: 'Automatically triggers warning email notifications to assignees prior to deadline.',
+    active: true,
+    trigger: 'Due Date Changed',
+    matchType: 'AND',
+    conditions: [{ field: 'status', operator: 'not_equals', value: 'done' }],
+    actions: [{ type: 'Send Email', config: { subject: 'Task Due Reminder', body: 'This task is approaching its due date.' } }],
+    elseActions: [],
+    enableElse: false
+  }
+]
+
 const DEFAULT_AUTOMATIONS = [
   {
     id: 'demo-1',
@@ -106,7 +183,9 @@ const DEFAULT_AUTOMATIONS = [
       { type: 'Create Comment', config: { text: 'Automated notification: This high priority task requires immediate attention.' } }
     ],
     elseActions: [],
-    enableElse: false
+    enableElse: false,
+    history: [],
+    telemetry: { status: 'Running', lastRun: 'Today 9:00', executed: 248, failed: 2, avgTime: '132ms' }
   },
   {
     id: 'demo-2',
@@ -121,21 +200,30 @@ const DEFAULT_AUTOMATIONS = [
       { type: 'Change Status', config: { status: 'in_progress' } }
     ],
     elseActions: [],
-    enableElse: false
+    enableElse: false,
+    history: [],
+    telemetry: { status: 'Inactive', lastRun: 'Yesterday 14:32', executed: 120, failed: 0, avgTime: '98ms' }
   }
 ]
 
-export default function AutomationBuilder({ projectId }) {
+export default function AutomationBuilder({ workspaceId }) {
   const workspaceMembers = useWorkspaceStore((state) => state.members)
   const sprints = useProjectStore((state) => state.sprints)
   const projectLabels = useTaskStore((state) => state.projectLabels)
+  const tasks = useTaskStore((state) => state.tasks)
 
   const [automations, setAutomations] = useState(() => {
-    const key = `orbitboard_automations_${projectId}`
+    const key = `orbitboard_automations_ws_${workspaceId}`
     const stored = localStorage.getItem(key)
     if (stored) {
       try {
-        return JSON.parse(stored)
+        const parsed = JSON.parse(stored)
+        // Ensure every automation has telemetry & history keys
+        return parsed.map(auto => ({
+          ...auto,
+          history: auto.history || [],
+          telemetry: auto.telemetry || { status: auto.active ? 'Running' : 'Inactive', lastRun: 'N/A', executed: 0, failed: 0, avgTime: '120ms' }
+        }))
       } catch {
         return DEFAULT_AUTOMATIONS
       }
@@ -144,18 +232,26 @@ export default function AutomationBuilder({ projectId }) {
   })
   const [editorState, setEditorState] = useState(null) // { mode: 'create'|'edit', automation: {...} }
   const [simulatorState, setSimulatorState] = useState(null) // { automation: {...}, running: boolean, logs: [], payload: {...} }
-
+  const [testRunnerState, setTestRunnerState] = useState(null) // { open: boolean, automation: {...}, step: number, status: string, selectedTaskId: string }
 
   const saveToStorage = (updated) => {
     setAutomations(updated)
-    const key = `orbitboard_automations_${projectId}`
+    const key = `orbitboard_automations_ws_${workspaceId}`
     localStorage.setItem(key, JSON.stringify(updated))
   }
 
   const handleToggleActive = (id) => {
     const updated = automations.map(auto => {
       if (auto.id === id) {
-        return { ...auto, active: !auto.active }
+        const nextActive = !auto.active
+        return {
+          ...auto,
+          active: nextActive,
+          telemetry: {
+            ...auto.telemetry,
+            status: nextActive ? 'Running' : 'Inactive'
+          }
+        }
       }
       return auto
     })
@@ -181,9 +277,26 @@ export default function AutomationBuilder({ projectId }) {
         conditions: [],
         actions: [],
         elseActions: [],
-        enableElse: false
+        enableElse: false,
+        history: [],
+        telemetry: { status: 'Running', lastRun: 'Never', executed: 0, failed: 0, avgTime: '120ms' }
       }
     })
+  }
+
+  // Impure ID generation wrapped in non-render handler
+  const handleApplyTemplate = (tmpl) => {
+    const createNewTemplateInstance = () => {
+      const randId = Math.random().toString(36).substr(2, 9)
+      return {
+        ...tmpl,
+        id: `auto-${randId}`,
+        history: [],
+        telemetry: { status: 'Running', lastRun: 'Never', executed: 0, failed: 0, avgTime: '110ms' }
+      }
+    }
+    const newAuto = createNewTemplateInstance()
+    saveToStorage([...automations, newAuto])
   }
 
   const handleEdit = (auto) => {
@@ -204,13 +317,44 @@ export default function AutomationBuilder({ projectId }) {
     }
 
     let updated
+    const autoToSave = { ...editorState.automation }
+
+    // Versioning logic: Save current state to history before overwriting
+    const existing = automations.find(a => a.id === autoToSave.id)
+    if (existing) {
+      const prevHistory = existing.history || []
+      // Don't save full history recursively
+      const snap = { ...existing }
+      delete snap.history
+      autoToSave.history = [
+        { version: prevHistory.length + 1, timestamp: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(), config: snap },
+        ...prevHistory
+      ]
+    }
+
     if (editorState.mode === 'create') {
-      updated = [...automations, editorState.automation]
+      updated = [...automations, autoToSave]
     } else {
-      updated = automations.map(auto => auto.id === editorState.automation.id ? editorState.automation : auto)
+      updated = automations.map(auto => auto.id === autoToSave.id ? autoToSave : auto)
     }
     saveToStorage(updated)
     setEditorState(null)
+  }
+
+  const handleRestoreVersion = (autoId, versionObj) => {
+    if (window.confirm(`Are you sure you want to restore Version ${versionObj.version}?`)) {
+      const updated = automations.map(auto => {
+        if (auto.id === autoId) {
+          return {
+            ...versionObj.config,
+            history: auto.history // keep the version history tree
+          }
+        }
+        return auto
+      })
+      saveToStorage(updated)
+      setEditorState(null)
+    }
   }
 
   // Conditions modification helpers
@@ -308,7 +452,6 @@ export default function AutomationBuilder({ projectId }) {
 
   // SIMULATOR FUNCTIONALITY
   const handleOpenSimulator = (auto) => {
-    // Construct default mock payload
     const defaultPayload = {
       title: 'Fix auth session infinite loop',
       status: 'todo',
@@ -336,12 +479,9 @@ export default function AutomationBuilder({ projectId }) {
     const payload = simulatorState.payload
     const logs = []
 
-    // 1. Trigger phase
     logs.push({ type: 'trigger', text: `⚡ Trigger fired: "${auto.trigger}" detected.` })
 
-    // Simulate delay for realism
     setTimeout(() => {
-      // 2. Conditions evaluation phase
       let conditionsPassed = true
       if (auto.conditions.length === 0) {
         logs.push({ type: 'info', text: '🔍 No conditions configured. Bypassing check...' })
@@ -352,7 +492,6 @@ export default function AutomationBuilder({ projectId }) {
           let fieldVal = payload[cond.field]
           let targetVal = cond.value
 
-          // Simple comparison logic
           let match = false
           if (cond.operator === 'equals') {
             match = String(fieldVal) === String(targetVal)
@@ -384,7 +523,6 @@ export default function AutomationBuilder({ projectId }) {
         }
       }
 
-      // 3. Action Execution phase
       const runActionBlock = (actionsList, labelName) => {
         if (actionsList.length === 0) {
           logs.push({ type: 'info', text: `⚙️ No ${labelName} actions configured.` })
@@ -451,6 +589,54 @@ export default function AutomationBuilder({ projectId }) {
     }, 1200)
   }
 
+  // AUTOMATION TEST RUNNER (TEST DESIGNATED TASK)
+  const handleOpenTestRunner = (auto) => {
+    setTestRunnerState({
+      open: true,
+      automation: auto,
+      step: 0,
+      status: 'idle',
+      selectedTaskId: tasks[0]?.id || ''
+    })
+  }
+
+  const runTestStep = () => {
+    const { step, automation, selectedTaskId } = testRunnerState
+    const targetTask = tasks.find(t => t.id === selectedTaskId) || tasks[0]
+
+    if (step === 0) {
+      // Step 1: Initial load
+      setTestRunnerState(prev => ({
+        ...prev,
+        step: 1,
+        status: 'evaluating'
+      }))
+    } else if (step === 1) {
+      // Step 2: Evaluate Conditions
+      let allPassed = true
+      if (automation.conditions && automation.conditions.length > 0) {
+        allPassed = automation.conditions.every(cond => {
+          const taskVal = targetTask ? targetTask[cond.field] : undefined
+          if (cond.operator === 'equals') return String(taskVal) === String(cond.value)
+          if (cond.operator === 'not_equals') return String(taskVal) !== String(cond.value)
+          return true
+        })
+      }
+      setTestRunnerState(prev => ({
+        ...prev,
+        step: 2,
+        status: allPassed ? 'passed' : 'failed'
+      }))
+    } else if (step === 2) {
+      // Step 3: Complete actions
+      setTestRunnerState(prev => ({
+        ...prev,
+        step: 3,
+        status: 'done'
+      }))
+    }
+  }
+
   // RENDER SECTIONS
   if (editorState) {
     const auto = editorState.automation
@@ -490,650 +676,687 @@ export default function AutomationBuilder({ projectId }) {
           </div>
         </div>
 
-        {/* Basic Metadata */}
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Automation Name</label>
-            <input
-              value={auto.name}
-              onChange={e => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, name: e.target.value } }))}
-              placeholder="e.g. Notify Slack on completed task"
-              className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-        </div>
-
-        {/* TRIGGER SELECTION */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>
-            When this trigger event occurs...
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Select Trigger Type</label>
-              <select
-                value={auto.trigger}
-                onChange={e => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, trigger: e.target.value } }))}
-                className="w-full text-sm border border-gray-200 bg-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {TRIGGER_TYPES.map(t => (
-                  <option key={t.id} value={t.id}>{t.id}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="p-4 rounded-2xl border border-indigo-50 bg-indigo-50/20 flex items-start gap-3">
-              <div className={`p-2 rounded-xl ${selectedTriggerObj.color} flex-shrink-0`}>
-                <TriggerIcon size={18} />
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Form Fields */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Basic Metadata */}
+            <div className="space-y-4">
               <div>
-                <p className="text-xs font-bold text-gray-900">{selectedTriggerObj.id}</p>
-                <p className="text-xs text-gray-500 mt-1">{selectedTriggerObj.desc}</p>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Automation Name</label>
+                <input
+                  value={auto.name}
+                  onChange={e => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, name: e.target.value } }))}
+                  placeholder="e.g. Notify Slack on completed task"
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* CONDITIONS SELECTION */}
-        <div className="space-y-4 border-t border-gray-50 pt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
-              If the following conditions are met...
-            </h3>
-            {auto.conditions.length > 0 && (
-              <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, matchType: 'AND' } }))}
-                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${auto.matchType === 'AND' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}
-                >
-                  AND (Match All)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, matchType: 'OR' } }))}
-                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${auto.matchType === 'OR' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}
-                >
-                  OR (Match Any)
-                </button>
+            {/* TRIGGER SELECTION */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>
+                When this trigger event occurs...
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Select Trigger Type</label>
+                  <select
+                    value={auto.trigger}
+                    onChange={e => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, trigger: e.target.value } }))}
+                    className="w-full text-sm border border-gray-200 bg-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  >
+                    {TRIGGER_TYPES.map(t => (
+                      <option key={t.id} value={t.id}>{t.id}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="p-4 rounded-2xl border border-indigo-50 bg-indigo-50/20 flex items-start gap-3">
+                  <div className={`p-2 rounded-xl ${selectedTriggerObj.color} flex-shrink-0`}>
+                    <TriggerIcon size={18} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-900">{selectedTriggerObj.id}</p>
+                    <p className="text-xs text-gray-500 mt-1">{selectedTriggerObj.desc}</p>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="space-y-3">
-            {auto.conditions.length === 0 ? (
-              <div className="p-6 rounded-2xl border border-dashed border-gray-200 text-center text-gray-400">
-                <Info size={24} className="mx-auto mb-2 opacity-30" />
-                <p className="text-xs font-medium">No conditions set.</p>
-                <p className="text-[10px] opacity-70 mt-0.5">This automation will always trigger when the event occurs.</p>
-                <button
-                  type="button"
-                  onClick={handleAddCondition}
-                  className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 border border-gray-100 hover:bg-gray-100 rounded-lg text-[10px] font-bold text-gray-600 transition-colors"
-                >
-                  <Plus size={12} /> Add Condition
-                </button>
+            {/* CONDITIONS SELECTION */}
+            <div className="space-y-4 border-t border-gray-50 pt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
+                  If the following conditions are met...
+                </h3>
+                {auto.conditions.length > 0 && (
+                  <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, matchType: 'AND' } }))}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${auto.matchType === 'AND' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}
+                    >
+                      AND (Match All)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, matchType: 'OR' } }))}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${auto.matchType === 'OR' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}
+                    >
+                      OR (Match Any)
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <>
-                {auto.conditions.map((cond, index) => {
-                  const selectedFieldObj = CONDITION_FIELDS.find(f => f.id === cond.field) || CONDITION_FIELDS[0]
 
-                  return (
-                    <div key={index} className="flex flex-wrap items-center gap-3 p-3 bg-gray-50/50 border border-gray-100 rounded-xl">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">If</span>
+              <div className="space-y-3">
+                {auto.conditions.length === 0 ? (
+                  <div className="p-6 rounded-2xl border border-dashed border-gray-200 text-center text-gray-400">
+                    <Info size={24} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-xs font-medium">No conditions set.</p>
+                    <p className="text-[10px] opacity-70 mt-0.5">This automation will always trigger when the event occurs.</p>
+                    <button
+                      type="button"
+                      onClick={handleAddCondition}
+                      className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 border border-gray-100 hover:bg-gray-100 rounded-lg text-[10px] font-bold text-gray-600 transition-colors"
+                    >
+                      <Plus size={12} /> Add Condition
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {auto.conditions.map((cond, index) => {
+                      const selectedFieldObj = CONDITION_FIELDS.find(f => f.id === cond.field) || CONDITION_FIELDS[0]
 
-                      {/* Field */}
-                      <select
-                        value={cond.field}
-                        onChange={e => handleConditionChange(index, 'field', e.target.value)}
-                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
-                      >
-                        {CONDITION_FIELDS.map(f => (
-                          <option key={f.id} value={f.id}>{f.label}</option>
-                        ))}
-                      </select>
+                      return (
+                        <div key={index} className="flex flex-wrap items-center gap-3 p-3 bg-gray-50/50 border border-gray-100 rounded-xl">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">If</span>
 
-                      {/* Operator */}
-                      <select
-                        value={cond.operator}
-                        onChange={e => handleConditionChange(index, 'operator', e.target.value)}
-                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      >
-                        {CONDITION_OPERATORS.map(op => (
-                          <option key={op.id} value={op.id}>{op.label}</option>
-                        ))}
-                      </select>
+                          {/* Field */}
+                          <select
+                            value={cond.field}
+                            onChange={e => handleConditionChange(index, 'field', e.target.value)}
+                            className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
+                          >
+                            {CONDITION_FIELDS.map(f => (
+                              <option key={f.id} value={f.id}>{f.label}</option>
+                            ))}
+                          </select>
 
-                      {/* Dynamic Value Input */}
-                      {!cond.operator.includes('set') && (
-                        <>
-                          {selectedFieldObj.type === 'select' && (
-                            <select
-                              value={cond.value}
-                              onChange={e => handleConditionChange(index, 'value', e.target.value)}
-                              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 capitalize"
-                            >
-                              {selectedFieldObj.options.map(opt => (
-                                <option key={opt} value={opt}>{opt.replace('_', ' ')}</option>
-                              ))}
-                            </select>
+                          {/* Operator */}
+                          <select
+                            value={cond.operator}
+                            onChange={e => handleConditionChange(index, 'operator', e.target.value)}
+                            className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          >
+                            {CONDITION_OPERATORS.map(op => (
+                              <option key={op.id} value={op.id}>{op.label}</option>
+                            ))}
+                          </select>
+
+                          {/* Dynamic Value Input */}
+                          {!cond.operator.includes('set') && (
+                            <>
+                              {selectedFieldObj.type === 'select' && (
+                                <select
+                                  value={cond.value}
+                                  onChange={e => handleConditionChange(index, 'value', e.target.value)}
+                                  className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 capitalize"
+                                >
+                                  {selectedFieldObj.options.map(opt => (
+                                    <option key={opt} value={opt}>{opt.replace('_', ' ')}</option>
+                                  ))}
+                                </select>
+                              )}
+
+                              {selectedFieldObj.type === 'member' && (
+                                <select
+                                  value={cond.value}
+                                  onChange={e => handleConditionChange(index, 'value', e.target.value)}
+                                  className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                >
+                                  {workspaceMembers.map(m => (
+                                    <option key={m.profiles.id} value={m.profiles.id}>{m.profiles.full_name}</option>
+                                  ))}
+                                </select>
+                              )}
+
+                              {selectedFieldObj.type === 'label' && (
+                                <select
+                                  value={cond.value}
+                                  onChange={e => handleConditionChange(index, 'value', e.target.value)}
+                                  className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                >
+                                  {projectLabels.map(l => (
+                                    <option key={l.id} value={l.id}>{l.name}</option>
+                                  ))}
+                                  {projectLabels.length === 0 && <option value="">No Project Labels</option>}
+                                </select>
+                              )}
+
+                              {selectedFieldObj.type === 'number' && (
+                                <input
+                                  type="number"
+                                  value={cond.value}
+                                  onChange={e => handleConditionChange(index, 'value', e.target.value)}
+                                  className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 w-20 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                />
+                              )}
+
+                              {selectedFieldObj.type === 'boolean' && (
+                                <select
+                                  value={cond.value}
+                                  onChange={e => handleConditionChange(index, 'value', e.target.value)}
+                                  className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
+                                >
+                                  <option value="true">True (Yes)</option>
+                                  <option value="false">False (No)</option>
+                                </select>
+                              )}
+                            </>
                           )}
 
-                          {selectedFieldObj.type === 'member' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCondition(index)}
+                            className="ml-auto p-1.5 text-gray-300 hover:text-red-500 hover:bg-gray-100/50 rounded-lg transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )
+                    })}
+
+                    <button
+                      type="button"
+                      onClick={handleAddCondition}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-[10px] font-bold text-indigo-600 transition-colors"
+                    >
+                      <Plus size={12} /> Add Condition
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ACTIONS SELECTION (THEN) */}
+            <div className="space-y-4 border-t border-gray-50 pt-6">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">3</span>
+                Then perform these actions (THEN)...
+              </h3>
+
+              <div className="space-y-4">
+                {auto.actions.map((act, index) => {
+                  const selectedActObj = ACTION_TYPES.find(a => a.id === act.type) || ACTION_TYPES[0]
+                  const ActIcon = selectedActObj.icon
+
+                  return (
+                    <div key={index} className="border border-gray-100 rounded-2xl p-4 bg-gray-50/30 space-y-3 relative group">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1.5 rounded-lg ${selectedActObj.color}`}>
+                            <ActIcon size={14} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-800">Action #{index + 1}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAction(index)}
+                          className="text-gray-400 hover:text-red-500 p-1 rounded-lg"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Action Type</label>
+                          <select
+                            value={act.type}
+                            onChange={e => handleActionChange(index, 'type', e.target.value)}
+                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            {ACTION_TYPES.map(a => (
+                              <option key={a.id} value={a.id}>{a.label}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* DYNAMIC ACTION PARAMETERS */}
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Configuration</label>
+
+                          {act.type === 'Assign User' && (
                             <select
-                              value={cond.value}
-                              onChange={e => handleConditionChange(index, 'value', e.target.value)}
-                              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              value={act.config.userId || ''}
+                              onChange={e => handleActionChange(index, 'userId', e.target.value)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
+                              <option value="">Choose User</option>
                               {workspaceMembers.map(m => (
                                 <option key={m.profiles.id} value={m.profiles.id}>{m.profiles.full_name}</option>
                               ))}
                             </select>
                           )}
 
-                          {selectedFieldObj.type === 'label' && (
+                          {act.type === 'Change Status' && (
                             <select
-                              value={cond.value}
-                              onChange={e => handleConditionChange(index, 'value', e.target.value)}
-                              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              value={act.config.status || 'todo'}
+                              onChange={e => handleActionChange(index, 'status', e.target.value)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
                             >
-                              {projectLabels.map(l => (
-                                <option key={l.id} value={l.id}>{l.name}</option>
+                              {['todo', 'in_progress', 'in_review', 'done'].map(s => (
+                                <option key={s} value={s}>{s.replace('_', ' ')}</option>
                               ))}
-                              {projectLabels.length === 0 && <option value="">No Project Labels</option>}
                             </select>
                           )}
 
-                          {selectedFieldObj.type === 'number' && (
+                          {act.type === 'Set Priority' && (
+                            <select
+                              value={act.config.priority || 'medium'}
+                              onChange={e => handleActionChange(index, 'priority', e.target.value)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
+                            >
+                              {['low', 'medium', 'high'].map(p => (
+                                <option key={p} value={p}>{p}</option>
+                              ))}
+                            </select>
+                          )}
+
+                          {act.type === 'Set Due Date' && (
+                            <select
+                              value={act.config.dueDate || 'today'}
+                              onChange={e => handleActionChange(index, 'dueDate', e.target.value)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="today">Today</option>
+                              <option value="tomorrow">Tomorrow</option>
+                              <option value="3_days">In 3 Days</option>
+                              <option value="1_week">In 1 Week</option>
+                            </select>
+                          )}
+
+                          {act.type === 'Move Sprint' && (
+                            <select
+                              value={act.config.sprintId || ''}
+                              onChange={e => handleActionChange(index, 'sprintId', e.target.value)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="">Select Sprint</option>
+                              {sprints.map(s => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
+                              ))}
+                            </select>
+                          )}
+
+                          {act.type === 'Archive Task' && (
+                            <div className="text-xs text-gray-400 py-2 italic">No config required. Automatically marks task as archived.</div>
+                          )}
+
+                          {act.type === 'Create Comment' && (
                             <input
-                              type="number"
-                              value={cond.value}
-                              onChange={e => handleConditionChange(index, 'value', e.target.value)}
-                              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 w-20 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              type="text"
+                              value={act.config.text || ''}
+                              onChange={e => handleActionChange(index, 'text', e.target.value)}
+                              placeholder="Type automated comment..."
+                              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                           )}
 
-                          {selectedFieldObj.type === 'boolean' && (
+                          {act.type === 'Create Subtask' && (
+                            <input
+                              type="text"
+                              value={act.config.title || ''}
+                              onChange={e => handleActionChange(index, 'title', e.target.value)}
+                              placeholder="e.g. Verify deployment checklist"
+                              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          )}
+
+                          {act.type === 'Send Notification' && (
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={act.config.title || ''}
+                                onChange={e => handleActionChange(index, 'title', e.target.value)}
+                                placeholder="Notification title..."
+                                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              />
+                              <input
+                                type="text"
+                                value={act.config.message || ''}
+                                onChange={e => handleActionChange(index, 'message', e.target.value)}
+                                placeholder="Notification message body..."
+                                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              />
+                            </div>
+                          )}
+
+                          {act.type === 'Send Email' && (
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={act.config.subject || ''}
+                                onChange={e => handleActionChange(index, 'subject', e.target.value)}
+                                placeholder="Email subject..."
+                                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              />
+                              <textarea
+                                value={act.config.body || ''}
+                                onChange={e => handleActionChange(index, 'body', e.target.value)}
+                                placeholder="Email content body..."
+                                rows={2}
+                                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                              />
+                            </div>
+                          )}
+
+                          {act.type === 'Add Label' && (
                             <select
-                              value={cond.value}
-                              onChange={e => handleConditionChange(index, 'value', e.target.value)}
-                              className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold"
+                              value={act.config.labelId || ''}
+                              onChange={e => handleActionChange(index, 'labelId', e.target.value)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
-                              <option value="true">True (Yes)</option>
-                              <option value="false">False (No)</option>
+                              <option value="">Select Label</option>
+                              {projectLabels.map(l => (
+                                <option key={l.id} value={l.id}>{l.name}</option>
+                              ))}
                             </select>
                           )}
-                        </>
-                      )}
 
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCondition(index)}
-                        className="ml-auto p-1.5 text-gray-300 hover:text-red-500 hover:bg-gray-100/50 rounded-lg transition-all"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                          {act.type === 'Remove Label' && (
+                            <select
+                              value={act.config.labelId || ''}
+                              onChange={e => handleActionChange(index, 'labelId', e.target.value)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="">Select Label</option>
+                              {projectLabels.map(l => (
+                                <option key={l.id} value={l.id}>{l.name}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )
                 })}
 
                 <button
                   type="button"
-                  onClick={handleAddCondition}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-[10px] font-bold text-indigo-600 transition-colors"
+                  onClick={() => handleAddAction(false)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-xs font-bold shadow-sm shadow-indigo-100 transition-colors"
                 >
-                  <Plus size={12} /> Add Condition
+                  <Plus size={14} /> Add Action
                 </button>
-              </>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* ACTIONS SELECTION (THEN) */}
-        <div className="space-y-4 border-t border-gray-50 pt-6">
-          <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">3</span>
-            Then perform these actions (THEN)...
-          </h3>
+            {/* ELSE ACTIONS SELECTION */}
+            <div className="space-y-4 border-t border-gray-50 pt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">4</span>
+                  Else, if conditions fail, execute alternative actions (ELSE)...
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, enableElse: !auto.enableElse } }))}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all border ${
+                    auto.enableElse
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                      : 'bg-gray-50 text-gray-400 border-gray-200'
+                  }`}
+                >
+                  {auto.enableElse ? 'Else Block Enabled' : 'Enable Else Block'}
+                </button>
+              </div>
 
-          <div className="space-y-4">
-            {auto.actions.map((act, index) => {
-              const selectedActObj = ACTION_TYPES.find(a => a.id === act.type) || ACTION_TYPES[0]
-              const ActIcon = selectedActObj.icon
+              {auto.enableElse && (
+                <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  {auto.elseActions.map((act, index) => {
+                    const selectedActObj = ACTION_TYPES.find(a => a.id === act.type) || ACTION_TYPES[0]
+                    const ActIcon = selectedActObj.icon
 
-              return (
-                <div key={index} className="border border-gray-100 rounded-2xl p-4 bg-gray-50/30 space-y-3 relative group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg ${selectedActObj.color}`}>
-                        <ActIcon size={14} />
+                    return (
+                      <div key={index} className="border border-emerald-100 rounded-2xl p-4 bg-emerald-50/10 space-y-3 relative group">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg ${selectedActObj.color}`}>
+                              <ActIcon size={14} />
+                            </div>
+                            <span className="text-xs font-bold text-gray-800">Else Action #{index + 1}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAction(index, true)}
+                            className="text-gray-400 hover:text-red-500 p-1 rounded-lg"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Action Type</label>
+                            <select
+                              value={act.type}
+                              onChange={e => handleActionChange(index, 'type', e.target.value, true)}
+                              className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              {ACTION_TYPES.map(a => (
+                                <option key={a.id} value={a.id}>{a.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* DYNAMIC ACTION PARAMETERS */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Configuration</label>
+
+                            {act.type === 'Assign User' && (
+                              <select
+                                value={act.config.userId || ''}
+                                onChange={e => handleActionChange(index, 'userId', e.target.value, true)}
+                                className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              >
+                                <option value="">Choose User</option>
+                                {workspaceMembers.map(m => (
+                                  <option key={m.profiles.id} value={m.profiles.id}>{m.profiles.full_name}</option>
+                                ))}
+                              </select>
+                            )}
+
+                            {act.type === 'Change Status' && (
+                              <select
+                                value={act.config.status || 'todo'}
+                                onChange={e => handleActionChange(index, 'status', e.target.value, true)}
+                                className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
+                              >
+                                {['todo', 'in_progress', 'in_review', 'done'].map(s => (
+                                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                                ))}
+                              </select>
+                            )}
+
+                            {act.type === 'Set Priority' && (
+                              <select
+                                value={act.config.priority || 'medium'}
+                                onChange={e => handleActionChange(index, 'priority', e.target.value, true)}
+                                className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
+                              >
+                                {['low', 'medium', 'high'].map(p => (
+                                  <option key={p} value={p}>{p}</option>
+                                ))}
+                              </select>
+                            )}
+
+                            {act.type === 'Set Due Date' && (
+                              <select
+                                value={act.config.dueDate || 'today'}
+                                onChange={e => handleActionChange(index, 'dueDate', e.target.value, true)}
+                                className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              >
+                                <option value="today">Today</option>
+                                <option value="tomorrow">Tomorrow</option>
+                                <option value="3_days">In 3 Days</option>
+                                <option value="1_week">In 1 Week</option>
+                              </select>
+                            )}
+
+                            {act.type === 'Move Sprint' && (
+                              <select
+                                value={act.config.sprintId || ''}
+                                onChange={e => handleActionChange(index, 'sprintId', e.target.value, true)}
+                                className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              >
+                                <option value="">Select Sprint</option>
+                                {sprints.map(s => (
+                                  <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                              </select>
+                            )}
+
+                            {act.type === 'Archive Task' && (
+                              <div className="text-xs text-gray-400 py-2 italic">No config required. Automatically marks task as archived.</div>
+                            )}
+
+                            {act.type === 'Create Comment' && (
+                              <input
+                                type="text"
+                                value={act.config.text || ''}
+                                onChange={e => handleActionChange(index, 'text', e.target.value, true)}
+                                placeholder="Type automated comment..."
+                                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              />
+                            )}
+
+                            {act.type === 'Create Subtask' && (
+                              <input
+                                type="text"
+                                value={act.config.title || ''}
+                                onChange={e => handleActionChange(index, 'title', e.target.value, true)}
+                                placeholder="e.g. Verify deployment checklist"
+                                className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              />
+                            )}
+
+                            {act.type === 'Send Notification' && (
+                              <div className="space-y-2">
+                                <input
+                                  type="text"
+                                  value={act.config.title || ''}
+                                  onChange={e => handleActionChange(index, 'title', e.target.value, true)}
+                                  placeholder="Notification title..."
+                                  className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                                <input
+                                  type="text"
+                                  value={act.config.message || ''}
+                                  onChange={e => handleActionChange(index, 'message', e.target.value, true)}
+                                  placeholder="Notification message body..."
+                                  className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                              </div>
+                            )}
+
+                            {act.type === 'Send Email' && (
+                              <div className="space-y-2">
+                                <input
+                                  type="text"
+                                  value={act.config.subject || ''}
+                                  onChange={e => handleActionChange(index, 'subject', e.target.value, true)}
+                                  placeholder="Email subject..."
+                                  className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                                <textarea
+                                  value={act.config.body || ''}
+                                  onChange={e => handleActionChange(index, 'body', e.target.value, true)}
+                                  placeholder="Email content body..."
+                                  rows={2}
+                                  className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                                />
+                              </div>
+                            )}
+
+                            {act.type === 'Add Label' && (
+                              <select
+                                value={act.config.labelId || ''}
+                                onChange={e => handleActionChange(index, 'labelId', e.target.value, true)}
+                                className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              >
+                                <option value="">Select Label</option>
+                                {projectLabels.map(l => (
+                                  <option key={l.id} value={l.id}>{l.name}</option>
+                                ))}
+                              </select>
+                            )}
+
+                            {act.type === 'Remove Label' && (
+                              <select
+                                value={act.config.labelId || ''}
+                                onChange={e => handleActionChange(index, 'labelId', e.target.value, true)}
+                                className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              >
+                                <option value="">Select Label</option>
+                                {projectLabels.map(l => (
+                                  <option key={l.id} value={l.id}>{l.name}</option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-xs font-bold text-gray-800">Action #{index + 1}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAction(index)}
-                      className="text-gray-400 hover:text-red-500 p-1 rounded-lg"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                    );
+                  })}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Action Type</label>
-                      <select
-                        value={act.type}
-                        onChange={e => handleActionChange(index, 'type', e.target.value)}
-                        className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        {ACTION_TYPES.map(a => (
-                          <option key={a.id} value={a.id}>{a.label}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* DYNAMIC ACTION PARAMETERS */}
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Configuration</label>
-
-                      {act.type === 'Assign User' && (
-                        <select
-                          value={act.config.userId || ''}
-                          onChange={e => handleActionChange(index, 'userId', e.target.value)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="">Choose User</option>
-                          {workspaceMembers.map(m => (
-                            <option key={m.profiles.id} value={m.profiles.id}>{m.profiles.full_name}</option>
-                          ))}
-                        </select>
-                      )}
-
-                      {act.type === 'Change Status' && (
-                        <select
-                          value={act.config.status || 'todo'}
-                          onChange={e => handleActionChange(index, 'status', e.target.value)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
-                        >
-                          {['todo', 'in_progress', 'in_review', 'done'].map(s => (
-                            <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                          ))}
-                        </select>
-                      )}
-
-                      {act.type === 'Set Priority' && (
-                        <select
-                          value={act.config.priority || 'medium'}
-                          onChange={e => handleActionChange(index, 'priority', e.target.value)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
-                        >
-                          {['low', 'medium', 'high'].map(p => (
-                            <option key={p} value={p}>{p}</option>
-                          ))}
-                        </select>
-                      )}
-
-                      {act.type === 'Set Due Date' && (
-                        <select
-                          value={act.config.dueDate || 'today'}
-                          onChange={e => handleActionChange(index, 'dueDate', e.target.value)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="today">Today</option>
-                          <option value="tomorrow">Tomorrow</option>
-                          <option value="3_days">In 3 Days</option>
-                          <option value="1_week">In 1 Week</option>
-                        </select>
-                      )}
-
-                      {act.type === 'Move Sprint' && (
-                        <select
-                          value={act.config.sprintId || ''}
-                          onChange={e => handleActionChange(index, 'sprintId', e.target.value)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="">Select Sprint</option>
-                          {sprints.map(s => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                          ))}
-                        </select>
-                      )}
-
-                      {act.type === 'Archive Task' && (
-                        <div className="text-xs text-gray-400 py-2 italic">No config required. Automatically marks task as archived.</div>
-                      )}
-
-                      {act.type === 'Create Comment' && (
-                        <input
-                          type="text"
-                          value={act.config.text || ''}
-                          onChange={e => handleActionChange(index, 'text', e.target.value)}
-                          placeholder="Type automated comment..."
-                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      )}
-
-                      {act.type === 'Create Subtask' && (
-                        <input
-                          type="text"
-                          value={act.config.title || ''}
-                          onChange={e => handleActionChange(index, 'title', e.target.value)}
-                          placeholder="e.g. Verify deployment checklist"
-                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                      )}
-
-                      {act.type === 'Send Notification' && (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            value={act.config.title || ''}
-                            onChange={e => handleActionChange(index, 'title', e.target.value)}
-                            placeholder="Notification title..."
-                            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          <input
-                            type="text"
-                            value={act.config.message || ''}
-                            onChange={e => handleActionChange(index, 'message', e.target.value)}
-                            placeholder="Notification message body..."
-                            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                        </div>
-                      )}
-
-                      {act.type === 'Send Email' && (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            value={act.config.subject || ''}
-                            onChange={e => handleActionChange(index, 'subject', e.target.value)}
-                            placeholder="Email subject..."
-                            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          <textarea
-                            value={act.config.body || ''}
-                            onChange={e => handleActionChange(index, 'body', e.target.value)}
-                            placeholder="Email content body..."
-                            rows={2}
-                            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                          />
-                        </div>
-                      )}
-
-                      {act.type === 'Add Label' && (
-                        <select
-                          value={act.config.labelId || ''}
-                          onChange={e => handleActionChange(index, 'labelId', e.target.value)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="">Select Label</option>
-                          {projectLabels.map(l => (
-                            <option key={l.id} value={l.id}>{l.name}</option>
-                          ))}
-                        </select>
-                      )}
-
-                      {act.type === 'Remove Label' && (
-                        <select
-                          value={act.config.labelId || ''}
-                          onChange={e => handleActionChange(index, 'labelId', e.target.value)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="">Select Label</option>
-                          {projectLabels.map(l => (
-                            <option key={l.id} value={l.id}>{l.name}</option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddAction(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-emerald-100 transition-colors"
+                  >
+                    <Plus size={14} /> Add Else Action
+                  </button>
                 </div>
-              )
-            })}
-
-            <button
-              type="button"
-              onClick={() => handleAddAction(false)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-xs font-bold shadow-sm shadow-indigo-100 transition-colors"
-            >
-              <Plus size={14} /> Add Action
-            </button>
-          </div>
-        </div>
-
-        {/* ELSE ACTIONS SELECTION */}
-        <div className="space-y-4 border-t border-gray-50 pt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">4</span>
-              Else, if conditions fail, execute alternative actions (ELSE)...
-            </h3>
-            <button
-              type="button"
-              onClick={() => setEditorState(prev => ({ ...prev, automation: { ...prev.automation, enableElse: !auto.enableElse } }))}
-              className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all border ${
-                auto.enableElse
-                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                  : 'bg-gray-50 text-gray-400 border-gray-200'
-              }`}
-            >
-              {auto.enableElse ? 'Else Block Enabled' : 'Enable Else Block'}
-            </button>
+              )}
+            </div>
           </div>
 
-          {auto.enableElse && (
-            <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
-              {auto.elseActions.map((act, index) => {
-                const selectedActObj = ACTION_TYPES.find(a => a.id === act.type) || ACTION_TYPES[0]
-                const ActIcon = selectedActObj.icon
+          {/* Version History Sidebar panel */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <History size={16} className="text-indigo-600" />
+                Rule Versioning
+              </h3>
 
-                return (
-                  <div key={index} className="border border-emerald-100 rounded-2xl p-4 bg-emerald-50/10 space-y-3 relative group">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-1.5 rounded-lg ${selectedActObj.color}`}>
-                          <ActIcon size={14} />
-                        </div>
-                        <span className="text-xs font-bold text-gray-800">Else Action #{index + 1}</span>
+              {auto.history && auto.history.length > 0 ? (
+                <div className="space-y-3">
+                  {auto.history.map((hist, idx) => (
+                    <div key={idx} className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">Version {hist.version}</p>
+                        <p className="text-[10px] text-gray-400">{hist.timestamp}</p>
                       </div>
                       <button
-                        type="button"
-                        onClick={() => handleRemoveAction(index, true)}
-                        className="text-gray-400 hover:text-red-500 p-1 rounded-lg"
+                        onClick={() => handleRestoreVersion(auto.id, hist)}
+                        className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-1.5 rounded transition-all"
                       >
-                        <Trash2 size={14} />
+                        <RotateCcw size={10} />
+                        Restore
                       </button>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Action Type</label>
-                        <select
-                          value={act.type}
-                          onChange={e => handleActionChange(index, 'type', e.target.value, true)}
-                          className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          {ACTION_TYPES.map(a => (
-                            <option key={a.id} value={a.id}>{a.label}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* DYNAMIC ACTION PARAMETERS */}
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Configuration</label>
-
-                        {act.type === 'Assign User' && (
-                          <select
-                            value={act.config.userId || ''}
-                            onChange={e => handleActionChange(index, 'userId', e.target.value, true)}
-                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
-                            <option value="">Choose User</option>
-                            {workspaceMembers.map(m => (
-                              <option key={m.profiles.id} value={m.profiles.id}>{m.profiles.full_name}</option>
-                            ))}
-                          </select>
-                        )}
-
-                        {act.type === 'Change Status' && (
-                          <select
-                            value={act.config.status || 'todo'}
-                            onChange={e => handleActionChange(index, 'status', e.target.value, true)}
-                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
-                          >
-                            {['todo', 'in_progress', 'in_review', 'done'].map(s => (
-                              <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                            ))}
-                          </select>
-                        )}
-
-                        {act.type === 'Set Priority' && (
-                          <select
-                            value={act.config.priority || 'medium'}
-                            onChange={e => handleActionChange(index, 'priority', e.target.value, true)}
-                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 capitalize"
-                          >
-                            {['low', 'medium', 'high'].map(p => (
-                              <option key={p} value={p}>{p}</option>
-                            ))}
-                          </select>
-                        )}
-
-                        {act.type === 'Set Due Date' && (
-                          <select
-                            value={act.config.dueDate || 'today'}
-                            onChange={e => handleActionChange(index, 'dueDate', e.target.value, true)}
-                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
-                            <option value="today">Today</option>
-                            <option value="tomorrow">Tomorrow</option>
-                            <option value="3_days">In 3 Days</option>
-                            <option value="1_week">In 1 Week</option>
-                          </select>
-                        )}
-
-                        {act.type === 'Move Sprint' && (
-                          <select
-                            value={act.config.sprintId || ''}
-                            onChange={e => handleActionChange(index, 'sprintId', e.target.value, true)}
-                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
-                            <option value="">Select Sprint</option>
-                            {sprints.map(s => (
-                              <option key={s.id} value={s.id}>{s.name}</option>
-                            ))}
-                          </select>
-                        )}
-
-                        {act.type === 'Archive Task' && (
-                          <div className="text-xs text-gray-400 py-2 italic">No config required. Automatically marks task as archived.</div>
-                        )}
-
-                        {act.type === 'Create Comment' && (
-                          <input
-                            type="text"
-                            value={act.config.text || ''}
-                            onChange={e => handleActionChange(index, 'text', e.target.value, true)}
-                            placeholder="Type automated comment..."
-                            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                        )}
-
-                        {act.type === 'Create Subtask' && (
-                          <input
-                            type="text"
-                            value={act.config.title || ''}
-                            onChange={e => handleActionChange(index, 'title', e.target.value, true)}
-                            placeholder="e.g. Verify deployment checklist"
-                            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                        )}
-
-                        {act.type === 'Send Notification' && (
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              value={act.config.title || ''}
-                              onChange={e => handleActionChange(index, 'title', e.target.value, true)}
-                              placeholder="Notification title..."
-                              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                            <input
-                              type="text"
-                              value={act.config.message || ''}
-                              onChange={e => handleActionChange(index, 'message', e.target.value, true)}
-                              placeholder="Notification message body..."
-                              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                          </div>
-                        )}
-
-                        {act.type === 'Send Email' && (
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              value={act.config.subject || ''}
-                              onChange={e => handleActionChange(index, 'subject', e.target.value, true)}
-                              placeholder="Email subject..."
-                              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                            <textarea
-                              value={act.config.body || ''}
-                              onChange={e => handleActionChange(index, 'body', e.target.value, true)}
-                              placeholder="Email content body..."
-                              rows={2}
-                              className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                            />
-                          </div>
-                        )}
-
-                        {act.type === 'Add Label' && (
-                          <select
-                            value={act.config.labelId || ''}
-                            onChange={e => handleActionChange(index, 'labelId', e.target.value, true)}
-                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
-                            <option value="">Select Label</option>
-                            {projectLabels.map(l => (
-                              <option key={l.id} value={l.id}>{l.name}</option>
-                            ))}
-                          </select>
-                        )}
-
-                        {act.type === 'Remove Label' && (
-                          <select
-                            value={act.config.labelId || ''}
-                            onChange={e => handleActionChange(index, 'labelId', e.target.value, true)}
-                            className="w-full text-xs border border-gray-200 bg-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
-                            <option value="">Select Label</option>
-                            {projectLabels.map(l => (
-                              <option key={l.id} value={l.id}>{l.name}</option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-
-              <button
-                type="button"
-                onClick={() => handleAddAction(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-emerald-100 transition-colors"
-              >
-                <Plus size={14} /> Add Else Action
-              </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic">No previous versions. Edits save auto-backups for easy recovery.</p>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     )
@@ -1141,7 +1364,7 @@ export default function AutomationBuilder({ projectId }) {
 
   // LIST VIEW & MAIN DASHBOARD
   return (
-    <div className="space-y-6 max-w-5xl mx-auto h-full overflow-y-auto pb-12">
+    <div className="space-y-8 max-w-6xl mx-auto h-full overflow-y-auto pb-12">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -1157,6 +1380,33 @@ export default function AutomationBuilder({ projectId }) {
           <Plus size={14} /> Create Automation
         </button>
       </div>
+
+      {/* SUGGESTIONS / ONE CLICK TEMPLATES */}
+      <section className="space-y-4">
+        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <Sparkles size={16} className="text-amber-500 animate-pulse" />
+          Recommended One-Click Templates
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {AUTOMATION_TEMPLATES.map((tmpl) => (
+            <div
+              key={tmpl.id}
+              className="p-4 bg-white border border-gray-100 hover:border-indigo-100 hover:shadow-md rounded-2xl transition-all flex flex-col justify-between gap-4"
+            >
+              <div>
+                <h4 className="text-xs font-bold text-indigo-700 mb-1">{tmpl.name}</h4>
+                <p className="text-[11px] text-gray-500 leading-relaxed">{tmpl.description}</p>
+              </div>
+              <button
+                onClick={() => handleApplyTemplate(tmpl)}
+                className="w-full text-center py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors"
+              >
+                Deploy Instantly
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {automations.length === 0 ? (
         <div className="bg-gray-50 border border-gray-100 rounded-2xl p-12 text-center max-w-2xl mx-auto">
@@ -1217,8 +1467,34 @@ export default function AutomationBuilder({ projectId }) {
                     </div>
                   </div>
 
+                  {/* Execution history block */}
+                  {auto.telemetry && (
+                    <div className="grid grid-cols-5 gap-2 border-y border-gray-100 py-3 my-4 text-center">
+                      <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-black">Status</p>
+                        <p className={`text-xs font-bold ${auto.telemetry.status === 'Running' ? 'text-emerald-600' : 'text-gray-500'}`}>{auto.telemetry.status}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-black">Last Run</p>
+                        <p className="text-xs font-bold text-gray-700">{auto.telemetry.lastRun}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-black">Executed</p>
+                        <p className="text-xs font-bold text-gray-700">{auto.telemetry.executed}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-black text-rose-500">Failed</p>
+                        <p className="text-xs font-bold text-rose-600">{auto.telemetry.failed}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-black">Average</p>
+                        <p className="text-xs font-bold text-gray-700">{auto.telemetry.avgTime}</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Summary of logic */}
-                  <div className="mt-4 bg-gray-50/50 border border-gray-50 rounded-xl p-3 text-xs text-gray-600 space-y-1.5">
+                  <div className="bg-gray-50/50 border border-gray-50 rounded-xl p-3 text-xs text-gray-600 space-y-1.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-bold text-[10px] text-gray-400 uppercase tracking-wide">IF:</span>
                       {auto.conditions.length === 0 ? (
@@ -1254,12 +1530,20 @@ export default function AutomationBuilder({ projectId }) {
 
                   {/* Control Row */}
                   <div className="flex items-center justify-between border-t border-gray-50 mt-4 pt-3 text-xs">
-                    <button
-                      onClick={() => handleOpenSimulator(auto)}
-                      className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors"
-                    >
-                      <Sparkles size={12} /> Simulate / Test Logic
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleOpenSimulator(auto)}
+                        className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Sparkles size={12} /> Simulate Logic
+                      </button>
+                      <button
+                        onClick={() => handleOpenTestRunner(auto)}
+                        className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Play size={12} fill="currentColor" /> Test Automation
+                      </button>
+                    </div>
 
                     <div className="flex gap-2">
                       <button
@@ -1399,6 +1683,96 @@ export default function AutomationBuilder({ projectId }) {
                     </>
                   )}
                 </button>
+              </div>
+            ) : testRunnerState && testRunnerState.open ? (
+              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-lg space-y-4 animate-in slide-in-from-right-3 duration-200">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                  <h3 className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <Play size={14} fill="currentColor" />
+                    Test Automation Run
+                  </h3>
+                  <button
+                    onClick={() => setTestRunnerState(null)}
+                    className="text-gray-400 hover:text-gray-600 p-1"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Choose Task</label>
+                    <select
+                      value={testRunnerState.selectedTaskId}
+                      onChange={e => setTestRunnerState(prev => ({ ...prev, selectedTaskId: e.target.value, step: 0, status: 'idle' }))}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2"
+                    >
+                      {tasks.map(t => (
+                        <option key={t.id} value={t.id}>{t.title} ({t.priority})</option>
+                      ))}
+                      {tasks.length === 0 && <option value="">[Simulate Mock Task]</option>}
+                    </select>
+                  </div>
+
+                  {/* Flow Steps rendering */}
+                  <div className="space-y-3 pt-2">
+                    <div className={`flex items-start gap-2.5 p-2 rounded-xl transition-all ${testRunnerState.step >= 1 ? 'bg-indigo-50/50' : 'opacity-50'}`}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${testRunnerState.step >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>1</div>
+                      <div>
+                        <p className="font-bold text-gray-800">Trigger Event Detected</p>
+                        {testRunnerState.step >= 1 && <p className="text-[10px] text-indigo-600 font-medium">Trigger "{testRunnerState.automation.trigger}" fired cleanly.</p>}
+                      </div>
+                    </div>
+
+                    <div className={`flex items-start gap-2.5 p-2 rounded-xl transition-all ${testRunnerState.step >= 2 ? 'bg-indigo-50/50' : 'opacity-50'}`}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${testRunnerState.step >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>2</div>
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-800">Evaluate Logic Criteria</p>
+                        {testRunnerState.step >= 2 && (
+                          <div className="mt-1 space-y-1">
+                            {testRunnerState.automation.conditions && testRunnerState.automation.conditions.length > 0 ? (
+                              testRunnerState.automation.conditions.map((cond, i) => (
+                                <div key={i} className="flex items-center justify-between text-[10px] bg-white border border-gray-100 px-2.5 py-1 rounded">
+                                  <span>Condition {i + 1}: {cond.field} == "{cond.value}"</span>
+                                  <span className={`font-bold px-1 py-0.5 rounded ${testRunnerState.status === 'passed' ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'}`}>
+                                    {testRunnerState.status === 'passed' ? 'PASS' : 'FAIL'}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-[10px] text-emerald-600 font-medium">No conditions set. PASS automatically.</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className={`flex items-start gap-2.5 p-2 rounded-xl transition-all ${testRunnerState.step >= 3 ? 'bg-indigo-50/50' : 'opacity-50'}`}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${testRunnerState.step >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>3</div>
+                      <div>
+                        <p className="font-bold text-gray-800">Execute Actions</p>
+                        {testRunnerState.step >= 3 && (
+                          <div className="mt-1 space-y-1">
+                            {testRunnerState.automation.actions.map((act, idx) => (
+                              <p key={idx} className="text-[10px] text-emerald-600 font-medium flex items-center gap-1.5 bg-white border border-gray-100 px-2 py-1 rounded">
+                                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                Action: {act.type} Sent
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={runTestStep}
+                    disabled={testRunnerState.step >= 3}
+                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-100 disabled:text-gray-400 text-white text-xs font-bold rounded-xl transition-colors"
+                  >
+                    {testRunnerState.step === 0 ? 'Run First Step' : testRunnerState.step === 1 ? 'Evaluate Criteria' : testRunnerState.step === 2 ? 'Run Action Flow' : 'Done'}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
