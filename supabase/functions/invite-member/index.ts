@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { logToGrafana, maskEmail } from "../_shared/logger.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,7 +42,13 @@ serve(async (req) => {
     }
 
     const body = await req.json()
-    console.log('Received request:', JSON.stringify(body))
+    await logToGrafana('info', 'invite-member', 'Received request', {
+      inviteId: body.inviteId,
+      type: body.type,
+      workspace_id: body.workspace_id,
+      project_id: body.project_id,
+      email: maskEmail(body.email),
+    })
 
     let { inviteId, type, email, workspace_id, project_id } = body
 
@@ -77,7 +84,7 @@ serve(async (req) => {
         .single()
 
       if (error || !data) {
-        console.error('Error fetching invite by ID:', error)
+        await logToGrafana('error', 'invite-member', 'Error fetching invite by ID', { inviteId, error: error?.message })
         throw new Error('Invitation not found')
       }
       invite = data
@@ -94,7 +101,7 @@ serve(async (req) => {
         .single()
 
       if (error || !data) {
-        console.error('Error fetching invite by email/entity:', error)
+        await logToGrafana('error', 'invite-member', 'Error fetching invite by email/entity', { email: maskEmail(email), entityId, error: error?.message })
         throw new Error('Invitation not found for the provided email and entity')
       }
       invite = data
@@ -120,7 +127,7 @@ serve(async (req) => {
       .single()
 
     if (entityError || !entity) {
-      console.error('Error fetching entity:', entityError)
+      await logToGrafana('error', 'invite-member', 'Error fetching entity', { entityTable, entityId: invite[entityIdField], error: entityError?.message })
       throw new Error(`${type === 'workspace' ? 'Workspace' : 'Project'} not found`)
     }
 
@@ -132,7 +139,7 @@ serve(async (req) => {
       .single()
 
     if (inviterError || !inviter) {
-      console.error('Error fetching inviter:', inviterError)
+      await logToGrafana('warn', 'invite-member', 'Error fetching inviter, using fallback name', { invitedBy: invite.invited_by, error: inviterError?.message })
       // Fallback if inviter profile not found
     }
 
@@ -144,7 +151,7 @@ serve(async (req) => {
     const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'OrbitBoard <notifications@orbitboard.in>'
 
     if (!EMAIL_API_KEY) {
-      console.error('Email API key not configured')
+      await logToGrafana('error', 'invite-member', 'Email API key not configured', {})
       return new Response(
         JSON.stringify({ error: 'Email service not configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -191,7 +198,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
-    console.error('Function error:', error)
+    await logToGrafana('error', 'invite-member', 'Unhandled function error', { error: error.message })
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { logToGrafana } from "../_shared/logger.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,11 +13,35 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    )
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      await logToGrafana('warn', 'task-notifications', 'Rejected: no authorization header', {})
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+
+    // authClient runs as the caller (RLS-scoped) purely to validate their JWT.
+    const authClient = createClient(supabaseUrl, supabaseServiceKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
+
+    const { data: { user: caller }, error: callerAuthError } = await authClient.auth.getUser()
+    if (callerAuthError || !caller) {
+      await logToGrafana('warn', 'task-notifications', 'Rejected: invalid token', { error: callerAuthError?.message })
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
+    // Admin client bypasses RLS for the actual lookups below — only reachable
+    // now that we've confirmed the caller holds a valid session.
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey)
 
     const { type, taskId, userId, content } = await req.json()
 
@@ -27,7 +52,10 @@ serve(async (req) => {
       .eq('id', taskId)
       .single()
 
-    if (taskError || !task) throw new Error('Task not found')
+    if (taskError || !task) {
+      await logToGrafana('error', 'task-notifications', 'Task not found', { taskId, callerId: caller.id })
+      throw new Error('Task not found')
+    }
 
     // Fetch Target User
     const { data: targetUser, error: userError } = await supabaseClient
@@ -36,14 +64,23 @@ serve(async (req) => {
       .eq('id', userId)
       .single()
 
-    if (userError || !targetUser) throw new Error('User not found')
+    if (userError || !targetUser) {
+      await logToGrafana('error', 'task-notifications', 'Target user not found', { userId, callerId: caller.id })
+      throw new Error('User not found')
+    }
 
     // Get user email from auth.users (requires service role)
     const { data: { user: authUser }, error: authError } = await supabaseClient.auth.admin.getUserById(userId)
-    if (authError || !authUser?.email) throw new Error('User email not found')
+    if (authError || !authUser?.email) {
+      await logToGrafana('error', 'task-notifications', 'User email not found', { userId })
+      throw new Error('User email not found')
+    }
 
     const EMAIL_API_KEY = Deno.env.get('RESEND_API_KEY')
-    if (!EMAIL_API_KEY) throw new Error('Email service not configured')
+    if (!EMAIL_API_KEY) {
+      await logToGrafana('error', 'task-notifications', 'Email API key not configured', {})
+      throw new Error('Email service not configured')
+    }
 
     let subject = ''
     let bodyHtml = ''
@@ -98,9 +135,11 @@ serve(async (req) => {
     })
 
     const result = await response.json()
+    await logToGrafana('info', 'task-notifications', 'Notification sent', { type, taskId })
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 })
 
   } catch (error) {
+    await logToGrafana('error', 'task-notifications', 'Unhandled function error', { error: error.message })
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 })
   }
 })
