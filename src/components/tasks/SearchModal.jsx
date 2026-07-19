@@ -107,7 +107,7 @@ export default function SearchModal({ onClose }) {
             navigate('/workspaces')
             onClose()
           } else if (item.id === 'invite-member') {
-            navigate(`/workspaces/${activeWorkspace?.slug}/settings/members`)
+            navigate('/settings/members')
             onClose()
           }
           return
@@ -199,7 +199,7 @@ export default function SearchModal({ onClose }) {
                         onClick={() => {
                            if (cmd.id === 'switch-workspace') navigate('/workspaces')
                            if (cmd.id === 'all-tasks') navigate('/my-tasks')
-                           if (cmd.id === 'invite-member') navigate(`/workspaces/${activeWorkspace?.slug}/settings/members`)
+                           if (cmd.id === 'invite-member') navigate('/settings/members')
                            onClose()
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl group transition-colors ${

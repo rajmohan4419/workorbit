@@ -132,9 +132,16 @@ export default function SettingsPage({ initialTab = 'general' }) {
   const activeTab = useMemo(() => {
     const params = new URLSearchParams(location.search)
     if (params.get('tab')) return params.get('tab')
-    if (location.pathname.startsWith('/settings/profile')) return 'profile'
-    if (location.pathname.endsWith('/team')) return 'members'
-    if (location.pathname.startsWith('/settings/billing')) return 'billing'
+    const path = location.pathname
+    if (path.startsWith('/settings/profile')) return 'profile'
+    if (path.startsWith('/settings/billing')) return 'billing'
+    if (path.startsWith('/settings/notifications')) return 'notifications'
+    if (path.startsWith('/settings/security')) return 'security'
+    if (path.startsWith('/settings/api')) return 'api'
+    if (path.startsWith('/settings/audit')) return 'audit'
+    if (path.startsWith('/settings/automations')) return 'automations'
+    if (path.startsWith('/settings/members')) return 'members'
+    if (path.endsWith('/team')) return 'members'
     return initialTab
   }, [location.pathname, location.search, initialTab])
 
@@ -301,7 +308,7 @@ export default function SettingsPage({ initialTab = 'general' }) {
             </Link>
             {activeWorkspace && (
               <Link
-                to={`/workspaces/${activeWorkspace.slug}/team`}
+                to="/settings/members"
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                   activeTab === 'members' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
                 }`}
@@ -310,15 +317,15 @@ export default function SettingsPage({ initialTab = 'general' }) {
                 Members
               </Link>
             )}
-            <button
-              onClick={() => navigate('/settings?tab=notifications')}
-              className={`flex items-center justify-start gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            <Link
+              to="/settings/notifications"
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'notifications' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               <Bell size={18} />
               Notifications
-            </button>
+            </Link>
             <Link
               to="/settings/billing"
               className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
@@ -328,42 +335,42 @@ export default function SettingsPage({ initialTab = 'general' }) {
               <Shield size={18} />
               Billing
             </Link>
-            <button
-              onClick={() => navigate('/settings?tab=security')}
-              className={`flex items-center justify-start gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            <Link
+              to="/settings/security"
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'security' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               <ShieldCheck size={18} />
               Security
-            </button>
-            <button
-              onClick={() => navigate('/settings?tab=api')}
-              className={`flex items-center justify-start gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            </Link>
+            <Link
+              to="/settings/api"
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'api' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               <Terminal size={18} />
               API Settings
-            </button>
-            <button
-              onClick={() => navigate('/settings?tab=audit')}
-              className={`flex items-center justify-start gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            </Link>
+            <Link
+              to="/settings/audit"
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'audit' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               <FileText size={18} />
               Audit Logs
-            </button>
-            <button
-              onClick={() => navigate('/settings?tab=automations')}
-              className={`flex items-center justify-start gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            </Link>
+            <Link
+              to="/settings/automations"
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                 activeTab === 'automations' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               <Cpu size={18} />
               Automations
-            </button>
+            </Link>
           </nav>
         </aside>
 

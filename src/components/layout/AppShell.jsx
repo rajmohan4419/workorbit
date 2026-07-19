@@ -28,7 +28,7 @@ export default function AppShell() {
         navigate('/my-tasks');
       }
       if (e.key === 'i' && activeWorkspace) {
-        navigate(`/workspaces/${activeWorkspace.slug}/settings/members`);
+        navigate('/settings/members');
       }
       if (e.key === 't') {
         setSearchOpen(true);

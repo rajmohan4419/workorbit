@@ -14,4 +14,10 @@ export const ROUTES = {
   PROFILE_SETTINGS: '/settings/profile',
   WORKSPACE_SETTINGS: '/settings/workspace',
   BILLING_SETTINGS: '/settings/billing',
+  NOTIFICATIONS_SETTINGS: '/settings/notifications',
+  SECURITY_SETTINGS: '/settings/security',
+  API_SETTINGS: '/settings/api',
+  AUDIT_SETTINGS: '/settings/audit',
+  AUTOMATIONS_SETTINGS: '/settings/automations',
+  MEMBERS_SETTINGS: '/settings/members',
 };
