@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { authService } from '../lib/services/authService'
 import { useWorkspaceStore } from './workspaceStore'
 import { analyticsService } from '../lib/services/analyticsService'
+import { supabase } from '../lib/supabase'
 
 const checkUserAnalytics = (user) => {
   if (!user) return
@@ -15,6 +16,15 @@ const checkUserAnalytics = (user) => {
   if (nowMs - userCreatedAt < fiveMinutesMs && !localStorage.getItem(signUpTrackedKey)) {
     analyticsService.track('User Signed Up', { userId: user.id, email: user.email })
     localStorage.setItem(signUpTrackedKey, 'true')
+
+    // Trigger welcome email with features list on signup
+    supabase.functions.invoke('user-emails', {
+      body: {
+        type: 'welcome',
+        email: user.email,
+        name: user.user_metadata?.full_name || user.user_metadata?.name || 'there'
+      }
+    }).catch(err => console.error('[AuthStore] Error triggering welcome email:', err))
   }
 
   // 2. Check Email Verified
