@@ -111,6 +111,7 @@ const router = createBrowserRouter([
                   { path: 'digest', element: <ProjectPage /> },
                   { path: 'sprints', element: <ProjectPage /> },
                   { path: 'members', element: <ProjectPage /> },
+                  { path: 'automations', element: <ProjectPage /> },
                 ]
               },
               {
