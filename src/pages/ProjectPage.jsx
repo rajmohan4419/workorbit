@@ -2,6 +2,7 @@ import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare, FileText, Share2, Globe } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
+import { analyticsService } from '../lib/services/analyticsService'
 import { useTaskStore } from '../store/taskStore'
 import { useWorkspaceStore } from '../store/workspaceStore'
 import { canDeleteProject } from '../lib/permissions'
@@ -50,6 +51,12 @@ export default function ProjectPage() {
       resetTasks()
     }
   }, [projectId, projects, setActiveProject, resetTasks, subscribeToProject])
+
+  useEffect(() => {
+    if (projectId && view === 'board') {
+      analyticsService.track('Board Viewed', { projectId })
+    }
+  }, [projectId, view])
 
   const project = activeProject?.id === projectId ? activeProject : projects.find((p) => p.id === projectId)
   const updateProject = useProjectStore(state => state.updateProject)

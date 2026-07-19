@@ -3,6 +3,7 @@ import { Zap, Calendar, Target, Plus, ChevronRight, X, Loader2 } from 'lucide-re
 import { useTaskStore } from '../../store/taskStore'
 import { useProjectStore } from '../../store/projectStore'
 import { sprintService } from '../../lib/services/sprintService'
+import { analyticsService } from '../../lib/services/analyticsService'
 
 export default function SprintBoard({ projectId }) {
   const [sprints, setSprints] = useState([])
@@ -47,7 +48,7 @@ export default function SprintBoard({ projectId }) {
 
     setCreating(true)
     setError('')
-    const { error: createError } = await sprintService.createSprint({
+    const { data, error: createError } = await sprintService.createSprint({
       project_id: projectId,
       name: form.name,
       start_date: form.start_date,
@@ -60,6 +61,11 @@ export default function SprintBoard({ projectId }) {
       setError(createError.message)
       setCreating(false)
     } else {
+      analyticsService.track('Sprint Created', {
+        sprintId: data?.id,
+        name: form.name,
+        projectId,
+      })
       await loadSprints()
       setCreating(false)
       setShowCreateModal(false)

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { authService } from '../lib/services/authService'
 import { projectService } from '../lib/services/projectService'
 import { sprintService } from '../lib/services/sprintService'
+import { analyticsService } from '../lib/services/analyticsService'
 
 export const useProjectStore = create((set, get) => ({
   projects: [],
@@ -65,6 +66,12 @@ export const useProjectStore = create((set, get) => ({
       activeProject: data,
       error: null,
     }))
+
+    analyticsService.track('Project Created', {
+      projectId: data.id,
+      name: data.name,
+      workspaceId,
+    })
 
     return { data }
   },
@@ -134,6 +141,15 @@ export const useProjectStore = create((set, get) => ({
 
     if (error) return { error }
     set((state) => ({ invites: [data, ...state.invites] }))
+
+    analyticsService.track('Invite Sent', {
+      type: 'project',
+      projectId,
+      email,
+      role,
+      inviteId: data.id,
+    })
+
     return { data }
   },
 
@@ -149,6 +165,15 @@ export const useProjectStore = create((set, get) => ({
     if (!user) return { error: { message: 'Session expired. Please log in again.' } }
     const result = await projectService.acceptInvite(inviteId, user.id)
     
+    if (result && !result.error) {
+      analyticsService.track('Invite Accepted', {
+        type: 'project',
+        inviteId,
+        projectId: result.projectId,
+        userId: user.id,
+      })
+    }
+
     return result
   },
 }))

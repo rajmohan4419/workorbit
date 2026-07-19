@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore'
 import { workspaceService } from '../../lib/services/workspaceService'
 import { projectService } from '../../lib/services/projectService'
 import { Loader2, AlertCircle } from 'lucide-react'
+import { analyticsService } from '../../lib/services/analyticsService'
 
 export default function PendingInviteHandler() {
   const user = useAuthStore((state) => state.user)
@@ -37,6 +38,14 @@ export default function PendingInviteHandler() {
             setProcessing(false)
             return
           }
+
+          analyticsService.track('Invite Accepted', {
+            type,
+            inviteId,
+            userId: user.id,
+            workspaceId: result?.workspaceId,
+            projectId: result?.projectId,
+          })
 
           localStorage.removeItem('pendingInvite')
           window.location.reload() // Reload to refresh workspace/project list

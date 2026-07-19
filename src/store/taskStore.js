@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { taskService } from '../lib/services/taskService'
+import { analyticsService } from '../lib/services/analyticsService'
 
 export const STATUSES = ['todo', 'in_progress', 'in_review', 'done']
 export const STATUS_LABELS = {
@@ -124,6 +125,13 @@ export const useTaskStore = create((set, get) => ({
     }
 
     set((state) => ({ tasks: [...state.tasks, data], error: null }))
+
+    analyticsService.track('Task Created', {
+      taskId: data.id,
+      title: data.title,
+      projectId: data.project_id,
+    })
+
     return { data }
   },
 
@@ -198,6 +206,20 @@ export const useTaskStore = create((set, get) => ({
       tasks: state.tasks.map((t) => (t.id === id ? data : t)),
       error: null,
     }))
+
+    analyticsService.track('Task Updated', {
+      taskId: id,
+      ...updates,
+    })
+
+    if (updates.status === 'done') {
+      analyticsService.track('Task Completed', {
+        taskId: id,
+        title: data.title,
+        projectId: data.project_id,
+      })
+    }
+
     return { data }
   },
 
@@ -218,6 +240,19 @@ export const useTaskStore = create((set, get) => ({
       tasks: state.tasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t)),
       error: null,
     }))
+
+    analyticsService.track('Task Updated', {
+      taskId: id,
+      status: newStatus,
+    })
+
+    if (newStatus === 'done') {
+      analyticsService.track('Task Completed', {
+        taskId: id,
+        title: currentTask.title,
+        projectId: currentTask.project_id,
+      })
+    }
 
     // Background update (Non-blocking)
     taskService.updateTask(id, { status: newStatus })
@@ -273,6 +308,12 @@ export const useTaskStore = create((set, get) => ({
 
     if (error) return { error }
     set((state) => ({ comments: [...state.comments, data] }))
+
+    analyticsService.track('Comment Added', {
+      taskId,
+      commentId: data.id,
+    })
+
     return { data }
   },
 
@@ -405,6 +446,14 @@ export const useTaskStore = create((set, get) => ({
 
     if (error) return { error }
     set((state) => ({ timeLogs: [data, ...state.timeLogs] }))
+
+    analyticsService.track('Time Logged', {
+      taskId,
+      timeLogId: data.id,
+      durationSeconds,
+      description,
+    })
+
     return { data }
   },
 

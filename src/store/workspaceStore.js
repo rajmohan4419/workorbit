@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { authService } from '../lib/services/authService'
 import { workspaceService } from '../lib/services/workspaceService'
+import { analyticsService } from '../lib/services/analyticsService'
 
 export const useWorkspaceStore = create((set, get) => ({
   workspaces: [],
@@ -32,6 +33,20 @@ export const useWorkspaceStore = create((set, get) => ({
 
     const activeWorkspaceId = get().activeWorkspace?.id
     const activeWorkspace = data.find((w) => w.id === activeWorkspaceId) || null
+
+    // Track Workspace Created for newly created workspaces (created within past 5 minutes)
+    if (data && data.length > 0) {
+      const fiveMinutesMs = 5 * 60 * 1000
+      const nowMs = Date.now()
+      data.forEach((ws) => {
+        const wsCreatedAt = new Date(ws.created_at).getTime()
+        const wsTrackedKey = `workspace_created_tracked_${ws.id}`
+        if (nowMs - wsCreatedAt < fiveMinutesMs && !localStorage.getItem(wsTrackedKey)) {
+          analyticsService.track('Workspace Created', { workspaceId: ws.id, name: ws.name, slug: ws.slug })
+          localStorage.setItem(wsTrackedKey, 'true')
+        }
+      })
+    }
 
     set({
       workspaces: data,
@@ -157,6 +172,15 @@ export const useWorkspaceStore = create((set, get) => ({
 
     if (error) return { error }
     set((state) => ({ invites: [data, ...state.invites] }))
+
+    analyticsService.track('Invite Sent', {
+      type: 'workspace',
+      workspaceId,
+      email,
+      role,
+      inviteId: data.id,
+    })
+
     return { data }
   },
 
@@ -171,6 +195,15 @@ export const useWorkspaceStore = create((set, get) => ({
     const { data: { user } } = await authService.getUser()
     if (!user) return { error: { message: 'Session expired. Please log in again.' } }
     const result = await workspaceService.acceptInvite(inviteId, user.id)
+
+    if (result && !result.error) {
+      analyticsService.track('Invite Accepted', {
+        type: 'workspace',
+        inviteId,
+        workspaceId: result.workspaceId,
+        userId: user.id,
+      })
+    }
 
     return result
   },

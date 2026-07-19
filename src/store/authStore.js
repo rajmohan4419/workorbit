@@ -1,6 +1,32 @@
 import { create } from 'zustand'
 import { authService } from '../lib/services/authService'
 import { useWorkspaceStore } from './workspaceStore'
+import { analyticsService } from '../lib/services/analyticsService'
+
+const checkUserAnalytics = (user) => {
+  if (!user) return
+
+  // 1. Check User Signed Up
+  const signUpTrackedKey = `signup_tracked_${user.id}`
+  const userCreatedAt = new Date(user.created_at).getTime()
+  const fiveMinutesMs = 5 * 60 * 1000
+  const nowMs = Date.now()
+
+  if (nowMs - userCreatedAt < fiveMinutesMs && !localStorage.getItem(signUpTrackedKey)) {
+    analyticsService.track('User Signed Up', { userId: user.id, email: user.email })
+    localStorage.setItem(signUpTrackedKey, 'true')
+  }
+
+  // 2. Check Email Verified
+  if (user.email_confirmed_at) {
+    const emailVerifiedTrackedKey = `email_verified_tracked_${user.id}`
+    const emailConfirmedAt = new Date(user.email_confirmed_at).getTime()
+    if (nowMs - emailConfirmedAt < fiveMinutesMs && !localStorage.getItem(emailVerifiedTrackedKey)) {
+      analyticsService.track('Email Verified', { userId: user.id, email: user.email })
+      localStorage.setItem(emailVerifiedTrackedKey, 'true')
+    }
+  }
+}
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -33,6 +59,7 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const user = session.user
+      checkUserAnalytics(user)
       handleProfileFetch(user.id).then(profile => {
         if (!active) return
         set({ session, user, profile, loading: false })
@@ -43,6 +70,10 @@ export const useAuthStore = create((set, get) => ({
     const { data: { subscription } } = authService.onAuthStateChange(async (_event, session) => {
       if (!active) return
       const user = session?.user ?? null
+
+      if (user) {
+        checkUserAnalytics(user)
+      }
 
       try {
         const profile = await handleProfileFetch(user?.id)
