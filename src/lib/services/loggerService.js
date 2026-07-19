@@ -258,8 +258,13 @@ export const loggerService = {
 
       if (LOKI_TOKEN) {
         if (LOKI_USER) {
-          const auth = btoa(`${LOKI_USER}:${LOKI_TOKEN}`)
-          headers['Authorization'] = `Basic ${auth}`
+          try {
+            const rawAuth = `${LOKI_USER}:${LOKI_TOKEN}`
+            const auth = btoa(unescape(encodeURIComponent(rawAuth)))
+            headers['Authorization'] = `Basic ${auth}`
+          } catch (e) {
+            originalConsole.error('[Loki Logger] Failed to encode authorization headers:', e)
+          }
         } else {
           if (LOKI_TOKEN.startsWith('Bearer ') || LOKI_TOKEN.startsWith('Basic ')) {
             headers['Authorization'] = LOKI_TOKEN
@@ -273,7 +278,10 @@ export const loggerService = {
         headers['X-Scope-OrgID'] = LOKI_TENANT_ID
       }
 
-      const pushUrl = `${LOKI_URL.replace(/\/$/, '')}/loki/api/v1/push`
+      let pushUrl = LOKI_URL.replace(/\/$/, '')
+      if (!pushUrl.endsWith('/loki/api/v1/push')) {
+        pushUrl = `${pushUrl}/loki/api/v1/push`
+      }
 
       const response = await fetch(pushUrl, {
         method: 'POST',
