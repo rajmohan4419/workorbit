@@ -77,8 +77,11 @@ export async function logToGrafana(
 
 function safeStringify(value: unknown): string {
   if (typeof value === 'string') return value
+  if (value === undefined) return 'undefined'
+  if (value === null) return 'null'
   try {
-    return JSON.stringify(value)
+    const result = JSON.stringify(value)
+    return result === undefined ? 'undefined' : result
   } catch {
     return String(value)
   }
