@@ -121,6 +121,54 @@ const router = createBrowserRouter([
                   </Suspense>
                 ),
               },
+              {
+                path: 'notifications',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage initialTab="notifications" />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'security',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage initialTab="security" />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'api',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage initialTab="api" />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'audit',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage initialTab="audit" />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'automations',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage initialTab="automations" />
+                  </Suspense>
+                ),
+              },
+              {
+                path: 'members',
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage initialTab="members" />
+                  </Suspense>
+                ),
+              },
             ]
           },
           {

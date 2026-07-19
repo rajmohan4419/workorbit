@@ -90,7 +90,7 @@ export default function NotificationBell() {
                 )}
                 <button
                   onClick={() => {
-                    navigate('/settings?tab=notifications')
+                    navigate('/settings/notifications')
                     setIsOpen(false)
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
