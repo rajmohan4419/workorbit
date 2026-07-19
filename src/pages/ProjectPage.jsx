@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare, FileText, Share2, Globe, Plus, X, Cpu } from 'lucide-react'
+import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare, FileText, Share2, Globe, Plus, X } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { analyticsService } from '../lib/services/analyticsService'
 import { useTaskStore } from '../store/taskStore'
@@ -15,7 +15,6 @@ import TimelineView from '../components/tasks/TimelineView'
 import ProjectDigest from '../components/tasks/ProjectDigest'
 import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
-import AutomationBuilder from '../components/tasks/AutomationBuilder'
 
 const getProjectPrefix = (name) => {
   if (!name) return 'TASK'
@@ -32,7 +31,7 @@ export default function ProjectPage() {
   const view = useMemo(() => {
     const parts = location.pathname.split('/')
     const lastPart = parts[parts.length - 1]
-    return ['board', 'list', 'timeline', 'activity', 'sprints', 'members', 'calendar', 'digest', 'automations'].includes(lastPart) ? lastPart : 'board'
+    return ['board', 'list', 'timeline', 'activity', 'sprints', 'members', 'calendar', 'digest'].includes(lastPart) ? lastPart : 'board'
   }, [location.pathname])
 
   const [toasts, setToasts] = useState([])
@@ -175,7 +174,6 @@ export default function ProjectPage() {
               { id: 'activity', label: 'Feed', icon: History },
               { id: 'digest', label: 'Digest', icon: FileText },
               { id: 'sprints', label: 'Sprints', icon: Zap },
-              { id: 'automations', label: 'Automations', icon: Cpu },
               { id: 'members', label: 'Members', icon: Users },
             ].map((v) => (
               <Link
@@ -223,10 +221,6 @@ export default function ProjectPage() {
         ) : view === 'digest' ? (
           <div className="max-w-5xl mx-auto h-full overflow-y-auto">
             <ProjectDigest projectId={projectId} />
-          </div>
-        ) : view === 'automations' ? (
-          <div className="h-full overflow-hidden">
-            <AutomationBuilder key={projectId} projectId={projectId} />
           </div>
         ) : view === 'calendar' ? (
           <div className="h-full overflow-hidden p-8 text-center text-gray-400">

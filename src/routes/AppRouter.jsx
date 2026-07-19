@@ -111,7 +111,6 @@ const router = createBrowserRouter([
                   { path: 'digest', element: <ProjectPage /> },
                   { path: 'sprints', element: <ProjectPage /> },
                   { path: 'members', element: <ProjectPage /> },
-                  { path: 'automations', element: <ProjectPage /> },
                 ]
               },
               {
@@ -145,7 +144,11 @@ const router = createBrowserRouter([
               },
               {
                 path: 'billing',
-                element: <div className="p-8">Billing (Coming Soon)</div>,
+                element: (
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <SettingsPage initialTab="billing" />
+                  </Suspense>
+                ),
               },
             ]
           },
