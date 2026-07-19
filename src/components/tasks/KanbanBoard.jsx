@@ -22,7 +22,7 @@ const dotColors = {
   done: 'bg-green-400',
 }
 
-export default function KanbanBoard({ projectId }) {
+export default function KanbanBoard({ projectId, onTaskCreated }) {
   const tasks = useTaskStore((state) => state.tasks)
   const sprints = useProjectStore((state) => state.sprints)
   const moveTask = useTaskStore((state) => state.moveTask)
@@ -183,6 +183,7 @@ export default function KanbanBoard({ projectId }) {
           projectId={projectId}
           defaultStatus={modalState.type === 'create' ? modalState.status : modalState.task.status}
           onClose={() => setModalState(null)}
+          onTaskCreated={onTaskCreated}
         />
       )}
     </>

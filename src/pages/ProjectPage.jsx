@@ -1,11 +1,11 @@
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState, useEffect, useMemo } from 'react'
-import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare, FileText, Share2, Globe } from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { ArrowLeft, Users, LayoutDashboard, Trash2, History, Zap, Calendar, List, GanttChartSquare, FileText, Share2, Globe, Plus, X, Cpu } from 'lucide-react'
 import { useProjectStore } from '../store/projectStore'
 import { analyticsService } from '../lib/services/analyticsService'
 import { useTaskStore } from '../store/taskStore'
 import { useWorkspaceStore } from '../store/workspaceStore'
-import { canDeleteProject } from '../lib/permissions'
+import { canDeleteProject, canCreateTask } from '../lib/permissions'
 import KanbanBoard from '../components/tasks/KanbanBoard'
 import TaskTable from '../components/tasks/TaskTable'
 import TaskModal from '../components/tasks/TaskModal'
@@ -15,6 +15,14 @@ import TimelineView from '../components/tasks/TimelineView'
 import ProjectDigest from '../components/tasks/ProjectDigest'
 import ProjectMembers from '../components/layout/ProjectMembers'
 import NotificationBell from '../components/layout/NotificationBell'
+import AutomationBuilder from '../components/tasks/AutomationBuilder'
+
+const getProjectPrefix = (name) => {
+  if (!name) return 'TASK'
+  const words = name.trim().split(/\s+/)
+  const prefix = words.map(w => w[0]).join('').toUpperCase()
+  return prefix || 'TASK'
+}
 
 export default function ProjectPage() {
   const { id : projectId } = useParams()
@@ -24,8 +32,11 @@ export default function ProjectPage() {
   const view = useMemo(() => {
     const parts = location.pathname.split('/')
     const lastPart = parts[parts.length - 1]
-    return ['board', 'list', 'timeline', 'activity', 'sprints', 'members', 'calendar', 'digest'].includes(lastPart) ? lastPart : 'board'
+    return ['board', 'list', 'timeline', 'activity', 'sprints', 'members', 'calendar', 'digest', 'automations'].includes(lastPart) ? lastPart : 'board'
   }, [location.pathname])
+
+  const [toasts, setToasts] = useState([])
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false)
 
   const [selectedTask, setSelectedTask] = useState(null)
   const projects = useProjectStore((state) => state.projects)
@@ -71,6 +82,23 @@ export default function ProjectPage() {
       navigate(activeWorkspace ? `/workspaces/${activeWorkspace.slug}` : '/')
     }
   }
+
+  const triggerToast = useCallback((task) => {
+    const prefix = getProjectPrefix(project?.name)
+    const taskNum = tasks.findIndex(t => t.id === task.id) + 1 || tasks.length + 1
+    const taskId = `${prefix}${taskNum}`
+
+    const id = Date.now()
+    const newToast = {
+      id,
+      taskId,
+      title: task.title,
+    }
+    setToasts(prev => [...prev, newToast])
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 5000)
+  }, [project?.name, tasks])
 
   return (
     <div className="flex flex-col h-full">
@@ -123,6 +151,19 @@ export default function ProjectPage() {
             </button>
           )}
 
+          {canCreateTask(wsRole) && (
+            <>
+              <button
+                onClick={() => setShowCreateTaskModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm shadow-indigo-100 flex-shrink-0"
+              >
+                <Plus size={14} />
+                <span>Create Task</span>
+              </button>
+              <div className="w-px h-6 bg-gray-100 mx-1" />
+            </>
+          )}
+
           <NotificationBell />
           <div className="w-px h-6 bg-gray-100 mx-1" />
           <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl max-w-[200px] sm:max-w-none overflow-x-auto no-scrollbar">
@@ -134,6 +175,7 @@ export default function ProjectPage() {
               { id: 'activity', label: 'Feed', icon: History },
               { id: 'digest', label: 'Digest', icon: FileText },
               { id: 'sprints', label: 'Sprints', icon: Zap },
+              { id: 'automations', label: 'Automations', icon: Cpu },
               { id: 'members', label: 'Members', icon: Users },
             ].map((v) => (
               <Link
@@ -182,6 +224,10 @@ export default function ProjectPage() {
           <div className="max-w-5xl mx-auto h-full overflow-y-auto">
             <ProjectDigest projectId={projectId} />
           </div>
+        ) : view === 'automations' ? (
+          <div className="h-full overflow-hidden">
+            <AutomationBuilder key={projectId} projectId={projectId} />
+          </div>
         ) : view === 'calendar' ? (
           <div className="h-full overflow-hidden p-8 text-center text-gray-400">
              Calendar View (Coming Soon)
@@ -199,7 +245,7 @@ export default function ProjectPage() {
                 {error}
               </div>
             ) : (
-              <KanbanBoard projectId={projectId} />
+              <KanbanBoard projectId={projectId} onTaskCreated={triggerToast} />
             )}
           </>
         )}
@@ -212,6 +258,40 @@ export default function ProjectPage() {
           onClose={() => setSelectedTask(null)}
         />
       )}
+
+      {showCreateTaskModal && (
+        <TaskModal
+          projectId={projectId}
+          defaultStatus="todo"
+          onClose={() => setShowCreateTaskModal(false)}
+          onTaskCreated={triggerToast}
+        />
+      )}
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className="pointer-events-auto bg-white border border-gray-100 shadow-xl rounded-xl p-4 flex items-center gap-3 animate-in slide-in-from-right-5 fade-in duration-300 max-w-sm"
+          >
+            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+              ✓
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">Task Created</p>
+              <p className="text-sm font-bold text-gray-900">{toast.taskId}</p>
+              <p className="text-xs text-gray-500 truncate max-w-[200px]">{toast.title}</p>
+            </div>
+            <button
+              onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+              className="ml-auto text-gray-400 hover:text-gray-600 p-1 rounded-lg transition-colors hover:bg-gray-50"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

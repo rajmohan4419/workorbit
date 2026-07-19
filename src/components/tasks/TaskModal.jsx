@@ -21,7 +21,7 @@ function getInitialForm(task, defaultStatus, currentUserId) {
   }
 }
 
-export default function TaskModal({ task = null, projectId = null, defaultStatus = 'todo', onClose }) {
+export default function TaskModal({ task = null, projectId = null, defaultStatus = 'todo', onClose, onTaskCreated }) {
   const currentUser = useAuthStore((state) => state.user)
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace)
   const wsRole = useWorkspaceStore((state) => state.currentUserRole)
@@ -283,6 +283,9 @@ export default function TaskModal({ task = null, projectId = null, defaultStatus
     }
 
     if (!isEditing) {
+      if (onTaskCreated && result.data) {
+        onTaskCreated(result.data)
+      }
       onClose()
       return
     }
