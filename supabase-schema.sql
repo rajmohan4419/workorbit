@@ -244,6 +244,24 @@ create table if not exists public.task_dependencies (
   check (task_id != depends_on_id)
 );
 
+-- OTT CATALOG CACHE
+create table if not exists public.ott_catalog_cache (
+    id uuid primary key default gen_random_uuid(),
+    tmdb_id integer unique not null,
+    title varchar(255) not null,
+    media_type varchar(20) default 'movie',
+    release_year integer,
+    poster_path text,
+    vote_average numeric(3, 1),
+    overview text,
+    providers jsonb default '{}'::jsonb,
+    last_synced_at timestamptz default now(),
+    expires_at timestamptz default (now() + interval '7 days')
+);
+
+create index if not exists idx_ott_tmdb_id on public.ott_catalog_cache (tmdb_id);
+create index if not exists idx_ott_title on public.ott_catalog_cache using gin (to_tsvector('english', title));
+
 -- ─────────────────────────────────────────────
 -- 3. SCHEMA EVOLUTION & CONSTRAINTS
 -- ─────────────────────────────────────────────
@@ -419,6 +437,9 @@ alter table public.sprints enable row level security;
 alter table public.labels enable row level security;
 alter table public.task_labels enable row level security;
 alter table public.notifications enable row level security;
+alter table public.ott_catalog_cache enable row level security;
+
+create policy "Public access ott_catalog_cache" on public.ott_catalog_cache for all using (true) with check (true);
 
 -- Profiles
 create policy "Public profile view" on public.profiles for select using (true);
@@ -918,6 +939,7 @@ grant execute on all functions in schema public to authenticated;
 
 -- Allow anonymous users to only read profiles (e.g. for workspace invites/discovery)
 grant select on public.profiles to anon;
+grant select, insert, update, delete on public.ott_catalog_cache to anon, authenticated;
 
 -- Explicitly ensure RLS is enabled for all existing tables in public schema
 do $$
