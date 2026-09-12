@@ -2,35 +2,56 @@ import { useState, useEffect } from 'react';
 import { searchMedia, getTrending } from './lib/services/ottService';
 import MediaCard from './components/MediaCard';
 
+const PLATFORMS = ['All', 'Netflix', 'JioHotstar', 'Amazon Prime Video', 'SonyLIV', 'Zee5'];
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('trending');
+  const [selectedPlatform, setSelectedPlatform] = useState('All');
 
-  // Load trending on mount
+  // Debounce search query & load trending when empty
   useEffect(() => {
     let isMounted = true;
-    if (activeTab === 'trending' && !query) {
+
+    if (!query.trim()) {
       getTrending().then(data => {
         if (isMounted) {
           setItems(data);
           setLoading(false);
         }
       });
+      return () => {
+        isMounted = false;
+      };
     }
+
+    const timer = setTimeout(async () => {
+      const results = await searchMedia(query);
+      if (isMounted) {
+        setItems(results);
+        setLoading(false);
+      }
+    }, 400);
+
     return () => {
       isMounted = false;
+      clearTimeout(timer);
     };
-  }, [activeTab, query]);
+  }, [query]);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const handleQueryChange = (e) => {
+    setQuery(e.target.value);
     setLoading(true);
-    const results = await searchMedia(query);
-    setItems(results);
-    setLoading(false);
+  };
+
+  const handleClearQuery = () => {
+    setQuery('');
+    setLoading(true);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
   };
 
   return (
@@ -60,38 +81,64 @@ export default function App() {
             Instant platform lookup across Hotstar, Netflix, Prime Video, SonyLIV, and Zee5.
           </p>
 
-          <form onSubmit={handleSearch} className="relative flex items-center">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center">
             <input
               type="text"
               placeholder="Search movie, web series, or anime..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-full px-5 py-3.5 pr-28 text-sm focus:outline-none focus:border-violet-500 transition shadow-inner"
+              onChange={handleQueryChange}
+              className="w-full bg-slate-900 border border-slate-800 rounded-full px-5 py-3.5 pr-28 text-sm focus:outline-none focus:border-violet-500 transition shadow-inner text-slate-100 placeholder-slate-500"
             />
-            <button
-              type="submit"
-              className="absolute right-2 px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-full text-xs font-semibold transition"
-            >
-              Search
-            </button>
+            {query && (
+              <button
+                type="button"
+                onClick={handleClearQuery}
+                className="absolute right-3 px-3 py-1.5 text-xs text-slate-400 hover:text-white transition"
+              >
+                Clear
+              </button>
+            )}
           </form>
         </div>
 
-        {/* Results Grid */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
-            {query ? `Search Results for "${query}"` : "Today's Trending in India"}
-          </h2>
-          {query && (
-            <button
-              onClick={() => { setQuery(''); setLoading(true); setActiveTab('trending'); }}
-              className="text-xs text-violet-400 hover:underline"
-            >
-              Reset to Trending
-            </button>
-          )}
+        {/* Results Header & Platform Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+              {query.trim() ? `Search Results for "${query}"` : "Today's Trending in India"}
+            </h2>
+            {query && (
+              <button
+                onClick={handleClearQuery}
+                className="text-xs text-violet-400 hover:underline sm:hidden"
+              >
+                Reset to Trending
+              </button>
+            )}
+          </div>
+
+          {/* Platform Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {PLATFORMS.map((platform) => {
+              const isActive = selectedPlatform === platform;
+              return (
+                <button
+                  key={platform}
+                  onClick={() => setSelectedPlatform(platform)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition border ${
+                    isActive
+                      ? 'bg-violet-600 text-white border-violet-500 shadow-sm'
+                      : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  {platform}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
+        {/* Grid or Skeleton or Empty */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {[...Array(10)].map((_, i) => (
@@ -101,7 +148,7 @@ export default function App() {
         ) : items.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {items.map((item) => (
-              <MediaCard key={item.id} item={item} />
+              <MediaCard key={item.id} item={item} selectedPlatform={selectedPlatform} />
             ))}
           </div>
         ) : (

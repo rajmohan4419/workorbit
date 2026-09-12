@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
-const DEFAULT_TITLE = 'OrbitBoard | Fast, Simple Project Management';
-const DEFAULT_DESCRIPTION = 'OrbitBoard is the ultimate project management and team collaboration platform. Built for Indian founders and high-growth teams.';
+const DEFAULT_TITLE = "Orbit Board — What to Watch & Where it's Streaming in India";
+const DEFAULT_DESCRIPTION = "Discover where movies, web series, and live sports are streaming across Netflix, Hotstar, Prime Video, Zee5, and SonyLIV in India.";
 const DEFAULT_IMAGE = 'https://orbitboard.in/og-image.png';
 
 export default function SEO({ title, description, canonical, image, type = 'website' }) {
@@ -25,7 +25,7 @@ export default function SEO({ title, description, canonical, image, type = 'webs
     let link = document.querySelector('link[rel="canonical"]');
     const previousCanonical = link?.getAttribute('href');
 
-    const fullTitle = title ? `OrbitBoard | ${title}` : DEFAULT_TITLE;
+    const fullTitle = title ? `Orbit Board | ${title}` : DEFAULT_TITLE;
     const fullDescription = description || DEFAULT_DESCRIPTION;
     const fullImage = image || DEFAULT_IMAGE;
 
@@ -56,9 +56,6 @@ export default function SEO({ title, description, canonical, image, type = 'webs
     return () => {
       document.title = previousTitle || DEFAULT_TITLE;
       if (metaDescription) metaDescription.setAttribute('content', previousDescription || DEFAULT_DESCRIPTION);
-
-      // We don't necessarily restore all OG tags on every unmount to avoid flickering
-      // but the next SEO component will overwrite them anyway.
 
       if (link) {
         if (previousCanonical) {

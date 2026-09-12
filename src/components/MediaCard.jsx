@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
-import { getWatchProviders, TMDB_IMAGE_BASE } from '../lib/services/ottService';
+import { getWatchProviders, getWatchUrl, isProviderMatch, TMDB_IMAGE_BASE } from '../lib/services/ottService';
 
 // Brand colors for top Indian OTT platforms
 const PROVIDER_THEMES = {
-  'JioHotstar': 'bg-blue-600/20 text-blue-400 border-blue-500/30',
-  'Disney Plus Hotstar': 'bg-blue-600/20 text-blue-400 border-blue-500/30',
-  'Netflix': 'bg-red-600/20 text-red-400 border-red-500/30',
-  'Amazon Prime Video': 'bg-sky-600/20 text-sky-400 border-sky-500/30',
-  'Zee5': 'bg-purple-600/20 text-purple-400 border-purple-500/30',
-  'SonyLIV': 'bg-amber-600/20 text-amber-400 border-amber-500/30',
-  'JioCinema': 'bg-pink-600/20 text-pink-400 border-pink-500/30',
-  'aha': 'bg-orange-600/20 text-orange-400 border-orange-500/30',
+  'JioHotstar': 'bg-blue-600/20 text-blue-400 border-blue-500/30 hover:bg-blue-600/30',
+  'Disney Plus Hotstar': 'bg-blue-600/20 text-blue-400 border-blue-500/30 hover:bg-blue-600/30',
+  'Hotstar': 'bg-blue-600/20 text-blue-400 border-blue-500/30 hover:bg-blue-600/30',
+  'Netflix': 'bg-red-600/20 text-red-400 border-red-500/30 hover:bg-red-600/30',
+  'Amazon Prime Video': 'bg-sky-600/20 text-sky-400 border-sky-500/30 hover:bg-sky-600/30',
+  'Zee5': 'bg-purple-600/20 text-purple-400 border-purple-500/30 hover:bg-purple-600/30',
+  'SonyLIV': 'bg-amber-600/20 text-amber-400 border-amber-500/30 hover:bg-amber-600/30',
+  'JioCinema': 'bg-pink-600/20 text-pink-400 border-pink-500/30 hover:bg-pink-600/30',
+  'aha': 'bg-orange-600/20 text-orange-400 border-orange-500/30 hover:bg-orange-600/30',
 };
 
-export default function MediaCard({ item }) {
+export default function MediaCard({ item, selectedPlatform = 'All', onProviderLoaded }) {
   const [providers, setProviders] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,10 +29,20 @@ export default function MediaCard({ item }) {
       if (mounted) {
         setProviders(data);
         setLoading(false);
+        if (onProviderLoaded) {
+          onProviderLoaded(item.id, data);
+        }
       }
     });
     return () => { mounted = false; };
-  }, [item, type]);
+  }, [item, type, onProviderLoaded]);
+
+  // Hide card if selectedPlatform is filtered and doesn't match
+  const matchesFilter = isProviderMatch(providers?.flatrate, selectedPlatform);
+
+  if (!loading && selectedPlatform !== 'All' && !matchesFilter) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-violet-500/40 transition duration-200 group">
@@ -71,12 +82,16 @@ export default function MediaCard({ item }) {
           ) : providers?.flatrate?.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 items-center">
               {providers.flatrate.map(p => {
-                const badgeStyle = PROVIDER_THEMES[p.provider_name] || 'bg-slate-800 text-slate-300 border-slate-700';
+                const badgeStyle = PROVIDER_THEMES[p.provider_name] || 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-750';
+                const watchLink = getWatchUrl(p.provider_name, title, providers.link);
                 return (
-                  <span
+                  <a
                     key={p.provider_id}
-                    title={p.provider_name}
-                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border ${badgeStyle}`}
+                    href={watchLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Watch ${title} on ${p.provider_name}`}
+                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border transition cursor-pointer ${badgeStyle}`}
                   >
                     <img
                       src={`${TMDB_IMAGE_BASE}/w45${p.logo_path}`}
@@ -84,15 +99,20 @@ export default function MediaCard({ item }) {
                       className="w-3.5 h-3.5 rounded-sm object-cover"
                     />
                     <span className="truncate max-w-[80px]">{p.provider_name}</span>
-                  </span>
+                  </a>
                 );
               })}
             </div>
           ) : providers?.rent?.length > 0 ? (
             <div className="flex flex-wrap gap-1 items-center">
-              <span className="text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+              <a
+                href={getWatchUrl(providers.rent[0]?.provider_name || '', title, providers.link)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition px-1.5 py-0.5 rounded"
+              >
                 Rent on {providers.rent[0]?.provider_name}
-              </span>
+              </a>
             </div>
           ) : (
             <p className="text-[11px] text-slate-500 italic">Not streaming right now</p>
