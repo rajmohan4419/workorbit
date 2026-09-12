@@ -74,3 +74,48 @@ export async function getTrending() {
     return [];
   }
 }
+
+// Helper to construct direct watch / search URLs for platforms
+export function getWatchUrl(providerName, title, tmdbLink) {
+  const name = providerName.toLowerCase();
+  const encodedTitle = encodeURIComponent(title);
+
+  if (name.includes('netflix')) {
+    return `https://www.netflix.com/search?q=${encodedTitle}`;
+  }
+  if (name.includes('prime') || name.includes('amazon')) {
+    return `https://www.primevideo.com/search?phrase=${encodedTitle}`;
+  }
+  if (name.includes('hotstar') || name.includes('jiohotstar')) {
+    return `https://www.hotstar.com/in/search?q=${encodedTitle}`;
+  }
+  if (name.includes('zee5') || name.includes('zee')) {
+    return `https://www.zee5.com/search?q=${encodedTitle}`;
+  }
+  if (name.includes('sonyliv') || name.includes('sony')) {
+    return `https://www.sonyliv.com/search?q=${encodedTitle}`;
+  }
+  if (name.includes('jiocinema')) {
+    return `https://www.jiocinema.com/search/${encodedTitle}`;
+  }
+  return tmdbLink || `https://www.google.com/search?q=${encodedTitle}+watch+online`;
+}
+
+// Check if a platform matches selected filter
+export function isProviderMatch(flatrateProviders, selectedPlatform) {
+  if (!selectedPlatform || selectedPlatform === 'All') return true;
+  if (!flatrateProviders || flatrateProviders.length === 0) return false;
+
+  const target = selectedPlatform.toLowerCase();
+  return flatrateProviders.some(p => {
+    const pName = p.provider_name.toLowerCase();
+    if (target === 'jiohotstar' || target === 'hotstar') {
+      return pName.includes('hotstar') || pName.includes('jio');
+    }
+    if (target.includes('netflix')) return pName.includes('netflix');
+    if (target.includes('amazon') || target.includes('prime')) return pName.includes('prime') || pName.includes('amazon');
+    if (target.includes('sonyliv') || target.includes('sony')) return pName.includes('sony') || pName.includes('liv');
+    if (target.includes('zee5') || target.includes('zee')) return pName.includes('zee');
+    return pName.includes(target);
+  });
+}
