@@ -5,19 +5,23 @@ import MediaCard from './components/MediaCard';
 export default function App() {
   const [query, setQuery] = useState('');
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('trending');
 
   // Load trending on mount
   useEffect(() => {
+    let isMounted = true;
     if (activeTab === 'trending' && !query) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLoading(true);
       getTrending().then(data => {
-        setItems(data);
-        setLoading(false);
+        if (isMounted) {
+          setItems(data);
+          setLoading(false);
+        }
       });
     }
+    return () => {
+      isMounted = false;
+    };
   }, [activeTab, query]);
 
   const handleSearch = async (e) => {
@@ -80,7 +84,7 @@ export default function App() {
           </h2>
           {query && (
             <button
-              onClick={() => { setQuery(''); setActiveTab('trending'); }}
+              onClick={() => { setQuery(''); setLoading(true); setActiveTab('trending'); }}
               className="text-xs text-violet-400 hover:underline"
             >
               Reset to Trending
