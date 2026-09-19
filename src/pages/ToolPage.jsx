@@ -389,7 +389,7 @@ function Gst() {
   return <div className="space-y-5">
     <div className="grid sm:grid-cols-2 gap-4">
       <Field label={mode==='exclusive'?'Pre-GST amount (₹)':'GST-inclusive amount (₹)'} value={amount} onChange={setAmount}/>
-      <Field label="GST rate (%)" value={rate} onChange={setRate}/>
+      <label className="block"><span className="text-xs font-medium text-slate-400">GST rate</span><select value={rate} onChange={e=>setRate(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-violet-500"><option value="0">0% (Nil / Exempt)</option><option value="5">5% (Merit Rate)</option><option value="18">18% (Standard Rate)</option><option value="40">40% (Luxury / Sin Rate)</option><option value="3">3% (Special Rate)</option></select></label>
     </div>
     <label className="block"><span className="text-xs font-medium text-slate-400">Calculation mode</span><select value={mode} onChange={e=>setMode(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-violet-500"><option value="exclusive">Add GST to price</option><option value="inclusive">Extract GST from inclusive price</option></select></label>
     <div className="grid sm:grid-cols-2 gap-3">
@@ -397,7 +397,7 @@ function Gst() {
       <Result label="GST amount" value={`₹ ${money(gst)}`} highlight/>
       <Result label="Final / inclusive price" value={`₹ ${money(total)}`}/>
     </div>
-    <p className="text-xs text-slate-500">Select the GST rate applicable to your transaction. This calculator does not determine taxability or the applicable rate.</p>
+    <p className="text-xs text-slate-500">Select the GST rate applicable to your transaction. The dropdown includes common/current rate options; specific goods or services can have different treatment, exemptions or conditions. This calculator does not determine taxability or the legally applicable rate.</p>
   </div>
 }
 
