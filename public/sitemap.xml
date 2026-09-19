@@ -20,4 +20,9 @@
     <loc>https://orbitboard.in/upcoming-features</loc>
     <priority>0.7</priority>
   </url>
+  <url><loc>https://orbitboard.in/tools/jpg-to-png</loc></url>
+  <url><loc>https://orbitboard.in/tools/png-to-jpg</loc></url>
+  <url><loc>https://orbitboard.in/tools/webp-to-jpg</loc></url>
+  <url><loc>https://orbitboard.in/tools/image-to-pdf</loc></url>
+  <url><loc>https://orbitboard.in/tools/xlsx-to-pdf</loc></url>
 </urlset>
