@@ -220,6 +220,132 @@ function createPdfFromJpeg(jpegBytes,width,height) {
   return new Blob(parts,{type:'application/pdf'});
 }
 
+async function unzipXlsxEntries(file) {
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  let eocd=-1;
+  for(let i=bytes.length-22;i>=Math.max(0,bytes.length-65558);i--) {
+    if(view.getUint32(i,true)===0x06054b50){eocd=i;break;}
+  }
+  if(eocd<0) throw new Error('Not a valid XLSX/ZIP file');
+  const cdOffset=view.getUint32(eocd+16,true), count=view.getUint16(eocd+10,true);
+  const entries={}; let p=cdOffset;
+  for(let i=0;i<count;i++){
+    if(view.getUint32(p,true)!==0x02014b50) throw new Error('Invalid XLSX directory');
+    const method=view.getUint16(p+10,true), compSize=view.getUint32(p+20,true);
+    const nameLen=view.getUint16(p+28,true), extraLen=view.getUint16(p+30,true), commentLen=view.getUint16(p+32,true);
+    const localOffset=view.getUint32(p+42,true);
+    const name=new TextDecoder().decode(bytes.slice(p+46,p+46+nameLen));
+    const lp=localOffset, localNameLen=view.getUint16(lp+26,true), localExtraLen=view.getUint16(lp+28,true);
+    const start=lp+30+localNameLen+localExtraLen;
+    const compressed=bytes.slice(start,start+compSize);
+    let data;
+    if(method===0) data=compressed;
+    else if(method===8){
+      const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      data=new Uint8Array(await new Response(stream).arrayBuffer());
+    } else throw new Error('Unsupported XLSX compression method');
+    entries[name]=new TextDecoder().decode(data);
+    p+=46+nameLen+extraLen+commentLen;
+  }
+  return entries;
+}
+
+function xlsxCellValue(cell,sharedStrings) {
+  const type=cell.getAttribute('t'), value=cell.getElementsByTagNameNS('*','v')[0]?.textContent||'';
+  if(type==='s') return sharedStrings[Number(value)]??value;
+  if(type==='inlineStr') return [...cell.getElementsByTagNameNS('*','t')].map(t=>t.textContent).join('');
+  if(type==='b') return value==='1'?'TRUE':'FALSE';
+  return value;
+}
+
+function columnIndex(ref) {
+  const letters=(ref||'').replace(/\\d/g,'').toUpperCase(); let n=0;
+  for(const ch of letters) n=n*26+ch.charCodeAt(0)-64;
+  return Math.max(0,n-1);
+}
+
+function parseXlsxEntries(entries) {
+  const parser=new DOMParser();
+  const workbook=parser.parseFromString(entries['xl/workbook.xml']||'','application/xml');
+  const rels=parser.parseFromString(entries['xl/_rels/workbook.xml.rels']||'','application/xml');
+  const sharedDoc=entries['xl/sharedStrings.xml']?parser.parseFromString(entries['xl/sharedStrings.xml'],'application/xml'):null;
+  const sharedStrings=sharedDoc?[...sharedDoc.getElementsByTagNameNS('*','si')].map(si=>[...si.getElementsByTagNameNS('*','t')].map(t=>t.textContent).join('')):[];
+  const relMap={};
+  [...rels.getElementsByTagNameNS('*','Relationship')].forEach(r=>{relMap[r.getAttribute('Id')]=r.getAttribute('Target');});
+  const sheets=[...workbook.getElementsByTagNameNS('*','sheet')];
+  return sheets.map((sheet)=>{
+    const target=relMap[sheet.getAttribute('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')]||relMap[sheet.getAttribute('r:id')];
+    const path=target?.startsWith('/')?target.slice(1):('xl/'+String(target||'').replace(/^\\.\\//,''));
+    const doc=parser.parseFromString(entries[path]||'','application/xml');
+    const rows=[...doc.getElementsByTagNameNS('*','row')].map(row=>{
+      const cells=[];
+      [...row.getElementsByTagNameNS('*','c')].forEach(cell=>{const ref=cell.getAttribute('r');cells[columnIndex(ref)]=xlsxCellValue(cell,sharedStrings);});
+      return cells;
+    });
+    return {name:sheet.getAttribute('name')||'Sheet',rows};
+  }).filter(s=>s.rows.length);
+}
+
+function createTextPdf(lines) {
+  const encoder=new TextEncoder(), pageLines=lines.length?lines:[['OrbitBoard']];
+  const pages=[]; for(let i=0;i<pageLines.length;i+=48) pages.push(pageLines.slice(i,i+48));
+  const objects=[]; const addObj=s=>{objects.push(encoder.encode(s));return objects.length;};
+  const catalog=addObj('<< /Type /Catalog /Pages 2 0 R >>');
+  const pagesObj=addObj('<< /Type /Pages /Kids [PAGE_KIDS] /Count PAGE_COUNT >>');
+  const font=addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  const pageIds=[];
+  const escape=s=>String(s??'').replace(/\\/g,'\\\\').replace(/\\(/g,'\\\\(').replace(/\\)/g,'\\\\)').replace(/[\\r\\n]+/g,' ');
+  for(const page of pages){
+    let stream='BT\\n/F1 9 Tf\\n40 800 Td\\n';
+    page.forEach((line,idx)=>{if(idx) stream+='0 -15 Td\\n';stream+='('+escape(line)+') Tj\\n';});
+    stream+='ET\\n';
+    const contentId=addObj('<< /Length '+encoder.encode(stream).length+' >>\\nstream\\n'+stream+'endstream');
+    const pageId=addObj('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 '+font+' 0 R >> >> /Contents '+contentId+' 0 R >>');
+    pageIds.push(pageId);
+  }
+  const finalParts=[]; const header=new Uint8Array([37,80,68,70,45,49,46,52,10,37,255,255,255,255,10]); finalParts.push(header);
+  const offsets=[0]; let pos=header.length;
+  objects.forEach((obj,i)=>{offsets[i+1]=pos;const b=encoder.encode((i+1)+' 0 obj\\n');const e=encoder.encode('\\nendobj\\n');finalParts.push(b,obj,e);pos+=b.length+obj.length+e.length;});
+  const kids=pageIds.map(id=>id+' 0 R').join(' ');
+  const pagesBytes=encoder.encode('2 0 obj\\n<< /Type /Pages /Kids ['+kids+'] /Count '+pageIds.length+' >>\\nendobj\\n');
+  const pagesStart=offsets[pagesObj]; finalParts.push(pagesBytes); pos+=pagesBytes.length;
+  const xrefStart=pos; let xref='xref\\n0 '+(objects.length+1)+'\\n0000000000 65535 f \\n';
+  for(let i=1;i<=objects.length;i++) xref+=String(i===pagesObj?pagesStart:offsets[i]).padStart(10,'0')+' 00000 n \\n';
+  xref+='trailer << /Size '+(objects.length+1)+' /Root '+catalog+' 0 R >>\\nstartxref\\n'+xrefStart+'\\n%%EOF';
+  finalParts.push(encoder.encode(xref));
+  return new Blob(finalParts,{type:'application/pdf'});
+}
+
+function XlsxToPdf() {
+  const [file,setFile]=useState(null),[status,setStatus]=useState('');
+  const convert=async()=>{
+    if(!file){setStatus('Choose an XLSX file first.');return;}
+    setStatus('Reading workbook...');
+    try {
+      const entries=await unzipXlsxEntries(file), sheets=parseXlsxEntries(entries), lines=[];
+      sheets.forEach(sheet=>{
+        lines.push('Sheet: '+sheet.name);
+        sheet.rows.slice(0,120).forEach(row=>{
+          const values=row.map(v=>String(v??'').trim());
+          while(values.length&&values[values.length-1]==='') values.pop();
+          lines.push(values.join(' | ').slice(0,180));
+        });
+        lines.push('');
+      });
+      if(!lines.length) throw new Error('No readable worksheet data found');
+      downloadBlob(createTextPdf(lines),'orbitboard-spreadsheet.pdf');
+      setStatus('Done — a readable PDF table was generated. Basic cell values are preserved; Excel styling, formulas and charts are not.');
+    } catch(e) { setStatus(e.message||'Could not convert this XLSX file.'); }
+  };
+  return <div className="space-y-5">
+    <label className="block"><span className="text-xs font-medium text-slate-400">Excel workbook (.xlsx)</span><input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('');}} className="mt-2 block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/></label>
+    <button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold hover:bg-violet-500">Convert XLSX to PDF</button>
+    {status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}
+    <p className="text-xs text-slate-500">Runs locally in your browser. This MVP exports readable cell values from workbook sheets; advanced Excel formatting is intentionally not reproduced.</p>
+  </div>
+}
+
 function ImageToPdf() {
   const [file,setFile]=useState(null),[preview,setPreview]=useState(''),[status,setStatus]=useState('');
   const convert=async()=>{
@@ -330,7 +456,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
