@@ -152,6 +152,43 @@ function Gst() {
   </div>
 }
 
+
+function JsonFormatter() {
+  const [input,setInput]=useState('{"name":"OrbitBoard","tools":["JSON","JWT"]}'); const [mode,setMode]=useState('format');
+  let output='',error='';
+  try { const parsed=JSON.parse(input); output=mode==='minify'?JSON.stringify(parsed):JSON.stringify(parsed,null,2); } catch(e){ error=e.message; }
+  return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('format')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Format</button><button onClick={()=>setMode('minify')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Minify</button></div>{error?<p className="text-sm text-red-400">Invalid JSON: {error}</p>:<textarea readOnly value={output} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>}</div>
+}
+function JsonToCsv() {
+  const [input,setInput]=useState('[{"name":"Mohan","role":"Developer"},{"name":"Mitra","role":"Assistant"}]'); let csv='',error='';
+  try { const rows=JSON.parse(input); if(!Array.isArray(rows)) throw new Error('JSON must be an array of objects'); const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))]; const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; csv=[keys.map(esc).join(','),...rows.map(r=>keys.map(k=>esc(typeof r[k]==='object'?JSON.stringify(r[k]):r[k])).join(','))].join('\n'); } catch(e){error=e.message;}
+  return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>{error?<p className="text-sm text-red-400">{error}</p>:<textarea readOnly value={csv} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>}<p className="text-xs text-slate-500">Best for flat JSON arrays. Nested values are stored as JSON text.</p></div>
+}
+function Base64Tool() {
+  const [input,setInput]=useState('Hello OrbitBoard'); const [mode,setMode]=useState('encode'); let output='',error='';
+  try { output=mode==='encode'?btoa(unescape(encodeURIComponent(input))):decodeURIComponent(escape(atob(input))); } catch { error='Invalid Base64 input'; }
+  return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('encode')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Encode</button><button onClick={()=>setMode('decode')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Decode</button></div><textarea readOnly value={error||output} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div>
+}
+function JwtDecoder() {
+  const [token,setToken]=useState(''); let header='',payload='',error='';
+  try { if(token.trim()){const p=token.split('.'); if(p.length!==3) throw new Error('A JWT must contain three parts'); const dec=s=>JSON.stringify(JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))))),null,2); header=dec(p[0]);payload=dec(p[1]);} } catch(e){error='Invalid JWT: '+e.message;}
+  return <div className="space-y-4"><textarea value={token} onChange={e=>setToken(e.target.value)} placeholder="Paste JWT here" className="w-full h-32 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>{error&&<p className="text-sm text-red-400">{error}</p>}<div className="grid sm:grid-cols-2 gap-4"><textarea readOnly value={header} placeholder="Header" className="w-full h-52 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><textarea readOnly value={payload} placeholder="Payload" className="w-full h-52 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div><p className="text-xs text-slate-500">Decoded locally in your browser. Signature verification is not performed.</p></div>
+}
+function UnixTimestamp() {
+  const [ts,setTs]=useState(String(Math.floor(Date.now()/1000))); const [date,setDate]=useState('');
+  const parsed=Number(ts); const readable=Number.isFinite(parsed)?new Date(parsed*1000).toISOString():'Invalid timestamp'; const fromDate=date?Math.floor(new Date(date).getTime()/1000):'';
+  return <div className="space-y-4"><Field label="Unix timestamp (seconds)" value={ts} onChange={setTs}/><Result label="UTC date" value={readable} highlight/><label className="block"><span className="text-xs font-medium text-slate-400">Date/time to convert</span><input type="datetime-local" value={date} onChange={e=>setDate(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/></label>{date&&<Result label="Unix timestamp" value={String(fromDate)}/>}</div>
+}
+function UuidGenerator() {
+  const [count,setCount]=useState('5'); const [ids,setIds]=useState(()=>Array.from({length:5},()=>crypto.randomUUID()));
+  return <div className="space-y-4"><Field label="Number of UUIDs" value={count} onChange={setCount}/><button onClick={()=>setIds(Array.from({length:Math.min(50,Math.max(1,Math.floor(num(count))))},()=>crypto.randomUUID()))} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Generate UUIDs</button><textarea readOnly value={ids.join('\n')} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div>
+}
+function UrlEncoder() {
+  const [input,setInput]=useState('https://orbitboard.in/tools?name=Mohan Raj'); const [mode,setMode]=useState('encode'); let output='';
+  try { output=mode==='encode'?encodeURIComponent(input):decodeURIComponent(input); } catch { output='Invalid encoded URL component'; }
+  return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('encode')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Encode</button><button onClick={()=>setMode('decode')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Decode</button></div><textarea readOnly value={output} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div>
+}
+
 function Sip() {
   const [monthly,setMonthly]=useState('10000'),[rate,setRate]=useState('12'),[years,setYears]=useState('10');
   const p=num(monthly), r=num(rate)/1200, n=num(years)*12;
@@ -174,7 +211,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug);
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'emi':Emi,'gst':Gst,'sip':Sip }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   if(!tool || !content) return <div className="min-h-screen bg-slate-950 text-white p-10"><Link to="/tools">← Tools</Link><h1 className="text-2xl font-bold mt-8">Tool not found</h1></div>;
   const Tool=content;
   return <div className="min-h-screen bg-slate-950 text-slate-100">
