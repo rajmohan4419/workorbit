@@ -1,114 +1,255 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, Calculator, Code2, Coins, ArrowRight, Sparkles, Search, Star, Clock3 } from 'lucide-react';
+import {
+  ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
+  Clock3, Search, Sparkles, Star, WandSparkles
+} from 'lucide-react';
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
 
-const categories = ['All', 'Career', 'Finance', 'Everyday', 'Developer'];
+const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
+
 const categoryMeta = {
-  Career: { icon: BriefcaseBusiness, label: 'Career & Salary', description: 'Make clearer decisions about salary, offers and your next move.' },
-  Finance: { icon: Coins, label: 'Money & Finance', description: 'Quick estimates for loans, taxes, investments and everyday money.' },
-  Everyday: { icon: Calculator, label: 'Everyday', description: 'Small calculations that save a little time every day.' },
-  Developer: { icon: Code2, label: 'Developer Tools', description: 'Fast browser-based utilities for developers and technical work.' }
+  Career: {
+    icon: BriefcaseBusiness,
+    label: 'Career & Salary',
+    description: 'Salary, offers, notice periods and career decisions.',
+    examples: ['12 LPA in hand', 'Compare offers', 'Calculate hike']
+  },
+  Finance: {
+    icon: Coins,
+    label: 'Money & Finance',
+    description: 'Loans, GST, investments and everyday money math.',
+    examples: ['EMI for 10 lakh', 'Calculate GST', 'Estimate SIP']
+  },
+  Everyday: {
+    icon: Calculator,
+    label: 'Everyday',
+    description: 'Converters and practical file utilities.',
+    examples: ['Convert PDF', 'Resize image', 'Convert CSV']
+  },
+  Developer: {
+    icon: Code2,
+    label: 'Developer Tools',
+    description: 'Fast browser utilities for data and technical work.',
+    examples: ['Format JSON', 'Decode JWT', 'Convert JSON']
+  }
 };
 
+const intentMap = [
+  { terms: ['salary', 'ctc', 'in hand', 'take home', 'take-home', 'hike', 'increment', 'offer', 'notice', 'experience'], slugs: ['ctc-to-inhand', 'salary-hike', 'offer-comparison', 'notice-period', 'experience'] },
+  { terms: ['emi', 'loan', 'interest', 'gst', 'sip', 'investment'], slugs: ['emi', 'gst', 'sip'] },
+  { terms: ['json', 'jwt', 'base64', 'xml', 'markdown', 'timestamp', 'uuid', 'url', 'developer', 'api'], slugs: ['json-formatter', 'jwt-decoder', 'base64', 'json-to-csv', 'json-to-xml', 'xml-to-json', 'markdown-to-html', 'unix-timestamp', 'uuid-generator', 'url-encoder'] },
+  { terms: ['csv', 'xlsx', 'excel', 'spreadsheet'], slugs: ['csv-to-xlsx', 'xlsx-to-csv', 'json-to-xlsx', 'csv-to-pdf', 'csv-to-json'] },
+  { terms: ['pdf', 'document'], slugs: ['pdf-workspace', 'pdf-merge', 'pdf-split', 'pdf-to-text', 'pdf-to-jpg', 'pdf-to-png', 'image-to-pdf', 'txt-to-pdf', 'pdf-compressor'] },
+  { terms: ['image', 'jpg', 'jpeg', 'png', 'webp', 'photo', 'picture'], slugs: ['jpg-to-png', 'png-to-jpg', 'webp-to-jpg', 'image-resizer', 'image-compressor', 'image-metadata-remover', 'svg-to-png'] },
+  { terms: ['convert', 'converter'], slugs: ['length-converter', 'weight-converter', 'temperature-converter', 'time-converter'] },
+  { terms: ['percentage', 'percent', '%'], slugs: ['percentage'] }
+];
+
 export default function ToolsHome() {
-  const [category,setCategory]=useState('All');
-  const [query,setQuery]=useState('');
-  const [favorites,setFavorites]=useState(()=>{try{return JSON.parse(localStorage.getItem('orbitboard:favorites')||'[]')}catch{return []}});
-  const [recent,setRecent]=useState(()=>{try{return JSON.parse(localStorage.getItem('orbitboard:recent')||'[]')}catch{return []}});
-  const [view,setView]=useState('all');
-  useEffect(()=>{localStorage.setItem('orbitboard:favorites',JSON.stringify(favorites))},[favorites]);
-  useEffect(()=>{localStorage.setItem('orbitboard:recent',JSON.stringify(recent))},[recent]);
-  const toggleFavorite=(slug)=>setFavorites(prev=>prev.includes(slug)?prev.filter(x=>x!==slug):[...prev,slug]);
-  const addRecent=(slug)=>setRecent(prev=>[slug,...prev.filter(x=>x!==slug)].slice(0,6));
-  const filtered=useMemo(()=>TOOLS.filter(t=>{
-    const q=query.trim().toLowerCase();
-    if(category!=='All'&&t.category!==category) return false;
-    if(!q) return true;
-    const info=TOOL_CONTENT[t.slug];
-    const haystack=[t.name,t.description,t.category,info?.keywords||''].join(' ').toLowerCase();
-    return haystack.includes(q);
-  }),[category,query]);
-  const popularSlugs=['ctc-to-inhand','salary-hike','offer-comparison','emi','json-formatter','jwt-decoder'];
-  const popularTools=popularSlugs.map(slug=>TOOLS.find(t=>t.slug===slug)).filter(Boolean);
-  const visibleTools=useMemo(()=>{let list=filtered;if(view==='favorites')list=list.filter(t=>favorites.includes(t.slug));if(view==='recent')list=list.filter(t=>recent.includes(t.slug)).sort((a,b)=>recent.indexOf(a.slug)-recent.indexOf(b.slug));return list},[filtered,view,favorites,recent]);
-  return <div className="min-h-screen bg-slate-950 text-slate-100">
-    <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">ORBIT<span className="text-violet-400">BOARD</span></Link>
-        <a href="#tools" className="text-sm font-medium text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg px-3 py-2">Browse tools</a>
-      </div>
-    </header>
-    <main>
-      <section className="mb-10 rounded-3xl border border-violet-500/20 bg-violet-500/[0.06] p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
-          <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-violet-300">Converter Hub</p><h2 className="mt-2 text-2xl sm:text-3xl font-black">Convert files without uploading them.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Image, spreadsheet and data converters designed for quick browser-based jobs.</p></div>
-          <button onClick={()=>setCategory('Converters')} className="shrink-0 rounded-xl border border-violet-500/30 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-violet-200 hover:border-violet-400">Explore converters</button>
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState(null);
+  const [favorites, setFavorites] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }
+  });
+  const [recent, setRecent] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('orbitboard:recent') || '[]'); } catch { return []; }
+  });
+
+  useEffect(() => { localStorage.setItem('orbitboard:favorites', JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => { localStorage.setItem('orbitboard:recent', JSON.stringify(recent)); }, [recent]);
+
+  const toggleFavorite = (slug) => setFavorites(prev => prev.includes(slug) ? prev.filter(x => x !== slug) : [slug, ...prev]);
+  const addRecent = (slug) => setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
+
+  const searchResults = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const direct = TOOLS.filter(tool => {
+      const info = TOOL_CONTENT[tool.slug];
+      const haystack = [tool.name, tool.description, tool.category, info?.keywords || ''].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+
+    const intentSlugs = intentMap
+      .filter(group => group.terms.some(term => q.includes(term)))
+      .flatMap(group => group.slugs);
+
+    const merged = [...intentSlugs.map(slug => TOOLS.find(t => t.slug === slug)), ...direct].filter(Boolean);
+    return [...new Map(merged.map(tool => [tool.slug, tool])).values()].slice(0, 8);
+  }, [query]);
+
+  const categoryTools = useMemo(
+    () => category ? TOOLS.filter(tool => tool.category === category).slice(0, 8) : [],
+    [category]
+  );
+
+  const recentTools = recent.map(slug => TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
+
+  const showExplore = !query.trim() && !category;
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
+            ORBIT<span className="text-violet-400">BOARD</span>
+          </Link>
+          <div className="text-xs font-medium text-slate-500">Free • No sign-up</div>
         </div>
-        <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {TOOLS.filter(t=>converterSlugs.has(t.slug)).slice(0,4).map(t=><Link key={t.slug} to={`/tools/${t.slug}`} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 hover:border-violet-500/40"><div className="text-xs font-bold text-violet-300">{t.icon}</div><div className="mt-2 font-semibold text-sm text-white">{t.name}</div><div className="mt-1 text-xs text-slate-500">Open tool →</div></Link>)}
-        </div>
-      </section>
-      <section className="relative overflow-hidden border-b border-slate-800/70">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(139,92,246,.18),transparent_32%)]" aria-hidden="true"/>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 grid lg:grid-cols-[1.1fr_.9fr] gap-12 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300"><Sparkles size={14}/> Free • No sign-up</div>
-            <h1 className="mt-6 text-4xl sm:text-6xl font-black tracking-tight max-w-3xl">Useful tools for work, money and everyday life.</h1>
-            <p className="mt-5 text-lg sm:text-xl leading-8 text-slate-400 max-w-2xl">Calculate, convert and compare without creating an account. Built for people who just need the answer.</p>
-            <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <a href="#tools" className="inline-flex justify-center items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-500 px-5 py-3 font-semibold focus:outline-none focus:ring-2 focus:ring-violet-300">Explore tools <ArrowRight size={18}/></a>
-              <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 flex-1 max-w-md"><Search size={18} className="text-slate-500" aria-hidden="true"/><label htmlFor="tool-search" className="sr-only">Search tools</label><input id="tool-search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search a tool..." className="w-full bg-transparent outline-none text-sm placeholder:text-slate-600"/></div>
-            </div>
-          </div>
-          <div className="hidden lg:block" aria-hidden="true">
-            <div className="relative mx-auto max-w-md aspect-square rounded-[2rem] border border-slate-800 bg-slate-900/80 p-8 shadow-2xl">
-              <div className="absolute -top-5 -right-5 rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4"><Code2 className="text-violet-300" size={28}/></div>
-              <div className="h-full rounded-2xl border border-slate-800 bg-slate-950 p-6 font-mono text-sm text-slate-400">
-                <p className="text-violet-300">orbitboard.tools()</p><p className="mt-4">→ salary</p><p>→ finance</p><p>→ developer</p><p>→ everyday</p><p className="mt-4 text-emerald-400">✓ answer found</p>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6">
+        <section className="min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16">
+          <div className="w-full">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300">
+                <Sparkles size={14} /> Practical tools, one place
+              </div>
+              <h1 className="mt-6 text-4xl sm:text-6xl font-black tracking-tight">
+                What do you need to <span className="text-violet-400">get done?</span>
+              </h1>
+              <p className="mt-5 text-base sm:text-lg leading-7 text-slate-400">
+                Tell OrbitBoard what you are trying to do. We’ll take you straight to the right tool.
+              </p>
+
+              <div className="mt-8 relative max-w-2xl mx-auto">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 shadow-2xl shadow-violet-950/20 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/20">
+                  <Search size={22} className="text-slate-500 shrink-0" aria-hidden="true" />
+                  <label htmlFor="tool-search" className="sr-only">Describe what you need</label>
+                  <input
+                    id="tool-search"
+                    autoFocus
+                    value={query}
+                    onChange={e => { setQuery(e.target.value); setCategory(null); }}
+                    placeholder="e.g. “I need my salary in hand”"
+                    className="w-full bg-transparent outline-none text-base placeholder:text-slate-600"
+                  />
+                  {query && <button type="button" onClick={() => setQuery('')} className="text-xs text-slate-500 hover:text-white">Clear</button>}
+                </div>
+
+                {query && (
+                  <div className="absolute z-20 mt-3 w-full rounded-2xl border border-slate-800 bg-slate-900 p-3 text-left shadow-2xl">
+                    <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      {searchResults.length ? 'We found these tools' : 'No direct match yet'}
+                    </div>
+                    {searchResults.map(tool => <ResultRow key={tool.slug} tool={tool} onUse={addRecent} />)}
+                    {!searchResults.length && (
+                      <div className="px-2 py-6 text-center text-sm text-slate-500">
+                        Try “salary”, “EMI”, “PDF”, “Excel”, “JSON” or “image”.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
+                  <button key={example} type="button" onClick={() => setQuery(example)} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-300">
+                    {example}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {!query && (
+              <div className="mt-14 max-w-4xl mx-auto">
+                <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-slate-600">
+                  <WandSparkles size={14} /> Explore by intent
+                </div>
+                <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {categories.map(name => {
+                    const meta = categoryMeta[name];
+                    const Icon = meta.icon;
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => setCategory(name)}
+                        className="group text-left rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-slate-900 transition"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center">
+                          <Icon size={20} />
+                        </div>
+                        <h2 className="mt-4 font-bold text-white group-hover:text-violet-300">{meta.label}</h2>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</p>
+                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-400">Explore <ArrowRight size={13} /></span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {category && !query && (
+              <div className="mt-10 max-w-4xl mx-auto">
+                <button type="button" onClick={() => setCategory(null)} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-white">
+                  <ChevronLeft size={16} /> All areas
+                </button>
+                <div className="mt-4 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Explore</p>
+                    <h2 className="mt-1 text-2xl font-black">{categoryMeta[category].label}</h2>
+                  </div>
+                  <span className="text-xs text-slate-600">{categoryTools.length} shown</span>
+                </div>
+                <div className="mt-5 grid sm:grid-cols-2 gap-3">
+                  {categoryTools.map(tool => <ResultRow key={tool.slug} tool={tool} onUse={addRecent} favorite={favorites.includes(tool.slug)} onFavorite={toggleFavorite} />)}
+                </div>
+              </div>
+            )}
+
+            {showExplore && recentTools.length > 0 && (
+              <div className="mt-10 max-w-4xl mx-auto">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    <Clock3 size={14} /> Continue where you left off
+                  </div>
+                  <span className="text-xs text-slate-700">{recentTools.length} recent</span>
+                </div>
+                <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {recentTools.map(tool => <ResultRow key={tool.slug} tool={tool} onUse={addRecent} compact />)}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
-      <section aria-labelledby="popular-heading" className="max-w-7xl mx-auto px-4 sm:px-6 pt-12">
-        <div className="flex items-end justify-between gap-4">
-          <div><p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Start here</p><h2 id="popular-heading" className="mt-2 text-2xl sm:text-3xl font-black">Popular tools</h2><p className="mt-2 text-sm text-slate-500">Quick access to tools people are most likely to need.</p></div>
-          <a href="#tools" className="hidden sm:inline text-sm font-semibold text-violet-400 hover:text-violet-300">Browse all <ArrowRight size={15} className="inline ml-1"/></a>
-        </div>
-        <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {popularTools.map(tool=><ToolCard key={tool.slug} tool={tool} favorite={favorites.includes(tool.slug)} onFavorite={toggleFavorite} onUse={addRecent} compact/>)}
-        </div>
-      </section>
-      <section id="tools" className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Tool views">
-          <button type="button" onClick={()=>setView('all')} className={view==='all'?'rounded-full px-4 py-2 text-sm font-medium border border-violet-500 bg-violet-500/15 text-violet-200':'rounded-full px-4 py-2 text-sm font-medium border border-slate-800 bg-slate-900 text-slate-400 hover:text-white'}><Calculator size={15} className="inline mr-2"/>All tools</button>
-          <button type="button" onClick={()=>setView('recent')} className={view==='recent'?'rounded-full px-4 py-2 text-sm font-medium border border-violet-500 bg-violet-500/15 text-violet-200':'rounded-full px-4 py-2 text-sm font-medium border border-slate-800 bg-slate-900 text-slate-400 hover:text-white'}><Clock3 size={15} className="inline mr-2"/>Recently used</button>
-          <button type="button" onClick={()=>setView('favorites')} className={view==='favorites'?'rounded-full px-4 py-2 text-sm font-medium border border-violet-500 bg-violet-500/15 text-violet-200':'rounded-full px-4 py-2 text-sm font-medium border border-slate-800 bg-slate-900 text-slate-400 hover:text-white'}><Star size={15} className="inline mr-2"/>Favorites {favorites.length>0&&'('+favorites.length+')'}</button>
-          {categories.map(c=><button key={c} type="button" onClick={()=>setCategory(c)} role="tab" aria-selected={category===c} className={`rounded-full px-4 py-2 text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-violet-500 ${category===c?'border-violet-500 bg-violet-500/15 text-violet-200':'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'}`}>{c}</button>)}
-        </div>
-        <div className="mt-5 flex items-center justify-between gap-4">
-          <p className="text-sm text-slate-500" aria-live="polite">{filtered.length} tool{filtered.length===1?'':'s'} available</p>
-          {query&&<button type="button" onClick={()=>setQuery('')} className="text-sm font-medium text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg px-2 py-1">Clear search</button>}
-        </div>
-        <section className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {visibleTools.map(tool=><ToolCard key={tool.slug} tool={tool} favorite={favorites.includes(tool.slug)} onFavorite={toggleFavorite} onUse={addRecent}/>)}
         </section>
-        {!visibleTools.length&&<div className="rounded-2xl border border-dashed border-slate-800 py-16 text-center">
-          <p className="text-base font-semibold text-slate-300">{view==='favorites'?'No favorite tools yet.':view==='recent'?'No recently used tools yet.':'No tools match “'+query+'”.'}</p>
-          <p className="mt-2 text-sm text-slate-500">{view==='favorites'?'Star a tool to keep it here for your next visit.':view==='recent'?'Open any tool and it will appear here.':'Try a broader term such as salary, loan, JSON or percentage.'}</p>
-          <button type="button" onClick={()=>{setQuery('');setCategory('All')}} className="mt-5 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-300">Show all tools</button>
-        </div>}
-      </section>
-    </main>
-    <footer className="border-t border-slate-900 py-10 text-center text-sm text-slate-600">OrbitBoard • Practical tools for work & life</footer>
-  </div>
+
+        <section className="border-t border-slate-900 py-14">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Still exploring?</p>
+              <h2 className="mt-1 text-xl font-bold">Every tool, when you need it.</h2>
+            </div>
+            <Link to="/tools" className="text-sm font-semibold text-violet-400 hover:text-violet-300">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-slate-900 py-8 text-center text-sm text-slate-600">
+        OrbitBoard • Practical tools for work & life
+      </footer>
+    </div>
+  );
 }
-function ToolCard({tool,favorite,onFavorite,onUse,compact=false}) {
-  const Icon=categoryMeta[tool.category]?.icon||Calculator;
-  return <Link to={`/tools/${tool.slug}`} onClick={()=>onUse(tool.slug)} className="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:-translate-y-0.5 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
-    <div className="flex items-start justify-between"><div className="w-11 h-11 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center"><Icon size={21}/></div><button type="button" aria-label={favorite?`Remove ${tool.name} from favorites`:`Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e=>{e.preventDefault();e.stopPropagation();onFavorite(tool.slug)}} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500"><Star size={17} fill={favorite?'currentColor':'none'}/></button></div>
-    <h2 className="mt-5 text-lg font-bold group-hover:text-violet-300">{tool.name}</h2><p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
-    <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-violet-400">{compact?'Open tool':'Use tool'} <ArrowRight size={15}/></span>
-  </Link>
+
+function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite }) {
+  const Icon = categoryMeta[tool.category]?.icon || Calculator;
+  return (
+    <div className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-violet-500/40">
+      <Link to={`/tools/${tool.slug}`} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
+        <div className="w-9 h-9 shrink-0 rounded-lg bg-violet-500/10 text-violet-300 flex items-center justify-center"><Icon size={17} /></div>
+        <div className="min-w-0">
+          <div className="font-semibold text-sm text-white group-hover:text-violet-300 truncate">{tool.name}</div>
+          {!compact && <div className="mt-0.5 text-xs text-slate-500 truncate">{tool.description}</div>}
+        </div>
+        <ArrowRight size={15} className="shrink-0 text-slate-600 group-hover:text-violet-400" />
+      </Link>
+      {onFavorite && (
+        <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 text-slate-600 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
+          <Star size={15} fill={favorite ? 'currentColor' : 'none'} />
+        </button>
+      )}
+    </div>
+  );
 }
