@@ -511,7 +511,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
@@ -533,6 +533,35 @@ export default function ToolPage() {
     </main><footer className="border-t border-slate-900 py-10 text-center text-sm text-slate-600">OrbitBoard • Practical tools for work & life</footer>
   </div>
 }
+function ImageCompressor() {
+  const [file,setFile]=useState(null),[quality,setQuality]=useState('0.72'),[format,setFormat]=useState('image/jpeg'),[status,setStatus]=useState(''),[before,setBefore]=useState(0),[after,setAfter]=useState(0);
+  const compress=async()=>{
+    if(!file){setStatus('Choose an image first.');return;}
+    setBefore(file.size);
+    const url=URL.createObjectURL(file);
+    try {
+      const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;});
+      const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+      const ctx=canvas.getContext('2d');if(format==='image/jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);}ctx.drawImage(image,0,0);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,format,Number(quality)));setAfter(blob.size);
+      const ext=format==='image/png'?'png':format==='image/webp'?'webp':'jpg';
+      downloadBlob(blob,(file.name.replace(/\.[^.]+$/,'')||'orbitboard-image')+'-compressed.'+ext);setStatus('Done — compressed image downloaded.');
+    } catch {setStatus('Could not compress this image.');} finally {URL.revokeObjectURL(url);}
+  };
+  const saved=before&&after?Math.max(0,Math.round((1-after/before)*100)):0;
+  return <div className="space-y-5"><input type="file" accept="image/*" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><div className="grid sm:grid-cols-2 gap-4"><label className="block"><span className="text-xs font-medium text-slate-400">Output format</span><select value={format} onChange={e=>setFormat(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option><option value="image/png">PNG</option></select></label><label className="block"><span className="text-xs font-medium text-slate-400">Quality: {Math.round(Number(quality)*100)}%</span><input type="range" min="0.4" max="1" step="0.01" value={quality} onChange={e=>setQuality(e.target.value)} className="mt-3 w-full"/></label></div><button onClick={compress} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Compress & Download</button>{after>0&&<div className="grid sm:grid-cols-3 gap-3"><Result label="Original" value={(before/1024).toFixed(1)+' KB'}/><Result label="Compressed" value={(after/1024).toFixed(1)+' KB'}/><Result label="Size reduction" value={saved+'%'} highlight/></div>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Re-encodes the image locally in your browser. Metadata may be removed during re-encoding.</p></div>
+}
+
+function ImageMetadataRemover() {
+  const [file,setFile]=useState(null),[format,setFormat]=useState('image/jpeg'),[status,setStatus]=useState('');
+  const clean=async()=>{
+    if(!file){setStatus('Choose an image first.');return;}
+    const url=URL.createObjectURL(file);
+    try {const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;});const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const ctx=canvas.getContext('2d');if(format==='image/jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);}ctx.drawImage(image,0,0);const blob=await new Promise(resolve=>canvas.toBlob(resolve,format,0.95));const ext=format==='image/png'?'png':format==='image/webp'?'webp':'jpg';downloadBlob(blob,(file.name.replace(/\.[^.]+$/,'')||'orbitboard-image')+'-clean.'+ext);setStatus('Done — re-encoded image downloaded.');}catch{setStatus('Could not process this image.')}finally{URL.revokeObjectURL(url);}
+  };
+  return <div className="space-y-5"><input type="file" accept="image/*" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><label className="block"><span className="text-xs font-medium text-slate-400">Output format</span><select value={format} onChange={e=>setFormat(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select></label><button onClick={clean} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Remove Metadata & Download</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">The image is decoded and re-encoded locally; this can strip embedded metadata supported by the browser's image pipeline.</p></div>
+}
+
 function ToolPageActions({tool}) {
   const [shared,setShared]=useState(false);
   const share=async()=>{
