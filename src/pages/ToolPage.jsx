@@ -475,11 +475,27 @@ export default function ToolPage() {
     <main>
       <section className="border-b border-slate-800/70 bg-gradient-to-b from-slate-900 to-slate-950"><div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14"><div className="grid lg:grid-cols-[.9fr_1.1fr] gap-10 items-center"><div><div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300"><CategoryIcon size={14}/>{tool.category} tool</div><h1 className="text-3xl sm:text-5xl font-black tracking-tight mt-5">{tool.name}</h1><p className="mt-4 text-base sm:text-lg leading-8 text-slate-400">{info?.intro||tool.description}</p></div><div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 min-h-56 sm:min-h-72"><img src={visualFor(tool.category)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35"/><div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/60 to-transparent"/><div className="relative h-full min-h-56 sm:min-h-72 p-7 flex items-end"><div><p className="text-xs uppercase tracking-[.2em] text-violet-300">OrbitBoard</p><p className="mt-2 text-2xl font-bold text-white">Get the answer. Keep moving.</p></div></div></div></div></div></section>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid lg:grid-cols-[minmax(0,1fr)_300px] gap-10"><div>
-        <section aria-labelledby="tool-heading" className="rounded-3xl border border-slate-800 bg-slate-900 p-5 sm:p-8 shadow-2xl"><h2 id="tool-heading" className="sr-only">Interactive tool</h2><Tool/></section>
+        <section aria-labelledby="tool-heading" className="rounded-3xl border border-slate-800 bg-slate-900 p-5 sm:p-8 shadow-2xl"><h2 id="tool-heading" className="sr-only">Interactive tool</h2><ToolPageActions tool={tool}/><Tool/></section>
         {info&&<section className="mt-10 grid md:grid-cols-2 gap-6"><article className="rounded-2xl border border-slate-800 bg-slate-900 p-6"><h2 className="text-xl font-bold">How to use it</h2><ol className="mt-5 space-y-4">{info.how.map((step,i)=><li key={step} className="flex gap-3 text-sm leading-6 text-slate-400"><span className="shrink-0 w-6 h-6 rounded-full bg-violet-500/15 text-violet-300 flex items-center justify-center text-xs font-bold">{i+1}</span>{step}</li>)}</ol></article><article className="rounded-2xl border border-slate-800 bg-slate-900 p-6"><h2 className="text-xl font-bold">Why use OrbitBoard?</h2><ul className="mt-5 space-y-4 text-sm leading-6 text-slate-400"><li className="flex gap-3"><CheckCircle2 className="shrink-0 text-emerald-400 mt-1" size={17}/>Free to use with no sign-up.</li><li className="flex gap-3"><CheckCircle2 className="shrink-0 text-emerald-400 mt-1" size={17}/>Designed for quick, practical answers.</li><li className="flex gap-3"><CheckCircle2 className="shrink-0 text-emerald-400 mt-1" size={17}/>Developer tools run in your browser.</li></ul></article></section>}
         {info?.faq?.length>0&&<section className="mt-10"><h2 className="text-2xl font-bold">Frequently asked questions</h2><div className="mt-5 space-y-3">{info.faq.map(([q,a])=><details key={q} className="group rounded-2xl border border-slate-800 bg-slate-900 p-5"><summary className="cursor-pointer font-semibold text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded">{q}</summary><p className="mt-3 text-sm leading-7 text-slate-400">{a}</p></details>)}</div></section>}
       </div><aside className="lg:pt-2"><div className="sticky top-24 rounded-2xl border border-slate-800 bg-slate-900 p-5"><p className="text-xs font-semibold uppercase tracking-wider text-violet-400">More {tool.category} tools</p><div className="mt-4 space-y-2">{related.map(r=><Link key={r.slug} to={`/tools/${r.slug}`} className="flex items-center justify-between rounded-xl px-3 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-500">{r.name}<ArrowRight size={15}/></Link>)}</div></div></aside></div>
     </main><footer className="border-t border-slate-900 py-10 text-center text-sm text-slate-600">OrbitBoard • Practical tools for work & life</footer>
   </div>
 }
+function ToolPageActions({tool}) {
+  const [shared,setShared]=useState(false);
+  const share=async()=>{
+    const data={title:tool.name,text:'Try '+tool.name+' on OrbitBoard',url:window.location.href};
+    try {
+      if(navigator.share) await navigator.share(data);
+      else { await navigator.clipboard.writeText(window.location.href); setShared(true); setTimeout(()=>setShared(false),1600); }
+    } catch {}
+  };
+  const reset=()=>window.location.reload();
+  return <div className="mb-5 flex flex-wrap gap-2">
+    <button onClick={share} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white">{shared?'Link copied':'Share tool'}</button>
+    <button onClick={reset} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-slate-600 hover:text-white">Reset</button>
+  </div>
+}
+
 function visualFor(category) { const images={Career:'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=80',Finance:'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80',Developer:'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80',Everyday:'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80'}; return images[category]||images.Everyday; }
