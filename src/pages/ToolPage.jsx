@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Code2, BriefcaseBusiness, Coins, Calculator } from 'lucide-react';
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
 import { PDFDocument } from 'pdf-lib';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const money = n => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.max(0, Number(n) || 0));
 const num = v => Math.max(0, Number(v) || 0);
@@ -512,7 +515,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
@@ -579,6 +582,27 @@ function PdfSplit() {
   const [file,setFile]=useState(null),[status,setStatus]=useState('');
   const split=async()=>{if(!file){setStatus('Choose a PDF first.');return;}try{const src=await PDFDocument.load(await file.arrayBuffer());for(let i=0;i<src.getPageCount();i++){const out=await PDFDocument.create();const [p]=await out.copyPages(src,[i]);out.addPage(p);const bytes=await out.save();downloadBlob(new Blob([bytes],{type:'application/pdf'}),`page-${i+1}.pdf`);}setStatus('Done — individual page PDFs downloaded.');}catch{setStatus('Could not split this PDF.');}};
   return <div className="space-y-5"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button onClick={split} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Split into Pages</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Each page is saved as a separate PDF in your browser.</p></div>
+}
+
+function PdfToImages({format='image/png'}) {
+  const [file,setFile]=useState(null),[pages,setPages]=useState([]),[busy,setBusy]=useState(false),[status,setStatus]=useState('');
+  const load=async()=>{
+    if(!file){setStatus('Choose a PDF first.');return;}
+    setBusy(true);setStatus('Rendering pages…');
+    try{
+      const doc=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+      const rendered=[];
+      for(let i=1;i<=doc.numPages;i++){
+        const page=await doc.getPage(i), viewport=page.getViewport({scale:1.25});
+        const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+        await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+        rendered.push({number:i,data:canvas.toDataURL(format,format==='image/jpeg'?0.92:undefined)});
+      }
+      setPages(rendered);setStatus(rendered.length+' page(s) rendered.');
+    }catch{setStatus('Could not render this PDF.');}finally{setBusy(false);}
+  };
+  const downloadAll=async()=>{for(const page of pages){const response=await fetch(page.data);downloadBlob(await response.blob(),`page-${page.number}.${format==='image/jpeg'?'jpg':'png'}`);}setStatus('Images downloaded.');};
+  return <div className="space-y-5"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setPages([]);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button disabled={busy} onClick={load} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Rendering…':'Render PDF Pages'}</button>{pages.length>0&&<><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{pages.map(p=><div key={p.number} className="rounded-2xl border border-slate-800 bg-slate-950 p-3"><img src={p.data} alt={'PDF page '+p.number} className="w-full rounded-lg bg-white"/><p className="mt-2 text-xs text-slate-400">Page {p.number}</p></div>)}</div><button onClick={downloadAll} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold">Download all pages</button></>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">PDF rendering and conversion happen locally in your browser.</p></div>
 }
 
 function PdfReorder() {
