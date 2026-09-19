@@ -288,33 +288,37 @@ function parseXlsxEntries(entries) {
 }
 
 function createTextPdf(lines) {
-  const encoder=new TextEncoder(), pageLines=lines.length?lines:[['OrbitBoard']];
-  const pages=[]; for(let i=0;i<pageLines.length;i+=48) pages.push(pageLines.slice(i,i+48));
-  const objects=[]; const addObj=s=>{objects.push(encoder.encode(s));return objects.length;};
-  const catalog=addObj('<< /Type /Catalog /Pages 2 0 R >>');
-  const pagesObj=addObj('<< /Type /Pages /Kids [PAGE_KIDS] /Count PAGE_COUNT >>');
-  const font=addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  const encoder=new TextEncoder();
+  const pageChunks=[]; for(let i=0;i<(lines.length?lines.length:1);i+=48) pageChunks.push((lines.length?lines:[['OrbitBoard']]).slice(i,i+48));
+  const objects=[null];
+  const addObj=s=>{objects.push(s);return objects.length-1;};
+  const pagesId=2;
+  addObj('<< /Type /Pages /Kids [PAGE_KIDS] /Count PAGE_COUNT >>');
+  const fontId=addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
   const pageIds=[];
   const escape=s=>String(s??'').replace(/\\/g,'\\\\').replace(/\\(/g,'\\\\(').replace(/\\)/g,'\\\\)').replace(/[\\r\\n]+/g,' ');
-  for(const page of pages){
+  pageChunks.forEach(page=>{
     let stream='BT\\n/F1 9 Tf\\n40 800 Td\\n';
     page.forEach((line,idx)=>{if(idx) stream+='0 -15 Td\\n';stream+='('+escape(line)+') Tj\\n';});
     stream+='ET\\n';
     const contentId=addObj('<< /Length '+encoder.encode(stream).length+' >>\\nstream\\n'+stream+'endstream');
-    const pageId=addObj('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 '+font+' 0 R >> >> /Contents '+contentId+' 0 R >>');
+    const pageId=addObj('<< /Type /Page /Parent '+pagesId+' 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 '+fontId+' 0 R >> >> /Contents '+contentId+' 0 R >>');
     pageIds.push(pageId);
+  });
+  objects[pagesId]='<< /Type /Pages /Kids ['+pageIds.map(id=>id+' 0 R').join(' ')+'] /Count '+pageIds.length+' >>';
+  const catalog='<< /Type /Catalog /Pages '+pagesId+' 0 R >>';
+  objects[1]=catalog;
+  const header=new Uint8Array([37,80,68,70,45,49,46,52,10,37,255,255,255,255,10]);
+  const parts=[header], offsets=[0]; let pos=header.length;
+  for(let i=1;i<objects.length;i++){
+    const b=encoder.encode(i+' 0 obj\\n'), body=encoder.encode(objects[i]), e=encoder.encode('\\nendobj\\n');
+    offsets[i]=pos; parts.push(b,body,e); pos+=b.length+body.length+e.length;
   }
-  const finalParts=[]; const header=new Uint8Array([37,80,68,70,45,49,46,52,10,37,255,255,255,255,10]); finalParts.push(header);
-  const offsets=[0]; let pos=header.length;
-  objects.forEach((obj,i)=>{offsets[i+1]=pos;const b=encoder.encode((i+1)+' 0 obj\\n');const e=encoder.encode('\\nendobj\\n');finalParts.push(b,obj,e);pos+=b.length+obj.length+e.length;});
-  const kids=pageIds.map(id=>id+' 0 R').join(' ');
-  const pagesBytes=encoder.encode('2 0 obj\\n<< /Type /Pages /Kids ['+kids+'] /Count '+pageIds.length+' >>\\nendobj\\n');
-  const pagesStart=offsets[pagesObj]; finalParts.push(pagesBytes); pos+=pagesBytes.length;
-  const xrefStart=pos; let xref='xref\\n0 '+(objects.length+1)+'\\n0000000000 65535 f \\n';
-  for(let i=1;i<=objects.length;i++) xref+=String(i===pagesObj?pagesStart:offsets[i]).padStart(10,'0')+' 00000 n \\n';
-  xref+='trailer << /Size '+(objects.length+1)+' /Root '+catalog+' 0 R >>\\nstartxref\\n'+xrefStart+'\\n%%EOF';
-  finalParts.push(encoder.encode(xref));
-  return new Blob(finalParts,{type:'application/pdf'});
+  const xrefStart=pos; let xref='xref\\n0 '+objects.length+'\\n0000000000 65535 f \\n';
+  for(let i=1;i<objects.length;i++) xref+=String(offsets[i]).padStart(10,'0')+' 00000 n \\n';
+  xref+='trailer << /Size '+objects.length+' /Root 1 0 R >>\\nstartxref\\n'+xrefStart+'\\n%%EOF';
+  parts.push(encoder.encode(xref));
+  return new Blob(parts,{type:'application/pdf'});
 }
 
 function XlsxToPdf() {
