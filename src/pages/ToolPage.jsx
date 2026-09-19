@@ -594,10 +594,10 @@ function MarkdownToHtml() {
 }
 
 function DiffChecker() {
-  const [left,setLeft]=useState(''),[right,setRight]=useState(''),[mode,setMode]=useState('lines');
+  const [left,setLeft]=useState(''),[right,setRight]=useState(''),[mode,setMode]=useState('lines'),[ignoreWhitespace,setIgnoreWhitespace]=useState(false);
   const leftLines=left.split(/\r?\n/), rightLines=right.split(/\r?\n/);
   const max=Math.max(leftLines.length,rightLines.length);
-  const rows=Array.from({length:max},(_,i)=>({n:i+1,left:leftLines[i]??'',right:rightLines[i]??'',same:(leftLines[i]??'')===(rightLines[i]??'')}));
+  const normalize=s=>ignoreWhitespace?s.replace(/\s+/g,' ').trim():s; const rows=Array.from({length:max},(_,i)=>({n:i+1,left:leftLines[i]??'',right:rightLines[i]??'',same:normalize(leftLines[i]??'')===normalize(rightLines[i]??'')}));
   const changed=rows.filter(r=>!r.same).length;
   const copy=async()=>{await navigator.clipboard.writeText(rows.filter(r=>!r.same).map(r=>`Line ${r.n}\n- ${r.left}\n+ ${r.right}`).join('\n\n'));};
   return <div className="space-y-5">
@@ -605,7 +605,7 @@ function DiffChecker() {
       <label className="block"><span className="text-xs font-medium text-slate-400">Original</span><textarea value={left} onChange={e=>setLeft(e.target.value)} placeholder="Paste original text…" className="mt-2 w-full h-72 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></label>
       <label className="block"><span className="text-xs font-medium text-slate-400">Changed</span><textarea value={right} onChange={e=>setRight(e.target.value)} placeholder="Paste changed text…" className="mt-2 w-full h-72 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></label>
     </div>
-    <div className="flex flex-wrap items-center gap-2"><select value={mode} onChange={e=>setMode(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm"><option value="lines">Line comparison</option></select><Result label="Changed lines" value={String(changed)} highlight/><button onClick={copy} className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold">Copy changes</button></div>
+    <div className="flex flex-wrap items-center gap-2"><select value={mode} onChange={e=>setMode(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm"><option value="lines">Line comparison</option></select><label className="inline-flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" checked={ignoreWhitespace} onChange={e=>setIgnoreWhitespace(e.target.checked)}/> Ignore whitespace</label><Result label="Changed lines" value={String(changed)} highlight/><button onClick={copy} className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold">Copy changes</button></div>
     <div className="overflow-auto rounded-xl border border-slate-800"><table className="w-full text-left text-xs"><thead className="bg-slate-900 text-slate-400"><tr><th className="p-3 w-16">Line</th><th className="p-3">Original</th><th className="p-3">Changed</th></tr></thead><tbody>{rows.map(r=><tr key={r.n} className={r.same?'border-t border-slate-800/50':'border-t border-violet-500/20 bg-violet-500/5'}><td className="p-3 text-slate-500">{r.n}</td><td className="p-3 font-mono whitespace-pre-wrap break-all text-slate-300">{r.left}</td><td className="p-3 font-mono whitespace-pre-wrap break-all text-slate-300">{r.right}</td></tr>)}</tbody></table></div>
     <p className="text-xs text-slate-500">Compares pasted text locally in your browser. This version compares lines and does not upload your content.</p>
   </div>
