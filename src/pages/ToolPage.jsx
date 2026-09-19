@@ -554,6 +554,24 @@ function ImageCompressor() {
   return <div className="space-y-5"><input type="file" accept="image/*" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><div className="grid sm:grid-cols-2 gap-4"><label className="block"><span className="text-xs font-medium text-slate-400">Output format</span><select value={format} onChange={e=>setFormat(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option><option value="image/png">PNG</option></select></label><label className="block"><span className="text-xs font-medium text-slate-400">Quality: {Math.round(Number(quality)*100)}%</span><input type="range" min="0.4" max="1" step="0.01" value={quality} onChange={e=>setQuality(e.target.value)} className="mt-3 w-full"/></label></div><button onClick={compress} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Compress & Download</button>{after>0&&<div className="grid sm:grid-cols-3 gap-3"><Result label="Original" value={(before/1024).toFixed(1)+' KB'}/><Result label="Compressed" value={(after/1024).toFixed(1)+' KB'}/><Result label="Size reduction" value={saved+'%'} highlight/></div>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Re-encodes the image locally in your browser. Metadata may be removed during re-encoding.</p></div>
 }
 
+function DiffChecker() {
+  const [left,setLeft]=useState(''),[right,setRight]=useState(''),[mode,setMode]=useState('lines');
+  const leftLines=left.split(/\r?\n/), rightLines=right.split(/\r?\n/);
+  const max=Math.max(leftLines.length,rightLines.length);
+  const rows=Array.from({length:max},(_,i)=>({n:i+1,left:leftLines[i]??'',right:rightLines[i]??'',same:(leftLines[i]??'')===(rightLines[i]??'')}));
+  const changed=rows.filter(r=>!r.same).length;
+  const copy=async()=>{await navigator.clipboard.writeText(rows.filter(r=>!r.same).map(r=>`Line ${r.n}\n- ${r.left}\n+ ${r.right}`).join('\n\n'));};
+  return <div className="space-y-5">
+    <div className="grid lg:grid-cols-2 gap-4">
+      <label className="block"><span className="text-xs font-medium text-slate-400">Original</span><textarea value={left} onChange={e=>setLeft(e.target.value)} placeholder="Paste original text…" className="mt-2 w-full h-72 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></label>
+      <label className="block"><span className="text-xs font-medium text-slate-400">Changed</span><textarea value={right} onChange={e=>setRight(e.target.value)} placeholder="Paste changed text…" className="mt-2 w-full h-72 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></label>
+    </div>
+    <div className="flex flex-wrap items-center gap-2"><select value={mode} onChange={e=>setMode(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm"><option value="lines">Line comparison</option></select><Result label="Changed lines" value={String(changed)} highlight/><button onClick={copy} className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold">Copy changes</button></div>
+    <div className="overflow-auto rounded-xl border border-slate-800"><table className="w-full text-left text-xs"><thead className="bg-slate-900 text-slate-400"><tr><th className="p-3 w-16">Line</th><th className="p-3">Original</th><th className="p-3">Changed</th></tr></thead><tbody>{rows.map(r=><tr key={r.n} className={r.same?'border-t border-slate-800/50':'border-t border-violet-500/20 bg-violet-500/5'}><td className="p-3 text-slate-500">{r.n}</td><td className="p-3 font-mono whitespace-pre-wrap break-all text-slate-300">{r.left}</td><td className="p-3 font-mono whitespace-pre-wrap break-all text-slate-300">{r.right}</td></tr>)}</tbody></table></div>
+    <p className="text-xs text-slate-500">Compares pasted text locally in your browser. This version compares lines and does not upload your content.</p>
+  </div>
+}
+
 function ImageMetadataRemover() {
   const [file,setFile]=useState(null),[format,setFormat]=useState('image/jpeg'),[status,setStatus]=useState('');
   const clean=async()=>{
@@ -589,13 +607,6 @@ function PdfToImages({format='image/png'}) {
     setBusy(true);setStatus('Rendering pages…');
     try{
       const rendered=await renderPdfPages(file,{scale:1.25,format,quality:0.92});
-      const rendered=[];
-      for(let i=1;i<=doc.numPages;i++){
-        const page=await doc.getPage(i), viewport=page.getViewport({scale:1.25});
-        const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
-        await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-        rendered.push({number:i,data:canvas.toDataURL(format,format==='image/jpeg'?0.92:undefined)});
-      }
       setPages(rendered);setStatus(rendered.length+' page(s) rendered.');
     }catch{setStatus('Could not render this PDF.');}finally{setBusy(false);}
   };
