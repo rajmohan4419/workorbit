@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Code2, BriefcaseBusiness, Coins, C
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, createEditedPdf, loadPdf, createTextPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
+import { csvToXlsx, jsonToXlsx, xlsxToCsv } from '../engines/spreadsheet';
 
 const money = n => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.max(0, Number(n) || 0));
 const num = v => Math.max(0, Number(v) || 0);
@@ -513,7 +514,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'csv-to-json':CsvToJson, 'txt-to-pdf':TextToPdf, 'pdf-to-text':PdfToText, 'diff-checker':DiffChecker, 'json-to-xml':JsonToXml, 'xml-to-json':XmlToJson, 'markdown-to-html':MarkdownToHtml, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-workspace':PdfWorkspace, 'pdf-compressor':PdfCompressor, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'csv-to-json':CsvToJson,'csv-to-xlsx':()=> <SpreadsheetFileTool type="csv-to-xlsx"/>,'json-to-xlsx':()=> <SpreadsheetFileTool type="json-to-xlsx"/>,'xlsx-to-csv':()=> <SpreadsheetFileTool type="xlsx-to-csv"/>, 'txt-to-pdf':TextToPdf, 'pdf-to-text':PdfToText, 'diff-checker':DiffChecker, 'json-to-xml':JsonToXml, 'xml-to-json':XmlToJson, 'markdown-to-html':MarkdownToHtml, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-workspace':PdfWorkspace, 'pdf-compressor':PdfCompressor, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
@@ -552,6 +553,52 @@ function ImageCompressor() {
   };
   const saved=before&&after?Math.max(0,Math.round((1-after/before)*100)):0;
   return <div className="space-y-5"><input type="file" accept="image/*" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><div className="grid sm:grid-cols-2 gap-4"><label className="block"><span className="text-xs font-medium text-slate-400">Output format</span><select value={format} onChange={e=>setFormat(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option><option value="image/png">PNG</option></select></label><label className="block"><span className="text-xs font-medium text-slate-400">Quality: {Math.round(Number(quality)*100)}%</span><input type="range" min="0.4" max="1" step="0.01" value={quality} onChange={e=>setQuality(e.target.value)} className="mt-3 w-full"/></label></div><button onClick={compress} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Compress & Download</button>{after>0&&<div className="grid sm:grid-cols-3 gap-3"><Result label="Original" value={(before/1024).toFixed(1)+' KB'}/><Result label="Compressed" value={(after/1024).toFixed(1)+' KB'}/><Result label="Size reduction" value={saved+'%'} highlight/></div>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Re-encodes the image locally in your browser. Metadata may be removed during re-encoding.</p></div>
+}
+
+function SpreadsheetFileTool({type}) {
+  const [file,setFile]=useState(null),[text,setText]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
+  const isJson=type==='json-to-xlsx';
+  const isCsv=type==='csv-to-xlsx';
+
+  const convert=async()=>{
+    if(!file && !text.trim()){setStatus(isJson?'Paste a JSON array first.':'Paste CSV or choose a file first.');return;}
+    setBusy(true);setStatus('Converting locally…');
+    try {
+      if(type==='xlsx-to-csv'){
+        const csv=await xlsxToCsv(file);
+        setText(csv);
+        setStatus('CSV generated locally.');
+        return;
+      }
+      const input=isCsv && file ? await file.text() : text;
+      const bytes=isJson ? jsonToXlsx(text) : csvToXlsx(input);
+      const filename=isJson ? 'orbitboard-data.xlsx' : (((file?.name||'orbitboard-data').replace(/\.csv$/i,'')||'orbitboard-data')+'.xlsx');
+      downloadBlob(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),filename);
+      setStatus('Done — XLSX downloaded.');
+    } catch(e) {
+      setStatus(e.message||'Could not convert this spreadsheet.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return <div className="space-y-4">
+    {type==='xlsx-to-csv' ? (
+      <>
+        <input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={e=>{setFile(e.target.files?.[0]||null);setText('');setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/>
+        {text&&<textarea readOnly value={text} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>}
+      </>
+    ) : (
+      <>
+        {isCsv&&<input type="file" accept=".csv,text/csv" onChange={e=>{setFile(e.target.files?.[0]||null);setText('');setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/>}
+        <textarea value={text} onChange={e=>{setText(e.target.value);if(isCsv)setFile(null)}} placeholder={isJson?'Paste a JSON array of objects…':'Paste CSV data or choose a CSV file…'} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>
+      </>
+    )}
+    <button disabled={busy} onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Converting…':type==='xlsx-to-csv'?'Convert to CSV':'Convert to XLSX'}</button>
+    {type==='xlsx-to-csv'&&text&&<ExportActions content={text} filename="orbitboard-data.csv"/>}
+    {status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}
+    <p className="text-xs text-slate-500">Processed locally in your browser. Files and data are not uploaded.</p>
+  </div>
 }
 
 function CsvToJson() {
