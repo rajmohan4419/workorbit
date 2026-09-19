@@ -511,7 +511,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'pdf-merge':PdfMerge, 'pdf-to-jpg':()=> <PdfPageImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfPageImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
@@ -533,6 +533,18 @@ export default function ToolPage() {
     </main><footer className="border-t border-slate-900 py-10 text-center text-sm text-slate-600">OrbitBoard • Practical tools for work & life</footer>
   </div>
 }
+function PdfMerge() {
+  const [files,setFiles]=useState([]),[status,setStatus]=useState('');
+  const merge=async()=>{setStatus('');if(files.length<2){setStatus('Choose at least two PDFs.');return;}setStatus('PDF merging needs a full PDF parser; this browser MVP will be added with a dedicated lightweight PDF engine.');};
+  return <div className="space-y-5"><input type="file" accept="application/pdf" multiple onChange={e=>setFiles([...e.target.files])} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><p className="text-sm text-slate-400">{files.length?files.length+' PDF(s) selected.':'Select two or more PDF files.'}</p><button onClick={merge} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Merge PDFs</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">We’re keeping this tool local-first and will use a proper PDF engine rather than fake a merge.</p></div>
+}
+
+function PdfPageImages({format='image/png'}) {
+  const [file,setFile]=useState(null),[status,setStatus]=useState('');
+  const convert=()=>{if(!file){setStatus('Choose a PDF first.');return;}setStatus('PDF rendering requires a dedicated PDF renderer; this is queued for the next implementation pass.');};
+  return <div className="space-y-5"><input type="file" accept="application/pdf" onChange={e=>setFile(e.target.files?.[0]||null)} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Convert PDF to {format==='image/jpeg'?'JPG':'PNG'}</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">A proper PDF rendering engine is required for reliable page conversion.</p></div>
+}
+
 function ToolPageActions({tool}) {
   const [shared,setShared]=useState(false);
   const share=async()=>{
