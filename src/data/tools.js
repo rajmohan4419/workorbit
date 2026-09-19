@@ -8,4 +8,11 @@ export const TOOLS = [
   { slug: 'emi', name: 'EMI Calculator', description: 'Estimate monthly EMI, total interest and total repayment.', category: 'Finance', icon: '₹' },
   { slug: 'gst', name: 'GST Calculator', description: 'Calculate GST amount, inclusive price and pre-GST price.', category: 'Finance', icon: 'G' },
   { slug: 'sip', name: 'SIP Calculator', description: 'Estimate SIP maturity value, invested amount and potential returns.', category: 'Finance', icon: '↗' },
+  { slug: 'json-formatter', name: 'JSON Formatter & Validator', description: 'Format, validate and minify JSON instantly in your browser.', category: 'Developer', icon: '{}' },
+  { slug: 'json-to-csv', name: 'JSON to CSV', description: 'Convert a JSON array into CSV for spreadsheets and data work.', category: 'Developer', icon: '↔' },
+  { slug: 'base64', name: 'Base64 Encoder / Decoder', description: 'Encode text to Base64 or decode Base64 back to text.', category: 'Developer', icon: '64' },
+  { slug: 'jwt-decoder', name: 'JWT Decoder', description: 'Decode JWT header and payload locally without sending the token anywhere.', category: 'Developer', icon: 'JWT' },
+  { slug: 'unix-timestamp', name: 'Unix Timestamp Converter', description: 'Convert Unix timestamps to readable dates and back.', category: 'Developer', icon: 'TS' },
+  { slug: 'uuid-generator', name: 'UUID Generator', description: 'Generate random UUID v4 identifiers instantly.', category: 'Developer', icon: 'ID' },
+  { slug: 'url-encoder', name: 'URL Encoder / Decoder', description: 'Encode or decode URL components safely and quickly.', category: 'Developer', icon: '%2F' },
 ];
