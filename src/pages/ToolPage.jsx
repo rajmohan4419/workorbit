@@ -161,7 +161,7 @@ function JsonFormatter() {
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('format')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Format</button><button onClick={()=>setMode('minify')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Minify</button></div>{error?<p className="text-sm text-red-400">Invalid JSON: {error}</p>:<textarea readOnly value={output} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>}</div>
 }
 function JsonToCsv() {
-  const [input,setInput]=useState('[{"name":"Mohan","role":"Developer"},{"name":"Mitra","role":"Assistant"}]'); let csv='',error='';
+  const [input,setInput]=useState('[{"name":"John Doe","role":"Developer"},{"name":"Mitra","role":"Assistant"}]'); let csv='',error='';
   try { const rows=JSON.parse(input); if(!Array.isArray(rows)) throw new Error('JSON must be an array of objects'); if(rows.some(r=>!r||typeof r!=='object'||Array.isArray(r))) throw new Error('Each item must be an object'); const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))]; const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; csv=[keys.map(esc).join(','),...rows.map(r=>keys.map(k=>esc(typeof r[k]==='object'?JSON.stringify(r[k]):r[k])).join(','))].join('\n'); } catch(e){error=e.message;}
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>{error?<p className="text-sm text-red-400">{error}</p>:<textarea readOnly value={csv} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>}<p className="text-xs text-slate-500">Best for flat JSON arrays. Nested values are stored as JSON text.</p></div>
 }
@@ -185,7 +185,7 @@ function UuidGenerator() {
   return <div className="space-y-4"><Field label="Number of UUIDs" value={count} onChange={setCount}/><button onClick={()=>setIds(Array.from({length:Math.min(50,Math.max(1,Math.floor(num(count))))},()=>crypto.randomUUID()))} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Generate UUIDs</button><textarea readOnly value={ids.join('\n')} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div>
 }
 function UrlEncoder() {
-  const [input,setInput]=useState('https://orbitboard.in/tools?name=Mohan Raj'); const [mode,setMode]=useState('encode'); let output;
+  const [input,setInput]=useState('https://orbitboard.in/tools?name=John%20Doe'); const [mode,setMode]=useState('encode'); let output;
   try { output=mode==='encode'?encodeURIComponent(input):decodeURIComponent(input); } catch { output='Invalid encoded URL component'; }
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('encode')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Encode</button><button onClick={()=>setMode('decode')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Decode</button></div><textarea readOnly value={output} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div>
 }
