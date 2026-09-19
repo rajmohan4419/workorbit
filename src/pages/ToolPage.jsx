@@ -321,6 +321,57 @@ function createTextPdf(lines) {
   return new Blob(parts,{type:'application/pdf'});
 }
 
+function ImageResizer() {
+  const [file,setFile]=useState(null),[width,setWidth]=useState('1200'),[height,setHeight]=useState(''),[quality,setQuality]=useState('0.9'),[format,setFormat]=useState('image/jpeg'),[preview,setPreview]=useState(''),[status,setStatus]=useState('');
+  const resize=async()=>{
+    if(!file){setStatus('Choose an image first.');return;}
+    const url=URL.createObjectURL(file);
+    try {
+      const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;});
+      const targetWidth=Math.max(1,Math.round(Number(width)||image.naturalWidth));
+      const targetHeight=height?Math.max(1,Math.round(Number(height))):Math.max(1,Math.round(image.naturalHeight*targetWidth/image.naturalWidth));
+      const canvas=document.createElement('canvas');canvas.width=targetWidth;canvas.height=targetHeight;
+      const ctx=canvas.getContext('2d');if(format==='image/jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,targetWidth,targetHeight);}ctx.drawImage(image,0,0,targetWidth,targetHeight);
+      const data=canvas.toDataURL(format,Number(quality));setPreview(data);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,format,Number(quality)));
+      const ext=format==='image/png'?'png':format==='image/webp'?'webp':'jpg';
+      downloadBlob(blob,(file.name.replace(/\.[^.]+$/,'')||'orbitboard-image')+'-'+targetWidth+'x'+targetHeight+'.'+ext);
+      setStatus('Done — resized image downloaded.');
+    } catch {setStatus('Could not resize this image.');} finally {URL.revokeObjectURL(url);}
+  };
+  return <div className="space-y-5">
+    <label className="block"><span className="text-xs font-medium text-slate-400">Image</span><input type="file" accept="image/*" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('');}} className="mt-2 block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/></label>
+    <div className="grid sm:grid-cols-2 gap-4"><Field label="Width (px)" value={width} onChange={setWidth}/><Field label="Height (px, optional)" value={height} onChange={setHeight} placeholder="Auto from aspect ratio"/></div>
+    <div className="grid sm:grid-cols-2 gap-4"><label className="block"><span className="text-xs font-medium text-slate-400">Output format</span><select value={format} onChange={e=>setFormat(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select></label><label className="block"><span className="text-xs font-medium text-slate-400">Quality: {Math.round(Number(quality)*100)}%</span><input type="range" min="0.5" max="1" step="0.01" value={quality} onChange={e=>setQuality(e.target.value)} className="mt-3 w-full"/></label></div>
+    <button onClick={resize} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Resize & Download</button>
+    {preview&&<img src={preview} alt="Resized preview" className="max-h-72 max-w-full rounded-2xl border border-slate-800 object-contain"/>}
+    {status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}
+    <p className="text-xs text-slate-500">Processed locally in your browser. Nothing is uploaded.</p>
+  </div>
+}
+
+function SvgToPng() {
+  const [input,setInput]=useState('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="800" height="450" fill="#111827"/><text x="400" y="235" text-anchor="middle" font-family="Arial" font-size="42" fill="white">OrbitBoard</text></svg>');
+  const [scale,setScale]=useState('1'),[preview,setPreview]=useState(''),[status,setStatus]=useState('');
+  const convert=async()=>{
+    try {
+      const blob=new Blob([input],{type:'image/svg+xml'}),url=URL.createObjectURL(blob);
+      const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;});
+      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*Number(scale)));canvas.height=Math.max(1,Math.round(image.naturalHeight*Number(scale)));
+      canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/png');setPreview(data);
+      const out=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));downloadBlob(out,'orbitboard-svg.png');setStatus('Done — PNG downloaded.');URL.revokeObjectURL(url);
+    } catch {setStatus('Invalid SVG or conversion failed.');}
+  };
+  return <div className="space-y-5"><label className="block"><span className="text-xs font-medium text-slate-400">SVG markup</span><textarea value={input} onChange={e=>setInput(e.target.value)} className="mt-2 w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></label><Field label="Scale" value={scale} onChange={setScale}/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Convert to PNG</button>{preview&&<img src={preview} alt="SVG converted to PNG" className="max-h-72 max-w-full rounded-2xl border border-slate-800 object-contain"/>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">SVG is rendered locally in your browser.</p></div>
+}
+
+function CsvToPdf() {
+  const [input,setInput]=useState('Name,Role,Status\nJohn Doe,Developer,Active\nMitra,Assistant,Active'),[status,setStatus]=useState('');
+  const parseCsv=text=>text.split(/\r?\n/).filter(Boolean).map(line=>{const out=[];let cell='',quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'&&line[i+1]==='"'){cell+='"';i++;continue;}if(ch==='"'){quoted=!quoted;continue;}if(ch===','&&!quoted){out.push(cell);cell='';}else cell+=ch;}out.push(cell);return out;});
+  const convert=()=>{try{const rows=parseCsv(input);const lines=rows.map(r=>r.map(v=>v.trim()).join(' | '));downloadBlob(createTextPdf(lines),'orbitboard-csv.pdf');setStatus('Done — CSV data exported to PDF.');}catch{setStatus('Could not convert the CSV.');}};
+  return <div className="space-y-5"><label className="block"><span className="text-xs font-medium text-slate-400">CSV data</span><textarea value={input} onChange={e=>setInput(e.target.value)} className="mt-2 w-full h-52 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></label><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Convert CSV to PDF</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Creates a simple, readable PDF from CSV rows. Processing stays in your browser.</p></div>
+}
+
 function XlsxToPdf() {
   const [file,setFile]=useState(null),[status,setStatus]=useState('');
   const convert=async()=>{
@@ -460,7 +511,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
