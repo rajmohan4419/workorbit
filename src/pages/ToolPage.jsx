@@ -647,7 +647,7 @@ function PdfWorkspace() {
   const [file,setFile]=useState(null),[pages,setPages]=useState([]),[selected,setSelected]=useState(new Set()),[busy,setBusy]=useState(false),[status,setStatus]=useState('');
   const renderPdf=async()=>{
     if(!file){setStatus('Choose a PDF first.');return;}setBusy(true);setStatus('Rendering PDF pages…');
-    try{const rendered=await renderPdfPages(file,{scale:0.8,format:'image/jpeg',quality:0.82});
+    try{const rendered=await renderPdfPages(file,{scale:0.65,format:'image/jpeg',quality:0.78,onProgress:(current,total)=>setStatus('Rendering page '+current+' of '+total+'…')});
       setPages(rendered);setSelected(new Set());setStatus(rendered.length+' pages ready.');}catch{setStatus('Could not render this PDF.');}finally{setBusy(false);}
   };
   const toggle=n=>setSelected(prev=>{const next=new Set(prev);next.has(n)?next.delete(n):next.add(n);return next;});
