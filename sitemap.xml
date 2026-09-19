@@ -1,2 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://orbitboard.in/</loc></url><url><loc>https://orbitboard.in/tools</loc></url></urlset>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://orbitboard.in/</loc></url>
+  <url><loc>https://orbitboard.in/tools</loc></url>
+  <url><loc>https://orbitboard.in/tools/ctc-to-inhand</loc></url>
+  <url><loc>https://orbitboard.in/tools/salary-hike</loc></url>
+  <url><loc>https://orbitboard.in/tools/offer-comparison</loc></url>
+  <url><loc>https://orbitboard.in/tools/notice-period</loc></url>
+  <url><loc>https://orbitboard.in/tools/experience</loc></url>
+  <url><loc>https://orbitboard.in/tools/percentage</loc></url>
+  <url><loc>https://orbitboard.in/tools/emi</loc></url>
+  <url><loc>https://orbitboard.in/tools/gst</loc></url>
+  <url><loc>https://orbitboard.in/tools/sip</loc></url>
+  <url><loc>https://orbitboard.in/tools/json-formatter</loc></url>
+  <url><loc>https://orbitboard.in/tools/json-to-csv</loc></url>
+  <url><loc>https://orbitboard.in/tools/base64</loc></url>
+  <url><loc>https://orbitboard.in/tools/jwt-decoder</loc></url>
+  <url><loc>https://orbitboard.in/tools/unix-timestamp</loc></url>
+  <url><loc>https://orbitboard.in/tools/uuid-generator</loc></url>
+  <url><loc>https://orbitboard.in/tools/url-encoder</loc></url>
+</urlset>
