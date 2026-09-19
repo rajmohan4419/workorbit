@@ -43,6 +43,21 @@ export async function reorderPdfPages(file, pageOrder) {
   return output.save();
 }
 
+export async function createTextPdf(text) {
+  const output = await PDFDocument.create();
+  const pageWidth = 595, pageHeight = 842, margin = 42, fontSize = 10, lineHeight = 14;
+  let page = output.addPage([pageWidth, pageHeight]);
+  let y = pageHeight - margin;
+  const font = await output.embedFont('Helvetica');
+  const lines = String(text).split(/\r?\n/);
+  for (const line of lines) {
+    if (y < margin) { page = output.addPage([pageWidth, pageHeight]); y = pageHeight - margin; }
+    page.drawText(line.slice(0, 110), { x: margin, y, size: fontSize, font });
+    y -= lineHeight;
+  }
+  return output.save();
+}
+
 export async function optimizePdf(file) {
   const source = await loadPdf(file);
   return source.save({ useObjectStreams: true, addDefaultPage: false });
