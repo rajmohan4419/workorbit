@@ -578,7 +578,7 @@ function PdfExtract() {
 
 function PdfSplit() {
   const [file,setFile]=useState(null),[status,setStatus]=useState('');
-  const split=async()=>{if(!file){setStatus('Choose a PDF first.');return;}try{const src=await PDFDocument.load(await file.arrayBuffer());for(let i=0;i<src.getPageCount();i++){const out=await PDFDocument.create();const [p]=await out.copyPages(src,[i]);out.addPage(p);const bytes=await out.save();downloadBlob(new Blob([bytes],{type:'application/pdf'}),`page-${i+1}.pdf`);}setStatus('Done — individual page PDFs downloaded.');}catch{setStatus('Could not split this PDF.');}};
+  const split=async()=>{if(!file){setStatus('Choose a PDF first.');return;}try{const bytesList=await splitPdfPages(file);bytesList.forEach((bytes,i)=>downloadBlob(new Blob([bytes],{type:'application/pdf'}),`page-${i+1}.pdf`));setStatus('Done — individual page PDFs downloaded.');}catch{setStatus('Could not split this PDF.');}};
   return <div className="space-y-5"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button onClick={split} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold">Split into Pages</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Each page is saved as a separate PDF in your browser.</p></div>
 }
 
@@ -588,7 +588,7 @@ function PdfToImages({format='image/png'}) {
     if(!file){setStatus('Choose a PDF first.');return;}
     setBusy(true);setStatus('Rendering pages…');
     try{
-      const doc=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+      const rendered=await renderPdfPages(file,{scale:1.25,format,quality:0.92});
       const rendered=[];
       for(let i=1;i<=doc.numPages;i++){
         const page=await doc.getPage(i), viewport=page.getViewport({scale:1.25});
@@ -633,8 +633,8 @@ function PdfWorkspace() {
 
 function PdfReorder() {
   const [file,setFile]=useState(null),[order,setOrder]=useState(''),[busy,setBusy]=useState(false),[status,setStatus]=useState('');
-  const load=async()=>{if(!file){setStatus('Choose a PDF first.');return;}try{const src=await PDFDocument.load(await file.arrayBuffer());setOrder(Array.from({length:src.getPageCount()},(_,i)=>i+1).join(','));setStatus(src.getPageCount()+' pages loaded. Enter the desired order.');}catch{setStatus('Could not read this PDF.');}};
-  const reorder=async()=>{if(!file){setStatus('Choose a PDF first.');return;}setBusy(true);try{const src=await PDFDocument.load(await file.arrayBuffer());const nums=order.split(',').map(v=>Number(v.trim())).filter(Number.isInteger);if(nums.length!==src.getPageCount()||nums.some(n=>n<1||n>src.getPageCount())){setStatus('Enter every page exactly once, for example 3,1,2,4.');return;}const out=await PDFDocument.create();const pages=await out.copyPages(src,nums.map(n=>n-1));pages.forEach(p=>out.addPage(p));const bytes=await out.save();downloadBlob(new Blob([bytes],{type:'application/pdf'}),'orbitboard-reordered.pdf');setStatus('Done — reordered PDF downloaded.');}catch{setStatus('Could not reorder this PDF.');}finally{setBusy(false);}};
+  const load=async()=>{if(!file){setStatus('Choose a PDF first.');return;}try{const src=await loadPdf(file);setOrder(Array.from({length:src.getPageCount()},(_,i)=>i+1).join(','));setStatus(src.getPageCount()+' pages loaded. Enter the desired order.');}catch{setStatus('Could not read this PDF.');}};
+  const reorder=async()=>{if(!file){setStatus('Choose a PDF first.');return;}setBusy(true);try{const src=await loadPdf(file);const nums=order.split(',').map(v=>Number(v.trim())).filter(Number.isInteger);if(nums.length!==src.getPageCount()||nums.some(n=>n<1||n>src.getPageCount())){setStatus('Enter every page exactly once, for example 3,1,2,4.');return;}const bytes=await reorderPdfPages(file,nums);downloadBlob(new Blob([bytes],{type:'application/pdf'}),'orbitboard-reordered.pdf');setStatus('Done — reordered PDF downloaded.');}catch{setStatus('Could not reorder this PDF.');}finally{setBusy(false);}};
   return <div className="space-y-5"><div className="flex gap-2"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block flex-1 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button onClick={load} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold">Load</button></div><Field label="Page order" value={order} onChange={setOrder} type="text" placeholder="Example: 3,1,2,4"/><button disabled={busy} onClick={reorder} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Saving…':'Reorder & Download'}</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Reordering runs locally. Page previews require a separate PDF rendering engine and are intentionally not faked.</p></div>
 }
 
