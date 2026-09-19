@@ -147,6 +147,107 @@ function TemperatureConverter() {
   const toC=v=>from==='C'?v:from==='F'?(v-32)*5/9:v-273.15; const c=toC(num(value)); const result=to==='C'?c:to==='F'?c*9/5+32:c+273.15; const text=String(value)+' '+from+' = '+(Number.isFinite(result)?result.toFixed(6):'Invalid')+' '+to;
   return <div className="space-y-5"><Field label="Temperature" value={value} onChange={setValue}/><div className="grid sm:grid-cols-2 gap-4">{['from','to'].map(side=><label key={side} className="block"><span className="text-xs font-medium text-slate-400">{side==='from'?'From':'To'}</span><select value={side==='from'?from:to} onChange={e=>side==='from'?setFrom(e.target.value):setTo(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"><option value="C">Celsius</option><option value="F">Fahrenheit</option><option value="K">Kelvin</option></select></label>)}</div><Result label="Converted value" value={text} highlight/><ExportActions content={text} filename="orbitboard-temperature-conversion.txt"/></div>
 }
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function ImageConverter({format}) {
+  const [file,setFile]=useState(null);
+  const [quality,setQuality]=useState('0.92');
+  const [preview,setPreview]=useState('');
+  const [status,setStatus]=useState('');
+  const isJpg=format==='image/jpeg';
+  const ext=isJpg?'jpg':'png';
+
+  const convert=async()=>{
+    if(!file){setStatus('Choose an image first.');return;}
+    setStatus('Converting...');
+    const url=URL.createObjectURL(file);
+    try {
+      const image=await new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>resolve(img);
+        img.onerror=reject;
+        img.src=url;
+      });
+      const canvas=document.createElement('canvas');
+      canvas.width=image.naturalWidth; canvas.height=image.naturalHeight;
+      const ctx=canvas.getContext('2d');
+      if(isJpg){ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);}
+      ctx.drawImage(image,0,0);
+      setPreview(canvas.toDataURL('image/'+(isJpg?'jpeg':'png'),isJpg?Number(quality):undefined));
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/'+(isJpg?'jpeg':'png'),isJpg?Number(quality):undefined));
+      if(!blob) throw new Error('Could not create output image');
+      downloadBlob(blob,(file.name.replace(/\\.[^.]+$/,'')||'orbitboard-image')+'.'+ext);
+      setStatus('Done — your converted image is ready.');
+    } catch { setStatus('Could not convert this image. Try another file.'); }
+    finally { URL.revokeObjectURL(url); }
+  };
+
+  return <div className="space-y-5">
+    <label className="block"><span className="text-xs font-medium text-slate-400">Image file</span><input type="file" accept="image/*" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('');}} className="mt-2 block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/></label>
+    {isJpg&&<label className="block"><span className="text-xs font-medium text-slate-400">JPG quality: {Math.round(Number(quality)*100)}%</span><input type="range" min="0.5" max="1" step="0.01" value={quality} onChange={e=>setQuality(e.target.value)} className="mt-3 w-full"/></label>}
+    <button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold hover:bg-violet-500">Convert to {ext.toUpperCase()}</button>
+    {preview&&<img src={preview} alt="Converted preview" className="max-h-72 max-w-full rounded-2xl border border-slate-800 object-contain"/>}
+    {status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}
+    <p className="text-xs text-slate-500">Processed locally in your browser. Your image is not uploaded.</p>
+  </div>
+}
+
+function createPdfFromJpeg(jpegBytes,width,height) {
+  const encoder=new TextEncoder();
+  const header=new Uint8Array([37,80,68,70,45,49,46,52,10,37,255,255,255,255,10]);
+  const parts=[header]; const offsets=[0]; let position=header.length;
+  const add=(bytes)=>{offsets.push(position);parts.push(bytes);position+=bytes.length;};
+  const text=s=>encoder.encode(s);
+  add(text('1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n'));
+  add(text('2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n'));
+  add(text('3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 '+width+' '+height+'] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >> endobj\n'));
+  add(text('4 0 obj << /Type /XObject /Subtype /Image /Width '+width+' /Height '+height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpegBytes.length+' >> stream\n'));
+  parts.push(jpegBytes); position+=jpegBytes.length; parts.push(text('\nendstream\nendobj\n')); position+=text('\nendstream\nendobj\n').length;
+  const stream=text('q\n'+width+' 0 0 '+height+' 0 0 cm\n/Im0 Do\nQ\n');
+  add(text('5 0 obj << /Length '+stream.length+' >> stream\n')); parts.push(stream); position+=stream.length; parts.push(text('endstream\nendobj\n')); position+=text('endstream\nendobj\n').length;
+  const xrefStart=position;
+  let xref='xref\n0 6\n0000000000 65535 f \n';
+  for(let i=1;i<=5;i++) xref+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+  xref+='trailer << /Size 6 /Root 1 0 R >>\nstartxref\n'+xrefStart+'\n%%EOF';
+  parts.push(text(xref));
+  return new Blob(parts,{type:'application/pdf'});
+}
+
+function ImageToPdf() {
+  const [file,setFile]=useState(null),[preview,setPreview]=useState(''),[status,setStatus]=useState('');
+  const convert=async()=>{
+    if(!file){setStatus('Choose an image first.');return;}
+    setStatus('Generating PDF...');
+    const url=URL.createObjectURL(file);
+    try {
+      const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;});
+      const canvas=document.createElement('canvas'); canvas.width=image.naturalWidth; canvas.height=image.naturalHeight;
+      const ctx=canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(image,0,0);
+      setPreview(canvas.toDataURL('image/jpeg',0.92));
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.92));
+      const bytes=new Uint8Array(await blob.arrayBuffer());
+      const pdf=createPdfFromJpeg(bytes,image.naturalWidth,image.naturalHeight);
+      downloadBlob(pdf,(file.name.replace(/\\.[^.]+$/,'')||'orbitboard-image')+'.pdf');
+      setStatus('Done — your PDF is ready.');
+    } catch { setStatus('Could not generate the PDF. Try another image.'); }
+    finally { URL.revokeObjectURL(url); }
+  };
+  return <div className="space-y-5">
+    <label className="block"><span className="text-xs font-medium text-slate-400">Image file</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('');}} className="mt-2 block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/></label>
+    {preview&&<img src={preview} alt="PDF preview" className="max-h-72 max-w-full rounded-2xl border border-slate-800 object-contain"/>}
+    <button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold hover:bg-violet-500">Convert to PDF</button>
+    {status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}
+    <p className="text-xs text-slate-500">Generated locally in your browser. No upload or server processing.</p>
+  </div>
+}
+
 function Percentage() { const [value,setValue]=useState('100'),[pct,setPct]=useState('20'); const amount=num(value)*num(pct)/100; return <><Field label="Base value" value={value} onChange={setValue}/><Field label="Percentage" value={pct} onChange={setPct}/><Result label="Percentage amount" value={money(amount)}/><Result label="Value after increase" value={money(num(value)+amount)}/></> }
 function Emi() { const [principal,setPrincipal]=useState('1000000'),[rate,setRate]=useState('9'),[years,setYears]=useState('5'); const p=num(principal),r=num(rate)/1200,n=Math.max(1,Math.round(num(years)*12)),emi=r?p*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1):p/n,total=emi*n; return <><Field label="Loan amount (₹)" value={principal} onChange={setPrincipal}/><Field label="Annual interest rate (%)" value={rate} onChange={setRate}/><Field label="Tenure (years)" value={years} onChange={setYears}/><Result label="Monthly EMI" value={`₹ ${money(emi)}`} highlight/><Result label="Total interest" value={`₹ ${money(total-p)}`}/><Result label="Total repayment" value={`₹ ${money(total)}`}/></> }
 
@@ -229,7 +330,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>,'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
