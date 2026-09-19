@@ -213,7 +213,12 @@ function Sip() {
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
   const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'emi':Emi,'gst':Gst,'sip':Sip,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
-  useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description; let meta=document.querySelector('meta[name="description"]'); if(!meta){meta=document.createElement('meta');meta.name='description';document.head.appendChild(meta);} meta.content=desc; window.scrollTo(0,0);}},[tool,info]);
+  useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
+    const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
+    setMeta('description',desc);
+    let canonical=document.querySelector('link[rel="canonical"]');if(!canonical){canonical=document.createElement('link');canonical.rel='canonical';document.head.appendChild(canonical);}canonical.href='https://orbitboard.in/tools/'+slug;
+    let schema=document.getElementById('orbitboard-tool-schema');if(schema)schema.remove();schema=document.createElement('script');schema.id='orbitboard-tool-schema';schema.type='application/ld+json';schema.textContent=JSON.stringify({"@context":"https://schema.org","@type":"WebApplication","name":tool.name,"url":"https://orbitboard.in/tools/"+slug,"applicationCategory":tool.category==="Developer"?"DeveloperApplication":"BusinessApplication","operatingSystem":"Web","description":desc,"offers":{"@type":"Offer","price":"0","priceCurrency":"INR"}});document.head.appendChild(schema);
+    window.scrollTo(0,0);}},[tool,info,slug]);
   if(!tool || !content) return <div className="min-h-screen bg-slate-950 text-white p-10"><Link to="/tools">← Tools</Link><h1 className="text-2xl font-bold mt-8">Tool not found</h1></div>;
   const Tool=content; const related=TOOLS.filter(t=>t.category===tool.category&&t.slug!==tool.slug).slice(0,3);
   const categoryIcons={Career:BriefcaseBusiness,Finance:Coins,Developer:Code2,Everyday:Calculator}; const CategoryIcon=categoryIcons[tool.category]||Calculator;
