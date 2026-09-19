@@ -2,22 +2,71 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://orbitboard.in/</loc>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://orbitboard.in/features</loc>
-    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://orbitboard.in/pricing</loc>
-    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://orbitboard.in/contact</loc>
-    <priority>0.7</priority>
+    <loc>https://orbitboard.in/career-intelligence</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/terms</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/privacy</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/security</loc>
   </url>
   <url>
     <loc>https://orbitboard.in/upcoming-features</loc>
-    <priority>0.7</priority>
   </url>
+  <url><loc>https://orbitboard.in/tools/ctc-to-inhand</loc></url>
+  <url><loc>https://orbitboard.in/tools/salary-hike</loc></url>
+  <url><loc>https://orbitboard.in/tools/offer-comparison</loc></url>
+  <url><loc>https://orbitboard.in/tools/notice-period</loc></url>
+  <url><loc>https://orbitboard.in/tools/experience</loc></url>
+  <url><loc>https://orbitboard.in/tools/percentage</loc></url>
+  <url><loc>https://orbitboard.in/tools/length-converter</loc></url>
+  <url><loc>https://orbitboard.in/tools/weight-converter</loc></url>
+  <url><loc>https://orbitboard.in/tools/temperature-converter</loc></url>
+  <url><loc>https://orbitboard.in/tools/time-converter</loc></url>
+  <url><loc>https://orbitboard.in/tools/jpg-to-png</loc></url>
+  <url><loc>https://orbitboard.in/tools/png-to-jpg</loc></url>
+  <url><loc>https://orbitboard.in/tools/webp-to-jpg</loc></url>
+  <url><loc>https://orbitboard.in/tools/image-to-pdf</loc></url>
+  <url><loc>https://orbitboard.in/tools/xlsx-to-pdf</loc></url>
+  <url><loc>https://orbitboard.in/tools/image-resizer</loc></url>
+  <url><loc>https://orbitboard.in/tools/svg-to-png</loc></url>
+  <url><loc>https://orbitboard.in/tools/csv-to-pdf</loc></url>
+  <url><loc>https://orbitboard.in/tools/json-to-xml</loc></url>
+  <url><loc>https://orbitboard.in/tools/xml-to-json</loc></url>
+  <url><loc>https://orbitboard.in/tools/markdown-to-html</loc></url>
+  <url><loc>https://orbitboard.in/tools/csv-to-json</loc></url>
+  <url><loc>https://orbitboard.in/tools/csv-to-xlsx</loc></url>
+  <url><loc>https://orbitboard.in/tools/json-to-xlsx</loc></url>
+  <url><loc>https://orbitboard.in/tools/xlsx-to-csv</loc></url>
+  <url><loc>https://orbitboard.in/tools/txt-to-pdf</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-to-text</loc></url>
+  <url><loc>https://orbitboard.in/tools/diff-checker</loc></url>
+  <url><loc>https://orbitboard.in/tools/image-compressor</loc></url>
+  <url><loc>https://orbitboard.in/tools/image-metadata-remover</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-merge</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-split</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-extract-pages</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-reorder</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-to-jpg</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-to-png</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-workspace</loc></url>
+  <url><loc>https://orbitboard.in/tools/pdf-compressor</loc></url>
+  <url><loc>https://orbitboard.in/tools/emi</loc></url>
+  <url><loc>https://orbitboard.in/tools/gst</loc></url>
+  <url><loc>https://orbitboard.in/tools/sip</loc></url>
+  <url><loc>https://orbitboard.in/tools/json-formatter</loc></url>
+  <url><loc>https://orbitboard.in/tools/json-to-csv</loc></url>
+  <url><loc>https://orbitboard.in/tools/base64</loc></url>
+  <url><loc>https://orbitboard.in/tools/jwt-decoder</loc></url>
+  <url><loc>https://orbitboard.in/tools/unix-timestamp</loc></url>
+  <url><loc>https://orbitboard.in/tools/uuid-generator</loc></url>
+  <url><loc>https://orbitboard.in/tools/url-encoder</loc></url>
 </urlset>
