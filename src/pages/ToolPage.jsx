@@ -83,7 +83,50 @@ function SalaryCalculator() {
 }
 
 function SalaryHike() { const [old,setOld]=useState('1000000'),[next,setNext]=useState('1200000'); const o=num(old),n=num(next),h=o?((n-o)/o)*100:0; return <><Field label="Current annual salary (₹)" value={old} onChange={setOld}/><Field label="New annual salary (₹)" value={next} onChange={setNext}/><Result label="Hike" value={`${h.toFixed(2)}%`} highlight/><Result label="Increase" value={`₹ ${money(n-o)} / year`}/></> }
-function Offer() { const [a,setA]=useState('1000000'),[b,setB]=useState('1300000'); const diff=num(b)-num(a); return <><Field label="Offer A CTC (₹)" value={a} onChange={setA}/><Field label="Offer B CTC (₹)" value={b} onChange={setB}/><Result label="Annual difference" value={`₹ ${money(diff)}`}/><Result label="Percentage difference" value={`${(num(a)?diff/num(a)*100:0).toFixed(2)}%`} /></> }
+function Offer() {
+  const [a,setA]=useState('1000000'),[b,setB]=useState('1300000');
+  const [basicPct,setBasicPct]=useState('40'),[variableA,setVariableA]=useState('0'),[variableB,setVariableB]=useState('0');
+  const [regime,setRegime]=useState('new');
+
+  const calculateTakeHome=(ctc,variable)=>{
+    const annual=num(ctc), basic=annual*num(basicPct)/100, monthlyBasic=basic/12;
+    const employeePf=Math.min(monthlyBasic,15000)*.12*12;
+    const employerPf=employeePf, fixedGross=Math.max(0,annual-employerPf-num(variable));
+    const standardDeduction=regime==='new'?75000:50000;
+    const taxable=Math.max(0,fixedGross-standardDeduction);
+    const tax=regime==='new'?calculateNewTax(taxable):calculateOldTax(taxable);
+    const pt=fixedGross/12>=25000?2500:0;
+    const annualTakeHome=Math.max(0,fixedGross-employeePf-tax-pt);
+    return {annualTakeHome,monthlyTakeHome:annualTakeHome/12};
+  };
+  const first=calculateTakeHome(a,variableA), second=calculateTakeHome(b,variableB);
+  const ctcDiff=num(b)-num(a), takeHomeDiff=second.annualTakeHome-first.annualTakeHome;
+  return <div className="space-y-5">
+    <div className="grid sm:grid-cols-2 gap-4">
+      <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 space-y-4">
+        <p className="text-sm font-bold text-slate-200">Offer A</p>
+        <Field label="Annual CTC (₹)" value={a} onChange={setA}/>
+        <Field label="Variable pay included (₹)" value={variableA} onChange={setVariableA}/>
+      </div>
+      <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 space-y-4">
+        <p className="text-sm font-bold text-slate-200">Offer B</p>
+        <Field label="Annual CTC (₹)" value={b} onChange={setB}/>
+        <Field label="Variable pay included (₹)" value={variableB} onChange={setVariableB}/>
+      </div>
+    </div>
+    <Field label="Basic salary as % of CTC" value={basicPct} onChange={setBasicPct}/>
+    <label className="block"><span className="text-xs font-medium text-slate-400">Tax regime</span><select value={regime} onChange={e=>setRegime(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-violet-500"><option value="new">New regime</option><option value="old">Old regime</option></select></label>
+    <div className="grid sm:grid-cols-2 gap-3">
+      <Result label="Offer A monthly take-home" value={`₹ ${money(first.monthlyTakeHome)}`} highlight/>
+      <Result label="Offer B monthly take-home" value={`₹ ${money(second.monthlyTakeHome)}`} highlight/>
+      <Result label="CTC difference" value={`₹ ${money(ctcDiff)} / year`}/>
+      <Result label="Take-home difference" value={`₹ ${money(takeHomeDiff)} / year`}/>
+      <Result label="Take-home difference / month" value={`₹ ${money(takeHomeDiff/12)}`}/>
+      <Result label="Offer B CTC increase" value={`${(num(a)?ctcDiff/num(a)*100:0).toFixed(2)}%`}/>
+    </div>
+    <p className="text-xs text-slate-500">This comparison uses the same simplified salary model as the CTC calculator. Actual offers can differ because of exemptions, deductions, PF structure, gratuity, bonuses, insurance and employer-specific payroll rules.</p>
+  </div>
+}
 function Notice() { const [date,setDate]=useState(new Date().toISOString().slice(0,10)),[days,setDays]=useState('60'); const d=new Date(date); d.setDate(d.getDate()+num(days)); return <><Field label="Resignation date" value={date} onChange={setDate} type="date"/><Field label="Notice period (days)" value={days} onChange={setDays}/><Result label="Calculated last working date" value={d.toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})} highlight/><p className="text-xs text-slate-500">Company policy and whether the resignation day counts can change the actual date by a day.</p></> }
 function Experience() { const [from,setFrom]=useState('2012-01-01'),[to,setTo]=useState(new Date().toISOString().slice(0,10)); const d=Math.max(0,(new Date(to)-new Date(from))/86400000),years=Math.floor(d/365.2425),months=Math.floor((d-years*365.2425)/30.44); return <><Field label="Start date" value={from} onChange={setFrom} type="date"/><Field label="End date" value={to} onChange={setTo} type="date"/><Result label="Approximate experience" value={`${years} years ${months} months`} highlight/></> }
 function Percentage() { const [value,setValue]=useState('100'),[pct,setPct]=useState('20'); const amount=num(value)*num(pct)/100; return <><Field label="Base value" value={value} onChange={setValue}/><Field label="Percentage" value={pct} onChange={setPct}/><Result label="Percentage amount" value={money(amount)}/><Result label="Value after increase" value={money(num(value)+amount)}/></> }
