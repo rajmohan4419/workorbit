@@ -1,5 +1,5 @@
 export const TOOLS = [
-  { slug: 'ctc-to-inhand', name: 'CTC to In-Hand Salary', description: 'Estimate monthly take-home salary from your annual CTC in India.', category: 'Career', icon: '₹' },
+  { slug: 'ctc-to-inhand', name: 'CTC to In-Hand Salary', description: 'Estimate take-home salary with tax regime, PF, gratuity, variable pay and professional tax.', category: 'Career', icon: '₹' },
   { slug: 'salary-hike', name: 'Salary Hike Calculator', description: 'Calculate your hike percentage and revised salary instantly.', category: 'Career', icon: '%' },
   { slug: 'offer-comparison', name: 'Offer Comparison', description: 'Compare two job offers by CTC, monthly take-home and hike.', category: 'Career', icon: '⇄' },
   { slug: 'notice-period', name: 'Notice Period Calculator', description: 'Find your last working day from resignation date and notice period.', category: 'Career', icon: '◷' },
