@@ -6,4 +6,6 @@ export const TOOLS = [
   { slug: 'experience', name: 'Experience Calculator', description: 'Calculate total professional experience between two dates.', category: 'Career', icon: '⌁' },
   { slug: 'percentage', name: 'Percentage Calculator', description: 'Calculate percentages, increases and decreases quickly.', category: 'Everyday', icon: '%' },
   { slug: 'emi', name: 'EMI Calculator', description: 'Estimate monthly EMI, total interest and total repayment.', category: 'Finance', icon: '₹' },
+  { slug: 'gst', name: 'GST Calculator', description: 'Calculate GST amount, inclusive price and pre-GST price.', category: 'Finance', icon: 'G' },
+  { slug: 'sip', name: 'SIP Calculator', description: 'Estimate SIP maturity value, invested amount and potential returns.', category: 'Finance', icon: '↗' },
 ];
