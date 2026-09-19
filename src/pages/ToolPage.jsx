@@ -132,9 +132,49 @@ function Experience() { const [from,setFrom]=useState('2012-01-01'),[to,setTo]=u
 function Percentage() { const [value,setValue]=useState('100'),[pct,setPct]=useState('20'); const amount=num(value)*num(pct)/100; return <><Field label="Base value" value={value} onChange={setValue}/><Field label="Percentage" value={pct} onChange={setPct}/><Result label="Percentage amount" value={money(amount)}/><Result label="Value after increase" value={money(num(value)+amount)}/></> }
 function Emi() { const [principal,setPrincipal]=useState('1000000'),[rate,setRate]=useState('9'),[years,setYears]=useState('5'); const p=num(principal),r=num(rate)/1200,n=num(years)*12,emi=r?p*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1):p/n,total=emi*n; return <><Field label="Loan amount (₹)" value={principal} onChange={setPrincipal}/><Field label="Annual interest rate (%)" value={rate} onChange={setRate}/><Field label="Tenure (years)" value={years} onChange={setYears}/><Result label="Monthly EMI" value={`₹ ${money(emi)}`} highlight/><Result label="Total interest" value={`₹ ${money(total-p)}`}/><Result label="Total repayment" value={`₹ ${money(total)}`}/></> }
 
+function Gst() {
+  const [amount,setAmount]=useState('100000'),[rate,setRate]=useState('18'),[mode,setMode]=useState('exclusive');
+  const base=num(amount), gst=mode==='exclusive'?base*num(rate)/100:base*num(rate)/(100+num(rate));
+  const total=mode==='exclusive'?base+gst:base;
+  const preGst=mode==='exclusive'?base:base-gst;
+  return <div className="space-y-5">
+    <div className="grid sm:grid-cols-2 gap-4">
+      <Field label={mode==='exclusive'?'Pre-GST amount (₹)':'GST-inclusive amount (₹)'} value={amount} onChange={setAmount}/>
+      <Field label="GST rate (%)" value={rate} onChange={setRate}/>
+    </div>
+    <label className="block"><span className="text-xs font-medium text-slate-400">Calculation mode</span><select value={mode} onChange={e=>setMode(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-violet-500"><option value="exclusive">Add GST to price</option><option value="inclusive">Extract GST from inclusive price</option></select></label>
+    <div className="grid sm:grid-cols-2 gap-3">
+      <Result label="Pre-GST value" value={`₹ ${money(preGst)}`} highlight/>
+      <Result label="GST amount" value={`₹ ${money(gst)}`} highlight/>
+      <Result label="Final / inclusive price" value={`₹ ${money(total)}`}/>
+    </div>
+    <p className="text-xs text-slate-500">Select the GST rate applicable to your transaction. This calculator does not determine taxability or the applicable rate.</p>
+  </div>
+}
+
+function Sip() {
+  const [monthly,setMonthly]=useState('10000'),[rate,setRate]=useState('12'),[years,setYears]=useState('10');
+  const p=num(monthly), r=num(rate)/1200, n=num(years)*12;
+  const maturity=r>0?p*((Math.pow(1+r,n)-1)/r)*(1+r):p*n;
+  const invested=p*n, returns=Math.max(0,maturity-invested);
+  return <div className="space-y-5">
+    <div className="grid sm:grid-cols-2 gap-4">
+      <Field label="Monthly SIP (₹)" value={monthly} onChange={setMonthly}/>
+      <Field label="Expected annual return (%)" value={rate} onChange={setRate}/>
+    </div>
+    <Field label="Investment period (years)" value={years} onChange={setYears}/>
+    <div className="grid sm:grid-cols-2 gap-3">
+      <Result label="Estimated maturity value" value={`₹ ${money(maturity)}`} highlight/>
+      <Result label="Total amount invested" value={`₹ ${money(invested)}`}/>
+      <Result label="Estimated returns" value={`₹ ${money(returns)}`}/>
+    </div>
+    <p className="text-xs text-slate-500">Illustration only. Mutual fund returns are market-linked and not guaranteed. Actual results depend on investment performance, timing and expenses.</p>
+  </div>
+}
+
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug);
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'emi':Emi }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'percentage':Percentage,'emi':Emi,'gst':Gst,'sip':Sip }[slug]),[slug]);
   if(!tool || !content) return <div className="min-h-screen bg-slate-950 text-white p-10"><Link to="/tools">← Tools</Link><h1 className="text-2xl font-bold mt-8">Tool not found</h1></div>;
   const Tool=content;
   return <div className="min-h-screen bg-slate-950 text-slate-100">
