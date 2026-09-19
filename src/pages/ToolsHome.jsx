@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { BriefcaseBusiness, Calculator, Code2, Coins, ArrowRight, Sparkles, Search } from 'lucide-react';
-import { TOOLS } from '../data/tools';
+import { TOOLS, TOOL_CONTENT } from '../data/tools';
 
 const categories = ['All', 'Career', 'Finance', 'Everyday', 'Developer'];
 const categoryMeta = {
@@ -14,7 +14,14 @@ const categoryMeta = {
 export default function ToolsHome() {
   const [category,setCategory]=useState('All');
   const [query,setQuery]=useState('');
-  const filtered=useMemo(()=>TOOLS.filter(t=>(category==='All'||t.category===category)&&(!query||t.name.toLowerCase().includes(query.toLowerCase())||t.description.toLowerCase().includes(query.toLowerCase()))),[category,query]);
+  const filtered=useMemo(()=>TOOLS.filter(t=>{
+    const q=query.trim().toLowerCase();
+    if(category!=='All'&&t.category!==category) return false;
+    if(!q) return true;
+    const info=TOOL_CONTENT[t.slug];
+    const haystack=[t.name,t.description,t.category,info?.keywords||''].join(' ').toLowerCase();
+    return haystack.includes(q);
+  }),[category,query]);
   return <div className="min-h-screen bg-slate-950 text-slate-100">
     <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -47,13 +54,20 @@ export default function ToolsHome() {
       </section>
       <section id="tools" className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Tool categories">
-          {categories.map(c=><button key={c} onClick={()=>setCategory(c)} role="tab" aria-selected={category===c} className={`rounded-full px-4 py-2 text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-violet-500 ${category===c?'border-violet-500 bg-violet-500/15 text-violet-200':'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'}`}>{c}</button>)}
+          {categories.map(c=><button key={c} type="button" onClick={()=>setCategory(c)} role="tab" aria-selected={category===c} className={`rounded-full px-4 py-2 text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-violet-500 ${category===c?'border-violet-500 bg-violet-500/15 text-violet-200':'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'}`}>{c}</button>)}
         </div>
-        <p className="mt-5 text-sm text-slate-500">{filtered.length} tool{filtered.length===1?'':'s'} available</p>
+        <div className="mt-5 flex items-center justify-between gap-4">
+          <p className="text-sm text-slate-500" aria-live="polite">{filtered.length} tool{filtered.length===1?'':'s'} available</p>
+          {query&&<button type="button" onClick={()=>setQuery('')} className="text-sm font-medium text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg px-2 py-1">Clear search</button>}
+        </div>
         <section className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map(tool=><ToolCard key={tool.slug} tool={tool}/>)}
         </section>
-        {!filtered.length&&<div className="py-20 text-center text-slate-500">No tools match that search.</div>}
+        {!filtered.length&&<div className="rounded-2xl border border-dashed border-slate-800 py-16 text-center">
+          <p className="text-base font-semibold text-slate-300">No tools match “{query}”.</p>
+          <p className="mt-2 text-sm text-slate-500">Try a broader term such as salary, loan, JSON or percentage.</p>
+          <button type="button" onClick={()=>{setQuery('');setCategory('All')}} className="mt-5 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-300">Show all tools</button>
+        </div>}
       </section>
     </main>
     <footer className="border-t border-slate-900 py-10 text-center text-sm text-slate-600">OrbitBoard • Practical tools for work & life</footer>
