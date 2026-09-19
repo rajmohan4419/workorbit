@@ -40,6 +40,15 @@ export default function ToolsHome() {
       </div>
     </header>
     <main>
+      <section className="mb-10 rounded-3xl border border-violet-500/20 bg-violet-500/[0.06] p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+          <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-violet-300">Converter Hub</p><h2 className="mt-2 text-2xl sm:text-3xl font-black">Convert files without uploading them.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Image, spreadsheet and data converters designed for quick browser-based jobs.</p></div>
+          <button onClick={()=>setCategory('Converters')} className="shrink-0 rounded-xl border border-violet-500/30 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-violet-200 hover:border-violet-400">Explore converters</button>
+        </div>
+        <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {TOOLS.filter(t=>converterSlugs.has(t.slug)).slice(0,4).map(t=><Link key={t.slug} to={`/tools/${t.slug}`} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 hover:border-violet-500/40"><div className="text-xs font-bold text-violet-300">{t.icon}</div><div className="mt-2 font-semibold text-sm text-white">{t.name}</div><div className="mt-1 text-xs text-slate-500">Open tool →</div></Link>)}
+        </div>
+      </section>
       <section className="relative overflow-hidden border-b border-slate-800/70">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(139,92,246,.18),transparent_32%)]" aria-hidden="true"/>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 grid lg:grid-cols-[1.1fr_.9fr] gap-12 items-center">
