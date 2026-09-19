@@ -4,6 +4,13 @@ import { BriefcaseBusiness, Calculator, Code2, Coins, ArrowRight, Sparkles, Sear
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
 
 const categories = ['All', 'Career', 'Finance', 'Everyday', 'Developer'];
+const converterSlugs = new Set([
+  'jpg-to-png', 'png-to-jpg', 'webp-to-jpg', 'image-to-pdf', 'xlsx-to-pdf',
+  'svg-to-png', 'csv-to-pdf', 'json-to-xml', 'xml-to-json', 'markdown-to-html',
+  'csv-to-json', 'csv-to-xlsx', 'json-to-xlsx', 'xlsx-to-csv', 'txt-to-pdf',
+  'pdf-to-text', 'pdf-to-jpg', 'pdf-to-png', 'length-converter', 'weight-converter',
+  'temperature-converter', 'time-converter'
+]);
 const categoryMeta = {
   Career: { icon: BriefcaseBusiness, label: 'Career & Salary', description: 'Make clearer decisions about salary, offers and your next move.' },
   Finance: { icon: Coins, label: 'Money & Finance', description: 'Quick estimates for loans, taxes, investments and everyday money.' },

@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Code2, BriefcaseBusiness, Coins, Calculator } from 'lucide-react';
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
-import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, createEditedPdf, loadPdf, createTextPdf } from '../engines/pdf';
+import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, createEditedPdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
 import { csvToXlsx, jsonToXlsx, xlsxToCsv } from '../engines/spreadsheet';
 
@@ -135,7 +135,7 @@ function Notice() { const [date,setDate]=useState(new Date().toISOString().slice
 function Experience() { const [from,setFrom]=useState('2012-01-01'),[to,setTo]=useState(new Date().toISOString().slice(0,10)); const start=new Date(from),end=new Date(to); const valid=!Number.isNaN(start.getTime())&&!Number.isNaN(end.getTime())&&end>=start; const d=valid?(end-start)/86400000:0,years=Math.floor(d/365.2425),months=Math.floor((d-years*365.2425)/30.44); return <><Field label="Start date" value={from} onChange={setFrom} type="date"/><Field label="End date" value={to} onChange={setTo} type="date"/>{valid?<Result label="Approximate experience" value={`${years} years ${months} months`} highlight/>:<p className="text-sm text-red-400">Choose an end date on or after the start date.</p>}</> }
 function ExportActions({content,filename='orbitboard-result.txt'}) {
   const [copied,setCopied]=useState(false);
-  const copy=async()=>{try{await navigator.clipboard.writeText(content);setCopied(true);setTimeout(()=>setCopied(false),1500)}catch{}};
+  const copy=async()=>{try{await navigator.clipboard.writeText(content);setCopied(true);setTimeout(()=>setCopied(false),1500)}catch(e){void e;}};
   const download=()=>{const blob=new Blob([content],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)};
   return <div className="flex flex-wrap gap-2 pt-2"><button type="button" onClick={copy} className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold hover:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500">{copied?'Copied':'Copy result'}</button><button type="button" onClick={download} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-300">Export .txt</button></div>
 }
@@ -186,7 +186,7 @@ function ImageConverter({format}) {
       setPreview(canvas.toDataURL('image/'+(isJpg?'jpeg':'png'),isJpg?Number(quality):undefined));
       const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/'+(isJpg?'jpeg':'png'),isJpg?Number(quality):undefined));
       if(!blob) throw new Error('Could not create output image');
-      downloadBlob(blob,(file.name.replace(/\\.[^.]+$/,'')||'orbitboard-image')+'.'+ext);
+      downloadBlob(blob,(file.name.replace(/\.[^.]+$/,'')||'orbitboard-image')+'.'+ext);
       setStatus('Done — your converted image is ready.');
     } catch { setStatus('Could not convert this image. Try another file.'); }
     finally { URL.revokeObjectURL(url); }
@@ -263,7 +263,7 @@ function xlsxCellValue(cell,sharedStrings) {
 }
 
 function columnIndex(ref) {
-  const letters=(ref||'').replace(/\\d/g,'').toUpperCase(); let n=0;
+  const letters=(ref||'').replace(/\d/g,'').toUpperCase(); let n=0;
   for(const ch of letters) n=n*26+ch.charCodeAt(0)-64;
   return Math.max(0,n-1);
 }
@@ -279,7 +279,7 @@ function parseXlsxEntries(entries) {
   const sheets=[...workbook.getElementsByTagNameNS('*','sheet')];
   return sheets.map((sheet)=>{
     const target=relMap[sheet.getAttribute('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id')]||relMap[sheet.getAttribute('r:id')];
-    const path=target?.startsWith('/')?target.slice(1):('xl/'+String(target||'').replace(/^\\.\\//,''));
+    const path=target?.startsWith('/')?target.slice(1):('xl/'+String(target||'').replace(/^\.\//,''));
     const doc=parser.parseFromString(entries[path]||'','application/xml');
     const rows=[...doc.getElementsByTagNameNS('*','row')].map(row=>{
       const cells=[];
@@ -299,7 +299,7 @@ function createTextPdf(lines) {
   addObj('<< /Type /Pages /Kids [PAGE_KIDS] /Count PAGE_COUNT >>');
   const fontId=addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
   const pageIds=[];
-  const escape=s=>String(s??'').replace(/\\/g,'\\\\').replace(/\\(/g,'\\\\(').replace(/\\)/g,'\\\\)').replace(/[\\r\\n]+/g,' ');
+  const escape=s=>String(s??'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[\r\n]+/g,' ');
   pageChunks.forEach(page=>{
     let stream='BT\\n/F1 9 Tf\\n40 800 Td\\n';
     page.forEach((line,idx)=>{if(idx) stream+='0 -15 Td\\n';stream+='('+escape(line)+') Tj\\n';});
@@ -418,7 +418,7 @@ function ImageToPdf() {
       const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.92));
       const bytes=new Uint8Array(await blob.arrayBuffer());
       const pdf=createPdfFromJpeg(bytes,image.naturalWidth,image.naturalHeight);
-      downloadBlob(pdf,(file.name.replace(/\\.[^.]+$/,'')||'orbitboard-image')+'.pdf');
+      downloadBlob(pdf,(file.name.replace(/\.[^.]+$/,'')||'orbitboard-image')+'.pdf');
       setStatus('Done — your PDF is ready.');
     } catch { setStatus('Could not generate the PDF. Try another image.'); }
     finally { URL.revokeObjectURL(url); }
@@ -460,7 +460,7 @@ function JsonFormatter() {
   const [input,setInput]=useState('{"name":"OrbitBoard","tools":["JSON","JWT"]}'); const [mode,setMode]=useState('format');
   let output='',error='';
   try { const parsed=JSON.parse(input); output=mode==='minify'?JSON.stringify(parsed):JSON.stringify(parsed,null,2); } catch(e){ error=e.message; }
-  return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('format')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Format</button><button onClick={()=>setMode('minify')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Minify</button></div>{error?<p className="text-sm text-red-400">Invalid JSON: {error}</p>:<textarea readOnly value={output} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard-json.txt"/></div>
+  return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('format')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Format</button><button onClick={()=>setMode('minify')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Minify</button></div>{error?<p className="text-sm text-red-400">Invalid JSON: {error}</p>:<><textarea readOnly value={output} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard-json.txt"/></>}</div>
 }
 function JsonToCsv() {
   const [input,setInput]=useState('[{"name":"John Doe","role":"Developer"},{"name":"Mitra","role":"Assistant"}]'); let csv='',error='';
@@ -635,7 +635,7 @@ function XmlToJson() {
 }
 function MarkdownToHtml() {
   const [input,setInput]=useState('# Hello OrbitBoard\n\nThis is **bold** and *italic*.\n\n- One\n- Two'),[output,setOutput]=useState('');
-  const inline=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/\`(.+?)\`/g,'<code>$1</code>');
+  const inline=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>');
   const convert=()=>{const lines=input.split(/\r?\n/),html=[];let list=false;for(const line of lines){if(line.startsWith('- ')){if(!list){html.push('<ul>');list=true;}html.push('<li>'+inline(line.slice(2))+'</li>');continue;}if(list){html.push('</ul>');list=false;}if(line.startsWith('# '))html.push('<h1>'+inline(line.slice(2))+'</h1>');else if(line.startsWith('## '))html.push('<h2>'+inline(line.slice(3))+'</h2>');else if(line.trim())html.push('<p>'+inline(line)+'</p>');}if(list)html.push('</ul>');setOutput(html.join('\n'));};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to HTML</button>{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.html"/></>}</div>;
 }
@@ -670,7 +670,7 @@ function ImageMetadataRemover() {
 
 function PdfMerge() {
   const [files,setFiles]=useState([]),[busy,setBusy]=useState(false),[status,setStatus]=useState('');
-  const merge=async()=>{if(files.length<2){setStatus('Choose at least two PDFs.');return;}setBusy(true);setStatus('Merging PDFs locally…');try{const bytes=await mergePdfFiles(files);downloadBlob(new Blob([bytes],{type:'application/pdf'}),'orbitboard-merged.pdf');setStatus('Done — merged PDF downloaded.');}catch(e){setStatus('Could not merge these PDFs. Some encrypted or malformed PDFs may not be supported.');}finally{setBusy(false);}};
+  const merge=async()=>{if(files.length<2){setStatus('Choose at least two PDFs.');return;}setBusy(true);setStatus('Merging PDFs locally…');try{const bytes=await mergePdfFiles(files);downloadBlob(new Blob([bytes],{type:'application/pdf'}),'orbitboard-merged.pdf');setStatus('Done — merged PDF downloaded.');}catch{setStatus('Could not merge these PDFs. Some encrypted or malformed PDFs may not be supported.');}finally{setBusy(false);}};
   return <div className="space-y-5"><input type="file" accept="application/pdf" multiple onChange={e=>{setFiles([...e.target.files]);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/>{files.length>0&&<ol className="space-y-2">{files.map((f,i)=><li key={f.name+i} className="rounded-xl bg-slate-950 px-4 py-3 text-sm text-slate-300">{i+1}. {f.name}</li>)}</ol>}<button disabled={busy} onClick={merge} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Merging…':'Merge PDFs'}</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">PDFs are processed locally in your browser.</p></div>
 }
 
@@ -704,7 +704,7 @@ function PdfCompressor() {
   const [file,setFile]=useState(null),[busy,setBusy]=useState(false),[status,setStatus]=useState(''),[stats,setStats]=useState(null);
   const compress=async()=>{
     if(!file){setStatus('Choose a PDF first.');return;}setBusy(true);setStatus('Optimizing PDF structure…');
-    try{const bytes=await optimizePdf(file);const blob=new Blob([bytes],{type:'application/pdf'});downloadBlob(blob,(file.name.replace(/\\.pdf$/i,'')||'orbitboard')+'-optimized.pdf');setStats({before:file.size,after:blob.size});setStatus('Done — optimized PDF downloaded.');}catch{setStatus('Could not optimize this PDF. Some encrypted or malformed PDFs may not be supported.');}finally{setBusy(false);}
+    try{const bytes=await optimizePdf(file);const blob=new Blob([bytes],{type:'application/pdf'});downloadBlob(blob,(file.name.replace(/\.pdf$/i,'')||'orbitboard')+'-optimized.pdf');setStats({before:file.size,after:blob.size});setStatus('Done — optimized PDF downloaded.');}catch{setStatus('Could not optimize this PDF. Some encrypted or malformed PDFs may not be supported.');}finally{setBusy(false);}
   };
   const saved=stats?Math.round((1-stats.after/stats.before)*100):0;
   return <div className="space-y-5"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setStats(null);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button disabled={busy} onClick={compress} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Optimizing…':'Optimize & Download'}</button>{stats&&<div className="grid sm:grid-cols-3 gap-3"><Result label="Original" value={(stats.before/1024).toFixed(1)+' KB'}/><Result label="Optimized" value={(stats.after/1024).toFixed(1)+' KB'}/><Result label="Size change" value={(saved>=0?saved+'% smaller':Math.abs(saved)+'% larger')} highlight/></div>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">This performs browser-side PDF structure optimization. It does not promise image recompression or a smaller file for every PDF.</p></div>
@@ -724,7 +724,7 @@ function PdfWorkspace() {
   const exportPdf=async()=>{if(!file||!pages.length){setStatus('No pages available.');return;}setBusy(true);try{const bytes=await createEditedPdf(file,pages);downloadBlob(new Blob([bytes],{type:'application/pdf'}),'orbitboard-edited.pdf');setStatus('Done — edited PDF downloaded.');}catch{setStatus('Could not export this PDF.');}finally{setBusy(false);}};
   return <div className="space-y-5"><div className="flex flex-wrap gap-2"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setPages([]);setStatus('')}} className="flex-1 min-w-60 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button disabled={busy} onClick={renderPdf} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Working…':'Open PDF'}</button></div>
     {pages.length>0&&<><div className="flex flex-wrap gap-2"><button onClick={()=>setSelected(new Set(pages.map(p=>p.number)))} className="rounded-lg border border-slate-700 px-3 py-2 text-xs">Select all</button><button onClick={()=>setSelected(new Set())} className="rounded-lg border border-slate-700 px-3 py-2 text-xs">Clear</button><button onClick={removeSelected} className="rounded-lg border border-red-900/60 px-3 py-2 text-xs text-red-300">Delete selected</button><button disabled={busy} onClick={exportPdf} className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold disabled:opacity-50">Export PDF</button></div>
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">{pages.map((p,i)=><div key={p.number} className={`rounded-2xl border p-3 ${selected.has(p.number)?'border-violet-500 bg-violet-500/10':'border-slate-800 bg-slate-950'}`}><button onClick={()=>toggle(p.number)} className="block w-full text-left"><img src={p.data} alt={'Page '+p.number} className="w-full rounded-lg bg-white" style={{transform:`rotate(${p.rotation}deg)`}}/><p className="mt-2 text-xs text-slate-400">Page {p.number}{selected.has(p.number)?' • selected':''}</p></button><div className="mt-2 flex gap-1"><button onClick={()=>move(p.number,-1)} className="flex-1 rounded-lg border border-slate-800 py-1 text-xs">←</button><button onClick={()=>rotate(p.number)} className="flex-1 rounded-lg border border-slate-800 py-1 text-xs">↻</button><button onClick={()=>move(p.number,1)} className="flex-1 rounded-lg border border-slate-800 py-1 text-xs">→</button></div></div>)}</div></>}
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">{pages.map(p=><div key={p.number} className={`rounded-2xl border p-3 ${selected.has(p.number)?'border-violet-500 bg-violet-500/10':'border-slate-800 bg-slate-950'}`}><button onClick={()=>toggle(p.number)} className="block w-full text-left"><img src={p.data} alt={'Page '+p.number} className="w-full rounded-lg bg-white" style={{transform:`rotate(${p.rotation}deg)`}}/><p className="mt-2 text-xs text-slate-400">Page {p.number}{selected.has(p.number)?' • selected':''}</p></button><div className="mt-2 flex gap-1"><button onClick={()=>move(p.number,-1)} className="flex-1 rounded-lg border border-slate-800 py-1 text-xs">←</button><button onClick={()=>rotate(p.number)} className="flex-1 rounded-lg border border-slate-800 py-1 text-xs">↻</button><button onClick={()=>move(p.number,1)} className="flex-1 rounded-lg border border-slate-800 py-1 text-xs">→</button></div></div>)}</div></>}
     {status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Pages are rendered and edited locally in your browser. Export uses the original PDF pages.</p></div>
 }
 
@@ -742,7 +742,7 @@ function ToolPageActions({tool}) {
     try {
       if(navigator.share) await navigator.share(data);
       else { await navigator.clipboard.writeText(window.location.href); setShared(true); setTimeout(()=>setShared(false),1600); }
-    } catch {}
+    } catch (e) { void e; }
   };
   const reset=()=>window.location.reload();
   return <div className="mb-5 flex flex-wrap gap-2">
