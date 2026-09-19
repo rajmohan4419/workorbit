@@ -14,7 +14,7 @@ export async function extractPdfText(file) {
   return pages.join('\n\n');
 }
 
-export async function renderPdfPages(file, { scale = 1.25, format = 'image/jpeg', quality = 0.9 } = {}) {
+export async function renderPdfPages(file, { scale = 1.25, format = 'image/jpeg', quality = 0.9, onProgress } = {}) {
   const pdfDocument = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
   const pages = [];
   for (let number = 1; number <= pdfDocument.numPages; number += 1) {
@@ -24,7 +24,8 @@ export async function renderPdfPages(file, { scale = 1.25, format = 'image/jpeg'
     canvas.width = Math.ceil(viewport.width);
     canvas.height = Math.ceil(viewport.height);
     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-    pages.push({ number, data: canvas.toDataURL(format, format === 'image/jpeg' ? quality : undefined) });
+    pages.push({ number, rotation: 0, data: canvas.toDataURL(format, format === 'image/jpeg' ? quality : undefined) });
+    onProgress?.(number, pdfDocument.numPages);
   }
   return pages;
 }
