@@ -617,8 +617,7 @@ function PdfWorkspace() {
   const [file,setFile]=useState(null),[pages,setPages]=useState([]),[selected,setSelected]=useState(new Set()),[busy,setBusy]=useState(false),[status,setStatus]=useState('');
   const renderPdf=async()=>{
     if(!file){setStatus('Choose a PDF first.');return;}setBusy(true);setStatus('Rendering PDF pages…');
-    try{const doc=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;const rendered=[];
-      for(let i=1;i<=doc.numPages;i++){const page=await doc.getPage(i),viewport=page.getViewport({scale:0.8}),canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;rendered.push({number:i,rotation:0,data:canvas.toDataURL('image/jpeg',0.82)});}
+    try{const rendered=await renderPdfPages(file,{scale:0.8,format:'image/jpeg',quality:0.82});
       setPages(rendered);setSelected(new Set());setStatus(rendered.length+' pages ready.');}catch{setStatus('Could not render this PDF.');}finally{setBusy(false);}
   };
   const toggle=n=>setSelected(prev=>{const next=new Set(prev);next.has(n)?next.delete(n):next.add(n);return next;});
