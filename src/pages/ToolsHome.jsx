@@ -4,7 +4,7 @@ import {
   ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
   Clock3, Search, Sparkles, Star, WandSparkles
 } from 'lucide-react';
-import { TOOLS } from '../data/toolCatalog';
+import { TOOLS, TOOL_CONTENT } from '../data/toolCatalog';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
@@ -100,7 +100,8 @@ export default function ToolsHome() {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     const direct = TOOLS.filter(tool => {
-      const haystack = [tool.name, tool.description, tool.category].join(' ').toLowerCase();
+      const info = TOOL_CONTENT[tool.slug];
+      const haystack = [tool.name, tool.description, tool.category, info?.keywords || ''].join(' ').toLowerCase();
       return haystack.includes(q);
     });
     const intentSlugs = intentMap.filter(group => group.terms.some(term => q.includes(term))).flatMap(group => group.slugs);
@@ -157,6 +158,7 @@ export default function ToolsHome() {
                   <label htmlFor="tool-search" className="sr-only">Describe what you need</label>
                   <input
                     id="tool-search"
+                    autoFocus
                     value={query}
                     onChange={e => { setQuery(e.target.value); setCategory(null); }}
                     placeholder="e.g. “I need my salary in hand”"
