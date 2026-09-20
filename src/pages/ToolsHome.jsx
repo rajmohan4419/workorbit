@@ -42,7 +42,7 @@ export default function ToolsHome() {
   return <div className="min-h-screen bg-slate-950 text-slate-100">
     <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">ORBIT<span className="text-violet-400">BOARD</span></Link>
+        <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-orange-500 via-violet-500 to-cyan-400 p-0.5"><div className="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center text-amber-400 text-xs font-black">O</div></div>ORBIT<span className="text-orange-500">BOARD</span></Link>
         <a href="#tools" className="text-sm font-medium text-slate-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg px-3 py-2">Browse tools</a>
       </div>
     </header>
@@ -113,9 +113,17 @@ export default function ToolsHome() {
 }
 function ToolCard({tool,favorite,onFavorite,onUse,compact=false}) {
   const Icon=categoryMeta[tool.category]?.icon||Calculator;
-  return <Link to={`/tools/${tool.slug}`} onClick={()=>onUse(tool.slug)} className="group rounded-2xl border border-slate-800 bg-slate-900/70 p-6 hover:-translate-y-0.5 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
-    <div className="flex items-start justify-between"><div className="w-11 h-11 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center"><Icon size={21}/></div><button type="button" aria-label={favorite?`Remove ${tool.name} from favorites`:`Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e=>{e.preventDefault();e.stopPropagation();onFavorite(tool.slug)}} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500"><Star size={17} fill={favorite?'currentColor':'none'}/></button></div>
-    <h2 className="mt-5 text-lg font-bold group-hover:text-violet-300">{tool.name}</h2><p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
-    <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-violet-400">{compact?'Open tool':'Use tool'} <ArrowRight size={15}/></span>
+  return <Link to={`/tools/${tool.slug}`} onClick={()=>onUse(tool.slug)} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 hover:-translate-y-0.5 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
+    {tool.image && <div className="relative h-28 w-full overflow-hidden bg-slate-950">
+      <img src={tool.image} alt={tool.name} className="h-full w-full object-cover opacity-60 group-hover:scale-105 transition duration-300"/>
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"/>
+    </div>}
+    <div className="p-6 flex-1 flex flex-col justify-between">
+      <div>
+        <div className="flex items-start justify-between"><div className="w-11 h-11 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center"><Icon size={21}/></div><button type="button" aria-label={favorite?`Remove ${tool.name} from favorites`:`Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e=>{e.preventDefault();e.stopPropagation();onFavorite(tool.slug)}} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500"><Star size={17} fill={favorite?'currentColor':'none'}/></button></div>
+        <h2 className="mt-4 text-lg font-bold group-hover:text-violet-300">{tool.name}</h2><p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
+      </div>
+      <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-violet-400">{compact?'Open tool':'Use tool'} <ArrowRight size={15}/></span>
+    </div>
   </Link>
 }
