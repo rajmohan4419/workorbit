@@ -138,7 +138,7 @@ export default function ToolsHome() {
       </header>
 
       <main className="px-4 sm:px-6">
-        <section className="relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem] max-w-[1440px] mx-auto">
+        <section className="relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem]">
           <img src={heroImage} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
           <div className="relative z-10 w-full">
