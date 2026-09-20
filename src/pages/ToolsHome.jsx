@@ -11,13 +11,13 @@ import { preloadToolPage } from '../lib/toolPageLoader';
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
 const categoryImages = {
-  Career: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1600&q=82',
-  Finance: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1600&q=82',
-  Everyday: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=82',
-  Developer: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1600&q=82'
+  Career: '/images/category-career.svg',
+  Finance: '/images/category-finance.svg',
+  Everyday: '/images/category-everyday.svg',
+  Developer: '/images/category-developer.svg'
 };
 
-const heroImage = 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=85';
+const heroImage = '/images/orbitboard-hero.svg';
 
 const categoryMeta = {
   Career: {
