@@ -751,4 +751,4 @@ function ToolPageActions({tool}) {
   </div>
 }
 
-function visualFor(category) { const images={Career:'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=80',Finance:'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80',Developer:'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80',Everyday:'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80'}; return images[category]||images.Everyday; }
+function visualFor(category) { const images={Career:'/images/category-career.svg',Finance:'/images/category-finance.svg',Developer:'/images/category-developer.svg',Everyday:'/images/category-everyday.svg'}; return images[category]||images.Everyday; }
