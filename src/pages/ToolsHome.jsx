@@ -9,6 +9,15 @@ import { logEvent } from '../lib/telemetry';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
+const categoryImages = {
+  Career: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1600&q=82',
+  Finance: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1600&q=82',
+  Everyday: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=82',
+  Developer: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1600&q=82'
+};
+
+const heroImage = 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=85';
+
 const categoryMeta = {
   Career: {
     icon: BriefcaseBusiness,
@@ -114,7 +123,7 @@ export default function ToolsHome() {
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
-            ORBIT<span className="text-violet-400">BOARD</span>
+            ORBIT<span className="text-violet-700">BOARD</span>
           </Link>
           <div className="flex items-center gap-3">
             {visitorCount !== null && (
@@ -129,21 +138,23 @@ export default function ToolsHome() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6">
-        <section className="min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16">
-          <div className="w-full">
+        <section className="relative min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16 overflow-hidden rounded-b-[2.5rem]">
+          <img src={heroImage} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
+          <div className="relative z-10 w-full">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
                 <Sparkles size={14} /> Practical tools, one place
               </div>
               <h1 className="mt-6 text-4xl sm:text-6xl font-black tracking-tight">
-                What do you need to <span className="text-violet-400">get done?</span>
+                What do you need to <span className="text-violet-700">get done?</span>
               </h1>
               <p className="mt-5 text-base sm:text-lg leading-7 text-slate-400">
                 Tell OrbitBoard what you are trying to do. We’ll take you straight to the right tool.
               </p>
 
               <div className="mt-8 relative max-w-2xl mx-auto">
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 shadow-2xl shadow-violet-950/20 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/20">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 shadow-2xl shadow-violet-200/40 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/10">
                   <Search size={22} className="text-slate-500 shrink-0" aria-hidden="true" />
                   <label htmlFor="tool-search" className="sr-only">Describe what you need</label>
                   <input
@@ -182,7 +193,7 @@ export default function ToolsHome() {
 
               <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
-                  <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-300">
+                  <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-700">
                     {example}
                   </button>
                 ))}
@@ -199,11 +210,15 @@ export default function ToolsHome() {
                     const meta = categoryMeta[name];
                     const Icon = meta.icon;
                     return (
-                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group text-left rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-slate-900 transition">
-                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center"><Icon size={20} /></div>
-                        <h2 className="mt-4 font-bold text-white group-hover:text-violet-300">{meta.label}</h2>
+                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group relative overflow-hidden text-left rounded-2xl border border-slate-800 bg-slate-900 p-5 hover:-translate-y-1 hover:border-violet-500/50 transition">
+                        <img src={categoryImages[name]} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-20 transition duration-500 group-hover:scale-105 group-hover:opacity-30" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-950/80 to-violet-950/50" aria-hidden="true" />
+                        <div className="relative z-10">
+                        <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center"><Icon size={20} /></div>
+                        <h2 className="mt-4 font-bold text-white group-hover:text-violet-700">{meta.label}</h2>
                         <p className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</p>
-                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-400">Explore <ArrowRight size={13} /></span>
+                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-700">Explore <ArrowRight size={13} /></span>
+                        </div>
                       </button>
                     );
                   })}
@@ -218,7 +233,7 @@ export default function ToolsHome() {
                 </button>
                 <div className="mt-4 flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Explore</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Explore</p>
                     <h2 className="mt-1 text-2xl font-black">{categoryMeta[category].label}</h2>
                   </div>
                   <span className="text-xs text-slate-600">{categoryTools.length} shown</span>
@@ -248,10 +263,10 @@ export default function ToolsHome() {
         <section className="border-t border-slate-900 py-14">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Still exploring?</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Still exploring?</p>
               <h2 className="mt-1 text-xl font-bold">Every tool, when you need it.</h2>
             </div>
-            <Link to="/tools" className="text-sm font-semibold text-violet-400 hover:text-violet-300">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
+            <Link to="/tools" className="text-sm font-semibold text-violet-700 hover:text-violet-700">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
           </div>
         </section>
       </main>
@@ -270,10 +285,10 @@ function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite 
       <Link to={`/tools/${tool.slug}`} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
         <ToolVisual tool={tool} compact />
         <div className="min-w-0">
-          <div className="font-semibold text-sm text-white group-hover:text-violet-300 truncate">{tool.name}</div>
+          <div className="font-semibold text-sm text-white group-hover:text-violet-700 truncate">{tool.name}</div>
           {!compact && <div className="mt-0.5 text-xs text-slate-500 truncate">{tool.description}</div>}
         </div>
-        <ArrowRight size={15} className="shrink-0 text-slate-600 group-hover:text-violet-400" />
+        <ArrowRight size={15} className="shrink-0 text-slate-600 group-hover:text-violet-700" />
       </Link>
       {onFavorite && (
         <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 text-slate-600 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
@@ -291,15 +306,15 @@ function ToolCard({ tool, favorite, onFavorite, onUse }) {
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400">{tool.category}</span>
-            <h2 className="mt-1 text-lg font-bold group-hover:text-violet-300">{tool.name}</h2>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-violet-700">{tool.category}</span>
+            <h2 className="mt-1 text-lg font-bold group-hover:text-violet-700">{tool.name}</h2>
           </div>
           <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e => { e.preventDefault(); e.stopPropagation(); onFavorite(tool.slug); }} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
             <Star size={17} fill={favorite ? 'currentColor' : 'none'} />
           </button>
         </div>
         <p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-400">Use tool <ArrowRight size={15} /></span>
+        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-700">Use tool <ArrowRight size={15} /></span>
       </div>
     </Link>
   );
