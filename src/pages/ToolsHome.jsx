@@ -121,7 +121,7 @@ export default function ToolsHome() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
             ORBIT<span className="text-violet-700">BOARD</span>
           </Link>
@@ -137,16 +137,16 @@ export default function ToolsHome() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6">
-        <section className="relative min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16 overflow-hidden rounded-b-[2.5rem]">
+      <main className="px-4 sm:px-6">
+        <section className="relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem]">
           <img src={heroImage} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
           <div className="relative z-10 w-full">
-            <div className="max-w-3xl mx-auto text-center">
+            <div className="max-w-5xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
                 <Sparkles size={14} /> Practical tools, one place
               </div>
-              <h1 className="mt-6 text-4xl sm:text-6xl font-black tracking-tight">
+              <h1 className="mt-6 text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight">
                 What do you need to <span className="text-violet-700">get done?</span>
               </h1>
               <p className="mt-5 text-base sm:text-lg leading-7 text-slate-400">
@@ -201,7 +201,7 @@ export default function ToolsHome() {
             </div>
 
             {!query && (
-              <div className="mt-14 max-w-4xl mx-auto">
+              <div className="mt-12 max-w-6xl mx-auto">
                 <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-slate-600">
                   <WandSparkles size={14} /> Explore by intent
                 </div>
@@ -227,7 +227,7 @@ export default function ToolsHome() {
             )}
 
             {category && !query && (
-              <div className="mt-10 max-w-5xl mx-auto">
+              <div className="mt-10 max-w-6xl mx-auto">
                 <button type="button" onClick={() => setCategory(null)} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-white">
                   <ChevronLeft size={16} /> All areas
                 </button>
@@ -260,7 +260,7 @@ export default function ToolsHome() {
           </div>
         </section>
 
-        <section className="border-t border-slate-900 py-14">
+        <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Still exploring?</p>
