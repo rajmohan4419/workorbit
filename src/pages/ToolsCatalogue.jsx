@@ -13,7 +13,7 @@ export default function ToolsCatalogue() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="text-xl font-black tracking-tight text-white" aria-label="OrbitBoard home">
             ORBIT<span className="text-violet-700">BOARD</span>
           </Link>
@@ -23,7 +23,7 @@ export default function ToolsCatalogue() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-violet-700">OrbitBoard catalogue</p>
           <h1 className="mt-3 text-4xl sm:text-5xl font-black tracking-tight">Every tool, when you need it.</h1>
