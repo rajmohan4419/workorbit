@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import ToolsHome from './pages/ToolsHome';
+import ToolsCatalogue from './pages/ToolsCatalogue';
 
 const ToolPage = lazy(() => import('./pages/ToolPage'));
 
@@ -10,6 +11,7 @@ export default function App() {
       <Telemetry />
       <Routes>
         <Route path="/" element={<ToolsHome />} />
+        <Route path="/tools" element={<ToolsCatalogue />} />
         <Route
           path="/tools/:slug"
           element={
