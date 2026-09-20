@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
 import { TOOLS } from '../data/tools';
+import { preloadToolPage } from '../lib/toolPageLoader';
 
 const categories = [
   { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness },
@@ -55,6 +56,9 @@ export default function ToolsCatalogue() {
                     <Link
                       key={tool.slug}
                       to={`/tools/${tool.slug}`}
+                      onMouseEnter={preloadToolPage}
+                      onFocus={preloadToolPage}
+                      onTouchStart={preloadToolPage}
                       className="group rounded-2xl border border-slate-800 bg-slate-900/70 p-5 hover:-translate-y-0.5 hover:border-violet-500/50 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500"
                     >
                       <div className="flex items-start justify-between gap-3">

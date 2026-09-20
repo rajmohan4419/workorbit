@@ -5,6 +5,8 @@ import {
   Clock3, Search, Sparkles, Star, WandSparkles
 } from 'lucide-react';
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
+import { logEvent } from '../lib/telemetry';
+import { preloadToolPage } from '../lib/toolPageLoader';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
@@ -16,12 +18,6 @@ const categoryImages = {
 };
 
 const heroImage = '/images/orbitboard-hero.svg';
-
-const trackEvent = (eventName, metadata = {}) => {
-  void import('../lib/telemetry')
-    .then(({ logEvent }) => logEvent(eventName, metadata))
-    .catch(() => {});
-};
 
 const categoryMeta = {
   Career: {
@@ -287,7 +283,7 @@ function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite 
   const Icon = categoryMeta[tool.category]?.icon || Calculator;
   return (
     <div className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-violet-500/40">
-      <Link to={`/tools/${tool.slug}`} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
+      <Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} onTouchStart={preloadToolPage} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
         <ToolVisual tool={tool} compact />
         <div className="min-w-0">
           <div className="font-semibold text-sm text-white group-hover:text-violet-700 truncate">{tool.name}</div>
@@ -306,7 +302,7 @@ function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite 
 
 function ToolCard({ tool, favorite, onFavorite, onUse }) {
   return (
-    <Link to={`/tools/${tool.slug}`} onClick={() => onUse(tool.slug)} className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 hover:-translate-y-1 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
+    <Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} onTouchStart={preloadToolPage} onClick={() => onUse(tool.slug)} className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 hover:-translate-y-1 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
       <ToolVisual tool={tool} />
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">

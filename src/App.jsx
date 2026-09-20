@@ -1,9 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { lazy, Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
-
-const ToolPage = lazy(() => import('./pages/ToolPage'));
+import ToolPageRoute from './pages/ToolPageRoute';
 
 export default function App() {
   return (
@@ -12,25 +11,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<ToolsHome />} />
         <Route path="/tools" element={<ToolsCatalogue />} />
-        <Route
-          path="/tools/:slug"
-          element={
-            <Suspense fallback={<ToolPageLoading />}>
-              <ToolPage />
-            </Suspense>
-          }
-        />
+        <Route path="/tools/:slug" element={<ToolPageRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  );
-}
-
-function ToolPageLoading() {
-  return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-      <div className="text-sm text-slate-400">Loading tool…</div>
-    </div>
   );
 }
 
