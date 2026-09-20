@@ -23,8 +23,11 @@ function Telemetry() {
 
   useEffect(() => {
     let cancelled = false;
+    let timer = null;
 
     const runTelemetry = async () => {
+      if (cancelled) return;
+
       try {
         const { recordVisit } = await import('./lib/telemetry');
         if (cancelled) return;
@@ -40,17 +43,20 @@ function Telemetry() {
       }
     };
 
-    const schedule = window.requestIdleCallback
-      ? window.requestIdleCallback(runTelemetry, { timeout: 2500 })
-      : window.setTimeout(runTelemetry, 1200);
+    const scheduleAfterLoad = () => {
+      timer = window.setTimeout(runTelemetry, 1500);
+    };
+
+    if (document.readyState === 'complete') {
+      scheduleAfterLoad();
+    } else {
+      window.addEventListener('load', scheduleAfterLoad, { once: true });
+    }
 
     return () => {
       cancelled = true;
-      if (window.cancelIdleCallback && typeof schedule === 'number') {
-        window.cancelIdleCallback(schedule);
-      } else {
-        window.clearTimeout(schedule);
-      }
+      window.removeEventListener('load', scheduleAfterLoad);
+      if (timer !== null) window.clearTimeout(timer);
     };
   }, [location.pathname]);
 
