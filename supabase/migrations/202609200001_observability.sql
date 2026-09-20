@@ -80,3 +80,32 @@ grant execute on function public.record_visit(uuid, text) to anon, authenticated
 
 revoke all on function public.log_app_event(text, text, text, uuid, jsonb) from public;
 grant execute on function public.log_app_event(text, text, text, uuid, jsonb) to anon, authenticated;
+
+
+create or replace view public.grafana_visitor_daily as
+select
+  date_trunc('day', first_seen_at) as day,
+  count(*)::bigint as new_visitors
+from public.visitors
+group by 1
+order by 1;
+
+create or replace view public.grafana_event_daily as
+select
+  date_trunc('day', created_at) as day,
+  event_name,
+  level,
+  count(*)::bigint as events
+from public.app_logs
+group by 1, 2, 3
+order by 1;
+
+create or replace view public.grafana_tool_usage as
+select
+  metadata->>'tool' as tool,
+  count(*)::bigint as opens
+from public.app_logs
+where event_name = 'tool.opened'
+  and metadata ? 'tool'
+group by 1
+order by opens desc;
