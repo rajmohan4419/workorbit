@@ -62,11 +62,12 @@ export default function IndiaIncomeTaxCalculator() {
   const [deductions, setDeductions] = useState('0');
   const [regime, setRegime] = useState('new');
   const [ageBand, setAgeBand] = useState('below60');
+  const [incomeType, setIncomeType] = useState('salary');
   const [resident, setResident] = useState(true);
 
   const result = useMemo(() => {
     const gross = num(income);
-    const standardDeduction = regime === 'new' ? Math.min(75000, gross) : 0;
+    const standardDeduction = incomeType === 'salary' ? Math.min(regime === 'new' ? 75000 : 50000, gross) : 0;
     const taxable = Math.max(0, gross - standardDeduction - num(deductions));
     let baseTax = regime === 'new' ? newRegimeTax(taxable) : oldRegimeTax(taxable, ageBand);
     let rebate = 0;
@@ -83,7 +84,7 @@ export default function IndiaIncomeTaxCalculator() {
     const total = taxAfterRebate + surcharge + cess;
 
     return { gross, standardDeduction, taxable, baseTax, rebate, surcharge, cess, total, monthly: total / 12 };
-  }, [income, deductions, regime, ageBand, resident]);
+  }, [income, deductions, regime, ageBand, incomeType, resident]);
 
   return (
     <div className="space-y-5">
@@ -92,7 +93,14 @@ export default function IndiaIncomeTaxCalculator() {
         <Field label="Additional deductions (₹)" value={deductions} onChange={setDeductions} />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-3 gap-4">
+        <label className="block">
+          <span className="text-xs font-medium text-slate-400">Income type</span>
+          <select value={incomeType} onChange={e => setIncomeType(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
+            <option value="salary">Salary</option>
+            <option value="other">Other income</option>
+          </select>
+        </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Tax regime</span>
           <select value={regime} onChange={e => setRegime(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
@@ -127,7 +135,7 @@ export default function IndiaIncomeTaxCalculator() {
         <Result label="Health & education cess" value={`₹ ${money(result.cess)}`} />
       </div>
 
-      <p className="text-xs text-slate-500">Uses AY 2026-27 individual slabs and a simplified calculation. The new regime applies a ₹75,000 standard deduction to salary income; enter only additional deductions here. Capital gains, special-rate income, detailed exemptions, payroll PF and every possible rebate/relief are not modelled.</p>
+      <p className="text-xs text-slate-500">Uses AY 2026-27 individual slabs and a simplified calculation. Salary income gets a ₹75,000 standard deduction in the new regime or ₹50,000 in the old regime; enter only additional deductions here. Capital gains, special-rate income, detailed exemptions, payroll PF and every possible rebate/relief are not modelled.</p>
     </div>
   );
 }
