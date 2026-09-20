@@ -5,18 +5,23 @@ import {
   Clock3, Search, Sparkles, Star, WandSparkles
 } from 'lucide-react';
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
-import { logEvent } from '../lib/telemetry';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
 const categoryImages = {
-  Career: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1600&q=82',
-  Finance: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1600&q=82',
-  Everyday: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=82',
-  Developer: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1600&q=82'
+  Career: '/images/category-career.svg',
+  Finance: '/images/category-finance.svg',
+  Everyday: '/images/category-everyday.svg',
+  Developer: '/images/category-developer.svg'
 };
 
-const heroImage = 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=85';
+const heroImage = '/images/orbitboard-hero.svg';
+
+const trackEvent = (eventName, metadata = {}) => {
+  void import('../lib/telemetry')
+    .then(({ logEvent }) => logEvent(eventName, metadata))
+    .catch(() => {});
+};
 
 const categoryMeta = {
   Career: {
@@ -90,11 +95,11 @@ export default function ToolsHome() {
   const toggleFavorite = (slug) => setFavorites(prev => prev.includes(slug) ? prev.filter(x => x !== slug) : [slug, ...prev]);
   const addRecent = (slug) => {
     setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
-    logEvent('tool.opened', { tool: slug });
+    trackEvent('tool.opened', { tool: slug });
   };
   const chooseCategory = (name) => {
     setCategory(name);
-    logEvent('category.explored', { category: name });
+    trackEvent('category.explored', { category: name });
   };
 
   const searchResults = useMemo(() => {
@@ -139,7 +144,7 @@ export default function ToolsHome() {
 
       <main className="px-4 sm:px-6">
         <section className="relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem]">
-          <img src={heroImage} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+          <img src={heroImage} alt="" aria-hidden="true" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
           <div className="relative z-10 w-full">
             <div className="max-w-5xl mx-auto text-center">
@@ -193,7 +198,7 @@ export default function ToolsHome() {
 
               <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
-                  <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-700">
+                  <button key={example} type="button" onClick={() => { setQuery(example); trackEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-700">
                     {example}
                   </button>
                 ))}
