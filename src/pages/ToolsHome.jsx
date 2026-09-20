@@ -5,6 +5,8 @@ import {
   Clock3, Search, Sparkles, Star, WandSparkles
 } from 'lucide-react';
 import { TOOLS } from '../data/toolCatalog';
+import { preloadToolPage } from '../lib/toolPageLoader';
+import { logEvent } from '../lib/telemetry';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
@@ -89,11 +91,11 @@ export default function ToolsHome() {
   const toggleFavorite = (slug) => setFavorites(prev => prev.includes(slug) ? prev.filter(x => x !== slug) : [slug, ...prev]);
   const addRecent = (slug) => {
     setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
-    trackEvent('tool.opened', { tool: slug });
+    logEvent('tool.opened', { tool: slug });
   };
   const chooseCategory = (name) => {
     setCategory(name);
-    trackEvent('category.explored', { category: name });
+    logEvent('category.explored', { category: name });
   };
 
   const searchResults = useMemo(() => {
@@ -190,7 +192,7 @@ export default function ToolsHome() {
 
               <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
-                  <button key={example} type="button" onClick={() => { setQuery(example); trackEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-400">
+                  <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-400">
                     {example}
                   </button>
                 ))}
@@ -276,7 +278,6 @@ export default function ToolsHome() {
 }
 
 function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite }) {
-  const Icon = categoryMeta[tool.category]?.icon || Calculator;
   return (
     <div className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-violet-500/40">
       <Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} onTouchStart={preloadToolPage} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
