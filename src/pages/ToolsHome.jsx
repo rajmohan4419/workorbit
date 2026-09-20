@@ -5,6 +5,7 @@ import {
   Clock3, Search, Sparkles, Star, WandSparkles
 } from 'lucide-react';
 import { TOOLS, TOOL_CONTENT } from '../data/tools';
+import { logEvent } from '../lib/telemetry';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
@@ -59,15 +60,33 @@ export default function ToolsHome() {
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }
   });
+  const [visitorCount, setVisitorCount] = useState(null);
   const [recent, setRecent] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:recent') || '[]'); } catch { return []; }
   });
 
-  useEffect(() => { localStorage.setItem('orbitboard:favorites', JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => {
+    localStorage.setItem('orbitboard:favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  useEffect(() => {
+    const handleCount = (event) => {
+      if (typeof event.detail === 'number' && Number.isFinite(event.detail)) setVisitorCount(event.detail);
+    };
+    window.addEventListener('orbitboard:visitor-count', handleCount);
+    return () => window.removeEventListener('orbitboard:visitor-count', handleCount);
+  }, []);
   useEffect(() => { localStorage.setItem('orbitboard:recent', JSON.stringify(recent)); }, [recent]);
 
   const toggleFavorite = (slug) => setFavorites(prev => prev.includes(slug) ? prev.filter(x => x !== slug) : [slug, ...prev]);
-  const addRecent = (slug) => setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
+  const addRecent = (slug) => {
+    setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
+    logEvent('tool.opened', { tool: slug });
+  };
+  const chooseCategory = (name) => {
+    setCategory(name);
+    logEvent('category.explored', { category: name });
+  };
 
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -97,7 +116,15 @@ export default function ToolsHome() {
           <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
             ORBIT<span className="text-violet-400">BOARD</span>
           </Link>
-          <div className="text-xs font-medium text-slate-500">Free • No sign-up</div>
+          <div className="flex items-center gap-3">
+            {visitorCount !== null && (
+              <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-[11px] font-medium text-slate-500" title="Unique visitors recorded by OrbitBoard">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                {visitorCount.toLocaleString()} visitors
+              </div>
+            )}
+            <div className="text-xs font-medium text-slate-500">Free • No sign-up</div>
+          </div>
         </div>
       </header>
 
@@ -145,9 +172,17 @@ export default function ToolsHome() {
                 )}
               </div>
 
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <div className="mt-8 relative h-10 hidden sm:block" aria-hidden="true">
+                <div className="absolute left-1/2 top-1/2 h-px w-72 -translate-x-1/2 bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+                <OrbitNode className="left-[12%] top-0" label="Salary" />
+                <OrbitNode className="left-[30%] top-5" label="JSON" />
+                <OrbitNode className="right-[30%] top-5" label="EMI" />
+                <OrbitNode className="right-[12%] top-0" label="PDF" />
+              </div>
+
+              <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
-                  <button key={example} type="button" onClick={() => setQuery(example)} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-300">
+                  <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-300">
                     {example}
                   </button>
                 ))}
@@ -164,7 +199,7 @@ export default function ToolsHome() {
                     const meta = categoryMeta[name];
                     const Icon = meta.icon;
                     return (
-                      <button key={name} type="button" onClick={() => setCategory(name)} className="group text-left rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-slate-900 transition">
+                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group text-left rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-slate-900 transition">
                         <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center"><Icon size={20} /></div>
                         <h2 className="mt-4 font-bold text-white group-hover:text-violet-300">{meta.label}</h2>
                         <p className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</p>
@@ -335,4 +370,8 @@ function ToolVisual({ tool, compact = false }) {
       {!compact && <div className="absolute bottom-3 left-4 rounded-full border border-white/10 bg-slate-950/70 px-2.5 py-1 text-[10px] font-semibold text-slate-300 backdrop-blur">{tool.category}</div>}
     </div>
   );
+}
+
+function OrbitNode({ label, className }) {
+  return <span className={`absolute inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold text-slate-500 backdrop-blur ${className}`}><span className="h-1.5 w-1.5 rounded-full bg-violet-400" />{label}</span>;
 }
