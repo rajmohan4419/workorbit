@@ -1,7 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Code2, BriefcaseBusiness, Coins, Calculator } from 'lucide-react';
-import { TOOLS, TOOL_CONTENT } from '../data/tools';
+import { TOOLS } from '../data/tools';
+import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, createEditedPdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
 import { csvToXlsx, jsonToXlsx, xlsxToCsv } from '../engines/spreadsheet';
