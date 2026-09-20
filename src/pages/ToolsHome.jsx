@@ -121,7 +121,7 @@ export default function ToolsHome() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
             ORBIT<span className="text-violet-700">BOARD</span>
           </Link>
@@ -137,7 +137,7 @@ export default function ToolsHome() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6">
         <section className="relative min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16 overflow-hidden rounded-b-[2.5rem]">
           <img src={heroImage} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
