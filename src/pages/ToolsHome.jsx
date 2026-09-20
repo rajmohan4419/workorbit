@@ -4,7 +4,7 @@ import {
   ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
   Clock3, Search, Sparkles, Star, WandSparkles
 } from 'lucide-react';
-import { TOOLS, TOOL_CONTENT } from '../data/tools';
+import { TOOLS, TOOL_CONTENT } from '../data/toolCatalog';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
