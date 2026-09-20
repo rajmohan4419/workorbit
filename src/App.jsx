@@ -7,7 +7,6 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<ToolsHome />} />
-        <Route path="/tools" element={<ToolsHome />} />
         <Route path="/tools/:slug" element={<ToolPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
