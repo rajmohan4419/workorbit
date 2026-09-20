@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
-import { TOOLS, TOOL_CONTENT } from '../data/tools';
+import { TOOLS } from '../data/toolCatalog';
+import { TOOL_CONTENT } from '../data/toolContent';
 import { loadToolPage } from '../lib/toolPageLoader';
 
 const ToolPage = lazy(loadToolPage);
