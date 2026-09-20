@@ -81,11 +81,11 @@ export default function ToolsHome() {
   const toggleFavorite = (slug) => setFavorites(prev => prev.includes(slug) ? prev.filter(x => x !== slug) : [slug, ...prev]);
   const addRecent = (slug) => {
     setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
-    logEvent('tool.opened', { tool: slug });
+    void import('../lib/telemetry').then(({ logEvent }) => logEvent('tool.opened', { tool: slug }));
   };
   const chooseCategory = (name) => {
     setCategory(name);
-    logEvent('category.explored', { category: name });
+    void import('../lib/telemetry').then(({ logEvent }) => logEvent('category.explored', { category: name }));
   };
 
   const searchResults = useMemo(() => {
@@ -110,15 +110,15 @@ export default function ToolsHome() {
   const showExplore = !query.trim() && !category;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
+    <div className="min-h-screen bg-white text-slate-900">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
-            ORBIT<span className="text-violet-400">BOARD</span>
+          <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-slate-900">
+            ORBIT<span className="text-violet-700">BOARD</span>
           </Link>
           <div className="flex items-center gap-3">
             {visitorCount !== null && (
-              <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-[11px] font-medium text-slate-500" title="Unique visitors recorded by OrbitBoard">
+              <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-500" title="Unique visitors recorded by OrbitBoard">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
                 {visitorCount.toLocaleString()} visitors
               </div>
@@ -132,18 +132,18 @@ export default function ToolsHome() {
         <section className="min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16">
           <div className="w-full">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
                 <Sparkles size={14} /> Practical tools, one place
               </div>
               <h1 className="mt-6 text-4xl sm:text-6xl font-black tracking-tight">
-                What do you need to <span className="text-violet-400">get done?</span>
+                What do you need to <span className="text-violet-700">get done?</span>
               </h1>
-              <p className="mt-5 text-base sm:text-lg leading-7 text-slate-400">
+              <p className="mt-5 text-base sm:text-lg leading-7 text-slate-500">
                 Tell OrbitBoard what you are trying to do. We’ll take you straight to the right tool.
               </p>
 
               <div className="mt-8 relative max-w-2xl mx-auto">
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 shadow-2xl shadow-violet-950/20 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/20">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 shadow-2xl shadow-violet-200/40 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/10">
                   <Search size={22} className="text-slate-500 shrink-0" aria-hidden="true" />
                   <label htmlFor="tool-search" className="sr-only">Describe what you need</label>
                   <input
@@ -152,13 +152,13 @@ export default function ToolsHome() {
                     value={query}
                     onChange={e => { setQuery(e.target.value); setCategory(null); }}
                     placeholder="e.g. “I need my salary in hand”"
-                    className="w-full bg-transparent outline-none text-base placeholder:text-slate-600"
+                    className="w-full bg-transparent outline-none text-base placeholder:text-slate-500"
                   />
-                  {query && <button type="button" onClick={() => setQuery('')} className="text-xs text-slate-500 hover:text-white">Clear</button>}
+                  {query && <button type="button" onClick={() => setQuery('')} className="text-xs text-slate-500 hover:text-slate-900">Clear</button>}
                 </div>
 
                 {query && (
-                  <div className="absolute z-20 mt-3 w-full rounded-2xl border border-slate-800 bg-slate-900 p-3 text-left shadow-2xl">
+                  <div className="absolute z-20 mt-3 w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left shadow-2xl">
                     <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
                       {searchResults.length ? 'We found these tools' : 'No direct match yet'}
                     </div>
@@ -182,7 +182,7 @@ export default function ToolsHome() {
 
               <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
-                  <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-300">
+                  <button key={example} type="button" onClick={() => { setQuery(example); void import('../lib/telemetry').then(({ logEvent }) => logEvent('search.suggestion_used', { suggestion: example })); }} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500 hover:border-violet-500/40 hover:text-violet-700">
                     {example}
                   </button>
                 ))}
@@ -191,7 +191,7 @@ export default function ToolsHome() {
 
             {!query && (
               <div className="mt-14 max-w-4xl mx-auto">
-                <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-slate-600">
+                <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-slate-500">
                   <WandSparkles size={14} /> Explore by intent
                 </div>
                 <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -199,11 +199,11 @@ export default function ToolsHome() {
                     const meta = categoryMeta[name];
                     const Icon = meta.icon;
                     return (
-                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group text-left rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-slate-900 transition">
-                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center"><Icon size={20} /></div>
-                        <h2 className="mt-4 font-bold text-white group-hover:text-violet-300">{meta.label}</h2>
+                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group text-left rounded-2xl border border-slate-200 bg-slate-50 p-5 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-slate-50 transition">
+                        <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center"><Icon size={20} /></div>
+                        <h2 className="mt-4 font-bold text-slate-900 group-hover:text-violet-700">{meta.label}</h2>
                         <p className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</p>
-                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-400">Explore <ArrowRight size={13} /></span>
+                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-700">Explore <ArrowRight size={13} /></span>
                       </button>
                     );
                   })}
@@ -213,15 +213,15 @@ export default function ToolsHome() {
 
             {category && !query && (
               <div className="mt-10 max-w-5xl mx-auto">
-                <button type="button" onClick={() => setCategory(null)} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-white">
+                <button type="button" onClick={() => setCategory(null)} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
                   <ChevronLeft size={16} /> All areas
                 </button>
                 <div className="mt-4 flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Explore</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Explore</p>
                     <h2 className="mt-1 text-2xl font-black">{categoryMeta[category].label}</h2>
                   </div>
-                  <span className="text-xs text-slate-600">{categoryTools.length} shown</span>
+                  <span className="text-xs text-slate-500">{categoryTools.length} shown</span>
                 </div>
                 <div className="mt-5 grid sm:grid-cols-2 gap-4">
                   {categoryTools.map(tool => <ToolCard key={tool.slug} tool={tool} onUse={addRecent} favorite={favorites.includes(tool.slug)} onFavorite={toggleFavorite} />)}
@@ -232,10 +232,10 @@ export default function ToolsHome() {
             {showExplore && recentTools.length > 0 && (
               <div className="mt-10 max-w-5xl mx-auto">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <Clock3 size={14} /> Continue where you left off
                   </div>
-                  <span className="text-xs text-slate-700">{recentTools.length} recent</span>
+                  <span className="text-xs text-slate-500">{recentTools.length} recent</span>
                 </div>
                 <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {recentTools.map(tool => <ResultRow key={tool.slug} tool={tool} onUse={addRecent} compact />)}
@@ -245,18 +245,18 @@ export default function ToolsHome() {
           </div>
         </section>
 
-        <section className="border-t border-slate-900 py-14">
+        <section className="border-t border-slate-200 py-14">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Still exploring?</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Still exploring?</p>
               <h2 className="mt-1 text-xl font-bold">Every tool, when you need it.</h2>
             </div>
-            <Link to="/tools" className="text-sm font-semibold text-violet-400 hover:text-violet-300">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
+            <Link to="/tools" className="text-sm font-semibold text-violet-700 hover:text-violet-700">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-slate-900 py-8 text-center text-sm text-slate-600">
+      <footer className="border-t border-slate-200 py-8 text-center text-sm text-slate-500">
         OrbitBoard • Practical tools for work & life
       </footer>
     </div>
@@ -266,17 +266,17 @@ export default function ToolsHome() {
 function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite }) {
   const Icon = categoryMeta[tool.category]?.icon || Calculator;
   return (
-    <div className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-violet-500/40">
+    <div className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white/60 p-3 hover:border-violet-500/40">
       <Link to={`/tools/${tool.slug}`} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
         <ToolVisual tool={tool} compact />
         <div className="min-w-0">
-          <div className="font-semibold text-sm text-white group-hover:text-violet-300 truncate">{tool.name}</div>
+          <div className="font-semibold text-sm text-slate-900 group-hover:text-violet-700 truncate">{tool.name}</div>
           {!compact && <div className="mt-0.5 text-xs text-slate-500 truncate">{tool.description}</div>}
         </div>
-        <ArrowRight size={15} className="shrink-0 text-slate-600 group-hover:text-violet-400" />
+        <ArrowRight size={15} className="shrink-0 text-slate-500 group-hover:text-violet-700" />
       </Link>
       {onFavorite && (
-        <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 text-slate-600 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
+        <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
           <Star size={15} fill={favorite ? 'currentColor' : 'none'} />
         </button>
       )}
@@ -286,20 +286,20 @@ function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite 
 
 function ToolCard({ tool, favorite, onFavorite, onUse }) {
   return (
-    <Link to={`/tools/${tool.slug}`} onClick={() => onUse(tool.slug)} className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 hover:-translate-y-1 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
+    <Link to={`/tools/${tool.slug}`} onClick={() => onUse(tool.slug)} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white hover:-translate-y-1 hover:border-violet-500/60 hover:bg-slate-50 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
       <ToolVisual tool={tool} />
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400">{tool.category}</span>
-            <h2 className="mt-1 text-lg font-bold group-hover:text-violet-300">{tool.name}</h2>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-violet-700">{tool.category}</span>
+            <h2 className="mt-1 text-lg font-bold group-hover:text-violet-700">{tool.name}</h2>
           </div>
           <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e => { e.preventDefault(); e.stopPropagation(); onFavorite(tool.slug); }} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
             <Star size={17} fill={favorite ? 'currentColor' : 'none'} />
           </button>
         </div>
-        <p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-400">Use tool <ArrowRight size={15} /></span>
+        <p className="mt-2 text-sm leading-6 text-slate-500">{tool.description}</p>
+        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-700">Use tool <ArrowRight size={15} /></span>
       </div>
     </Link>
   );
@@ -367,11 +367,11 @@ function ToolVisual({ tool, compact = false }) {
           <text x="160" y="86" textAnchor="middle" fontSize="28" fontWeight="800" fill="#c4b5fd">{label}</text>
         </>}
       </svg>
-      {!compact && <div className="absolute bottom-3 left-4 rounded-full border border-white/10 bg-slate-950/70 px-2.5 py-1 text-[10px] font-semibold text-slate-300 backdrop-blur">{tool.category}</div>}
+      {!compact && <div className="absolute bottom-3 left-4 rounded-full border border-white/10 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-slate-500 backdrop-blur">{tool.category}</div>}
     </div>
   );
 }
 
 function OrbitNode({ label, className }) {
-  return <span className={`absolute inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold text-slate-500 backdrop-blur ${className}`}><span className="h-1.5 w-1.5 rounded-full bg-violet-400" />{label}</span>;
+  return <span className={`absolute inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-[10px] font-semibold text-slate-500 backdrop-blur ${className}`}><span className="h-1.5 w-1.5 rounded-full bg-violet-400" />{label}</span>;
 }
