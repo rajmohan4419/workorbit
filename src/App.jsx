@@ -19,6 +19,41 @@ export default function App() {
   );
 }
 
+function Analytics() {
+  useEffect(() => {
+    let cancelled = false;
+    let timer = null;
+
+    const load = async () => {
+      if (cancelled) return;
+      try {
+        const { loadGoogleAnalytics } = await import('./lib/analytics');
+        if (!cancelled) await loadGoogleAnalytics();
+      } catch (error) {
+        console.warn('[OrbitBoard analytics] deferred load failed', error);
+      }
+    };
+
+    const schedule = () => {
+      timer = window.setTimeout(load, 8000);
+    };
+
+    if (document.readyState === 'complete') {
+      schedule();
+    } else {
+      window.addEventListener('load', schedule, { once: true });
+    }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', schedule);
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, []);
+
+  return null;
+}
+
 function Telemetry() {
   const location = useLocation();
 
