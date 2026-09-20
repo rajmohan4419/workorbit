@@ -35,25 +35,25 @@ function newRegimeTax(taxable) {
 }
 
 function oldRegimeTax(taxable, senior = false) {
-  const first = senior === 'super' ? 500000 : senior === 'senior' ? 300000 : 250000;
-  const second = 500000 - first;
-  const slabs = [[first, 0], [second, .05], [Infinity, .30]];
+  const firstThreshold = senior === 'super' ? 500000 : senior === 'senior' ? 300000 : 250000;
+  const slabs = [
+    [firstThreshold, 0],
+    [500000, .05],
+    [1000000, .20],
+    [Infinity, .30]
+  ];
   let remaining = taxable;
   let tax = 0;
-  let used = 0;
+  let previous = 0;
   for (const [limit, rate] of slabs) {
-    const amount = Math.min(remaining, limit);
+    const width = Math.max(0, limit - previous);
+    const amount = Math.min(remaining, width);
     if (amount <= 0) break;
     tax += amount * rate;
     remaining -= amount;
-    used += amount;
-    if (used >= 1000000 && remaining > 0) break;
+    previous = limit;
   }
-  if (remaining > 0) tax += remaining * .30;
-  if (taxable > 500000) {
-    const above = Math.min(taxable, 1000000) - 500000;
-    tax = Math.max(0, tax - Math.max(0, 12500 - above * .05));
-  }
+  if (taxable <= 500000) tax = Math.max(0, tax - 12500);
   return tax;
 }
 
