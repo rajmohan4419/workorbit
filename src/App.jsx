@@ -45,7 +45,7 @@ function Telemetry() {
     };
 
     const scheduleAfterLoad = () => {
-      timer = window.setTimeout(runTelemetry, 1500);
+      timer = window.setTimeout(runTelemetry, 8000);
     };
 
     if (document.readyState === 'complete') {
