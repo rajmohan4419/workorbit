@@ -157,7 +157,6 @@ export default function ToolsHome() {
                   <label htmlFor="tool-search" className="sr-only">Describe what you need</label>
                   <input
                     id="tool-search"
-                    autoFocus
                     value={query}
                     onChange={e => { setQuery(e.target.value); setCategory(null); }}
                     placeholder="e.g. “I need my salary in hand”"
