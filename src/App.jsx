@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
+import { loadToolPage } from './lib/toolPageLoader';
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 
-const ToolPage = lazy(() => import('./pages/ToolPage'));
+const ToolPage = lazy(loadToolPage);
 
 export default function App() {
   return (
