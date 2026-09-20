@@ -8,6 +8,7 @@ const ToolPage = lazy(() => import('./pages/ToolPage'));
 export default function App() {
   return (
     <BrowserRouter>
+      <Analytics />
       <Telemetry />
       <Routes>
         <Route path="/" element={<ToolsHome />} />
@@ -32,6 +33,38 @@ function ToolPageLoading() {
       <div className="text-sm text-slate-400">Loading tool…</div>
     </div>
   );
+}
+
+function Analytics() {
+  useEffect(() => {
+    let cancelled = false;
+    let timer = null;
+
+    const load = async () => {
+      if (cancelled) return;
+      try {
+        const { loadGoogleAnalytics } = await import('./lib/analytics');
+        if (!cancelled) await loadGoogleAnalytics();
+      } catch (error) {
+        console.warn('[OrbitBoard analytics] deferred load failed', error);
+      }
+    };
+
+    const schedule = () => {
+      timer = window.setTimeout(load, 2000);
+    };
+
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule, { once: true });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', schedule);
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, []);
+
+  return null;
 }
 
 function Telemetry() {
