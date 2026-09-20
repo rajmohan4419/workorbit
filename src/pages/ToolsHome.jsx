@@ -9,6 +9,15 @@ import { logEvent } from '../lib/telemetry';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
+const categoryImages = {
+  Career: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1600&q=82',
+  Finance: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1600&q=82',
+  Everyday: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=82',
+  Developer: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1600&q=82'
+};
+
+const heroImage = 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=85';
+
 const categoryMeta = {
   Career: {
     icon: BriefcaseBusiness,
@@ -129,8 +138,10 @@ export default function ToolsHome() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6">
-        <section className="min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16">
-          <div className="w-full">
+        <section className="relative min-h-[calc(100vh-64px)] flex items-center py-12 sm:py-16 overflow-hidden rounded-b-[2.5rem]">
+          <img src={heroImage} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
+          <div className="relative z-10 w-full">
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
                 <Sparkles size={14} /> Practical tools, one place
@@ -199,11 +210,15 @@ export default function ToolsHome() {
                     const meta = categoryMeta[name];
                     const Icon = meta.icon;
                     return (
-                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group text-left rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:-translate-y-1 hover:border-violet-500/50 hover:bg-slate-900 transition">
+                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group relative overflow-hidden text-left rounded-2xl border border-slate-800 bg-slate-900 p-5 hover:-translate-y-1 hover:border-violet-500/50 transition">
+                        <img src={categoryImages[name]} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-20 transition duration-500 group-hover:scale-105 group-hover:opacity-30" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-950/80 to-violet-950/50" aria-hidden="true" />
+                        <div className="relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center"><Icon size={20} /></div>
                         <h2 className="mt-4 font-bold text-white group-hover:text-violet-700">{meta.label}</h2>
                         <p className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</p>
                         <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-700">Explore <ArrowRight size={13} /></span>
+                        </div>
                       </button>
                     );
                   })}
