@@ -36,12 +36,9 @@ function newRegimeTax(taxable) {
 
 function oldRegimeTax(taxable, senior = false) {
   const firstThreshold = senior === 'super' ? 500000 : senior === 'senior' ? 300000 : 250000;
-  const slabs = [
-    [firstThreshold, 0],
-    [500000, .05],
-    [1000000, .20],
-    [Infinity, .30]
-  ];
+  const slabs = senior === 'super'
+    ? [[500000, 0], [1000000, .20], [Infinity, .30]]
+    : [[firstThreshold, 0], [500000, .05], [1000000, .20], [Infinity, .30]];
   let remaining = taxable;
   let tax = 0;
   let previous = 0;
