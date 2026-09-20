@@ -121,7 +121,7 @@ export default function ToolsHome() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
             ORBIT<span className="text-violet-700">BOARD</span>
           </Link>
