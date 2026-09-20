@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
-import { TOOLS } from '../data/tools';
-import { preloadToolPage } from '../lib/toolPageLoader';
+import { TOOLS } from '../data/toolCatalog';
 
 const categories = [
   { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness },
@@ -16,7 +15,7 @@ export default function ToolsCatalogue() {
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="text-xl font-black tracking-tight text-white" aria-label="OrbitBoard home">
-            ORBIT<span className="text-violet-700">BOARD</span>
+            ORBIT<span className="text-violet-400">BOARD</span>
           </Link>
           <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-400 hover:text-white">
             <ArrowLeft size={15} /> Back home
@@ -26,7 +25,7 @@ export default function ToolsCatalogue() {
 
       <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <div className="max-w-3xl">
-          <p className="text-xs font-semibold uppercase tracking-[.2em] text-violet-700">OrbitBoard catalogue</p>
+          <p className="text-xs font-semibold uppercase tracking-[.2em] text-violet-400">OrbitBoard catalogue</p>
           <h1 className="mt-3 text-4xl sm:text-5xl font-black tracking-tight">Every tool, when you need it.</h1>
           <p className="mt-4 text-base leading-7 text-slate-400">
             Browse the complete OrbitBoard toolkit for work, money, everyday tasks and developer workflows.
@@ -63,10 +62,10 @@ export default function ToolsCatalogue() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-violet-700">{name}</p>
-                          <h3 className="mt-1 font-bold text-white group-hover:text-violet-700">{tool.name}</h3>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-violet-400">{name}</p>
+                          <h3 className="mt-1 font-bold text-white group-hover:text-violet-400">{tool.name}</h3>
                         </div>
-                        <ArrowRight size={16} className="mt-1 shrink-0 text-slate-600 group-hover:text-violet-700" />
+                        <ArrowRight size={16} className="mt-1 shrink-0 text-slate-600 group-hover:text-violet-400" />
                       </div>
                       <p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
                     </Link>

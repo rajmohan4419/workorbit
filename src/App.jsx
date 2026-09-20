@@ -7,6 +7,7 @@ import ToolPageRoute from './pages/ToolPageRoute';
 export default function App() {
   return (
     <BrowserRouter>
+      <Analytics />
       <Telemetry />
       <Routes>
         <Route path="/" element={<ToolsHome />} />

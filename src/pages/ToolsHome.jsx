@@ -4,9 +4,7 @@ import {
   ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
   Clock3, Search, Sparkles, Star, WandSparkles
 } from 'lucide-react';
-import { TOOLS, TOOL_CONTENT } from '../data/tools';
-import { logEvent } from '../lib/telemetry';
-import { preloadToolPage } from '../lib/toolPageLoader';
+import { TOOLS, TOOL_CONTENT } from '../data/toolCatalog';
 
 const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
 
@@ -124,7 +122,7 @@ export default function ToolsHome() {
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
-            ORBIT<span className="text-violet-700">BOARD</span>
+            ORBIT<span className="text-violet-400">BOARD</span>
           </Link>
           <div className="flex items-center gap-3">
             {visitorCount !== null && (
@@ -144,11 +142,11 @@ export default function ToolsHome() {
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
           <div className="relative z-10 w-full">
             <div className="max-w-5xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
+              <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-400">
                 <Sparkles size={14} /> Practical tools, one place
               </div>
               <h1 className="mt-6 text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight">
-                What do you need to <span className="text-violet-700">get done?</span>
+                What do you need to <span className="text-violet-400">get done?</span>
               </h1>
               <p className="mt-5 text-base sm:text-lg leading-7 text-slate-400">
                 Tell OrbitBoard what you are trying to do. We’ll take you straight to the right tool.
@@ -194,7 +192,7 @@ export default function ToolsHome() {
 
               <div className="mt-2 flex flex-wrap justify-center gap-2">
                 {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
-                  <button key={example} type="button" onClick={() => { setQuery(example); trackEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-700">
+                  <button key={example} type="button" onClick={() => { setQuery(example); trackEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-400">
                     {example}
                   </button>
                 ))}
@@ -216,9 +214,9 @@ export default function ToolsHome() {
                         <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-950/80 to-violet-950/50" aria-hidden="true" />
                         <div className="relative z-10">
                         <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center"><Icon size={20} /></div>
-                        <h2 className="mt-4 font-bold text-white group-hover:text-violet-700">{meta.label}</h2>
+                        <h2 className="mt-4 font-bold text-white group-hover:text-violet-400">{meta.label}</h2>
                         <p className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</p>
-                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-700">Explore <ArrowRight size={13} /></span>
+                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-400">Explore <ArrowRight size={13} /></span>
                         </div>
                       </button>
                     );
@@ -234,7 +232,7 @@ export default function ToolsHome() {
                 </button>
                 <div className="mt-4 flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Explore</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Explore</p>
                     <h2 className="mt-1 text-2xl font-black">{categoryMeta[category].label}</h2>
                   </div>
                   <span className="text-xs text-slate-600">{categoryTools.length} shown</span>
@@ -264,10 +262,10 @@ export default function ToolsHome() {
         <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Still exploring?</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Still exploring?</p>
               <h2 className="mt-1 text-xl font-bold">Every tool, when you need it.</h2>
             </div>
-            <Link to="/tools" className="text-sm font-semibold text-violet-700 hover:text-violet-700">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
+            <Link to="/tools" className="text-sm font-semibold text-violet-400 hover:text-violet-400">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
           </div>
         </section>
       </main>
@@ -286,10 +284,10 @@ function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite 
       <Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} onTouchStart={preloadToolPage} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
         <ToolVisual tool={tool} compact />
         <div className="min-w-0">
-          <div className="font-semibold text-sm text-white group-hover:text-violet-700 truncate">{tool.name}</div>
+          <div className="font-semibold text-sm text-white group-hover:text-violet-400 truncate">{tool.name}</div>
           {!compact && <div className="mt-0.5 text-xs text-slate-500 truncate">{tool.description}</div>}
         </div>
-        <ArrowRight size={15} className="shrink-0 text-slate-600 group-hover:text-violet-700" />
+        <ArrowRight size={15} className="shrink-0 text-slate-600 group-hover:text-violet-400" />
       </Link>
       {onFavorite && (
         <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 text-slate-600 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
@@ -307,15 +305,15 @@ function ToolCard({ tool, favorite, onFavorite, onUse }) {
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-violet-700">{tool.category}</span>
-            <h2 className="mt-1 text-lg font-bold group-hover:text-violet-700">{tool.name}</h2>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400">{tool.category}</span>
+            <h2 className="mt-1 text-lg font-bold group-hover:text-violet-400">{tool.name}</h2>
           </div>
           <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e => { e.preventDefault(); e.stopPropagation(); onFavorite(tool.slug); }} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
             <Star size={17} fill={favorite ? 'currentColor' : 'none'} />
           </button>
         </div>
         <p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-700">Use tool <ArrowRight size={15} /></span>
+        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-400">Use tool <ArrowRight size={15} /></span>
       </div>
     </Link>
   );
