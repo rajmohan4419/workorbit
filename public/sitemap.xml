@@ -1,51 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://orbitboard.in/</loc>
-    <priority>1.0</priority>
+    <loc>https://orbitboard.in/</loc><priority>1.0</priority>
   </url>
   <url>
-    <loc>https://orbitboard.in/features</loc>
-    <priority>0.9</priority>
+    <loc>https://orbitboard.in/tools/jpg-to-png</loc>
   </url>
   <url>
-    <loc>https://orbitboard.in/pricing</loc>
-    <priority>0.8</priority>
+    <loc>https://orbitboard.in/tools/png-to-jpg</loc>
   </url>
   <url>
-    <loc>https://orbitboard.in/contact</loc>
-    <priority>0.7</priority>
+    <loc>https://orbitboard.in/tools/webp-to-jpg</loc>
   </url>
   <url>
-    <loc>https://orbitboard.in/upcoming-features</loc>
-    <priority>0.7</priority>
+    <loc>https://orbitboard.in/tools/image-to-pdf</loc>
   </url>
-  <url><loc>https://orbitboard.in/tools/jpg-to-png</loc></url>
-  <url><loc>https://orbitboard.in/tools/png-to-jpg</loc></url>
-  <url><loc>https://orbitboard.in/tools/webp-to-jpg</loc></url>
-  <url><loc>https://orbitboard.in/tools/image-to-pdf</loc></url>
-  <url><loc>https://orbitboard.in/tools/xlsx-to-pdf</loc></url>
-  <url><loc>https://orbitboard.in/tools/image-resizer</loc></url>
-  <url><loc>https://orbitboard.in/tools/svg-to-png</loc></url>
-  <url><loc>https://orbitboard.in/tools/csv-to-pdf</loc></url>
-  <url><loc>https://orbitboard.in/tools/image-compressor</loc></url>
-  <url><loc>https://orbitboard.in/tools/image-metadata-remover</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-merge</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-split</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-extract-pages</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-reorder</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-to-jpg</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-to-png</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-workspace</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-compressor</loc></url>
-  <url><loc>https://orbitboard.in/tools/csv-to-json</loc></url>
-  <url><loc>https://orbitboard.in/tools/txt-to-pdf</loc></url>
-  <url><loc>https://orbitboard.in/tools/pdf-to-text</loc></url>
-  <url><loc>https://orbitboard.in/tools/diff-checker</loc></url>
-  <url><loc>https://orbitboard.in/tools/json-to-xml</loc></url>
-  <url><loc>https://orbitboard.in/tools/xml-to-json</loc></url>
-  <url><loc>https://orbitboard.in/tools/markdown-to-html</loc></url>
-  <url><loc>https://orbitboard.in/tools/csv-to-xlsx</loc></url>
-  <url><loc>https://orbitboard.in/tools/json-to-xlsx</loc></url>
-  <url><loc>https://orbitboard.in/tools/xlsx-to-csv</loc></url>
+  <url>
+    <loc>https://orbitboard.in/tools/xlsx-to-pdf</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/image-resizer</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/svg-to-png</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/csv-to-pdf</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/image-compressor</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/image-metadata-remover</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-merge</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-split</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-extract-pages</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-reorder</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-to-jpg</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-to-png</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-workspace</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-compressor</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/csv-to-json</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/txt-to-pdf</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/pdf-to-text</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/diff-checker</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/json-to-xml</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/xml-to-json</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/markdown-to-html</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/csv-to-xlsx</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/json-to-xlsx</loc>
+  </url>
+  <url>
+    <loc>https://orbitboard.in/tools/xlsx-to-csv</loc>
+  </url>
 </urlset>
