@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
-  Clock3, Search, Sparkles, Star, WandSparkles
+  Clock3, Search, Sparkles, Star, Trophy, WandSparkles
 } from 'lucide-react';
 import { TOOLS } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
@@ -138,13 +138,47 @@ export default function ToolsHome() {
       </header>
 
       <main className="px-4 sm:px-6">
+      <div className="border-b border-amber-900/40 bg-gradient-to-r from-amber-950/80 via-slate-900 to-violet-950/60">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-3">
+          <a
+            href="https://www.aichi-nagoya2026.org/"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-amber-700/30 bg-slate-950/40 px-4 py-3 transition hover:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/60"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300">
+                <Trophy size={18} aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-rose-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400" aria-hidden="true" /> Live now
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-[.14em] text-slate-500">Asian Games 2026</span>
+                </div>
+                <p className="mt-0.5 truncate text-sm font-semibold text-white">Aichi–Nagoya · 19 Sep – 4 Oct</p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 group-hover:text-amber-200 sm:shrink-0">
+              Schedule & live results <ArrowRight size={14} aria-hidden="true" />
+            </span>
+          </a>
+        </div>
+      </div>
+
         <section className="relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem]">
           <img src={heroImage} alt="" aria-hidden="true" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
           <div className="relative z-10 w-full">
             <div className="max-w-5xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-400">
-                <Sparkles size={14} /> Practical tools, one place
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-400">
+                  <Sparkles size={14} /> Practical tools, one place
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-800/70 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-300">
+                  <span aria-hidden="true">🔒</span> Private · Secure · Free
+                </div>
               </div>
               <h1 className="mt-6 text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight">
                 What do you need to <span className="text-violet-400">get done?</span>
@@ -259,6 +293,36 @@ export default function ToolsHome() {
           </div>
         </section>
 
+        <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-8 sm:py-10">
+          <div className="rounded-2xl border border-emerald-900/40 bg-emerald-950/20 px-5 py-5 sm:px-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-emerald-300">
+                  <span aria-hidden="true">🔒</span> Your privacy matters
+                </div>
+                <h2 className="mt-2 text-lg sm:text-xl font-bold text-white">Private, secure & free by design.</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  No account is required for our core tools. Many file and data tools process your content directly in your browser, so your files can stay on your device instead of being uploaded to OrbitBoard.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-400 lg:min-w-[460px]">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
+                  <div className="font-semibold text-white">No sign-up</div>
+                  <div className="mt-1">Use core tools without an account.</div>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
+                  <div className="font-semibold text-white">Browser-first</div>
+                  <div className="mt-1">Many tools process files locally.</div>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
+                  <div className="font-semibold text-white">Free to use</div>
+                  <div className="mt-1">Core utilities stay accessible.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
@@ -270,8 +334,16 @@ export default function ToolsHome() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-900 py-8 text-center text-sm text-slate-600">
-        OrbitBoard • Practical tools for work & life
+      <footer className="border-t border-slate-900 py-8">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-600">
+          <span>OrbitBoard • Practical tools for work & life</span>
+          <a
+            href="mailto:support@orbitboard.in?subject=OrbitBoard%20Collaboration"
+            className="font-medium text-slate-500 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-md px-1"
+          >
+            Collaboration? support@orbitboard.in
+          </a>
+        </div>
       </footer>
     </div>
   );
