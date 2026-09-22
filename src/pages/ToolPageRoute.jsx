@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } fr
 import { TOOLS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { loadToolPage } from '../lib/toolPageLoader';
+import SEO from '../components/layout/SEO';
 
 const ToolPage = lazy(loadToolPage);
 
