@@ -187,7 +187,7 @@ serve(async (req) => {
       ctaText = 'Get Started on Your Board'
     } else if (type === 'nudge') {
       const activeSender = senderName || 'A teammate'
-      subject = `Quick nudge from ${safe(activeSender)} at OrbitBoard 🔔`
+      subject = `Quick nudge from ${activeSender} at OrbitBoard 🔔`
       bodyHtml = `
         <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-top: 0;">
           Hi <strong>${safeRecipientName()}</strong>,
@@ -235,7 +235,7 @@ serve(async (req) => {
       const activeTask = taskTitle || 'Assigned task'
       const activeProject = projectName || 'Active Project'
       const activeDueDate = dueDate || 'Passed deadline'
-      subject = `[Overdue Alert] Task past due: ${safe(activeTask)} ⏰`
+      subject = `[Overdue Alert] Task past due: ${activeTask} ⏰`
       bodyHtml = `
         <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-top: 0;">
           Hi <strong>${safeRecipientName()}</strong>,
@@ -287,7 +287,7 @@ serve(async (req) => {
 
             ${ctaLink ? `
             <div style="margin: 32px 0; text-align: center;">
-              <a href="${ctaLink}" style="display: inline-block; background-color: #2563EB; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+              <a href="${safe(ctaLink)}" style="display: inline-block; background-color: #2563EB; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
                 ${safe(ctaText)}
               </a>
             </div>` : ''}
