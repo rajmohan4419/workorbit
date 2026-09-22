@@ -1,22 +1,25 @@
-# OrbitBoard - Project Management for Indian Startups
+# OrbitBoard — Practical Online Tools for Work & Life
 
-OrbitBoard is a high-velocity project management platform designed specifically for founders and fast-moving teams.
+OrbitBoard is a free online utility platform for practical tools across career, finance, everyday tasks, developer workflows, PDFs, documents and file utilities.
 
-## Key Features
-- Workspace isolation for multiple projects/teams
-- Real-time Kanban boards and Sprint planning
-- AI-powered command parser for natural language task creation
-- India-first billing and GST support
-- Built for speed and zero-friction workflows
+## Core categories
+- Career — salary, gratuity, experience and job-related calculators
+- Finance — EMI, GST, SIP and income-tax estimators
+- Everyday — converters, PDF tools, image tools and file utilities
+- Developer — JSON, CSV, XML, Base64, JWT, URL and timestamp tools
+
+## Product principles
+- Core tools are available without an account.
+- Many file and data tools process content directly in the browser.
+- Tools are designed to provide practical results quickly.
+- OrbitBoard is expanding toward live information and other utility experiences.
 
 ## Navigation
-- [Home](https://orbitboard.in/) - Main marketing page
-- [Features](https://orbitboard.in/features) - Detailed product capabilities
-- [Pricing](https://orbitboard.in/pricing) - Transparent plans from Free to Enterprise
-- [Contact](https://orbitboard.in/contact) - Get in touch with our team
-- [Upcoming Features](https://orbitboard.in/upcoming-features) - Product roadmap
+- [Home](https://orbitboard.in/) — OrbitBoard home
+- [All tools](https://orbitboard.in/tools) — searchable tool catalogue
+- [Tool pages](https://orbitboard.in/tools/) — individual tools under the /tools/ path
 
-## Tech Stack
-- Frontend: React (Vite), Tailwind CSS
-- Backend: Supabase (Auth, Database, Edge Functions, Real-time)
-- Infrastructure: Vercel / Cloudflare
+## Technology
+- Frontend: React + Vite + Tailwind CSS
+- Backend services: Supabase
+- Hosting: Vercel
