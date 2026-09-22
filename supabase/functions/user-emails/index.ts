@@ -2,6 +2,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { logToGrafana } from "../_shared/logger.ts"
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -97,6 +106,9 @@ serve(async (req) => {
       throw new Error('Email service not configured')
     }
 
+    const safeRecipientName = () => escapeHtml(recipientName || 'there')
+    const safe = value => escapeHtml(value || '')
+
     let subject = ''
     let bodyHtml = ''
     let ctaLink = ''
@@ -110,7 +122,7 @@ serve(async (req) => {
       subject = 'Welcome to OrbitBoard! 🚀'
       bodyHtml = `
         <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-top: 0;">
-          Hi <strong>${recipientName}</strong>,
+          Hi <strong>${safeRecipientName()}</strong>,
         </p>
         <p style="font-size: 16px; line-height: 1.6; color: #334155;">
           Welcome to <strong>OrbitBoard</strong>! We are absolutely thrilled to have you on board.
@@ -178,10 +190,10 @@ serve(async (req) => {
       subject = `Quick nudge from ${activeSender} at OrbitBoard 🔔`
       bodyHtml = `
         <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-top: 0;">
-          Hi <strong>${recipientName}</strong>,
+          Hi <strong>${safeRecipientName()}</strong>,
         </p>
         <p style="font-size: 16px; line-height: 1.6; color: #334155;">
-          Your teammate <strong>${activeSender}</strong> has sent you a quick nudge to check in on OrbitBoard!
+          Your teammate <strong>${safe(activeSender)}</strong> has sent you a quick nudge to check in on OrbitBoard!
         </p>
         <div style="margin: 28px 0; padding: 20px; background-color: #EFF6FF; border-left: 4px solid #2563EB; border-radius: 0 12px 12px 0;">
           <p style="margin: 0; font-size: 14px; font-weight: 700; color: #1E293B;">What should you do?</p>
@@ -196,7 +208,7 @@ serve(async (req) => {
       subject = 'We miss you at OrbitBoard! 🌟'
       bodyHtml = `
         <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-top: 0;">
-          Hi <strong>${recipientName}</strong>,
+          Hi <strong>${safeRecipientName()}</strong>,
         </p>
         <p style="font-size: 16px; line-height: 1.6; color: #334155;">
           We've noticed you haven't logged into OrbitBoard in a while, and we really miss having you!
@@ -226,24 +238,24 @@ serve(async (req) => {
       subject = `[Overdue Alert] Task past due: ${activeTask} ⏰`
       bodyHtml = `
         <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-top: 0;">
-          Hi <strong>${recipientName}</strong>,
+          Hi <strong>${safeRecipientName()}</strong>,
         </p>
         <p style="font-size: 16px; line-height: 1.6; color: #334155;">
-          This is an alert that your assigned task <strong>"${activeTask}"</strong> is past its scheduled due date.
+          This is an alert that your assigned task <strong>"${safe(activeTask)}"</strong> is past its scheduled due date.
         </p>
         <div style="margin: 24px 0; padding: 20px; background-color: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 0 12px 12px 0;">
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
             <tr>
               <td style="padding: 6px 0; font-weight: 700; color: #475569; width: 110px; vertical-align: top;">Task Title:</td>
-              <td style="padding: 6px 0; color: #991B1B; font-weight: 700; vertical-align: top;">${activeTask}</td>
+              <td style="padding: 6px 0; color: #991B1B; font-weight: 700; vertical-align: top;">${safe(activeTask)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #475569; width: 110px; vertical-align: top;">Project:</td>
-              <td style="padding: 6px 0; color: #1E293B; vertical-align: top;">${activeProject}</td>
+              <td style="padding: 6px 0; color: #1E293B; vertical-align: top;">${safe(activeProject)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #475569; width: 110px; vertical-align: top;">Due Date:</td>
-              <td style="padding: 6px 0; color: #B91C1C; font-weight: 700; vertical-align: top;">${activeDueDate}</td>
+              <td style="padding: 6px 0; color: #B91C1C; font-weight: 700; vertical-align: top;">${safe(activeDueDate)}</td>
             </tr>
           </table>
         </div>
@@ -275,8 +287,8 @@ serve(async (req) => {
 
             ${ctaLink ? `
             <div style="margin: 32px 0; text-align: center;">
-              <a href="${ctaLink}" style="display: inline-block; background-color: #2563EB; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
-                ${ctaText}
+              <a href="${safe(ctaLink)}" style="display: inline-block; background-color: #2563EB; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+                ${safe(ctaText)}
               </a>
             </div>` : ''}
           </div>

@@ -1,80 +1,71 @@
-# OrbitBoard — Free Project Management App
+# OrbitBoard
 
-Zero-cost stack: React + Vite + Tailwind → Vercel | Supabase (DB + Auth + Edge) | Cloudflare CDN
+Practical online tools for work, money, everyday tasks and developers.
 
----
+OrbitBoard is a utility-first platform providing free calculators, converters, PDF tools, image/file utilities and developer tools. Core tools are designed to work without an account, and many file/data tools process content directly in the browser.
 
-## Setup in 4 steps
+## Categories
 
-### 1. Create your Supabase project
-1. Go to supabase.com → New project
-2. Open SQL Editor → paste supabase-schema.sql → Run
-3. Go to Settings → API → copy Project URL and anon key
+- Career
+- Finance
+- Everyday
+- Developer
+- PDF, document and file utilities
 
-### 2. Configure environment
-cp .env.example .env
-# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+## Stack
 
-### 3. Run locally
+- React
+- Vite
+- Tailwind CSS
+- Supabase
+- Vercel
+
+## Local development
+
+```bash
 npm install
 npm run dev
-# Open http://localhost:5173
+```
 
-### 4. Deploy to Vercel
-# Connect GitHub repo on vercel.com for auto-deploy
-# Add env vars in: Project → Settings → Environment Variables
+Open http://localhost:5173.
 
----
+## Production build
+
+```bash
+npm run build
+npm run preview
+```
+
+## Environment
+
+Create `.env` from `.env.example` and configure:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
 ## Project structure
 
+```text
 src/
-├── components/
-│   ├── layout/Sidebar.jsx        Nav + project list
-│   └── tasks/
-│       ├── KanbanBoard.jsx       Drag-and-drop board
-│       ├── TaskCard.jsx          Task card with priority + due date
-│       └── TaskModal.jsx         Edit task modal
-├── pages/
-│   ├── AuthPage.jsx              Login / signup
-│   ├── DashboardPage.jsx         Project overview
-│   └── ProjectPage.jsx           Kanban view per project
-├── store/
-│   ├── authStore.js              Zustand auth state
-│   ├── projectStore.js           Projects CRUD
-│   └── taskStore.js              Tasks CRUD + move
-└── lib/supabase.js               Supabase client
+├── components/       Shared UI
+├── data/             Tool catalogue and SEO content
+├── engines/          PDF and spreadsheet processing
+├── lib/              Supabase, analytics and telemetry
+├── pages/            Home, catalogue and tool routes
+└── tools/            Individual tool implementations
 
----
+public/
+├── robots.txt
+├── sitemap.xml
+└── llms.txt
+```
 
-## Features
-- Email + Google + GitHub login via Supabase Auth
-- Multiple projects per user
-- Kanban board: To do / In progress / In review / Done
-- Drag-and-drop between columns
-- Task details: title, description, priority, status, due date
-- Inline task creation per column
-- Overdue date highlighting
-- Mobile-responsive sidebar
-- RLS enforced — each user sees only their own data
+## Product direction
 
----
+OrbitBoard is evolving from its original project-management prototype into a utility platform. The repository still contains some legacy PM code and database schema from that earlier product phase; treat those files as legacy until they are audited and archived.
 
-## Free tier headroom (2026)
-Vercel Hobby      100 GB bandwidth    Static CDN, no concurrent cap
-Supabase DB       500 MB storage      Fine for thousands of tasks
-Supabase Auth     50,000 MAU          Fine for early growth
-Supabase Realtime 200 concurrent      OK without live sync feature
-Bandwidth         5 GB/month          Add Cloudflare CDN to extend
+## Deployment
 
-Tip: Add Cloudflare (free) in front of your Vercel domain — takes 5 min,
-absorbs traffic spikes, and extends your effective bandwidth significantly.
+The production site is hosted at https://orbitboard.in.
 
----
-
-## What to build next
-- [ ] Team members and project sharing
-- [ ] Comments on tasks
-- [ ] File attachments (Supabase Storage — 1 GB free)
-- [ ] My Tasks view across all projects
-- [ ] Notifications
+Vercel can be connected to the GitHub repository for automated deployments. Keep production environment variables configured in the Vercel project rather than committing secrets.
