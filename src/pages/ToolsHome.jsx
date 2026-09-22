@@ -293,6 +293,36 @@ export default function ToolsHome() {
           </div>
         </section>
 
+        <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-8 sm:py-10">
+          <div className="rounded-2xl border border-emerald-900/40 bg-emerald-950/20 px-5 py-5 sm:px-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-emerald-300">
+                  <span aria-hidden="true">🔒</span> Your privacy matters
+                </div>
+                <h2 className="mt-2 text-lg sm:text-xl font-bold text-white">Private, secure & free by design.</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  No account is required for our core tools. Many file and data tools process your content directly in your browser, so your files can stay on your device instead of being uploaded to OrbitBoard.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-400 lg:min-w-[460px]">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
+                  <div className="font-semibold text-white">No sign-up</div>
+                  <div className="mt-1">Use core tools without an account.</div>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
+                  <div className="font-semibold text-white">Browser-first</div>
+                  <div className="mt-1">Many tools process files locally.</div>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
+                  <div className="font-semibold text-white">Free to use</div>
+                  <div className="mt-1">Core utilities stay accessible.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
