@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
-  Clock3, Search, Sparkles, Star, Trophy, WandSparkles
+  Clock3, FlaskConical, Search, Sparkles, Star, Trophy, WandSparkles
 } from 'lucide-react';
 import { TOOLS } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
@@ -126,6 +126,9 @@ export default function ToolsHome() {
             ORBIT<span className="text-violet-400">BOARD</span>
           </Link>
           <div className="flex items-center gap-3">
+            <Link to="/market-lab" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-violet-800/60 bg-violet-950/30 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:border-violet-500/60 hover:text-white">
+              <FlaskConical size={13} /> Market Lab
+            </Link>
             {visitorCount !== null && (
               <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-[11px] font-medium text-slate-500" title="Unique visitors recorded by OrbitBoard">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
