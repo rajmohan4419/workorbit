@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
 import { TOOLS } from '../data/toolCatalog';
+import { preloadToolPage } from '../lib/toolPageLoader';
 
 const categories = [
   { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness },
