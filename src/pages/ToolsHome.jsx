@@ -172,8 +172,13 @@ export default function ToolsHome() {
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
           <div className="relative z-10 w-full">
             <div className="max-w-5xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-400">
-                <Sparkles size={14} /> Practical tools, one place
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-400">
+                  <Sparkles size={14} /> Practical tools, one place
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-800/70 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-300">
+                  <span aria-hidden="true">🔒</span> Private · Secure · Free
+                </div>
               </div>
               <h1 className="mt-6 text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight">
                 What do you need to <span className="text-violet-400">get done?</span>
