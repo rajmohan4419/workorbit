@@ -334,8 +334,16 @@ export default function ToolsHome() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-900 py-8 text-center text-sm text-slate-600">
-        OrbitBoard • Practical tools for work & life
+      <footer className="border-t border-slate-900 py-8">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-600">
+          <span>OrbitBoard • Practical tools for work & life</span>
+          <a
+            href="mailto:support@orbitboard.in?subject=OrbitBoard%20Collaboration"
+            className="font-medium text-slate-500 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-md px-1"
+          >
+            Collaboration? support@orbitboard.in
+          </a>
+        </div>
       </footer>
     </div>
   );
