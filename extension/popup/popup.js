@@ -1,3 +1,4 @@
+/* global chrome */
 // OrbitBoard Extension — Popup Controller
 // Manages search, favorites, recents, navigation and instant offline utilities
 
@@ -818,7 +819,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await navigator.clipboard.writeText(text);
       setStatus(jsonStatus, '✓ Copied to clipboard!', 'success');
-    } catch (err) {
+    } catch {
       setStatus(jsonStatus, 'Failed to copy', 'error');
     }
   });
@@ -871,7 +872,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await navigator.clipboard.writeText(b64Input.value);
       setStatus(b64Status, '✓ Copied to clipboard!', 'success');
-    } catch (_) {}
+    } catch {
+      // Ignore copy error
+    }
   });
 
   btnB64Clear.addEventListener('click', () => {
@@ -929,7 +932,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await navigator.clipboard.writeText(text);
       setStatus(jwtStatus, '✓ Copied payload to clipboard!', 'success');
-    } catch (_) {}
+    } catch {
+      // Ignore copy error
+    }
   });
 
   btnJwtClear.addEventListener('click', () => {
@@ -1026,7 +1031,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await navigator.clipboard.writeText(uuidOutput.value);
       setStatus(uuidStatus, '✓ Copied UUIDs to clipboard!', 'success');
-    } catch (_) {}
+    } catch {
+      // Ignore copy error
+    }
   });
 
   btnUuidClear.addEventListener('click', () => {
@@ -1069,7 +1076,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await navigator.clipboard.writeText(urlInput.value);
       setStatus(urlStatus, '✓ Copied to clipboard!', 'success');
-    } catch (_) {}
+    } catch {
+      // Ignore copy error
+    }
   });
 
   btnUrlClear.addEventListener('click', () => {

@@ -1,7 +1,5 @@
 import { runExperiment } from './engine';
 
-const cloneConditions = (conditions) => conditions.map((condition) => ({ ...condition }));
-
 const withCondition = (definition, condition) => ({
   ...definition,
   trigger: { ...definition.trigger, all: [...definition.trigger.all, condition] }

@@ -66,16 +66,15 @@ const visualKind = (slug) => {
 
 export default function ToolsHome() {
   const [searchParams] = useSearchParams();
-  const initialQuery = searchParams.get('q') || searchParams.get('search') || '';
-  const [query, setQuery] = useState(initialQuery);
+  const urlQuery = searchParams.get('q') || searchParams.get('search') || '';
+  const [query, setQuery] = useState(urlQuery);
+  const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
   const [category, setCategory] = useState(null);
 
-  useEffect(() => {
-    const qFromUrl = searchParams.get('q') || searchParams.get('search');
-    if (qFromUrl !== null && qFromUrl !== query) {
-      setQuery(qFromUrl);
-    }
-  }, [searchParams]);
+  if (urlQuery !== prevUrlQuery) {
+    setPrevUrlQuery(urlQuery);
+    setQuery(urlQuery);
+  }
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }
   });

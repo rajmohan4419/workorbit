@@ -1,3 +1,4 @@
+/* global chrome */
 // OrbitBoard Chrome Extension — Background Service Worker (Manifest V3)
 // Handles context menus, page actions, toasts, and background coordination
 
@@ -138,7 +139,7 @@ function injectToastIntoPage(title, message, copyText) {
         copyBtn.textContent = 'Copied!';
         copyBtn.style.background = '#10B981';
         setTimeout(() => container.remove(), 1200);
-      } catch (e) {
+      } catch {
         copyBtn.textContent = 'Failed to copy';
       }
     });
@@ -177,7 +178,9 @@ async function flashBadge(text, color = '#6366F1') {
     setTimeout(async () => {
       try {
         await chrome.action.setBadgeText({ text: '' });
-      } catch (_) {}
+      } catch {
+        // Ignore errors clearing badge
+      }
     }, 2800);
   } catch (err) {
     console.error('Badge flash error:', err);
@@ -205,7 +208,9 @@ async function deliverResult(tabId, title, displayText, copyContent, badgeText =
         title: `OrbitBoard: ${title}`,
         message: displayText.slice(0, 140)
       });
-    } catch (_) {}
+    } catch {
+      // Ignore notification creation errors
+    }
   }
 }
 

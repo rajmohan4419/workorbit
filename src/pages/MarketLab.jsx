@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, FlaskConical, Play, RotateCcw, TrendingUp, Activity, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
@@ -59,12 +59,6 @@ export default function MarketLab() {
 
   const replay = DEMO_DAYS[replayIndex];
   const replayProgress = ((replayIndex + 1) / DEMO_DAYS.length) * 100;
-
-  const summary = useMemo(() => ({
-    first: DEMO_DAYS[0],
-    last: DEMO_DAYS[DEMO_DAYS.length - 1],
-    change: ((DEMO_DAYS.at(-1).close - DEMO_DAYS[0].close) / DEMO_DAYS[0].close) * 100
-  }), []);
 
   const run = () => setResult(runExperiment(DEMO_DAYS, volumeThreshold, oiThreshold, forwardDays));
   const reset = () => {
