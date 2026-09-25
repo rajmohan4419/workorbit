@@ -8,6 +8,22 @@ export const TOOL_CONTENT = {
   'weight-converter': { intro:'Convert common weight and mass units including kilograms, grams, pounds and ounces.', keywords:'weight converter, kg to lbs, grams to ounces, pounds to kg', how:['Enter a value and choose the source unit.','Choose the target unit.','Copy or export the result.'], faq:[] },
   'temperature-converter': { intro:'Convert temperatures between Celsius, Fahrenheit and Kelvin.', keywords:'temperature converter, celsius to fahrenheit, fahrenheit to celsius, kelvin converter', how:['Enter a temperature.','Choose the source and target units.','Review or export the converted value.'], faq:[['Are Celsius and Fahrenheit converted linearly?','Yes. Their relationship is linear, while Kelvin uses an absolute temperature scale.']] },
   'time-converter': { intro:'Convert seconds, minutes, hours and days for quick calculations and technical work.', keywords:'time converter, seconds to minutes, hours to seconds, days to hours', how:['Enter a value and source unit.','Choose the target unit.','Copy or export the converted result.'], faq:[] },
+  'timezone-converter': {
+    intro: 'Compare date and time across real IANA time zones instantly with daylight saving (DST) awareness, multi-zone comparison, and copy-all support.',
+    keywords: 'time zone converter, global time zone converter, UTC to IST, IST to PST, IST to Pacific Time, IST to London, IST to Singapore, IST to Tokyo, New York to India time converter, Dubai to India time converter, Sydney to India time converter, DST time converter',
+    how: [
+      'Select your source time zone, date, and time.',
+      'Check destination time zones to compare multiple locations simultaneously.',
+      'Review converted times, daylight saving indicators, and relative hour offsets.',
+      'Click "Copy All Results" to copy the formatted schedule to your clipboard.'
+    ],
+    faq: [
+      ['How are daylight saving time (DST) changes handled?', 'The tool uses real IANA time zone identifiers (e.g. America/Los_Angeles, Europe/London, Australia/Sydney) so daylight saving changes are applied automatically according to your selected date.'],
+      ['Can I compare multiple time zones at once?', 'Yes! You can select multiple destination time zones via checkboxes and compare them all against your source date and time.'],
+      ['How do I copy all converted times?', 'Click the "Copy All Results" button to copy a neatly formatted summary of all converted time zones directly to your clipboard.'],
+      ['Does this support major global city pairs?', 'Yes. Popular conversions include UTC to IST, IST to Pacific Time (PST/PDT), IST to London (GMT/BST), IST to Singapore, IST to Tokyo, New York to India, Dubai to India, and Sydney to India.']
+    ]
+  },
   'jpg-to-png': { intro:'Convert JPG photos to PNG without uploading the image to a server.', keywords:'jpg to png converter, jpeg to png, convert jpg png online', how:['Choose a JPG image from your device.','Convert it in your browser.','Download the PNG file.'], faq:[['Is my image uploaded?','No. The conversion uses your browser canvas and creates the output locally.']] },
   'png-to-jpg': { intro:'Convert PNG images to JPG locally with a selectable quality setting.', keywords:'png to jpg converter, convert png jpeg, png jpeg converter', how:['Choose a PNG image.','Select the JPG quality.','Download the converted JPG.'], faq:[['Will transparency be preserved?','No. JPG does not support transparency, so transparent areas are rendered on a white background.']] },
   'webp-to-jpg': { intro:'Convert WebP images to widely compatible JPG files in your browser.', keywords:'webp to jpg converter, convert webp jpeg, webp jpeg converter', how:['Choose a WebP image.','Select the JPG quality.','Download the JPG file.'], faq:[] },
