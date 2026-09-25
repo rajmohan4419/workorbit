@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Beaker, Play, Plus, ShieldAlert, Users, Trash2 } from 'lucide-react';
+import { ArrowLeft, Beaker, Layers3, Play, Plus, ShieldAlert, Users, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
 import { INFY_SYNTHETIC_DAILY } from '../market/demo/infySyntheticData';
 import { runExperiment } from '../market/experiments/engine';
 import { runChallenge } from '../market/experiments/challenge';
 import { runControlComparison } from '../market/experiments/control';
+import { runRegimeAnalysis } from '../market/experiments/regimes';
 
 const METRICS = [
   { value: 'volume_ratio', label: 'Volume ratio' },
@@ -27,6 +28,7 @@ export default function ExperimentBuilder() {
   const [ran, setRan] = useState(false);
   const [challengeRan, setChallengeRan] = useState(false);
   const [controlRan, setControlRan] = useState(false);
+  const [regimeRan, setRegimeRan] = useState(false);
 
   const definition = useMemo(() => ({
     universe: { type: 'security', symbols: ['INFY'] },
@@ -38,10 +40,11 @@ export default function ExperimentBuilder() {
   const result = useMemo(() => ran ? runExperiment({ rows: INFY_SYNTHETIC_DAILY, definition }).results[window] : null, [definition, ran, window]);
   const challenge = useMemo(() => challengeRan ? runChallenge({ rows: INFY_SYNTHETIC_DAILY, definition }) : null, [definition, challengeRan]);
   const control = useMemo(() => controlRan ? runControlComparison({ rows: INFY_SYNTHETIC_DAILY, definition }) : null, [definition, controlRan]);
+  const regimes = useMemo(() => regimeRan ? runRegimeAnalysis({ rows: INFY_SYNTHETIC_DAILY, definition }) : null, [definition, regimeRan]);
 
   const updateCondition = (index, key, value) => {
     setConditions((current) => current.map((condition, i) => i === index ? { ...condition, [key]: value } : condition));
-    setRan(false); setChallengeRan(false); setControlRan(false);
+    setRan(false); setChallengeRan(false); setControlRan(false); setRegimeRan(false);
   };
   const addCondition = () => {
     setConditions((current) => [...current, { metric: 'open_interest_change', operator: '>=', value: 2 }]);
@@ -64,12 +67,13 @@ export default function ExperimentBuilder() {
           <div className="flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-violet-400">Hypothesis</p><h2 className="mt-1 text-xl font-black">When these conditions happen…</h2></div><span className="text-xs text-slate-600">INFY · synthetic dataset</span></div>
           <div className="mt-6 space-y-3">{conditions.map((condition, index) => <div key={index} className="grid gap-3 md:grid-cols-[1fr_160px_140px_auto] items-center rounded-xl border border-slate-800 bg-slate-950 p-3"><select value={condition.metric} onChange={(e) => updateCondition(index, 'metric', e.target.value)} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white">{METRICS.map((metric) => <option key={metric.value} value={metric.value}>{metric.label}</option>)}</select><select value={condition.operator} onChange={(e) => updateCondition(index, 'operator', e.target.value)} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white">{OPERATORS.map((operator) => <option key={operator.value} value={operator.value}>{operator.label}</option>)}</select><input type="number" step="0.1" value={condition.value} onChange={(e) => updateCondition(index, 'value', e.target.value)} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white" /><button type="button" onClick={() => removeCondition(index)} disabled={conditions.length === 1} aria-label="Remove condition" className="rounded-lg p-2 text-slate-600 hover:text-red-300 disabled:opacity-20"><Trash2 size={17} /></button></div>)}</div>
           <button type="button" onClick={addCondition} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 hover:border-violet-500/50 hover:text-white"><Plus size={14} /> Add condition</button>
-          <div className="mt-8 border-t border-slate-800 pt-6"><p className="text-xs font-bold uppercase tracking-[.18em] text-cyan-400">Then inspect</p><div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-sm text-slate-400">The market after</span><select value={window} onChange={(e) => { setWindow(Number(e.target.value)); setRan(false); setChallengeRan(false); setControlRan(false); }} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm font-bold text-white">{WINDOWS.map((item) => <option key={item} value={item}>{item} session{item > 1 ? 's' : ''}</option>)}</select></div></div>
-          <div className="flex flex-wrap gap-3"><button type="button" onClick={() => { setRan(true); setChallengeRan(false); setControlRan(false); }} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-black text-white hover:bg-violet-400"><Play size={16} /> Run experiment</button>{ran && <><button type="button" onClick={() => setControlRan(true)} className="mt-7 inline-flex items-center gap-2 rounded-xl border border-cyan-700/60 bg-cyan-950/20 px-5 py-3 text-sm font-black text-cyan-200 hover:bg-cyan-950/40"><Users size={16} /> Compare control group</button><button type="button" onClick={() => setChallengeRan(true)} className="mt-7 inline-flex items-center gap-2 rounded-xl border border-amber-700/60 bg-amber-950/20 px-5 py-3 text-sm font-black text-amber-200 hover:bg-amber-950/40"><ShieldAlert size={16} /> Try to break it</button></>}</div>
+          <div className="mt-8 border-t border-slate-800 pt-6"><p className="text-xs font-bold uppercase tracking-[.18em] text-cyan-400">Then inspect</p><div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-sm text-slate-400">The market after</span><select value={window} onChange={(e) => { setWindow(Number(e.target.value)); setRan(false); setChallengeRan(false); setControlRan(false); setRegimeRan(false); }} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm font-bold text-white">{WINDOWS.map((item) => <option key={item} value={item}>{item} session{item > 1 ? 's' : ''}</option>)}</select></div></div>
+          <div className="flex flex-wrap gap-3"><button type="button" onClick={() => { setRan(true); setChallengeRan(false); setControlRan(false); }} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-black text-white hover:bg-violet-400"><Play size={16} /> Run experiment</button>{ran && <><button type="button" onClick={() => setControlRan(true)} className="mt-7 inline-flex items-center gap-2 rounded-xl border border-cyan-700/60 bg-cyan-950/20 px-5 py-3 text-sm font-black text-cyan-200 hover:bg-cyan-950/40"><Users size={16} /> Compare control group</button><button type="button" onClick={() => setRegimeRan(true)} className="mt-7 inline-flex items-center gap-2 rounded-xl border border-indigo-700/60 bg-indigo-950/20 px-5 py-3 text-sm font-black text-indigo-200 hover:bg-indigo-950/40"><Layers3 size={16} /> Inspect regimes</button><button type="button" onClick={() => setChallengeRan(true)} className="mt-7 inline-flex items-center gap-2 rounded-xl border border-amber-700/60 bg-amber-950/20 px-5 py-3 text-sm font-black text-amber-200 hover:bg-amber-950/40"><ShieldAlert size={16} /> Try to break it</button></>}</div>
         </section>
 
         {result && <Evidence result={result} definition={definition} />}
         {control && <ControlComparison control={control} />}
+        {regimes && <RegimeAnalysis regimes={regimes} />}
         {challenge && <Challenge challenge={challenge} />}
 
         <section className="mt-6 rounded-2xl border border-amber-900/50 bg-amber-950/20 p-5 text-sm leading-6 text-amber-200/80"><strong className="text-amber-200">Prototype boundary:</strong> this builder uses fictional market observations. The production engine will only use data for which OrbitBoard has appropriate access and usage rights.</section>
@@ -89,6 +93,14 @@ function ControlComparison({ control }) {
 
 function GroupCard({ title, data }) {
   return <div className="rounded-xl border border-slate-800 bg-slate-950 p-4"><h3 className="font-bold">{title}</h3><div className="mt-4 grid grid-cols-3 gap-3"><Metric label="N" value={data.observations} /><Metric label="Positive" value={data.positiveRate == null ? '—' : `${data.positiveRate.toFixed(1)}%`} /><Metric label="Median" value={data.medianReturn == null ? '—' : `${data.medianReturn >= 0 ? '+' : ''}${data.medianReturn.toFixed(2)}%`} /></div></div>;
+}
+
+function RegimeAnalysis({ regimes }) {
+  return <section className="mt-6 rounded-2xl border border-indigo-800/50 bg-slate-900/70 p-5 sm:p-6">
+    <div className="flex items-center gap-3"><Layers3 className="text-indigo-300" size={20} /><div><p className="text-xs font-bold uppercase tracking-[.18em] text-indigo-400">Regime analysis</p><h2 className="mt-1 text-2xl font-black">Does the observation survive different conditions?</h2></div></div>
+    {regimes.analyses.map((analysis) => <div key={analysis.id} className="mt-6"><h3 className="font-bold text-slate-300">{analysis.label}</h3><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[600px] text-left text-sm"><thead className="text-xs uppercase tracking-wider text-slate-600"><tr><th className="pb-3">Regime</th><th className="pb-3">Observations</th><th className="pb-3">Positive</th><th className="pb-3">Average return</th><th className="pb-3">Median return</th></tr></thead><tbody>{analysis.groups.map((group) => <tr key={group.label} className="border-t border-slate-800"><td className="py-3 font-semibold text-slate-300">{group.label}</td><td className="py-3">{group.observations}</td><td className="py-3">{group.positiveRate == null ? '—' : `${group.positiveRate.toFixed(1)}%`}</td><td className="py-3">{group.averageReturn == null ? '—' : `${group.averageReturn >= 0 ? '+' : ''}${group.averageReturn.toFixed(2)}%`}</td><td className="py-3">{group.medianReturn == null ? '—' : `${group.medianReturn >= 0 ? '+' : ''}${group.medianReturn.toFixed(2)}%`}</td></tr>)}</tbody></table></div></div>)}
+    <p className="mt-5 text-xs leading-5 text-slate-600">{regimes.methodology}</p>
+  </section>;
 }
 
 function Challenge({ challenge }) {
