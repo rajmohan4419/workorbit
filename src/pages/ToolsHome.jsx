@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
@@ -65,8 +65,18 @@ const visualKind = (slug) => {
 };
 
 export default function ToolsHome() {
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get('q') || searchParams.get('search') || '';
+  const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(null);
+
+  useEffect(() => {
+    const qFromUrl = searchParams.get('q') || searchParams.get('search');
+    if (qFromUrl !== null && qFromUrl !== query) {
+      setQuery(qFromUrl);
+    }
+  }, [searchParams]);
+
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }
   });
@@ -101,12 +111,13 @@ export default function ToolsHome() {
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
+    const tokens = q.split(/\s+/).filter(Boolean);
     const direct = TOOLS.filter(tool => {
-      const haystack = [tool.name, tool.description, tool.category].join(' ').toLowerCase();
-      return haystack.includes(q);
+      const haystack = [tool.name, tool.description, tool.category, tool.slug, tool.slug.replace(/-/g, ' ')].join(' ').toLowerCase();
+      return tokens.every(token => haystack.includes(token));
     });
     const intentSlugs = intentMap.filter(group => group.terms.some(term => q.includes(term))).flatMap(group => group.slugs);
-    const merged = [...intentSlugs.map(slug => TOOLS.find(t => t.slug === slug)), ...direct].filter(Boolean);
+    const merged = [...direct, ...intentSlugs.map(slug => TOOLS.find(t => t.slug === slug))].filter(Boolean);
     return [...new Map(merged.map(tool => [tool.slug, tool])).values()].slice(0, 8);
   }, [query]);
 
