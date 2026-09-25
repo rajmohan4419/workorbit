@@ -10,6 +10,7 @@ export const TOOLS = [
   { slug: 'weight-converter', name: 'Weight Converter', description: 'Convert grams, kilograms, ounces, pounds and tonnes.', category: 'Everyday', icon: '↔' },
   { slug: 'temperature-converter', name: 'Temperature Converter', description: 'Convert Celsius, Fahrenheit and Kelvin instantly.', category: 'Everyday', icon: '°' },
   { slug: 'time-converter', name: 'Time Converter', description: 'Convert seconds, minutes, hours and days quickly.', category: 'Everyday', icon: '◷' },
+  { slug: 'timezone-converter', name: 'Global Time Zone Converter', description: 'Compare times across real IANA time zones with daylight-saving changes, multi-zone selection and instant copying.', category: 'Everyday', icon: '🌐' },
   { slug: 'jpg-to-png', name: 'JPG to PNG Converter', description: 'Convert JPG images to PNG directly in your browser.', category: 'Everyday', icon: 'IMG' },
   { slug: 'png-to-jpg', name: 'PNG to JPG Converter', description: 'Convert PNG images to JPG directly in your browser.', category: 'Everyday', icon: 'IMG' },
   { slug: 'webp-to-jpg', name: 'WebP to JPG Converter', description: 'Convert WebP images to JPG directly in your browser.', category: 'Everyday', icon: 'IMG' },
