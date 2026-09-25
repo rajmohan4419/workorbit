@@ -361,7 +361,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     }
 
     case 'orbitboard-search': {
-      const searchUrl = `${BASE_URL}/tools?search=${encodeURIComponent(selection)}`;
+      const searchUrl = `${BASE_URL}/?q=${encodeURIComponent(selection)}`;
       await chrome.tabs.create({ url: searchUrl });
       break;
     }

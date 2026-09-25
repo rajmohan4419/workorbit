@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
 import { TOOLS } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
@@ -11,6 +11,11 @@ const categories = [
 ];
 
 export default function ToolsCatalogue() {
+  const [searchParams] = useSearchParams();
+  const q = searchParams.get('q') || searchParams.get('search');
+  if (q) {
+    return <Navigate to={`/?q=${encodeURIComponent(q)}`} replace />;
+  }
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
