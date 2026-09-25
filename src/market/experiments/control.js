@@ -2,46 +2,6 @@ import { runExperiment } from './engine';
 
 const sameTriggerDateSet = (observations) => new Set(observations.map((item) => item.triggerDate));
 
-const metricValue = (row, previous, metric) => {
-  if (!row || !previous) return null;
-  switch (metric) {
-    case 'daily_return':
-      return previous.close === 0 ? null : ((row.close - previous.close) / previous.close) * 100;
-    case 'volume_ratio': {
-      const baseline = Number(previous.volume);
-      return baseline > 0 ? Number(row.volume) / baseline : null;
-    }
-    case 'open_interest_change':
-      return previous.openInterest === 0 ? null : ((row.openInterest - previous.openInterest) / previous.openInterest) * 100;
-    case 'price':
-      return Number(row.close);
-    default:
-      return null;
-  }
-};
-
-const matchesTrigger = (rows, index, conditions) => {
-  const row = rows[index];
-  const previous = rows[index - 1];
-  if (!row || !previous) return false;
-
-  return conditions.every((condition) => {
-    const actual = metricValue(row, previous, condition.metric);
-    const expected = Number(condition.value);
-    if (!Number.isFinite(actual) || !Number.isFinite(expected)) return false;
-
-    switch (condition.operator) {
-      case '>': return actual > expected;
-      case '>=': return actual >= expected;
-      case '<': return actual < expected;
-      case '<=': return actual <= expected;
-      case '==': return actual === expected;
-      case '!=': return actual !== expected;
-      default: return false;
-    }
-  });
-};
-
 const summarizeReturns = (observations) => {
   const returns = observations.map((item) => item.forwardReturn).filter(Number.isFinite);
   if (!returns.length) return { observations: 0, averageReturn: null, medianReturn: null, positiveRate: null };
