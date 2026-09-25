@@ -521,7 +521,7 @@ function Sip() {
 
 export default function ToolPage() {
   const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
-  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'gratuity-calculator':GratuityCalculator,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'csv-to-json':CsvToJson,'csv-to-xlsx':()=> <SpreadsheetFileTool type="csv-to-xlsx"/>,'json-to-xlsx':()=> <SpreadsheetFileTool type="json-to-xlsx"/>,'xlsx-to-csv':()=> <SpreadsheetFileTool type="xlsx-to-csv"/>, 'txt-to-pdf':TextToPdf, 'pdf-to-text':PdfToText, 'diff-checker':DiffChecker, 'json-to-xml':JsonToXml, 'xml-to-json':XmlToJson, 'markdown-to-html':MarkdownToHtml, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-workspace':PdfWorkspace, 'pdf-compressor':PdfCompressor, 'pdf-e-sign':PdfESign, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'income-tax-india':IndiaIncomeTaxCalculator,'income-tax-global':GlobalIncomeTaxCalculator,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
+  const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'gratuity-calculator':GratuityCalculator,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'timezone-converter':TimezoneConverter, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'csv-to-json':CsvToJson,'csv-to-xlsx':()=> <SpreadsheetFileTool type="csv-to-xlsx"/>,'json-to-xlsx':()=> <SpreadsheetFileTool type="json-to-xlsx"/>,'xlsx-to-csv':()=> <SpreadsheetFileTool type="xlsx-to-csv"/>, 'txt-to-pdf':TextToPdf, 'pdf-to-text':PdfToText, 'diff-checker':DiffChecker, 'json-to-xml':JsonToXml, 'xml-to-json':XmlToJson, 'markdown-to-html':MarkdownToHtml, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-workspace':PdfWorkspace, 'pdf-compressor':PdfCompressor, 'pdf-e-sign':PdfESign, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'income-tax-india':IndiaIncomeTaxCalculator,'income-tax-global':GlobalIncomeTaxCalculator,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
     setMeta('description',desc);
@@ -741,6 +741,86 @@ function PdfReorder() {
   const load=async()=>{if(!file){setStatus('Choose a PDF first.');return;}try{const src=await loadPdf(file);setOrder(Array.from({length:src.getPageCount()},(_,i)=>i+1).join(','));setStatus(src.getPageCount()+' pages loaded. Enter the desired order.');}catch{setStatus('Could not read this PDF.');}};
   const reorder=async()=>{if(!file){setStatus('Choose a PDF first.');return;}setBusy(true);try{const src=await loadPdf(file);const nums=order.split(',').map(v=>Number(v.trim())).filter(Number.isInteger);if(nums.length!==src.getPageCount()||nums.some(n=>n<1||n>src.getPageCount())){setStatus('Enter every page exactly once, for example 3,1,2,4.');return;}const bytes=await reorderPdfPages(file,nums);downloadBlob(new Blob([bytes],{type:'application/pdf'}),'orbitboard-reordered.pdf');setStatus('Done — reordered PDF downloaded.');}catch{setStatus('Could not reorder this PDF.');}finally{setBusy(false);}};
   return <div className="space-y-5"><div className="flex gap-2"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setStatus('')}} className="block flex-1 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button onClick={load} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold">Load</button></div><Field label="Page order" value={order} onChange={setOrder} type="text" placeholder="Example: 3,1,2,4"/><button disabled={busy} onClick={reorder} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Saving…':'Reorder & Download'}</button>{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">Reordering runs locally. Page previews require a separate PDF rendering engine and are intentionally not faked.</p></div>
+}
+
+
+const TIME_ZONES = [
+  ['UTC', 'UTC'],
+  ['India — IST', 'Asia/Kolkata'],
+  ['US Pacific — PST/PDT', 'America/Los_Angeles'],
+  ['US Mountain — MST/MDT', 'America/Denver'],
+  ['US Central — CST/CDT', 'America/Chicago'],
+  ['US Eastern — EST/EDT', 'America/New_York'],
+  ['Canada Eastern — EST/EDT', 'America/Toronto'],
+  ['Brazil — BRT', 'America/Sao_Paulo'],
+  ['UK — GMT/BST', 'Europe/London'],
+  ['Central Europe — CET/CEST', 'Europe/Berlin'],
+  ['South Africa — SAST', 'Africa/Johannesburg'],
+  ['Gulf — GST', 'Asia/Dubai'],
+  ['Singapore — SGT', 'Asia/Singapore'],
+  ['China — CST', 'Asia/Shanghai'],
+  ['Japan — JST', 'Asia/Tokyo'],
+  ['Australia Eastern — AEST/AEDT', 'Australia/Sydney'],
+  ['New Zealand — NZST/NZDT', 'Pacific/Auckland']
+];
+
+function TimezoneConverter() {
+  const localNow = new Date();
+  const pad = value => String(value).padStart(2, '0');
+  const defaultInput = new Date(localNow.getTime() - localNow.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  const [dateTime, setDateTime] = useState(defaultInput);
+  const [source, setSource] = useState('UTC');
+  const [destinations, setDestinations] = useState(['Asia/Kolkata', 'America/Los_Angeles', 'Europe/London', 'Asia/Singapore', 'Asia/Tokyo']);
+  const [copied, setCopied] = useState(false);
+
+  const instant = useMemo(() => parseTimeZoneInput(dateTime, source), [dateTime, source]);
+  const formatted = useMemo(() => destinations.map(zone => {
+    const target = TIME_ZONES.find(item => item[1] === zone);
+    return { zone, label: target?.[0] || zone, value: instant ? formatInTimeZone(instant, zone) : 'Invalid date/time' };
+  }), [destinations, instant]);
+
+  const toggleDestination = zone => setDestinations(current => current.includes(zone) ? current.filter(item => item !== zone) : [...current, zone]);
+
+  const copyAll = async () => {
+    if (!formatted.length) return;
+    try {
+      await navigator.clipboard.writeText(formatted.map(item => item.label + ': ' + item.value).join('\n'));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch { /* clipboard may be unavailable */ }
+  };
+
+  return <div className="space-y-5">
+    <div className="grid sm:grid-cols-2 gap-4">
+      <label className="block"><span className="text-xs font-medium text-slate-400">Date & time</span><input type="datetime-local" value={dateTime} onChange={e => setDateTime(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/></label>
+      <label className="block"><span className="text-xs font-medium text-slate-400">Source time zone</span><select value={source} onChange={e => setSource(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">{TIME_ZONES.map(([label, zone]) => <option key={zone} value={zone}>{label}</option>)}</select></label>
+    </div>
+    <div className="rounded-2xl border border-violet-500/20 bg-violet-950/10 p-4"><p className="text-xs font-bold uppercase tracking-wider text-violet-300">Quick conversion</p><p className="mt-2 text-sm text-slate-300">{source === 'UTC' ? 'UTC' : TIME_ZONES.find(item => item[1] === source)?.[0] || source} → {destinations.length} selected time zones</p><p className="mt-1 text-xs text-slate-500">Offsets and daylight-saving rules are calculated for the exact date you choose.</p></div>
+    <div><div className="flex items-center justify-between gap-3"><span className="text-xs font-medium text-slate-400">Destination time zones</span><button onClick={copyAll} className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold">{copied ? 'Copied' : 'Copy all'}</button></div>
+      <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-2">{TIME_ZONES.filter(([, zone]) => zone !== source).map(([label, zone]) => <label key={zone} className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs cursor-pointer ${destinations.includes(zone) ? 'border-violet-500/40 bg-violet-950/20 text-white' : 'border-slate-800 bg-slate-950 text-slate-500'}`}><input type="checkbox" checked={destinations.includes(zone)} onChange={() => toggleDestination(zone)} />{label}</label>)}</div>
+    </div>
+    <div className="grid sm:grid-cols-2 gap-3">{formatted.map(item => <div key={item.zone} className="rounded-2xl border border-slate-800 bg-slate-950 p-4"><p className="text-xs text-slate-500">{item.label}</p><p className="mt-2 text-lg font-black text-white">{item.value}</p></div>)}</div>
+    <p className="text-xs leading-5 text-slate-500">Pacific Time is shown as PST or PDT depending on the selected date. Other regions with daylight-saving rules are handled the same way.</p>
+  </div>;
+}
+
+function parseTimeZoneInput(value, timeZone) {
+  if (!value) return null;
+  const [datePart, timePart] = value.split('T');
+  if (!datePart || !timePart) return null;
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = timePart.split(':').map(Number);
+  const asUTC = Date.UTC(year, month - 1, day, hour, minute);
+  let instant = new Date(asUTC);
+  const formatter = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  const parts = Object.fromEntries(formatter.formatToParts(instant).filter(part => part.type !== 'literal').map(part => [part.type, Number(part.value)]));
+  const represented = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+  instant = new Date(asUTC - (represented - asUTC));
+  return instant;
+}
+
+function formatInTimeZone(instant, timeZone) {
+  return new Intl.DateTimeFormat('en-GB', { timeZone, dateStyle: 'medium', timeStyle: 'short', timeZoneName: 'short' }).format(instant);
 }
 
 function ToolPageActions({tool}) {
