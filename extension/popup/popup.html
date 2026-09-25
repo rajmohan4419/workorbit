@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrbitBoard - Quick Tools & Directory</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo-area">
+      <img src="../icons/icon-48.png" alt="OrbitBoard" class="app-logo" width="28" height="28">
+      <div>
+        <h1 class="app-title">OrbitBoard</h1>
+        <span class="app-tagline">Utility Companion</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="btn-open-sidepanel" class="icon-btn" title="Open in Chrome Side Panel" aria-label="Open in Chrome Side Panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/>
+        </svg>
+      </button>
+      <button id="btn-open-website" class="icon-btn" title="Open OrbitBoard.in" aria-label="Open OrbitBoard.in">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Top Navigation Tabs -->
+  <nav class="main-tabs" role="tablist">
+    <button id="tab-btn-directory" class="tab-btn active" role="tab" aria-selected="true" data-tab="directory">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      Tools Directory
+    </button>
+    <button id="tab-btn-offline" class="tab-btn" role="tab" aria-selected="false" data-tab="offline">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Instant Utilities
+    </button>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="content-container">
+
+    <!-- TAB 1: TOOLS DIRECTORY & SEARCH LAUNCHER -->
+    <section id="panel-directory" class="tab-panel active">
+      <!-- Search Input -->
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="tool-search-input" placeholder="Search 50+ tools (e.g. JSON, PDF, Salary, Tax)..." autofocus autocomplete="off">
+        <button id="search-clear-btn" class="clear-btn" style="display: none;" title="Clear search">&times;</button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="category-filters" id="category-filters">
+        <button class="filter-pill active" data-category="All">All</button>
+        <button class="filter-pill" data-category="Favorites">⭐ Favorites</button>
+        <button class="filter-pill" data-category="Developer">Developer</button>
+        <button class="filter-pill" data-category="Everyday">Everyday & PDF</button>
+        <button class="filter-pill" data-category="Career">Career</button>
+        <button class="filter-pill" data-category="Finance">Finance</button>
+      </div>
+
+      <!-- Recent Tools Section (Hidden if empty) -->
+      <div id="recent-tools-section" class="recents-wrapper" style="display: none;">
+        <div class="section-label">Recently Used</div>
+        <div id="recents-list" class="recents-list"></div>
+      </div>
+
+      <!-- Tool List -->
+      <div class="tools-list-header">
+        <span id="tool-count" class="count-badge">53 tools</span>
+      </div>
+      <div id="tools-container" class="tools-grid"></div>
+    </section>
+
+    <!-- TAB 2: INSTANT OFFLINE UTILITIES -->
+    <section id="panel-offline" class="tab-panel" style="display: none;">
+      <!-- Sub-tabs for offline mini-tools -->
+      <div class="mini-tools-nav">
+        <button class="mini-pill active" data-tool="json">JSON</button>
+        <button class="mini-pill" data-tool="base64">Base64</button>
+        <button class="mini-pill" data-tool="jwt">JWT</button>
+        <button class="mini-pill" data-tool="time">Timestamp</button>
+        <button class="mini-pill" data-tool="uuid">UUID</button>
+        <button class="mini-pill" data-tool="url">URL</button>
+        <button class="mini-pill" data-tool="calc">Calculator</button>
+      </div>
+
+      <!-- MINI-TOOL: JSON FORMATTER -->
+      <div id="mini-tool-json" class="mini-tool-view active">
+        <div class="tool-controls">
+          <button id="btn-json-format" class="action-btn primary-btn">Format</button>
+          <button id="btn-json-minify" class="action-btn secondary-btn">Minify</button>
+          <button id="btn-json-copy" class="action-btn secondary-btn">Copy</button>
+          <button id="btn-json-clear" class="action-btn text-btn">Clear</button>
+        </div>
+        <textarea id="json-input" class="code-textarea" placeholder="Paste JSON here..."></textarea>
+        <div id="json-status" class="tool-status-bar">Ready</div>
+      </div>
+
+      <!-- MINI-TOOL: BASE64 -->
+      <div id="mini-tool-base64" class="mini-tool-view" style="display: none;">
+        <div class="tool-controls">
+          <button id="btn-b64-encode" class="action-btn primary-btn">Encode</button>
+          <button id="btn-b64-decode" class="action-btn primary-btn">Decode</button>
+          <button id="btn-b64-copy" class="action-btn secondary-btn">Copy</button>
+          <button id="btn-b64-clear" class="action-btn text-btn">Clear</button>
+        </div>
+        <textarea id="b64-input" class="code-textarea" placeholder="Type text or paste Base64 string..."></textarea>
+        <div id="b64-status" class="tool-status-bar">Ready</div>
+      </div>
+
+      <!-- MINI-TOOL: JWT DECODER -->
+      <div id="mini-tool-jwt" class="mini-tool-view" style="display: none;">
+        <div class="tool-controls">
+          <button id="btn-jwt-decode" class="action-btn primary-btn">Decode Token</button>
+          <button id="btn-jwt-copy-payload" class="action-btn secondary-btn">Copy Payload</button>
+          <button id="btn-jwt-clear" class="action-btn text-btn">Clear</button>
+        </div>
+        <textarea id="jwt-input" class="code-textarea jwt-input" placeholder="Paste encoded JWT (header.payload.signature)..."></textarea>
+        <div id="jwt-status" class="tool-status-bar">Ready</div>
+        <div class="jwt-results">
+          <div class="jwt-block">
+            <span class="block-label">Header:</span>
+            <pre id="jwt-header-out" class="code-preview">// Header will appear here</pre>
+          </div>
+          <div class="jwt-block">
+            <span class="block-label">Payload:</span>
+            <pre id="jwt-payload-out" class="code-preview">// Payload will appear here</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- MINI-TOOL: UNIX TIMESTAMP -->
+      <div id="mini-tool-time" class="mini-tool-view" style="display: none;">
+        <div class="live-epoch-card">
+          <div class="epoch-label">Current Unix Epoch:</div>
+          <div class="epoch-value-row">
+            <span id="live-epoch-counter" class="epoch-digits">---------</span>
+            <button id="btn-copy-live-epoch" class="mini-btn">Copy</button>
+          </div>
+        </div>
+
+        <div class="calc-section">
+          <label class="input-label" for="ts-convert-input">Epoch to Date (seconds or ms):</label>
+          <div class="input-with-button">
+            <input type="text" id="ts-convert-input" class="text-input" placeholder="e.g. 1774405800">
+            <button id="btn-ts-to-date" class="action-btn primary-btn">Convert</button>
+          </div>
+          <div id="ts-date-result" class="time-result-box">Converted date will show here</div>
+        </div>
+
+        <div class="calc-section">
+          <label class="input-label" for="date-convert-input">Date to Epoch:</label>
+          <div class="input-with-button">
+            <input type="datetime-local" id="date-convert-input" class="text-input">
+            <button id="btn-date-to-ts" class="action-btn secondary-btn">Get Epoch</button>
+          </div>
+          <div id="date-ts-result" class="time-result-box">Timestamp will show here</div>
+        </div>
+      </div>
+
+      <!-- MINI-TOOL: UUID GENERATOR -->
+      <div id="mini-tool-uuid" class="mini-tool-view" style="display: none;">
+        <div class="tool-controls">
+          <button id="btn-uuid-gen-1" class="action-btn primary-btn">Generate 1</button>
+          <button id="btn-uuid-gen-5" class="action-btn secondary-btn">Generate 5</button>
+          <button id="btn-uuid-copy" class="action-btn secondary-btn">Copy All</button>
+          <button id="btn-uuid-clear" class="action-btn text-btn">Clear</button>
+        </div>
+        <textarea id="uuid-output" class="code-textarea" readonly placeholder="Generated UUIDs will appear here..."></textarea>
+        <div id="uuid-status" class="tool-status-bar">Ready</div>
+      </div>
+
+      <!-- MINI-TOOL: URL ENCODER/DECODER -->
+      <div id="mini-tool-url" class="mini-tool-view" style="display: none;">
+        <div class="tool-controls">
+          <button id="btn-url-encode" class="action-btn primary-btn">Encode</button>
+          <button id="btn-url-decode" class="action-btn primary-btn">Decode</button>
+          <button id="btn-url-copy" class="action-btn secondary-btn">Copy</button>
+          <button id="btn-url-clear" class="action-btn text-btn">Clear</button>
+        </div>
+        <textarea id="url-input" class="code-textarea" placeholder="Paste URL or component to encode/decode..."></textarea>
+        <div id="url-status" class="tool-status-bar">Ready</div>
+      </div>
+
+      <!-- MINI-TOOL: QUICK CALCULATOR -->
+      <div id="mini-tool-calc" class="mini-tool-view" style="display: none;">
+        <div class="calc-card">
+          <h4 class="calc-title">Percentage Calculator</h4>
+          <div class="calc-row">
+            <span>What is</span>
+            <input type="number" id="calc-pct-val" class="num-input" placeholder="18">
+            <span>% of</span>
+            <input type="number" id="calc-pct-base" class="num-input" placeholder="2500">
+            <button id="btn-calc-pct" class="mini-btn primary">Calc</button>
+          </div>
+          <div id="calc-pct-res" class="calc-res-badge">Result: --</div>
+        </div>
+
+        <div class="calc-card" style="margin-top: 12px;">
+          <h4 class="calc-title">Salary Hike Calculator</h4>
+          <div class="calc-row">
+            <span>Old (₹/$)</span>
+            <input type="number" id="calc-hike-old" class="num-input" placeholder="800000">
+            <span>New</span>
+            <input type="number" id="calc-hike-new" class="num-input" placeholder="1100000">
+            <button id="btn-calc-hike" class="mini-btn primary">Hike</button>
+          </div>
+          <div id="calc-hike-res" class="calc-res-badge">Result: --</div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-note">
+      <span class="safe-dot"></span> 100% Client-Side &amp; Private
+    </div>
+    <a href="https://orbitboard.in" target="_blank" rel="noopener" class="footer-link">orbitboard.in &rarr;</a>
+  </footer>
+
+  <script src="../data/tools.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
