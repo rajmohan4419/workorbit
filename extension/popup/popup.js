@@ -1,7 +1,7 @@
 // OrbitBoard Extension — Popup Controller
 // Manages search, favorites, recents, navigation and instant offline utilities
 
-const BASE_URL = 'https://orbitboard.in';
+const BASE_URL = globalThis.ORBITBOARD_BASE_URL || 'https://orbitboard.in';
 
 // Embedded fallback tools array guarantees tools are ALWAYS available
 const EMBEDDED_TOOLS = [
@@ -609,7 +609,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       empty.className = 'empty-state';
       empty.textContent = currentCategory === 'Favorites'
         ? (query ? `No favorite tools match "${searchTerm}".` : 'No favorite tools saved yet. Click the star icon on any tool to pin it here!')
-        : `No tools found matching "${searchTerm}".`;
+        : `No tools found matching "${searchTerm}". Try words like "salary", "pdf", "json", "excel", "tax", "emi", or "image".`;
       toolsContainer.appendChild(empty);
       return;
     }

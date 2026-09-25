@@ -76,7 +76,6 @@ export default function ToolsHome() {
       setQuery(qFromUrl);
     }
   }, [searchParams]);
-
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }
   });
