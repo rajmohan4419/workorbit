@@ -4,6 +4,7 @@ import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
 import MarketLab from './pages/MarketLab';
+import MarketSecurity from './pages/MarketSecurity';
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/" element={<ToolsHome />} />
         <Route path="/tools" element={<ToolsCatalogue />} />
         <Route path="/market-lab" element={<MarketLab />} />
+        <Route path="/market/:symbol" element={<MarketSecurity />} />
         <Route path="/tools/:slug" element={<ToolPageRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
