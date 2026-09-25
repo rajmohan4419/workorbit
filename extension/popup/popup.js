@@ -1,7 +1,7 @@
 // OrbitBoard Extension — Popup Controller
 // Manages search, favorites, recents, navigation and instant offline utilities
 
-const BASE_URL = 'https://orbitboard.in';
+const BASE_URL = globalThis.ORBITBOARD_BASE_URL || 'https://orbitboard.in';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // State
@@ -75,23 +75,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   tabBtnOffline.addEventListener('click', () => switchMainTab('offline'));
 
   // Header Actions
-  btnOpenWebsite.addEventListener('click', async () => {
-    await chrome.tabs.create({ url: BASE_URL });
-  });
+  if (btnOpenWebsite) {
+    btnOpenWebsite.addEventListener('click', async () => {
+      await chrome.tabs.create({ url: BASE_URL });
+    });
+  }
 
-  btnOpenSidepanel.addEventListener('click', async () => {
-    try {
-      if (chrome.sidePanel?.open) {
-        const currentWin = await chrome.windows.getCurrent();
-        await chrome.sidePanel.open({ windowId: currentWin.id });
-        window.close(); // Close popup once sidepanel opens
-      } else {
-        alert('Side panel is not supported in this Chrome version.');
+  if (btnOpenSidepanel) {
+    btnOpenSidepanel.addEventListener('click', async () => {
+      try {
+        if (chrome.sidePanel?.open) {
+          const currentWin = await chrome.windows.getCurrent();
+          await chrome.sidePanel.open({ windowId: currentWin.id });
+          window.close(); // Close popup once sidepanel opens
+        } else {
+          alert('Side panel is not supported in this Chrome version.');
+        }
+      } catch (err) {
+        console.error('Failed to open side panel:', err);
       }
-    } catch (err) {
-      console.error('Failed to open side panel:', err);
-    }
-  });
+    });
+  }
 
   // --- Tools Directory Rendering ---
   const allTools = Array.isArray(globalThis.ORBITBOARD_TOOLS) ? globalThis.ORBITBOARD_TOOLS : [];
@@ -137,37 +141,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     toolsContainer.innerHTML = '';
 
     const query = searchTerm.toLowerCase().trim();
+    const queryTokens = query ? query.split(/\s+/).filter(Boolean) : [];
 
     const filtered = allTools.filter(tool => {
       // Category filter
       if (currentCategory === 'Favorites') {
         if (!favorites.has(tool.slug)) return false;
-      } else if (currentCategory === 'Everyday') {
-        if (tool.category !== 'Everyday') return false;
       } else if (currentCategory !== 'All') {
         if (tool.category !== currentCategory) return false;
       }
 
-      // Search query filter
-      if (query) {
-        const matchName = tool.name.toLowerCase().includes(query);
-        const matchDesc = tool.description.toLowerCase().includes(query);
-        const matchSlug = tool.slug.toLowerCase().includes(query);
-        const matchCat = tool.category.toLowerCase().includes(query);
-        return matchName || matchDesc || matchSlug || matchCat;
+      // Search query filter: every word token must match in searchable text
+      if (queryTokens.length > 0) {
+        const searchableText = [
+          tool.name,
+          tool.slug,
+          tool.slug.replace(/-/g, ' '),
+          tool.description,
+          tool.category,
+          tool.keywords || ''
+        ].join(' ').toLowerCase();
+
+        return queryTokens.every(token => searchableText.includes(token));
       }
 
       return true;
     });
 
-    toolCountEl.textContent = `${filtered.length} tool${filtered.length === 1 ? '' : 's'}`;
+    if (query) {
+      toolCountEl.textContent = `${filtered.length} match${filtered.length === 1 ? '' : 'es'}`;
+    } else {
+      toolCountEl.textContent = `${filtered.length} tool${filtered.length === 1 ? '' : 's'}`;
+    }
 
     if (!filtered.length) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
       empty.textContent = currentCategory === 'Favorites'
-        ? 'No favorite tools saved yet. Click the star icon on any tool to pin it here!'
-        : `No tools found matching "${searchTerm}".`;
+        ? (query ? `No favorite tools match "${searchTerm}".` : 'No favorite tools saved yet. Click the star icon on any tool to pin it here!')
+        : `No tools found matching "${searchTerm}". Try words like "salary", "pdf", "json", "excel", "tax", "emi", or "image".`;
       toolsContainer.appendChild(empty);
       return;
     }
@@ -254,6 +266,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   searchInput.addEventListener('input', (e) => {
     searchTerm = e.target.value;
     clearBtn.style.display = searchTerm ? 'block' : 'none';
+
+    // If user is searching while 'Favorites' tab is active with no matches, switch to 'All'
+    if (searchTerm && currentCategory === 'Favorites') {
+      const queryTokens = searchTerm.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const hasFavMatch = allTools.some(t => {
+        if (!favorites.has(t.slug)) return false;
+        const text = [t.name, t.slug, t.description, t.keywords || ''].join(' ').toLowerCase();
+        return queryTokens.every(tok => text.includes(tok));
+      });
+      if (!hasFavMatch) {
+        currentCategory = 'All';
+        categoryFilters.querySelectorAll('.filter-pill').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-category') === 'All');
+        });
+      }
+    }
+
     renderTools();
   });
 
