@@ -237,6 +237,8 @@ export default function MarketLab() {
   const [forwardDays, setForwardDays] = useState(2);
   const [researchQuery, setResearchQuery] = useState('DEMO');
   const [researchMode, setResearchMode] = useState('simple');
+  const [researchResult, setResearchResult] = useState(null);
+  const [researchStatus, setResearchStatus] = useState('idle');
   const [result, setResult] = useState(() => runExperiment(DEMO_DAYS, 1.25, 2, 2));
   const [replayIndex, setReplayIndex] = useState(0);
   const evidenceValidation = DEMO_EVIDENCE_VALIDATION;
@@ -251,6 +253,22 @@ export default function MarketLab() {
     setOiThreshold(2);
     setForwardDays(2);
     setResult(runExperiment(DEMO_DAYS, 1.25, 2, 2));
+  };
+
+  const runResearch = () => {
+    const query = researchQuery.trim() || 'DEMO';
+    setResearchStatus('running');
+    setResearchResult(null);
+    window.setTimeout(() => {
+      const normalized = query.toUpperCase();
+      if (normalized === 'DEMO') {
+        setResearchResult({ entity: 'DEMO', status: DEMO_DOSSIER.status, dossier: DEMO_DOSSIER, message: 'Research completed against the synthetic Market Lab dataset. No live market data was used.' });
+        setResearchStatus('complete');
+        return;
+      }
+      setResearchResult({ entity: normalized, status: 'NOT_CONNECTED', dossier: null, message: 'No live research connector is configured for ' + normalized + ' in this browser build. Market Lab will not manufacture evidence or fall back to demo data.' });
+      setResearchStatus('blocked');
+    }, 250);
   };
 
   return (
@@ -304,11 +322,11 @@ export default function MarketLab() {
               id="market-research-company"
               value={researchQuery}
               onChange={e => setResearchQuery(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') setResearchQuery(e.currentTarget.value.trim() || 'DEMO'); }}
+              onKeyDown={e => { if (e.key === 'Enter') { setResearchQuery(e.currentTarget.value.trim() || 'DEMO'); runResearch(); } }}
               placeholder="Try Infosys, INFY, TCS..."
               className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
             />
-            <button type="button" onClick={() => setResearchQuery(value => value.trim() || 'DEMO')} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white hover:bg-violet-400">Research</button>
+            <button type="button" onClick={runResearch} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white hover:bg-violet-400">Research</button>
           </div>
 
           <div className="mt-5 grid md:grid-cols-3 gap-3">
@@ -326,6 +344,30 @@ export default function MarketLab() {
                 : 'Deep mode exposes the underlying evidence, reconciliation, contradiction and provenance layers.'}
             </p>
           </div>
+
+          {researchStatus === 'running' && (
+            <div className="mt-4 rounded-xl border border-violet-800/60 bg-violet-950/20 p-4 text-sm text-violet-200" role="status">
+              Researching <strong>{researchQuery.trim() || 'DEMO'}</strong>…
+            </div>
+          )}
+
+          {researchResult && researchStatus !== 'running' && (
+            <div className={`mt-4 rounded-xl border p-4 ${researchStatus === 'complete' ? 'border-emerald-800/60 bg-emerald-950/20' : 'border-amber-800/60 bg-amber-950/20'}`} role="status">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Research result · {researchResult.entity}</p>
+                <span className="rounded-full border border-slate-700 px-2 py-1 text-[10px] font-bold text-slate-400">{researchResult.status}</span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{researchResult.message}</p>
+              {researchResult.dossier && (
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <Metric icon={Activity} label="Evidence" value={researchResult.dossier.dataQuality.evidenceCount} />
+                  <Metric icon={TrendingUp} label="Verified" value={researchResult.dossier.dataQuality.verifiedEvidenceCount} />
+                  <Metric icon={BarChart3} label="Contradictions" value={researchResult.dossier.dataQuality.contradictionCount} />
+                  <Metric icon={Activity} label="Blocked signals" value={researchResult.dossier.dataQuality.blockedSignalCount} />
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mt-4 flex flex-wrap gap-2 text-xs">
             {['What changed?', 'What are the risks?', 'Why is this contradictory?', 'Show the sources'].map(question => (
