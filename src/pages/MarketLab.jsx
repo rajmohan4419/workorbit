@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { ArrowLeft, FlaskConical, Play, RotateCcw, TrendingUp, Activity, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
@@ -255,20 +256,40 @@ export default function MarketLab() {
     setResult(runExperiment(DEMO_DAYS, 1.25, 2, 2));
   };
 
-  const runResearch = () => {
+  const runResearch = async () => {
     const query = researchQuery.trim() || 'DEMO';
     setResearchStatus('running');
     setResearchResult(null);
-    window.setTimeout(() => {
-      const normalized = query.toUpperCase();
-      if (normalized === 'DEMO') {
+
+    try {
+      if (query.toUpperCase() === 'DEMO') {
         setResearchResult({ entity: 'DEMO', status: DEMO_DOSSIER.status, dossier: DEMO_DOSSIER, message: 'Research completed against the synthetic Market Lab dataset. No live market data was used.' });
         setResearchStatus('complete');
         return;
       }
-      setResearchResult({ entity: normalized, status: 'NOT_CONNECTED', dossier: null, message: 'No live research connector is configured for ' + normalized + ' in this browser build. Market Lab will not manufacture evidence or fall back to demo data.' });
+
+      const result = await runResearch({
+        query,
+        fetcher: async request => {
+          const { data, error } = await supabase.functions.invoke('market-research', { body: { query: request.issuer === 'Infosys Limited' ? 'INFY' : query } });
+          if (error) throw new Error(error.message || 'Research function failed.');
+          if (!data?.records) throw new Error(data?.error || 'Research function returned no filing records.');
+          return data.records;
+        }
+      });
+
+      setResearchResult({
+        entity: result.entity?.symbol ?? query.toUpperCase(),
+        status: result.status,
+        dossier: result.dossier ?? null,
+        message: result.message ?? (result.status === 'READY' ? 'Research completed.' : 'Research completed with incomplete evidence coverage.'),
+        connector: result.connector ?? null
+      });
+      setResearchStatus(result.status === 'FAILED' || result.status === 'BLOCKED' ? 'blocked' : 'complete');
+    } catch (error) {
+      setResearchResult({ entity: query.toUpperCase(), status: 'FAILED', dossier: null, message: error.message || 'Research failed.' });
       setResearchStatus('blocked');
-    }, 250);
+    }
   };
 
   return (
