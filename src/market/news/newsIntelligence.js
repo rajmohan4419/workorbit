@@ -16,7 +16,7 @@ function normalizeUrl(value) {
     const url = new URL(value);
     url.hash = '';
     url.hostname = url.hostname.toLowerCase();
-    return url.toString().replace(/\\/$/, '');
+    return url.toString().replace(/\/$/, '');
   } catch {
     return String(value).trim();
   }
