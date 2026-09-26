@@ -345,7 +345,7 @@ export default function MarketLab() {
               value={researchQuery}
               onChange={e => setResearchQuery(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { setResearchQuery(e.currentTarget.value.trim() || 'DEMO'); runResearch(); } }}
-              placeholder="Try Infosys, INFY, TCS..."
+              placeholder="Try Infosys, INFY, NIFTY 50, NIFTY BANK..."
               className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
             />
             <button type="button" onClick={runResearch} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white hover:bg-violet-400">Research</button>
