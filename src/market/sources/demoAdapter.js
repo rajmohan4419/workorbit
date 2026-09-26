@@ -46,11 +46,12 @@ export const demoAdapter = {
           metric: { key, label: key.replaceAll('_', ' ') },
           value,
           unit: key.includes('index') ? 'x' : 'INR',
+          notes: value === undefined || value === null ? 'Source supplied a missing value; validation must reject this record.' : null,
           period: { asOf: row.date },
           source: { provider: demoSource.provider, url: sourceUrl, sourceId: demoSource.id, trust: demoSource.trust },
           kind: EVIDENCE_KINDS.FACT,
           status: EVIDENCE_STATUS.UNVERIFIED,
-          retrievedAt: context.retrievedAt
+          retrievedAt: context.retrievedAt ?? new Date().toISOString()
         }));
       }
     }
