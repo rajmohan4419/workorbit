@@ -4,8 +4,6 @@ import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
 import MarketLab from './pages/MarketLab';
-import MarketSecurity from './pages/MarketSecurity';
-import ExperimentBuilder from './pages/ExperimentBuilder';
 
 export default function App() {
   return (
@@ -16,8 +14,6 @@ export default function App() {
         <Route path="/" element={<ToolsHome />} />
         <Route path="/tools" element={<ToolsCatalogue />} />
         <Route path="/market-lab" element={<MarketLab />} />
-        <Route path="/market/:symbol" element={<MarketSecurity />} />
-        <Route path="/market/:symbol/experiment" element={<ExperimentBuilder />} />
         <Route path="/tools/:slug" element={<ToolPageRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -40,10 +36,15 @@ function Analytics() {
       }
     };
 
-    const schedule = () => { timer = window.setTimeout(load, 8000); };
+    const schedule = () => {
+      timer = window.setTimeout(load, 8000);
+    };
 
-    if (document.readyState === 'complete') schedule();
-    else window.addEventListener('load', schedule, { once: true });
+    if (document.readyState === 'complete') {
+      schedule();
+    } else {
+      window.addEventListener('load', schedule, { once: true });
+    }
 
     return () => {
       cancelled = true;
@@ -64,22 +65,31 @@ function Telemetry() {
 
     const runTelemetry = async () => {
       if (cancelled) return;
+
       try {
         const { recordVisit } = await import('./lib/telemetry');
         if (cancelled) return;
+
         const total = await recordVisit(location.pathname);
         if (!cancelled && typeof total === 'number' && Number.isFinite(total)) {
-          window.dispatchEvent(new CustomEvent('orbitboard:visitor-count', { detail: total }));
+          window.dispatchEvent(
+            new CustomEvent('orbitboard:visitor-count', { detail: total })
+          );
         }
       } catch (error) {
         console.warn('[OrbitBoard telemetry] deferred telemetry failed', error);
       }
     };
 
-    const scheduleAfterLoad = () => { timer = window.setTimeout(runTelemetry, 8000); };
+    const scheduleAfterLoad = () => {
+      timer = window.setTimeout(runTelemetry, 8000);
+    };
 
-    if (document.readyState === 'complete') scheduleAfterLoad();
-    else window.addEventListener('load', scheduleAfterLoad, { once: true });
+    if (document.readyState === 'complete') {
+      scheduleAfterLoad();
+    } else {
+      window.addEventListener('load', scheduleAfterLoad, { once: true });
+    }
 
     return () => {
       cancelled = true;

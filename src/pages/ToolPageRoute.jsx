@@ -23,10 +23,10 @@ function ToolShell({ tool, info }) {
       <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" aria-label="OrbitBoard home" className="text-lg font-black text-white flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-400 via-violet-500 to-cyan-400 p-0.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-orange-500 via-violet-500 to-cyan-400 p-0.5">
               <div className="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center text-amber-400 text-xs font-black">O</div>
             </div>
-            ORBIT<span className="text-violet-400">BOARD</span>
+            ORBIT<span className="text-orange-500">BOARD</span>
           </Link>
           <Link to="/tools" className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white rounded-lg px-3 py-2">
             <ArrowLeft size={16}/> All tools
