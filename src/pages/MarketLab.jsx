@@ -268,7 +268,7 @@ export default function MarketLab() {
         return;
       }
 
-      const result = await runResearch({
+      const result = await executeResearch({
         query,
         fetcher: async request => {
           const { data, error } = await supabase.functions.invoke('market-research', { body: { query: request.issuer === 'Infosys Limited' ? 'INFY' : query } });
