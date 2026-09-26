@@ -8,6 +8,16 @@ export const newsSource = createSourceDescriptor({
   capabilities: [SOURCE_CAPABILITIES.NEWS]
 });
 
+export function createNewsSource({ id, provider, trust = SOURCE_TRUST.SECONDARY, baseUrl = null }) {
+  return createSourceDescriptor({
+    id,
+    provider,
+    trust,
+    capabilities: [SOURCE_CAPABILITIES.NEWS],
+    baseUrl
+  });
+}
+
 /**
  * Expected normalized input:
  * [{
