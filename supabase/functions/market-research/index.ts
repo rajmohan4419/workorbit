@@ -68,26 +68,7 @@ function normalizeIndexName(value: unknown) {
   return String(value ?? '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '')
 }
 
-function parseLiveIndexFeed(payload: unknown, index: { name: string; url: string; type: string }, retrievedAt: string) {
-  const rows = Array.isArray((payload as { data?: unknown[] })?.data)
-    ? (payload as { data: unknown[] }).data
-    : Array.isArray(payload) ? payload : []
-
-  const wanted = normalizeIndexName(index.name)
-  const row = rows.find(item => {
-    const record = item as Record<string, unknown>
-    return normalizeIndexName(record.indexName ?? record.indexSymbol ?? record.index) === wanted
-  }) as Record<string, unknown> | undefined
-
-  if (!row) return []
-
-  const source = {
-    id: 'nse-indices-live-feed',
-    provider: 'NSE Indices live index feed',
-    trust: 'PRIMARY',
-    url: LIVE_INDEX_FEED
-  }
-
+function indexQuoteRecords(row: Record<string, unknown>, index: { name: string; url: string; type: string }, retrievedAt: string, source: { id: string; provider: string; trust: string; url: string }) {
   const period = { asOf: retrievedAt }
   const values: Array<{ metric: string; label: string; value: number | null; unit: string }> = [
     { metric: 'index_level', label: index.name + ' level', value: toNumber(row.last ?? row.lastPrice), unit: 'INDEX_POINTS' },
@@ -110,8 +91,47 @@ function parseLiveIndexFeed(payload: unknown, index: { name: string; url: string
       source,
       retrievedAt,
       publishedAt: null,
-      notes: 'Captured from the official NSE Indices live feed; verification remains explicit in Market Lab.'
+      notes: 'Captured from an official NSE index endpoint; verification remains explicit in Market Lab.'
     }))
+}
+
+function parseNseAllIndices(payload: unknown, index: { name: string; url: string; type: string }, retrievedAt: string) {
+  const rows = Array.isArray((payload as { data?: unknown[] })?.data) ? (payload as { data: unknown[] }).data : []
+  const wanted = normalizeIndexName(index.name)
+  const row = rows.find(item => {
+    const record = item as Record<string, unknown>
+    return normalizeIndexName(record.index) === wanted
+  }) as Record<string, unknown> | undefined
+
+  if (!row) return []
+
+  return indexQuoteRecords(row, index, retrievedAt, {
+    id: 'nse-all-indices',
+    provider: 'NSE India all-indices endpoint',
+    trust: 'PRIMARY',
+    url: 'https://www.nseindia.com/api/allIndices'
+  })
+}
+
+function parseLiveIndexFeed(payload: unknown, index: { name: string; url: string; type: string }, retrievedAt: string) {
+  const rows = Array.isArray((payload as { data?: unknown[] })?.data)
+    ? (payload as { data: unknown[] }).data
+    : Array.isArray(payload) ? payload : []
+
+  const wanted = normalizeIndexName(index.name)
+  const row = rows.find(item => {
+    const record = item as Record<string, unknown>
+    return normalizeIndexName(record.indexName ?? record.indexSymbol ?? record.index) === wanted
+  }) as Record<string, unknown> | undefined
+
+  if (!row) return []
+
+  return indexQuoteRecords(row, index, retrievedAt, {
+    id: 'nse-indices-live-feed',
+    provider: 'NSE Indices live index feed',
+    trust: 'PRIMARY',
+    url: LIVE_INDEX_FEED
+  })
 }
 
 Deno.serve(async (request) => {
@@ -153,17 +173,33 @@ Deno.serve(async (request) => {
     }
 
     const retrievedAt = new Date().toISOString()
-    const response = await fetch(LIVE_INDEX_FEED, {
+    const nseResponse = await fetch('https://www.nseindia.com/api/allIndices', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; OrbitBoard Market Lab)',
-        'Referer': 'https://www.niftyindices.com/'
+        'Accept': 'application/json,text/plain,*/*',
+        'Referer': 'https://www.nseindia.com/'
       }
     })
-    if (!response.ok) throw new Error('NSE Indices live feed returned HTTP ' + response.status)
 
-    const payload = await response.json()
-    const records = parseLiveIndexFeed(payload, index, retrievedAt)
-    if (!records.length) throw new Error(index.name + ' was not found in the official NSE Indices live feed')
+    let records: Array<Record<string, unknown>> = []
+    if (nseResponse.ok) {
+      const payload = await nseResponse.json()
+      records = parseNseAllIndices(payload, index, retrievedAt)
+    }
+
+    if (!records.length) {
+      const feedResponse = await fetch(LIVE_INDEX_FEED, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; OrbitBoard Market Lab)',
+          'Referer': 'https://www.niftyindices.com/'
+        }
+      })
+      if (!feedResponse.ok) throw new Error('NSE index sources returned HTTP ' + nseResponse.status + ' and live feed HTTP ' + feedResponse.status)
+      const payload = await feedResponse.json()
+      records = parseLiveIndexFeed(payload, index, retrievedAt)
+    }
+
+    if (!records.length) throw new Error(index.name + ' was not found in the official NSE index sources')
 
     return new Response(JSON.stringify({
       entity: { issuer: index.name, symbol: query, exchange: 'NSE', entityType: 'INDEX', indexType: index.type },
