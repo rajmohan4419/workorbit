@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
 import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS, validateEvidenceSet } from '../market/evidence';
 import { demoAdapter, normalizeSourcePayload } from '../market/sources';
+import { reconcileEvidenceSet, RECONCILIATION_STATUS } from '../market/reconciliation';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
@@ -70,6 +71,44 @@ const DEMO_EVIDENCE = [
 
 const DEMO_EVIDENCE_VALIDATION = validateEvidenceSet(DEMO_EVIDENCE);
 const DEMO_SOURCE_VALIDATION = validateEvidenceSet(DEMO_SOURCE_EVIDENCE.records);
+
+const RECONCILIATION_DEMO = reconcileEvidenceSet([
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue', label: 'Revenue' },
+    value: 12.4,
+    unit: 'INR Cr',
+    period: { end: '2026-01-31' },
+    source: { id: 'source-a', provider: 'Source A', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue', label: 'Revenue' },
+    value: 12.1,
+    unit: 'INR Cr',
+    period: { end: '2026-01-31' },
+    source: { id: 'source-b', provider: 'Source B', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue', label: 'Revenue' },
+    value: 12.4,
+    unit: 'INR Cr',
+    period: { end: '2026-01-31' },
+    source: { id: 'source-c', provider: 'Source C', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  })
+]);
+
+const DEMO_RECONCILIATION = RECONCILIATION_DEMO.results[0];
 
 function runExperiment(data, volumeThreshold, oiThreshold, forwardDays) {
   const matches = [];
@@ -212,6 +251,23 @@ export default function MarketLab() {
                 {evidenceValidation.valid ? 'Schema validation passed.' : 'Schema validation failed.'}
               </p>
               <p className="mt-1 text-slate-500">Source adapter normalized {sourceValidation.summary.total} atomic records. Invalid or missing observations are preserved for validation instead of being silently discarded.</p>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-amber-400">Reconciliation gate</p>
+            <h2 className="mt-1 text-xl font-black">Conflicts stay visible</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Keys checked" value={RECONCILIATION_DEMO.summary.totalKeys} />
+              <Metric icon={TrendingUp} label="Agreed" value={RECONCILIATION_DEMO.summary.agreed} />
+              <Metric icon={BarChart3} label="Conflicted" value={RECONCILIATION_DEMO.summary.conflicted} />
+            </div>
+            <div className="mt-5 rounded-xl border border-amber-900/60 bg-amber-950/20 p-3 text-xs leading-5">
+              <p className="font-bold text-amber-300">
+                {DEMO_RECONCILIATION.status === RECONCILIATION_STATUS.CONFLICTED ? 'CONFLICTED — signal use blocked' : DEMO_RECONCILIATION.status}
+              </p>
+              <p className="mt-1 text-amber-200/70">{DEMO_RECONCILIATION.rationale}</p>
+              <p className="mt-1 text-slate-500">Demo revenue observations: 12.4 Cr, 12.1 Cr, 12.4 Cr. Market Lab does not silently select the majority or a preferred provider.</p>
             </div>
           </section>
 
