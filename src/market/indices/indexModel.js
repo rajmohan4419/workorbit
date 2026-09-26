@@ -15,7 +15,18 @@ const INDEX_DEFINITIONS = [
 
 export const MARKET_INDEXES = Object.freeze(INDEX_DEFINITIONS.map(index => Object.freeze({ ...index })));
 
+function normalizeIndexQuery(query) {
+  return String(query ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/\\bINDEX\\b/g, '')
+    .replace(/[^A-Z0-9]+/g, '');
+}
+
 export function resolveIndex(query) {
-  const normalized = String(query ?? '').trim().toUpperCase();
-  return MARKET_INDEXES.find(index => index.aliases.some(alias => alias.toUpperCase() === normalized)) ?? null;
+  const normalized = normalizeIndexQuery(query);
+  return MARKET_INDEXES.find(index => {
+    const candidates = [index.symbol, index.name, ...index.aliases];
+    return candidates.some(candidate => normalizeIndexQuery(candidate) === normalized);
+  }) ?? null;
 }
