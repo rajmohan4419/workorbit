@@ -52,11 +52,9 @@ export function ingestNewsSources(
     }
   }
 
-  const deduplicatedRecords = Array.from(
-    new Map(records.map(record => [sourceRecordKey(record), record])).values()
-  );
-
-  const enrichedRecords = enrichNewsEvidence(deduplicatedRecords, { now, rules });
+  // Preserve every observation. Duplicate detection is an intelligence result,
+  // not a destructive ingestion step.
+  const enrichedRecords = enrichNewsEvidence(records, { now, rules });
 
   return {
     records: enrichedRecords,
