@@ -9,9 +9,9 @@ function signalTypeForMetric(metricKey = '') {
 }
 
 function buildGenericSignal(item) {
-  const blocked = item.status === RECONCILIATION_STATUS.CONFLICTED
-    || item.status === RECONCILIATION_STATUS.INVALID
-    || item.status === RECONCILIATION_STATUS.INSUFFICIENT_DATA;
+  const statuses = item.observations?.map(observation => observation.status) ?? [];
+  const verified = statuses.length > 0 && statuses.every(status => status === 'VERIFIED');
+  const blocked = item.status !== RECONCILIATION_STATUS.AGREED || !verified;
 
   const evidenceIds = item.observations?.map(observation => observation.evidenceId) ?? [];
 
@@ -30,7 +30,9 @@ function buildGenericSignal(item) {
     evidenceIds,
     sourceCount: item.sourceCount ?? 0,
     rationale: blocked
-      ? 'Signal generation is blocked because the underlying evidence is not reconciled.'
+      ? item.status !== RECONCILIATION_STATUS.AGREED
+        ? 'Signal generation is blocked because the underlying evidence is not reconciled.'
+        : 'Evidence agrees, but signal generation is blocked until all contributing evidence is verified.'
       : item.rationale
   });
 }
