@@ -3,6 +3,7 @@ import { ArrowLeft, FlaskConical, Play, RotateCcw, TrendingUp, Activity, BarChar
 import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
 import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS, validateEvidenceSet } from '../market/evidence';
+import { demoAdapter, normalizeSourcePayload } from '../market/sources';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
@@ -28,6 +29,8 @@ const DEMO_DAYS = [
 ].map(([date, open, high, low, close, volume, oi]) => ({ date, open, high, low, close, volume, oi }));
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value);
+
+const DEMO_SOURCE_EVIDENCE = normalizeSourcePayload(demoAdapter, DEMO_DAYS, { symbol: 'DEMO', exchange: 'DEMO', retrievedAt: '2026-01-31T00:00:00Z' });
 
 const DEMO_EVIDENCE = [
   createEvidenceRecord({
@@ -66,6 +69,7 @@ const DEMO_EVIDENCE = [
 ];
 
 const DEMO_EVIDENCE_VALIDATION = validateEvidenceSet(DEMO_EVIDENCE);
+const DEMO_SOURCE_VALIDATION = validateEvidenceSet(DEMO_SOURCE_EVIDENCE.records);
 
 function runExperiment(data, volumeThreshold, oiThreshold, forwardDays) {
   const matches = [];
@@ -96,6 +100,7 @@ export default function MarketLab() {
   const [result, setResult] = useState(() => runExperiment(DEMO_DAYS, 1.25, 2, 2));
   const [replayIndex, setReplayIndex] = useState(0);
   const evidenceValidation = DEMO_EVIDENCE_VALIDATION;
+  const sourceValidation = DEMO_SOURCE_VALIDATION;
 
   const replay = DEMO_DAYS[replayIndex];
   const replayProgress = ((replayIndex + 1) / DEMO_DAYS.length) * 100;
@@ -206,7 +211,7 @@ export default function MarketLab() {
               <p className={evidenceValidation.valid ? 'text-emerald-300' : 'text-rose-300'}>
                 {evidenceValidation.valid ? 'Schema validation passed.' : 'Schema validation failed.'}
               </p>
-              <p className="mt-1 text-slate-500">Every record carries entity, metric, value, period, source and retrieval metadata. Synthetic records remain explicitly unverified.</p>
+              <p className="mt-1 text-slate-500">Source adapter normalized {sourceValidation.summary.total} atomic records. Invalid or missing observations are preserved for validation instead of being silently discarded.</p>
             </div>
           </section>
 
