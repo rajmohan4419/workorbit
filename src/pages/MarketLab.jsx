@@ -235,6 +235,8 @@ export default function MarketLab() {
   const [volumeThreshold, setVolumeThreshold] = useState(1.25);
   const [oiThreshold, setOiThreshold] = useState(2);
   const [forwardDays, setForwardDays] = useState(2);
+  const [researchQuery, setResearchQuery] = useState('DEMO');
+  const [researchMode, setResearchMode] = useState('simple');
   const [result, setResult] = useState(() => runExperiment(DEMO_DAYS, 1.25, 2, 2));
   const [replayIndex, setReplayIndex] = useState(0);
   const evidenceValidation = DEMO_EVIDENCE_VALIDATION;
@@ -280,6 +282,55 @@ export default function MarketLab() {
             <p className="mt-4 max-w-3xl text-base sm:text-lg leading-7 text-slate-400">
               OrbitBoard Market Lab is designed around a simple workflow: form a market hypothesis, test it against historical data, inspect the evidence, then replay the market context.
             </p>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-3xl border border-violet-800/60 bg-slate-900/80 p-5 sm:p-7 shadow-2xl">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-violet-400">Simple research</p>
+              <h2 className="mt-1 text-2xl sm:text-3xl font-black">Ask about a company. Get the evidence in plain English.</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">Accessible mode changes how Market Lab explains evidence — not the evidence standards underneath it.</p>
+            </div>
+            <div className="inline-flex rounded-xl border border-slate-700 bg-slate-950 p-1" role="group" aria-label="Research display mode">
+              <button type="button" onClick={() => setResearchMode('simple')} aria-pressed={researchMode === 'simple'} className={`rounded-lg px-3 py-2 text-xs font-bold ${researchMode === 'simple' ? 'bg-violet-500 text-white' : 'text-slate-500 hover:text-white'}`}>Simple</button>
+              <button type="button" onClick={() => setResearchMode('deep')} aria-pressed={researchMode === 'deep'} className={`rounded-lg px-3 py-2 text-xs font-bold ${researchMode === 'deep' ? 'bg-violet-500 text-white' : 'text-slate-500 hover:text-white'}`}>Deep</button>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col sm:flex-row gap-3">
+            <label className="sr-only" htmlFor="market-research-company">Company or symbol</label>
+            <input
+              id="market-research-company"
+              value={researchQuery}
+              onChange={e => setResearchQuery(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') setResearchQuery(e.currentTarget.value.trim() || 'DEMO'); }}
+              placeholder="Try Infosys, INFY, TCS..."
+              className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+            />
+            <button type="button" onClick={() => setResearchQuery(value => value.trim() || 'DEMO')} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white hover:bg-violet-400">Research</button>
+          </div>
+
+          <div className="mt-5 grid md:grid-cols-3 gap-3">
+            <AccessibleCard label="What changed?" value="Demo evidence shows price activity, financial observations and news signals." tone="violet" />
+            <AccessibleCard label="What doesn't line up?" value={DEMO_CONTRADICTIONS.summary.total ? `${DEMO_CONTRADICTIONS.summary.total} contradiction(s) need investigation.` : 'No contradiction detected in the available evidence.'} tone="rose" />
+            <AccessibleCard label="How reliable is this?" value={DEMO_DOSSIER.status === DOSSIER_STATUS.READY ? 'Evidence coverage is complete and verified.' : 'Coverage is partial — missing or unverified evidence remains visible.'} tone="amber" />
+          </div>
+
+          <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Research question</p>
+            <p className="mt-2 text-sm font-semibold text-white">{researchQuery || 'DEMO'}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              {researchMode === 'simple'
+                ? 'Simple mode explains the evidence without analyst jargon. It does not turn incomplete evidence into a conclusion.'
+                : 'Deep mode exposes the underlying evidence, reconciliation, contradiction and provenance layers.'}
+            </p>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
+            {['What changed?', 'What are the risks?', 'Why is this contradictory?', 'Show the sources'].map(question => (
+              <button key={question} type="button" onClick={() => setResearchQuery(question)} className="rounded-full border border-slate-700 px-3 py-1.5 font-semibold text-slate-400 hover:border-violet-500/60 hover:text-white">{question}</button>
+            ))}
           </div>
         </section>
 
@@ -525,6 +576,20 @@ function Metric({ icon: Icon, label, value }) {
 
 function ReplayMetric({ label, value }) {
   return <div className="rounded-xl border border-slate-800 bg-slate-900 p-3"><p className="text-[10px] uppercase tracking-wider text-slate-600">{label}</p><p className="mt-1 font-bold text-white">{value}</p></div>;
+}
+
+function AccessibleCard({ label, value, tone }) {
+  const tones = {
+    violet: 'border-violet-900/60 bg-violet-950/20 text-violet-300',
+    rose: 'border-rose-900/60 bg-rose-950/20 text-rose-300',
+    amber: 'border-amber-900/60 bg-amber-950/20 text-amber-300'
+  };
+  return (
+    <div className={`rounded-xl border p-4 ${tones[tone] ?? tones.violet}`}>
+      <p className="text-[10px] font-bold uppercase tracking-wider">{label}</p>
+      <p className="mt-2 text-sm leading-5 text-slate-200">{value}</p>
+    </div>
+  );
 }
 
 function Feature({ title, text }) {
