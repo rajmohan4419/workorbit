@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, FlaskConical, Play, RotateCcw, TrendingUp, Activity, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
+import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS, validateEvidenceSet } from '../market/evidence';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
@@ -27,6 +28,44 @@ const DEMO_DAYS = [
 ].map(([date, open, high, low, close, volume, oi]) => ({ date, open, high, low, close, volume, oi }));
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value);
+
+const DEMO_EVIDENCE = [
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'close', label: 'Close price' },
+    value: 23880,
+    unit: 'INR',
+    period: { asOf: '2026-01-05' },
+    source: { provider: 'OrbitBoard synthetic dataset', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-01-05T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'volume_index', label: 'Volume index' },
+    value: 1.12,
+    unit: 'x',
+    period: { asOf: '2026-01-05' },
+    source: { provider: 'OrbitBoard synthetic dataset', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-01-05T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'oi', label: 'Open interest index' },
+    value: 1.4,
+    unit: 'x',
+    period: { asOf: '2026-01-05' },
+    source: { provider: 'OrbitBoard synthetic dataset', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-01-05T00:00:00Z'
+  })
+];
+
+const DEMO_EVIDENCE_VALIDATION = validateEvidenceSet(DEMO_EVIDENCE);
 
 function runExperiment(data, volumeThreshold, oiThreshold, forwardDays) {
   const matches = [];
@@ -56,6 +95,7 @@ export default function MarketLab() {
   const [forwardDays, setForwardDays] = useState(2);
   const [result, setResult] = useState(() => runExperiment(DEMO_DAYS, 1.25, 2, 2));
   const [replayIndex, setReplayIndex] = useState(0);
+  const evidenceValidation = DEMO_EVIDENCE_VALIDATION;
 
   const replay = DEMO_DAYS[replayIndex];
   const replayProgress = ((replayIndex + 1) / DEMO_DAYS.length) * 100;
@@ -152,6 +192,22 @@ export default function MarketLab() {
             <button type="button" onClick={run} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400">
               <Play size={16} /> Run experiment
             </button>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-400">Evidence integrity</p>
+            <h2 className="mt-1 text-xl font-black">Evidence ledger validation</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Records" value={evidenceValidation.summary.total} />
+              <Metric icon={TrendingUp} label="Valid" value={evidenceValidation.summary.valid} />
+              <Metric icon={BarChart3} label="Conflicts" value={evidenceValidation.summary.conflicts} />
+            </div>
+            <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs leading-5">
+              <p className={evidenceValidation.valid ? 'text-emerald-300' : 'text-rose-300'}>
+                {evidenceValidation.valid ? 'Schema validation passed.' : 'Schema validation failed.'}
+              </p>
+              <p className="mt-1 text-slate-500">Every record carries entity, metric, value, period, source and retrieval metadata. Synthetic records remain explicitly unverified.</p>
+            </div>
           </section>
 
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
