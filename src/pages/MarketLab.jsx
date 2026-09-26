@@ -272,7 +272,7 @@ export default function MarketLab() {
       const result = await executeResearch({
         query,
         fetcher: async request => {
-          const { data, error } = await supabase.functions.invoke('market-research', { body: { query: request.issuer === 'Infosys Limited' ? 'INFY' : query } });
+          const { data, error } = await supabase.functions.invoke('market-research', { body: { query: request.index?.symbol ?? (request.issuer === 'Infosys Limited' ? 'INFY' : query) } });
           if (error) throw new Error(error.message || 'Research function failed.');
           if (!data?.records) throw new Error(data?.error || 'Research function returned no filing records.');
           return data.records;
@@ -352,9 +352,31 @@ export default function MarketLab() {
           </div>
 
           <div className="mt-5 grid md:grid-cols-3 gap-3">
-            <AccessibleCard label="What changed?" value="Demo evidence shows price activity, financial observations and news signals." tone="violet" />
-            <AccessibleCard label="What doesn't line up?" value={DEMO_CONTRADICTIONS.summary.total ? `${DEMO_CONTRADICTIONS.summary.total} contradiction(s) need investigation.` : 'No contradiction detected in the available evidence.'} tone="rose" />
-            <AccessibleCard label="How reliable is this?" value={DEMO_DOSSIER.status === DOSSIER_STATUS.READY ? 'Evidence coverage is complete and verified.' : 'Coverage is partial — missing or unverified evidence remains visible.'} tone="amber" />
+            {researchResult && researchResult.entity !== 'DEMO' ? (
+              <>
+                <AccessibleCard
+                  label="What changed?"
+                  value={researchResult.dossier ? `${researchResult.dossier.dataQuality.evidenceCount} evidence record(s) collected from the primary source. ${researchResult.dossier.dataQuality.verifiedEvidenceCount} currently verified.` : 'The research run did not produce a dossier.'}
+                  tone="violet"
+                />
+                <AccessibleCard
+                  label="What doesn't line up?"
+                  value={researchResult.dossier?.dataQuality.contradictionCount ? `${researchResult.dossier.dataQuality.contradictionCount} contradiction(s) need investigation.` : 'No contradiction was detected in the evidence currently collected.'}
+                  tone="rose"
+                />
+                <AccessibleCard
+                  label="How reliable is this?"
+                  value={researchResult.status === 'READY' ? 'Evidence coverage passed the current dossier gate.' : 'Coverage is partial — missing or unverified evidence remains visible.'}
+                  tone="amber"
+                />
+              </>
+            ) : (
+              <>
+                <AccessibleCard label="What changed?" value="Demo evidence shows price activity, financial observations and news signals." tone="violet" />
+                <AccessibleCard label="What doesn't line up?" value={DEMO_CONTRADICTIONS.summary.total ? `${DEMO_CONTRADICTIONS.summary.total} contradiction(s) need investigation.` : 'No contradiction detected in the available evidence.'} tone="rose" />
+                <AccessibleCard label="How reliable is this?" value={DEMO_DOSSIER.status === DOSSIER_STATUS.READY ? 'Evidence coverage is complete and verified.' : 'Coverage is partial — missing or unverified evidence remains visible.'} tone="amber" />
+              </>
+            )}
           </div>
 
           <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950 p-4">
