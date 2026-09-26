@@ -309,10 +309,10 @@ function createTextPdf(lines) {
   const pageIds=[];
   const escape=s=>String(s??'').replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[\r\n]+/g,' ');
   pageChunks.forEach(page=>{
-    let stream='BT\\n/F1 9 Tf\\n40 800 Td\\n';
-    page.forEach((line,idx)=>{if(idx) stream+='0 -15 Td\\n';stream+='('+escape(line)+') Tj\\n';});
-    stream+='ET\\n';
-    const contentId=addObj('<< /Length '+encoder.encode(stream).length+' >>\\nstream\\n'+stream+'endstream');
+    let stream='BT\n/F1 9 Tf\n40 800 Td\n';
+    page.forEach((line,idx)=>{if(idx) stream+='0 -15 Td\n';stream+='('+escape(line)+') Tj\n';});
+    stream+='ET\n';
+    const contentId=addObj('<< /Length '+encoder.encode(stream).length+' >>\nstream\n'+stream+'endstream');
     const pageId=addObj('<< /Type /Page /Parent '+pagesId+' 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 '+fontId+' 0 R >> >> /Contents '+contentId+' 0 R >>');
     pageIds.push(pageId);
   });
@@ -322,12 +322,12 @@ function createTextPdf(lines) {
   const header=new Uint8Array([37,80,68,70,45,49,46,52,10,37,255,255,255,255,10]);
   const parts=[header], offsets=[0]; let pos=header.length;
   for(let i=1;i<objects.length;i++){
-    const b=encoder.encode(i+' 0 obj\\n'), body=encoder.encode(objects[i]), e=encoder.encode('\\nendobj\\n');
+    const b=encoder.encode(i+' 0 obj\n'), body=encoder.encode(objects[i]), e=encoder.encode('\nendobj\n');
     offsets[i]=pos; parts.push(b,body,e); pos+=b.length+body.length+e.length;
   }
-  const xrefStart=pos; let xref='xref\\n0 '+objects.length+'\\n0000000000 65535 f \\n';
-  for(let i=1;i<objects.length;i++) xref+=String(offsets[i]).padStart(10,'0')+' 00000 n \\n';
-  xref+='trailer << /Size '+objects.length+' /Root 1 0 R >>\\nstartxref\\n'+xrefStart+'\\n%%EOF';
+  const xrefStart=pos; let xref='xref\n0 '+objects.length+'\n0000000000 65535 f \n';
+  for(let i=1;i<objects.length;i++) xref+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+  xref+='trailer << /Size '+objects.length+' /Root 1 0 R >>\nstartxref\n'+xrefStart+'\n%%EOF';
   parts.push(encoder.encode(xref));
   return new Blob(parts,{type:'application/pdf'});
 }
