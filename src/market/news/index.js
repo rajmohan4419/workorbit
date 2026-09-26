@@ -10,3 +10,4 @@ export {
   classifyNewsDuplicates,
   summarizeNewsIntelligence
 } from './newsIntelligence';export { ingestNewsSources } from './newsPipeline';
+export { verifyNewsEvidence, verificationSummary } from '../verification';
