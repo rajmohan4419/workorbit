@@ -1,6 +1,7 @@
 export {
   CONNECTOR_STATUS,
   createConnectorDescriptor,
-  assertConnector
+  assertConnector,
+  createConnectorHealth
 } from './connectorContract';
 export { runConnector } from './connectorRunner';
