@@ -39,7 +39,7 @@ export const filingAdapter = {
         type,
         status: item?.status ?? FILING_STATUS.UNKNOWN,
         title: item?.title ?? 'Untitled filing',
-        publishedAt: item?.publishedAt ?? context.retrievedAt ?? new Date().toISOString(),
+        publishedAt: item?.publishedAt ?? null,
         effectiveAt: item?.effectiveAt ?? null,
         url: item?.url ?? filingSource.baseUrl ?? 'about:blank',
         source: {
