@@ -59,7 +59,9 @@ export const newsAdapter = {
         source: {
           id: newsSource.id,
           provider: item?.provider ?? newsSource.provider,
-          url: item?.url ?? newsSource.baseUrl
+          url: item?.url ?? newsSource.baseUrl,
+          sourceId: newsSource.id,
+          trust: newsSource.trust
         },
         kind: EVIDENCE_KINDS.FACT,
         status: EVIDENCE_STATUS.UNVERIFIED,
