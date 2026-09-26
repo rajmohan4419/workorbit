@@ -5,3 +5,4 @@ export {
 } from './dossierModel';
 
 export { buildResearchDossier } from './builder';
+export { runResearchDossier, createDossierInput } from './runner';
