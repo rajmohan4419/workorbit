@@ -35,3 +35,21 @@ export function assertConnector(connector) {
   }
   return connector;
 }
+
+export function createConnectorHealth({
+  status = CONNECTOR_STATUS.READY,
+  checkedAt = new Date().toISOString(),
+  latencyMs = null,
+  records = 0,
+  warnings = 0,
+  error = null
+} = {}) {
+  return Object.freeze({
+    status,
+    checkedAt,
+    latencyMs,
+    records,
+    warnings,
+    error
+  });
+}
