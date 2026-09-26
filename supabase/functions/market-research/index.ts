@@ -10,6 +10,8 @@ const INDEX_SOURCES: Record<string, { name: string; url: string; type: string }>
   NIFTYIT: { name: 'Nifty IT', url: 'https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-it', type: 'SECTORAL' }
 }
 
+const LIVE_INDEX_FEED = 'https://iislliveblob.niftyindices.com/jsonfiles/LiveIndicesWatch.json'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -56,30 +58,60 @@ function parseInfosysFilings(html: string) {
   return Array.from(unique.values()).slice(0, 20)
 }
 
-function extractMeta(html: string, name: string) {
-  const pattern = new RegExp('<meta[^>]+(?:name|property)=["\\\']' + name + '["\\\'][^>]+content=["\\\']([^"\\\']+)["\\\']', 'i')
-  const match = html.match(pattern)
-  return match?.[1] ? clean(match[1]) : null
+function toNumber(value: unknown) {
+  if (value === null || value === undefined || value === '') return null
+  const parsed = Number(String(value).replace(/,/g, ''))
+  return Number.isFinite(parsed) ? parsed : null
 }
 
-function parseIndexPage(html: string, index: { name: string; url: string; type: string }, retrievedAt: string) {
-  const title = extractMeta(html, 'description') ?? index.name
-  return [{
-    metric: 'index_definition',
-    label: index.name + ' official source description',
-    value: title,
-    unit: null,
-    period: { asOf: retrievedAt },
-    source: {
-      id: 'nse-indices-' + index.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      provider: 'NSE Indices official index page',
-      trust: 'PRIMARY',
-      url: index.url
-    },
-    retrievedAt,
-    publishedAt: null,
-    notes: title === index.name ? 'The official page was reached, but no description metadata was parsed.' : null
-  }]
+function normalizeIndexName(value: unknown) {
+  return String(value ?? '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '')
+}
+
+function parseLiveIndexFeed(payload: unknown, index: { name: string; url: string; type: string }, retrievedAt: string) {
+  const rows = Array.isArray((payload as { data?: unknown[] })?.data)
+    ? (payload as { data: unknown[] }).data
+    : Array.isArray(payload) ? payload : []
+
+  const wanted = normalizeIndexName(index.name)
+  const row = rows.find(item => {
+    const record = item as Record<string, unknown>
+    return normalizeIndexName(record.indexName ?? record.indexSymbol ?? record.index) === wanted
+  }) as Record<string, unknown> | undefined
+
+  if (!row) return []
+
+  const source = {
+    id: 'nse-indices-live-feed',
+    provider: 'NSE Indices live index feed',
+    trust: 'PRIMARY',
+    url: LIVE_INDEX_FEED
+  }
+
+  const period = { asOf: retrievedAt }
+  const values: Array<{ metric: string; label: string; value: number | null; unit: string }> = [
+    { metric: 'index_level', label: index.name + ' level', value: toNumber(row.last ?? row.lastPrice), unit: 'INDEX_POINTS' },
+    { metric: 'daily_change', label: index.name + ' daily change', value: toNumber(row.variation ?? row.change), unit: 'INDEX_POINTS' },
+    { metric: 'daily_return', label: index.name + ' daily change %', value: toNumber(row.percentChange ?? row.pChange), unit: '%' },
+    { metric: 'open', label: index.name + ' open', value: toNumber(row.open), unit: 'INDEX_POINTS' },
+    { metric: 'high', label: index.name + ' high', value: toNumber(row.high), unit: 'INDEX_POINTS' },
+    { metric: 'low', label: index.name + ' low', value: toNumber(row.low), unit: 'INDEX_POINTS' },
+    { metric: 'previous_close', label: index.name + ' previous close', value: toNumber(row.previousClose), unit: 'INDEX_POINTS' }
+  ]
+
+  return values
+    .filter(item => item.value !== null)
+    .map(item => ({
+      metric: item.metric,
+      label: item.label,
+      value: item.value,
+      unit: item.unit,
+      period,
+      source,
+      retrievedAt,
+      publishedAt: null,
+      notes: 'Captured from the official NSE Indices live feed; verification remains explicit in Market Lab.'
+    }))
 }
 
 Deno.serve(async (request) => {
@@ -121,21 +153,25 @@ Deno.serve(async (request) => {
     }
 
     const retrievedAt = new Date().toISOString()
-    const response = await fetch(index.url, {
-      headers: { 'User-Agent': 'OrbitBoard Market Lab research connector' }
+    const response = await fetch(LIVE_INDEX_FEED, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; OrbitBoard Market Lab)',
+        'Referer': 'https://www.niftyindices.com/'
+      }
     })
-    if (!response.ok) throw new Error(index.name + ' source returned HTTP ' + response.status)
+    if (!response.ok) throw new Error('NSE Indices live feed returned HTTP ' + response.status)
 
-    const html = await response.text()
-    const records = parseIndexPage(html, index, retrievedAt)
+    const payload = await response.json()
+    const records = parseLiveIndexFeed(payload, index, retrievedAt)
+    if (!records.length) throw new Error(index.name + ' was not found in the official NSE Indices live feed')
 
     return new Response(JSON.stringify({
       entity: { issuer: index.name, symbol: query, exchange: 'NSE', entityType: 'INDEX', indexType: index.type },
       source: {
-        id: 'nse-indices-primary',
-        provider: 'NSE Indices official index page',
+        id: 'nse-indices-live-feed',
+        provider: 'NSE Indices live index feed',
         trust: 'PRIMARY',
-        url: index.url
+        url: LIVE_INDEX_FEED
       },
       records,
       retrievedAt,
