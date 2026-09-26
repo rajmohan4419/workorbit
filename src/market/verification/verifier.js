@@ -4,16 +4,6 @@ function sourceTrustOf(record) {
   return record.source?.trust ?? 'DISCOVERY';
 }
 
-function eventIdentity(record) {
-  return [
-    record.entity?.exchange ?? '',
-    record.entity?.symbol ?? '',
-    record.metric?.key ?? '',
-    record.value?.headline ?? '',
-    record.publishedAt ?? record.value?.publishedAt ?? ''
-  ].join('|').toLowerCase();
-}
-
 function isSameEvent(left, right) {
   if (left.entity?.symbol !== right.entity?.symbol) return false;
   if (left.entity?.exchange !== right.entity?.exchange) return false;
