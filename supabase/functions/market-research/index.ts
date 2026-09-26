@@ -65,7 +65,7 @@ function toNumber(value: unknown) {
 }
 
 function normalizeIndexName(value: unknown) {
-  return String(value ?? '').trim().toUpperCase().replace(/\\s+/g, ' ')
+  return String(value ?? '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '')
 }
 
 function parseLiveIndexFeed(payload: unknown, index: { name: string; url: string; type: string }, retrievedAt: string) {
