@@ -18,6 +18,7 @@ function isUsable(record) {
 }
 
 function reconcileGroup(key, records, rules) {
+  const representative = records[0] ?? null;
   const observations = records.map(record => ({
     evidenceId: record.id,
     value: observationValue(record),
@@ -36,6 +37,8 @@ function reconcileGroup(key, records, rules) {
   if (!usable.length) {
     return {
       key,
+      entity: representative?.entity ?? null,
+      metric: representative?.metric ?? null,
       status: invalid.length ? RECONCILIATION_STATUS.INVALID : RECONCILIATION_STATUS.INSUFFICIENT_DATA,
       selectedValue: null,
       observations,
@@ -85,6 +88,8 @@ function reconcileGroup(key, records, rules) {
 
     return {
       key,
+      entity: representative?.entity ?? null,
+      metric: representative?.metric ?? null,
       status: valuesAgree(values, rules) ? RECONCILIATION_STATUS.AGREED : RECONCILIATION_STATUS.CONFLICTED,
       selectedValue: rules.allowSelectedValueOnAgreement ? values[0] : null,
       observations,
@@ -99,6 +104,8 @@ function reconcileGroup(key, records, rules) {
 
   return {
     key,
+    entity: representative?.entity ?? null,
+    metric: representative?.metric ?? null,
     status: RECONCILIATION_STATUS.CONFLICTED,
     selectedValue: null,
     observations,
