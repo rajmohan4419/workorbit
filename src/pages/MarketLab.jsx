@@ -1,7 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, FlaskConical, Play, RotateCcw, TrendingUp, Activity, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
+import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS, validateEvidenceSet } from '../market/evidence';
+import { demoAdapter, normalizeSourcePayload } from '../market/sources';
+import { reconcileEvidenceSet, RECONCILIATION_STATUS } from '../market/reconciliation';
+import { detectContradictions } from '../market/contradictions';
+import { buildResearchDossier, DOSSIER_STATUS } from '../market/dossier';
+import { newsAdapter, enrichNewsEvidence, summarizeNewsIntelligence } from '../market/news';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
@@ -27,6 +33,181 @@ const DEMO_DAYS = [
 ].map(([date, open, high, low, close, volume, oi]) => ({ date, open, high, low, close, volume, oi }));
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value);
+
+const DEMO_SOURCE_EVIDENCE = normalizeSourcePayload(demoAdapter, DEMO_DAYS, { symbol: 'DEMO', exchange: 'DEMO', retrievedAt: '2026-01-31T00:00:00Z' });
+
+const DEMO_EVIDENCE = [
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'close', label: 'Close price' },
+    value: 23880,
+    unit: 'INR',
+    period: { asOf: '2026-01-05' },
+    source: { provider: 'OrbitBoard synthetic dataset', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-01-05T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'volume_index', label: 'Volume index' },
+    value: 1.12,
+    unit: 'x',
+    period: { asOf: '2026-01-05' },
+    source: { provider: 'OrbitBoard synthetic dataset', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-01-05T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'oi', label: 'Open interest index' },
+    value: 1.4,
+    unit: 'x',
+    period: { asOf: '2026-01-05' },
+    source: { provider: 'OrbitBoard synthetic dataset', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-01-05T00:00:00Z'
+  })
+];
+
+const DEMO_EVIDENCE_VALIDATION = validateEvidenceSet(DEMO_EVIDENCE);
+const DEMO_SOURCE_VALIDATION = validateEvidenceSet(DEMO_SOURCE_EVIDENCE.records);
+
+const RECONCILIATION_DEMO = reconcileEvidenceSet([
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue', label: 'Revenue' },
+    value: 12.4,
+    unit: 'INR Cr',
+    period: { end: '2026-01-31' },
+    source: { id: 'source-a', provider: 'Source A', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue', label: 'Revenue' },
+    value: 12.1,
+    unit: 'INR Cr',
+    period: { end: '2026-01-31' },
+    source: { id: 'source-b', provider: 'Source B', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue', label: 'Revenue' },
+    value: 12.4,
+    unit: 'INR Cr',
+    period: { end: '2026-01-31' },
+    source: { id: 'source-c', provider: 'Source C', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.UNVERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  })
+]);
+
+const DEMO_RECONCILIATION = RECONCILIATION_DEMO.results[0];
+
+const CONTRADICTION_DEMO_EVIDENCE = [
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue_growth', label: 'Revenue growth' },
+    value: 28,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'profit_growth', label: 'Profit growth' },
+    value: 35,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'operating_cash_flow_growth', label: 'Operating cash flow growth' },
+    value: -18,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'debt_growth', label: 'Debt growth' },
+    value: 62,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  })
+];
+
+const DEMO_CONTRADICTIONS = detectContradictions(CONTRADICTION_DEMO_EVIDENCE);
+
+const DEMO_NEWS = normalizeSourcePayload(newsAdapter, [
+  {
+    symbol: 'DEMO',
+    exchange: 'DEMO',
+    headline: 'Demo company reports quarterly revenue growth',
+    publishedAt: '2026-01-31T08:00:00Z',
+    url: 'https://orbitboard.in/market-lab/demo-news-1',
+    provider: 'Demo News Wire',
+    direction: 'POSITIVE',
+    materiality: 'HIGH'
+  },
+  {
+    symbol: 'DEMO',
+    exchange: 'DEMO',
+    headline: 'Demo company reports quarterly revenue growth',
+    publishedAt: '2026-01-31T08:05:00Z',
+    url: 'https://orbitboard.in/market-lab/demo-news-1',
+    provider: 'Demo News Wire',
+    direction: 'POSITIVE',
+    materiality: 'HIGH'
+  },
+  {
+    symbol: 'DEMO',
+    exchange: 'DEMO',
+    headline: 'Demo company announces board meeting',
+    publishedAt: '2026-01-20T08:00:00Z',
+    url: 'https://orbitboard.in/market-lab/demo-news-2',
+    provider: 'Demo News Wire',
+    direction: 'NEUTRAL',
+    materiality: 'MEDIUM'
+  }
+], { symbol: 'DEMO', exchange: 'DEMO', retrievedAt: '2026-02-01T10:00:00Z' });
+
+const DEMO_NEWS_INTELLIGENCE = enrichNewsEvidence(DEMO_NEWS.records, {
+  now: '2026-02-01T10:00:00Z'
+});
+const DEMO_NEWS_SUMMARY = summarizeNewsIntelligence(DEMO_NEWS_INTELLIGENCE);
+
+const DEMO_DOSSIER = buildResearchDossier({
+  entity: { symbol: 'DEMO', exchange: 'DEMO' },
+  asOf: '2026-02-01T00:00:00Z',
+  evidence: [...DEMO_EVIDENCE, ...CONTRADICTION_DEMO_EVIDENCE, ...DEMO_SOURCE_EVIDENCE.records, ...DEMO_NEWS_INTELLIGENCE],
+  reconciliations: RECONCILIATION_DEMO,
+  signals: [],
+  contradictions: DEMO_CONTRADICTIONS
+});
 
 function runExperiment(data, volumeThreshold, oiThreshold, forwardDays) {
   const matches = [];
@@ -56,15 +237,11 @@ export default function MarketLab() {
   const [forwardDays, setForwardDays] = useState(2);
   const [result, setResult] = useState(() => runExperiment(DEMO_DAYS, 1.25, 2, 2));
   const [replayIndex, setReplayIndex] = useState(0);
+  const evidenceValidation = DEMO_EVIDENCE_VALIDATION;
+  const sourceValidation = DEMO_SOURCE_VALIDATION;
 
   const replay = DEMO_DAYS[replayIndex];
   const replayProgress = ((replayIndex + 1) / DEMO_DAYS.length) * 100;
-
-  const summary = useMemo(() => ({
-    first: DEMO_DAYS[0],
-    last: DEMO_DAYS[DEMO_DAYS.length - 1],
-    change: ((DEMO_DAYS.at(-1).close - DEMO_DAYS[0].close) / DEMO_DAYS[0].close) * 100
-  }), []);
 
   const run = () => setResult(runExperiment(DEMO_DAYS, volumeThreshold, oiThreshold, forwardDays));
   const reset = () => {
@@ -155,6 +332,85 @@ export default function MarketLab() {
           </section>
 
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-400">Evidence integrity</p>
+            <h2 className="mt-1 text-xl font-black">Evidence ledger validation</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Records" value={evidenceValidation.summary.total} />
+              <Metric icon={TrendingUp} label="Valid" value={evidenceValidation.summary.valid} />
+              <Metric icon={BarChart3} label="Conflicts" value={evidenceValidation.summary.conflicts} />
+            </div>
+            <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs leading-5">
+              <p className={evidenceValidation.valid ? 'text-emerald-300' : 'text-rose-300'}>
+                {evidenceValidation.valid ? 'Schema validation passed.' : 'Schema validation failed.'}
+              </p>
+              <p className="mt-1 text-slate-500">Source adapter normalized {sourceValidation.summary.total} atomic records. Invalid or missing observations are preserved for validation instead of being silently discarded.</p>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-amber-400">Reconciliation gate</p>
+            <h2 className="mt-1 text-xl font-black">Conflicts stay visible</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Keys checked" value={RECONCILIATION_DEMO.summary.totalKeys} />
+              <Metric icon={TrendingUp} label="Agreed" value={RECONCILIATION_DEMO.summary.agreed} />
+              <Metric icon={BarChart3} label="Conflicted" value={RECONCILIATION_DEMO.summary.conflicted} />
+            </div>
+            <div className="mt-5 rounded-xl border border-amber-900/60 bg-amber-950/20 p-3 text-xs leading-5">
+              <p className="font-bold text-amber-300">
+                {DEMO_RECONCILIATION.status === RECONCILIATION_STATUS.CONFLICTED ? 'CONFLICTED — signal use blocked' : DEMO_RECONCILIATION.status}
+              </p>
+              <p className="mt-1 text-amber-200/70">{DEMO_RECONCILIATION.rationale}</p>
+              <p className="mt-1 text-slate-500">Demo revenue observations: 12.4 Cr, 12.1 Cr, 12.4 Cr. Market Lab does not silently select the majority or a preferred provider.</p>
+            </div>
+          </section>
+
+
+
+          <section className="rounded-2xl border border-rose-900/60 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-rose-400">Contradiction engine</p>
+            <h2 className="mt-1 text-xl font-black">Don't let a positive story hide negative evidence</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Contradictions" value={DEMO_CONTRADICTIONS.summary.total} />
+              <Metric icon={TrendingUp} label="High/Critical" value={DEMO_CONTRADICTIONS.summary.highOrCritical} />
+              <Metric icon={BarChart3} label="Rule types" value={Object.values(DEMO_CONTRADICTIONS.summary.byType).filter(Boolean).length} />
+            </div>
+            {DEMO_CONTRADICTIONS.contradictions.slice(0, 3).map(item => (
+              <div key={item.type} className="mt-4 rounded-xl border border-rose-900/50 bg-rose-950/20 p-3 text-xs leading-5">
+                <p className="font-bold text-rose-300">{item.severity} · {item.type}</p>
+                <p className="mt-1 text-rose-200/70">{item.rationale}</p>
+                <p className="mt-1 text-slate-500">Evidence IDs: {item.evidenceIds.length} · Period: {item.period?.end ?? item.period?.asOf ?? 'n/a'}</p>
+              </div>
+            ))}
+            {DEMO_CONTRADICTIONS.summary.total === 0 && (
+              <p className="mt-4 text-xs text-slate-500">No contradiction detected under the active rules and evidence requirements.</p>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-cyan-900/60 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-cyan-400">News intelligence</p>
+            <h2 className="mt-1 text-xl font-black">Freshness is not the same as truth</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Fresh" value={DEMO_NEWS_SUMMARY.fresh} />
+              <Metric icon={TrendingUp} label="Aging / stale" value={DEMO_NEWS_SUMMARY.aging + DEMO_NEWS_SUMMARY.stale} />
+              <Metric icon={BarChart3} label="Duplicates" value={DEMO_NEWS_SUMMARY.exactDuplicates + DEMO_NEWS_SUMMARY.possibleDuplicates} />
+            </div>
+            <div className="mt-5 space-y-2">
+              {DEMO_NEWS_INTELLIGENCE.map(record => (
+                <div key={record.id} className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-white">{record.value?.freshness}</span>
+                    <span className="text-[10px] font-bold text-slate-500">{record.value?.duplicateStatus}</span>
+                    <span className="text-[10px] text-slate-600">{record.source?.trust ?? 'UNKNOWN'} source</span>
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">{record.value?.headline}</p>
+                  <p className="mt-1 text-[10px] text-slate-600">Published {record.publishedAt ?? 'unknown'} · Retrieved {record.retrievedAt ?? 'unknown'}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs leading-5 text-slate-600">Demo only. Freshness is calculated from publication time; retrieval time is retained for provenance. Duplicate detection flags repeats but does not merge distinct stories merely because headlines resemble each other.</p>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
             <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-400">Evidence</p>
             <h2 className="mt-1 text-xl font-black">Observed in demo data</h2>
             <div className="mt-5 grid grid-cols-3 gap-3">
@@ -167,6 +423,39 @@ export default function MarketLab() {
             </p>
           </section>
         </div>
+
+
+        <section className="mt-6 rounded-2xl border border-cyan-900/60 bg-slate-900/70 p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-cyan-400">Research dossier</p>
+              <h2 className="mt-1 text-2xl font-black">One auditable view of the evidence</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">The dossier assembles market, fundamentals, valuation, technicals, corporate events and news coverage without inventing missing sections.</p>
+            </div>
+            <span className="rounded-full border border-cyan-800/60 bg-cyan-950/30 px-3 py-1.5 text-xs font-bold text-cyan-300">{DEMO_DOSSIER.status}</span>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Metric icon={Activity} label="Evidence" value={DEMO_DOSSIER.dataQuality.evidenceCount} />
+            <Metric icon={TrendingUp} label="Verified" value={DEMO_DOSSIER.dataQuality.verifiedEvidenceCount} />
+            <Metric icon={BarChart3} label="Blocked signals" value={DEMO_DOSSIER.dataQuality.blockedSignalCount} />
+            <Metric icon={Activity} label="Contradictions" value={DEMO_DOSSIER.dataQuality.contradictionCount} />
+          </div>
+
+          <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(DEMO_DOSSIER.sections).map(([section, value]) => (
+              <div key={section} className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{section}</p>
+                <p className="mt-2 text-sm font-semibold text-white">{value.status}</p>
+                <p className="mt-1 text-xs text-slate-600">{value.evidenceCount} evidence records</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-5 text-xs leading-5 text-slate-600">
+            Dossier status is {DEMO_DOSSIER.status}. {DEMO_DOSSIER.status === DOSSIER_STATUS.PARTIAL ? 'The demo intentionally contains incomplete/unverified and conflicting evidence, so the dossier is not presented as fully ready.' : ''}
+          </p>
+        </section>
 
         <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
