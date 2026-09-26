@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, FlaskConical, Play, RotateCcw, TrendingUp, Activity, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
@@ -7,6 +7,7 @@ import { demoAdapter, normalizeSourcePayload } from '../market/sources';
 import { reconcileEvidenceSet, RECONCILIATION_STATUS } from '../market/reconciliation';
 import { detectContradictions } from '../market/contradictions';
 import { buildResearchDossier, DOSSIER_STATUS } from '../market/dossier';
+import { newsAdapter, enrichNewsEvidence, summarizeNewsIntelligence } from '../market/news';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
@@ -161,10 +162,48 @@ const CONTRADICTION_DEMO_EVIDENCE = [
 
 const DEMO_CONTRADICTIONS = detectContradictions(CONTRADICTION_DEMO_EVIDENCE);
 
+const DEMO_NEWS = normalizeSourcePayload(newsAdapter, [
+  {
+    symbol: 'DEMO',
+    exchange: 'DEMO',
+    headline: 'Demo company reports quarterly revenue growth',
+    publishedAt: '2026-01-31T08:00:00Z',
+    url: 'https://orbitboard.in/market-lab/demo-news-1',
+    provider: 'Demo News Wire',
+    direction: 'POSITIVE',
+    materiality: 'HIGH'
+  },
+  {
+    symbol: 'DEMO',
+    exchange: 'DEMO',
+    headline: 'Demo company reports quarterly revenue growth',
+    publishedAt: '2026-01-31T08:05:00Z',
+    url: 'https://orbitboard.in/market-lab/demo-news-1',
+    provider: 'Demo News Wire',
+    direction: 'POSITIVE',
+    materiality: 'HIGH'
+  },
+  {
+    symbol: 'DEMO',
+    exchange: 'DEMO',
+    headline: 'Demo company announces board meeting',
+    publishedAt: '2026-01-20T08:00:00Z',
+    url: 'https://orbitboard.in/market-lab/demo-news-2',
+    provider: 'Demo News Wire',
+    direction: 'NEUTRAL',
+    materiality: 'MEDIUM'
+  }
+], { symbol: 'DEMO', exchange: 'DEMO', retrievedAt: '2026-02-01T10:00:00Z' });
+
+const DEMO_NEWS_INTELLIGENCE = enrichNewsEvidence(DEMO_NEWS.records, {
+  now: '2026-02-01T10:00:00Z'
+});
+const DEMO_NEWS_SUMMARY = summarizeNewsIntelligence(DEMO_NEWS_INTELLIGENCE);
+
 const DEMO_DOSSIER = buildResearchDossier({
   entity: { symbol: 'DEMO', exchange: 'DEMO' },
   asOf: '2026-02-01T00:00:00Z',
-  evidence: [...DEMO_EVIDENCE, ...CONTRADICTION_DEMO_EVIDENCE, ...DEMO_SOURCE_EVIDENCE.records],
+  evidence: [...DEMO_EVIDENCE, ...CONTRADICTION_DEMO_EVIDENCE, ...DEMO_SOURCE_EVIDENCE.records, ...DEMO_NEWS_INTELLIGENCE],
   reconciliations: RECONCILIATION_DEMO,
   signals: [],
   contradictions: DEMO_CONTRADICTIONS
@@ -203,12 +242,6 @@ export default function MarketLab() {
 
   const replay = DEMO_DAYS[replayIndex];
   const replayProgress = ((replayIndex + 1) / DEMO_DAYS.length) * 100;
-
-  const summary = useMemo(() => ({
-    first: DEMO_DAYS[0],
-    last: DEMO_DAYS[DEMO_DAYS.length - 1],
-    change: ((DEMO_DAYS.at(-1).close - DEMO_DAYS[0].close) / DEMO_DAYS[0].close) * 100
-  }), []);
 
   const run = () => setResult(runExperiment(DEMO_DAYS, volumeThreshold, oiThreshold, forwardDays));
   const reset = () => {
@@ -351,6 +384,30 @@ export default function MarketLab() {
             {DEMO_CONTRADICTIONS.summary.total === 0 && (
               <p className="mt-4 text-xs text-slate-500">No contradiction detected under the active rules and evidence requirements.</p>
             )}
+          </section>
+
+          <section className="rounded-2xl border border-cyan-900/60 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-cyan-400">News intelligence</p>
+            <h2 className="mt-1 text-xl font-black">Freshness is not the same as truth</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Fresh" value={DEMO_NEWS_SUMMARY.fresh} />
+              <Metric icon={TrendingUp} label="Aging / stale" value={DEMO_NEWS_SUMMARY.aging + DEMO_NEWS_SUMMARY.stale} />
+              <Metric icon={BarChart3} label="Duplicates" value={DEMO_NEWS_SUMMARY.exactDuplicates + DEMO_NEWS_SUMMARY.possibleDuplicates} />
+            </div>
+            <div className="mt-5 space-y-2">
+              {DEMO_NEWS_INTELLIGENCE.map(record => (
+                <div key={record.id} className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-white">{record.value?.freshness}</span>
+                    <span className="text-[10px] font-bold text-slate-500">{record.value?.duplicateStatus}</span>
+                    <span className="text-[10px] text-slate-600">{record.source?.trust ?? 'UNKNOWN'} source</span>
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">{record.value?.headline}</p>
+                  <p className="mt-1 text-[10px] text-slate-600">Published {record.publishedAt ?? 'unknown'} · Retrieved {record.retrievedAt ?? 'unknown'}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs leading-5 text-slate-600">Demo only. Freshness is calculated from publication time; retrieval time is retained for provenance. Duplicate detection flags repeats but does not merge distinct stories merely because headlines resemble each other.</p>
           </section>
 
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
