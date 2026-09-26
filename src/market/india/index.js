@@ -8,3 +8,4 @@ export {
   createIndiaFilingConnector,
   runIndiaFilingConnector
 } from './indiaConnector';
+export { INFOSYS_SECURITY, createInfosysFilingConnector, runInfosysValidation } from './infosysConnector';
