@@ -58,17 +58,6 @@ function usable(record, rules) {
   return true;
 }
 
-function sameEntity(left, right) {
-  return left.entity?.exchange === right.entity?.exchange
-    && left.entity?.symbol === right.entity?.symbol;
-}
-
-function samePeriod(left, right) {
-  const l = left.period?.end ?? left.period?.asOf;
-  const r = right.period?.end ?? right.period?.asOf;
-  return l && r && l === r;
-}
-
 function findMatches(records, keys, rules) {
   return records.filter(record =>
     keys.includes(record.metric?.key)
