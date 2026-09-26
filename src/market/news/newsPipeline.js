@@ -1,15 +1,6 @@
 import { normalizeSourcePayload } from '../sources';
 import { enrichNewsEvidence, summarizeNewsIntelligence } from './newsIntelligence';
 
-function sourceRecordKey(record) {
-  return [
-    record.entity?.exchange ?? '',
-    record.entity?.symbol ?? '',
-    record.metric?.key ?? '',
-    record.id ?? ''
-  ].join('|');
-}
-
 /**
  * Normalize multiple news providers through the same source contract,
  * then apply freshness and duplicate intelligence to the combined ledger.
