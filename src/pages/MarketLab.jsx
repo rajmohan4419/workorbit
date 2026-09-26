@@ -9,7 +9,6 @@ import { reconcileEvidenceSet, RECONCILIATION_STATUS } from '../market/reconcili
 import { detectContradictions } from '../market/contradictions';
 import { buildResearchDossier, DOSSIER_STATUS } from '../market/dossier';
 import { newsAdapter, enrichNewsEvidence, summarizeNewsIntelligence } from '../market/news';
-import { runResearch } from '../market/research';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
