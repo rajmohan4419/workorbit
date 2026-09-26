@@ -9,4 +9,4 @@ export {
   enrichNewsEvidence,
   classifyNewsDuplicates,
   summarizeNewsIntelligence
-} from './newsIntelligence';
+} from './newsIntelligence';export { ingestNewsSources } from './newsPipeline';
