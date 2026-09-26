@@ -1,4 +1,4 @@
-export { newsSource, newsAdapter } from './newsAdapter';
+export { newsSource, newsAdapter, createNewsSource } from './newsAdapter';
 export {
   NEWS_FRESHNESS,
   NEWS_DUPLICATE_STATUS,
