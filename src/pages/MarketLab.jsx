@@ -7,6 +7,7 @@ import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS, validateEvidence
 import { demoAdapter, normalizeSourcePayload } from '../market/sources';
 import { reconcileEvidenceSet, RECONCILIATION_STATUS } from '../market/reconciliation';
 import { detectContradictions } from '../market/contradictions';
+import { runResearch as executeResearch } from '../market/research';
 import { buildResearchDossier, DOSSIER_STATUS } from '../market/dossier';
 import { newsAdapter, enrichNewsEvidence, summarizeNewsIntelligence } from '../market/news';
 
@@ -268,7 +269,7 @@ export default function MarketLab() {
         return;
       }
 
-      const result = await runResearch({
+      const result = await executeResearch({
         query,
         fetcher: async request => {
           const { data, error } = await supabase.functions.invoke('market-research', { body: { query: request.issuer === 'Infosys Limited' ? 'INFY' : query } });
