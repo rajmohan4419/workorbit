@@ -57,8 +57,9 @@ function parseInfosysFilings(html: string) {
 }
 
 function extractMeta(html: string, name: string) {
-  const pattern = new RegExp('<meta[^>]+(?:name|property)=["\\\']' + name.replace(/[.*+?^{}()|[\\]\\]/g, '\\$&') + '["\\\'][^>]+content=["\\\']([^"\\\']+)["\\\']', 'i')
-  return html.match(pattern)?.[1] ? clean(html.match(pattern)![1]) : null
+  const pattern = new RegExp('<meta[^>]+(?:name|property)=["\\\']' + name + '["\\\'][^>]+content=["\\\']([^"\\\']+)["\\\']', 'i')
+  const match = html.match(pattern)
+  return match?.[1] ? clean(match[1]) : null
 }
 
 function parseIndexPage(html: string, index: { name: string; url: string; type: string }, retrievedAt: string) {
