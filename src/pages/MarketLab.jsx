@@ -5,6 +5,7 @@ import SEO from '../components/layout/SEO';
 import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS, validateEvidenceSet } from '../market/evidence';
 import { demoAdapter, normalizeSourcePayload } from '../market/sources';
 import { reconcileEvidenceSet, RECONCILIATION_STATUS } from '../market/reconciliation';
+import { detectContradictions, CONTRADICTION_SEVERITY } from '../market/contradictions';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
@@ -109,6 +110,55 @@ const RECONCILIATION_DEMO = reconcileEvidenceSet([
 ]);
 
 const DEMO_RECONCILIATION = RECONCILIATION_DEMO.results[0];
+
+const CONTRADICTION_DEMO_EVIDENCE = [
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'revenue_growth', label: 'Revenue growth' },
+    value: 28,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'profit_growth', label: 'Profit growth' },
+    value: 35,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'operating_cash_flow_growth', label: 'Operating cash flow growth' },
+    value: -18,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'DEMO', exchange: 'DEMO' },
+    metric: { key: 'debt_growth', label: 'Debt growth' },
+    value: 62,
+    unit: '%',
+    period: { end: '2026-01-31' },
+    source: { provider: 'Demo financial source', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-02-01T00:00:00Z'
+  })
+];
+
+const DEMO_CONTRADICTIONS = detectContradictions(CONTRADICTION_DEMO_EVIDENCE);
 
 function runExperiment(data, volumeThreshold, oiThreshold, forwardDays) {
   const matches = [];
@@ -269,6 +319,28 @@ export default function MarketLab() {
               <p className="mt-1 text-amber-200/70">{DEMO_RECONCILIATION.rationale}</p>
               <p className="mt-1 text-slate-500">Demo revenue observations: 12.4 Cr, 12.1 Cr, 12.4 Cr. Market Lab does not silently select the majority or a preferred provider.</p>
             </div>
+          </section>
+
+
+
+          <section className="rounded-2xl border border-rose-900/60 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-rose-400">Contradiction engine</p>
+            <h2 className="mt-1 text-xl font-black">Don't let a positive story hide negative evidence</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Contradictions" value={DEMO_CONTRADICTIONS.summary.total} />
+              <Metric icon={TrendingUp} label="High/Critical" value={DEMO_CONTRADICTIONS.summary.highOrCritical} />
+              <Metric icon={BarChart3} label="Rule types" value={Object.values(DEMO_CONTRADICTIONS.summary.byType).filter(Boolean).length} />
+            </div>
+            {DEMO_CONTRADICTIONS.contradictions.slice(0, 3).map(item => (
+              <div key={item.type} className="mt-4 rounded-xl border border-rose-900/50 bg-rose-950/20 p-3 text-xs leading-5">
+                <p className="font-bold text-rose-300">{item.severity} · {item.type}</p>
+                <p className="mt-1 text-rose-200/70">{item.rationale}</p>
+                <p className="mt-1 text-slate-500">Evidence IDs: {item.evidenceIds.length} · Period: {item.period?.end ?? item.period?.asOf ?? 'n/a'}</p>
+              </div>
+            ))}
+            {DEMO_CONTRADICTIONS.summary.total === 0 && (
+              <p className="mt-4 text-xs text-slate-500">No contradiction detected under the active rules and evidence requirements.</p>
+            )}
           </section>
 
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
