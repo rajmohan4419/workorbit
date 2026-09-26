@@ -51,7 +51,15 @@ function reconcileGroup(key, records, rules) {
   }
 
   const values = usable.map(record => record.value);
-  const distinctValues = [...new Set(values)];
+  const valueGroups = [...new Map(
+    usable.map(record => [record.value, usable.filter(item => item.value === record.value)])
+  ).entries()]
+    .map(([value, group]) => ({ value, count: group.length, sources: [...new Set(group.map(sourceIdentity))] }))
+    .sort((a, b) => b.count - a.count);
+
+  const distinctValues = valueGroups.map(group => group.value);
+  const agreementCount = valueGroups[0]?.count ?? 0;
+  const conflictCount = Math.max(0, usable.length - agreementCount);
 
   if (distinctValues.length === 1) {
     if (usable.length === 1) {
@@ -94,12 +102,18 @@ function reconcileGroup(key, records, rules) {
     status: RECONCILIATION_STATUS.CONFLICTED,
     selectedValue: null,
     observations,
-    agreementCount: 0,
-    conflictCount: distinctValues.length,
+    agreementCount,
+    conflictCount,
     sourceCount: sources.length,
     sources,
+    valueGroups: valueGroups.map(group => ({
+      value: group.value,
+      observationCount: group.count,
+      sourceCount: group.sources.length,
+      sources: group.sources
+    })),
     invalidCount: invalid.length,
-    rationale: 'Usable observations disagree. No source is silently preferred.'
+    rationale: `${agreementCount} observation${agreementCount === 1 ? '' : 's'} agree and ${conflictCount} conflict. No source is silently preferred.`
   };
 }
 
