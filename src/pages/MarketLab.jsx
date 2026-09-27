@@ -8,6 +8,7 @@ import { reconcileEvidenceSet, RECONCILIATION_STATUS } from '../market/reconcili
 import { detectContradictions } from '../market/contradictions';
 import { buildResearchDossier, DOSSIER_STATUS } from '../market/dossier';
 import { newsAdapter, enrichNewsEvidence, summarizeNewsIntelligence } from '../market/news';
+import { assessVolatilityRisk } from '../market/risk';
 
 const DEMO_DAYS = [
   ['2026-01-05', 23840, 23910, 23790, 23880, 1.12, 1.4],
@@ -112,6 +113,54 @@ const RECONCILIATION_DEMO = reconcileEvidenceSet([
 ]);
 
 const DEMO_RECONCILIATION = RECONCILIATION_DEMO.results[0];
+
+const VOLATILITY_GATE_DEMO = assessVolatilityRisk([
+  createEvidenceRecord({
+    entity: { symbol: 'VOLATILITY_DEMO', exchange: 'DEMO' },
+    metric: { key: 'high', label: 'High price' },
+    value: 6.62,
+    unit: 'INR',
+    period: { end: '2026-09-01' },
+    source: { provider: 'OrbitBoard synthetic risk fixture', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-09-27T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'VOLATILITY_DEMO', exchange: 'DEMO' },
+    metric: { key: 'low', label: 'Low price' },
+    value: 5.80,
+    unit: 'INR',
+    period: { end: '2026-09-01' },
+    source: { provider: 'OrbitBoard synthetic risk fixture', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-09-27T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'VOLATILITY_DEMO', exchange: 'DEMO' },
+    metric: { key: 'high', label: 'High price' },
+    value: 3.10,
+    unit: 'INR',
+    period: { end: '2026-09-20' },
+    source: { provider: 'OrbitBoard synthetic risk fixture', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-09-27T00:00:00Z'
+  }),
+  createEvidenceRecord({
+    entity: { symbol: 'VOLATILITY_DEMO', exchange: 'DEMO' },
+    metric: { key: 'low', label: 'Low price' },
+    value: 2.50,
+    unit: 'INR',
+    period: { end: '2026-09-20' },
+    source: { provider: 'OrbitBoard synthetic risk fixture', url: 'https://orbitboard.in/market-lab' },
+    kind: EVIDENCE_KINDS.FACT,
+    status: EVIDENCE_STATUS.VERIFIED,
+    retrievedAt: '2026-09-27T00:00:00Z'
+  })
+], { symbol: 'VOLATILITY_DEMO', exchange: 'DEMO' });
+
 
 const CONTRADICTION_DEMO_EVIDENCE = [
   createEvidenceRecord({
@@ -344,6 +393,21 @@ export default function MarketLab() {
                 {evidenceValidation.valid ? 'Schema validation passed.' : 'Schema validation failed.'}
               </p>
               <p className="mt-1 text-slate-500">Source adapter normalized {sourceValidation.summary.total} atomic records. Invalid or missing observations are preserved for validation instead of being silently discarded.</p>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-orange-900/60 bg-slate-900/70 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-orange-400">Volatility risk gate</p>
+            <h2 className="mt-1 text-xl font-black">Extreme range requires validation</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <Metric icon={Activity} label="Range" value={VOLATILITY_GATE_DEMO.rangePct === null ? 'n/a' : `${VOLATILITY_GATE_DEMO.rangePct.toFixed(1)}%`} />
+              <Metric icon={TrendingUp} label="Threshold" value={`${VOLATILITY_GATE_DEMO.thresholdPct}%`} />
+              <Metric icon={BarChart3} label="Status" value={VOLATILITY_GATE_DEMO.status} />
+            </div>
+            <div className="mt-5 rounded-xl border border-orange-900/60 bg-orange-950/20 p-3 text-xs leading-5">
+              <p className="font-bold text-orange-300">{VOLATILITY_GATE_DEMO.status === 'FLAGGED' ? 'FLAGGED — additional validation required' : VOLATILITY_GATE_DEMO.status}</p>
+              <p className="mt-1 text-orange-200/70">{VOLATILITY_GATE_DEMO.rationale}</p>
+              <p className="mt-1 text-slate-500">Synthetic control fixture: ₹2.50 low to ₹6.62 high. This demonstrates the gate without pretending the fixture is live market evidence.</p>
             </div>
           </section>
 
