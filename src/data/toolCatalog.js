@@ -53,3 +53,5 @@ export const TOOLS = [
   { slug: 'uuid-generator', name: 'UUID Generator', description: 'Generate random UUID v4 identifiers instantly.', category: 'Developer', icon: 'ID' },
   { slug: 'url-encoder', name: 'URL Encoder / Decoder', description: 'Encode or decode URL components safely and quickly.', category: 'Developer', icon: '%2F' },
 ];
+
+export const TOOLS_BY_SLUG = new Map(TOOLS.map(tool => [tool.slug, tool]));

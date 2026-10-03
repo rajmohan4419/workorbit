@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Code2, BriefcaseBusiness, Coins, Calculator } from 'lucide-react';
-import { TOOLS } from '../data/tools';
+import { TOOLS, TOOLS_BY_SLUG } from '../data/tools';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, createEditedPdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
@@ -521,7 +521,7 @@ function Sip() {
 }
 
 export default function ToolPage() {
-  const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
+  const {slug}=useParams(); const tool=TOOLS_BY_SLUG.get(slug); const info=TOOL_CONTENT[slug];
   const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'gratuity-calculator':GratuityCalculator,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'timezone-converter':GlobalTimeZoneConverter, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'csv-to-json':CsvToJson,'csv-to-xlsx':()=> <SpreadsheetFileTool type="csv-to-xlsx"/>,'json-to-xlsx':()=> <SpreadsheetFileTool type="json-to-xlsx"/>,'xlsx-to-csv':()=> <SpreadsheetFileTool type="xlsx-to-csv"/>, 'txt-to-pdf':TextToPdf, 'pdf-to-text':PdfToText, 'diff-checker':DiffChecker, 'json-to-xml':JsonToXml, 'xml-to-json':XmlToJson, 'markdown-to-html':MarkdownToHtml, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-workspace':PdfWorkspace, 'pdf-compressor':PdfCompressor, 'pdf-e-sign':PdfESign, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'income-tax-india':IndiaIncomeTaxCalculator,'income-tax-global':GlobalIncomeTaxCalculator,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
