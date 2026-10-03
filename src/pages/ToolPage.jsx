@@ -642,9 +642,16 @@ function XmlToJson() {
   const convert=()=>{try{const doc=new DOMParser().parseFromString(input,'application/xml');if(doc.querySelector('parsererror'))throw new Error('Invalid XML');setOutput(JSON.stringify({[doc.documentElement.tagName]:parseNode(doc.documentElement)},null,2));setError('');}catch(e){setError(e.message);setOutput('');}};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to JSON</button>{error&&<p className="text-sm text-red-400">{error}</p>}{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.json"/></>}</div>;
 }
+const REGEX_AMP = /&/g;
+const REGEX_LT = /</g;
+const REGEX_GT = />/g;
+const REGEX_BOLD = /\*\*(.+?)\*\*/g;
+const REGEX_ITALIC = /\*(.+?)\*/g;
+const REGEX_CODE = /`(.+?)`/g;
+
 function MarkdownToHtml() {
   const [input,setInput]=useState('# Hello OrbitBoard\n\nThis is **bold** and *italic*.\n\n- One\n- Two'),[output,setOutput]=useState('');
-  const inline=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>');
+  const inline=s=>s.replace(REGEX_AMP,'&amp;').replace(REGEX_LT,'&lt;').replace(REGEX_GT,'&gt;').replace(REGEX_BOLD,'<strong>$1</strong>').replace(REGEX_ITALIC,'<em>$1</em>').replace(REGEX_CODE,'<code>$1</code>');
   const convert=()=>{const lines=input.split(/\r?\n/),html=[];let list=false;for(const line of lines){if(line.startsWith('- ')){if(!list){html.push('<ul>');list=true;}html.push('<li>'+inline(line.slice(2))+'</li>');continue;}if(list){html.push('</ul>');list=false;}if(line.startsWith('# '))html.push('<h1>'+inline(line.slice(2))+'</h1>');else if(line.startsWith('## '))html.push('<h2>'+inline(line.slice(3))+'</h2>');else if(line.trim())html.push('<p>'+inline(line)+'</p>');}if(list)html.push('</ul>');setOutput(html.join('\n'));};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to HTML</button>{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.html"/></>}</div>;
 }
