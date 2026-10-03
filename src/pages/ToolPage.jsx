@@ -636,10 +636,12 @@ function JsonToXml() {
   const convert=()=>{try{setOutput('<?xml version="1.0" encoding="UTF-8"?>\n'+build(JSON.parse(input)));setError('');}catch(e){setError('Invalid JSON: '+e.message);setOutput('');}};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to XML</button>{error&&<p className="text-sm text-red-400">{error}</p>}{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.xml"/></>}</div>;
 }
+const xmlParser = new DOMParser();
+
 function XmlToJson() {
   const [input,setInput]=useState('<root><name>John Doe</name><role>Developer</role></root>'),[output,setOutput]=useState(''),[error,setError]=useState('');
-  const parseNode=node=>{if(!node.children.length)return node.textContent??'';const obj={};Array.from(node.children).forEach(child=>{const value=parseNode(child);obj[child.tagName]===undefined?obj[child.tagName]=value:obj[child.tagName]=[].concat(obj[child.tagName],value);});return obj;};
-  const convert=()=>{try{const doc=new DOMParser().parseFromString(input,'application/xml');if(doc.querySelector('parsererror'))throw new Error('Invalid XML');setOutput(JSON.stringify({[doc.documentElement.tagName]:parseNode(doc.documentElement)},null,2));setError('');}catch(e){setError(e.message);setOutput('');}};
+  const parseNode=node=>{if(!node.firstElementChild)return node.textContent??'';const obj={};for(let child=node.firstElementChild;child;child=child.nextElementSibling){const value=parseNode(child);const tag=child.tagName;if(obj[tag]===undefined)obj[tag]=value;else if(Array.isArray(obj[tag]))obj[tag].push(value);else obj[tag]=[obj[tag],value];}return obj;};
+  const convert=()=>{try{const doc=xmlParser.parseFromString(input,'application/xml');if(doc.querySelector('parsererror'))throw new Error('Invalid XML');setOutput(JSON.stringify({[doc.documentElement.tagName]:parseNode(doc.documentElement)},null,2));setError('');}catch(e){setError(e.message);setOutput('');}};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to JSON</button>{error&&<p className="text-sm text-red-400">{error}</p>}{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.json"/></>}</div>;
 }
 function MarkdownToHtml() {
