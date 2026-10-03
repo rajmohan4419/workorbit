@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
-import { TOOLS } from '../data/toolCatalog';
+import { TOOLS, TOOLS_BY_SLUG } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { loadToolPage } from '../lib/toolPageLoader';
 
@@ -93,7 +93,7 @@ function ToolShell({ tool, info }) {
 
 export default function ToolPageRoute() {
   const { slug } = useParams();
-  const tool = TOOLS.find(item => item.slug === slug);
+  const tool = TOOLS_BY_SLUG.get(slug);
   const info = TOOL_CONTENT[slug];
 
   if (!tool) {
