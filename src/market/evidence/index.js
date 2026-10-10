@@ -5,9 +5,9 @@ export {
   createEvidenceId,
   evidenceKey,
   stableHash
-} from './evidenceModel';
+} from './evidenceModel.js';
 
 export {
   validateEvidenceRecord,
   validateEvidenceSet
-} from './validator';
+} from './validator.js';
