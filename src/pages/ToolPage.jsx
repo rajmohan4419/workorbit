@@ -705,7 +705,7 @@ function PdfToImages({format='image/png'}) {
       setPages(rendered);setStatus(rendered.length+' page(s) rendered.');
     }catch{setStatus('Could not render this PDF.');}finally{setBusy(false);}
   };
-  const downloadAll=async()=>{for(const page of pages){const response=await fetch(page.data);downloadBlob(await response.blob(),`page-${page.number}.${format==='image/jpeg'?'jpg':'png'}`);}setStatus('Images downloaded.');};
+  const downloadAll=async()=>{await Promise.all(pages.map(async(page)=>{const response=await fetch(page.data);downloadBlob(await response.blob(),`page-${page.number}.${format==='image/jpeg'?'jpg':'png'}`);}));setStatus('Images downloaded.');};
   return <div className="space-y-5"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setPages([]);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button disabled={busy} onClick={load} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Rendering…':'Render PDF Pages'}</button>{pages.length>0&&<><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{pages.map(p=><div key={p.number} className="rounded-2xl border border-slate-800 bg-slate-950 p-3"><img src={p.data} alt={'PDF page '+p.number} className="w-full rounded-lg bg-white"/><p className="mt-2 text-xs text-slate-400">Page {p.number}</p></div>)}</div><button onClick={downloadAll} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold">Download all pages</button></>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">PDF rendering and conversion happen locally in your browser.</p></div>
 }
 
