@@ -25,8 +25,7 @@ export async function recordVisit(path = window.location.pathname) {
     });
     if (error) throw error;
     return Number(data);
-  } catch (error) {
-    console.warn('[OrbitBoard telemetry] visitor recording failed', error);
+  } catch {
     return null;
   }
 }
