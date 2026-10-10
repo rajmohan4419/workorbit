@@ -71,8 +71,8 @@ function Telemetry() {
         if (!cancelled && typeof total === 'number' && Number.isFinite(total)) {
           window.dispatchEvent(new CustomEvent('orbitboard:visitor-count', { detail: total }));
         }
-      } catch (error) {
-        console.warn('[OrbitBoard telemetry] deferred telemetry failed', error);
+      } catch {
+        // Telemetry failure is non-critical and handled silently
       }
     };
 
