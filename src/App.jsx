@@ -35,8 +35,8 @@ function Analytics() {
       try {
         const { loadGoogleAnalytics } = await import('./lib/analytics');
         if (!cancelled) await loadGoogleAnalytics();
-      } catch (error) {
-        console.warn('[OrbitBoard analytics] deferred load failed', error);
+      } catch {
+        // ignore deferred analytics load failure
       }
     };
 
