@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Code2, BriefcaseBusiness, Coins, Calculator } from 'lucide-react';
-import { TOOLS } from '../data/tools';
+import { TOOLS, TOOLS_BY_SLUG } from '../data/tools';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, createEditedPdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
@@ -475,14 +475,28 @@ function JsonToCsv() {
   try { const rows=JSON.parse(input); if(!Array.isArray(rows)) throw new Error('JSON must be an array of objects'); if(rows.some(r=>!r||typeof r!=='object'||Array.isArray(r))) throw new Error('Each item must be an object'); const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))]; const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; csv=[keys.map(esc).join(','),...rows.map(r=>keys.map(k=>esc(typeof r[k]==='object'?JSON.stringify(r[k]):r[k])).join(','))].join('\n'); } catch(e){error=e.message;}
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>{error?<p className="text-sm text-red-400">{error}</p>:<textarea readOnly value={csv} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>}<ExportActions content={csv} filename="orbitboard-data.csv"/><p className="text-xs text-slate-500">Best for flat JSON arrays. Nested values are stored as JSON text.</p></div>
 }
+function base64Encode(str) {
+  const bytes = new TextEncoder().encode(str);
+  const binString = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+  return btoa(binString);
+}
+
+function base64Decode(str) {
+  const binString = atob(str);
+  const bytes = Uint8Array.from(binString, char => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
 function Base64Tool() {
   const [input,setInput]=useState('Hello OrbitBoard'); const [mode,setMode]=useState('encode'); let output='',error='';
-  try { output=mode==='encode'?btoa(unescape(encodeURIComponent(input))):decodeURIComponent(escape(atob(input))); } catch { error='Invalid Base64 input'; }
+  try { output=mode==='encode'?base64Encode(input):base64Decode(input); } catch { error='Invalid Base64 input'; }
+  try { output=mode==='encode'?btoa(String.fromCharCode(...new TextEncoder().encode(input))):new TextDecoder().decode(Uint8Array.from(atob(input),c=>c.charCodeAt(0))); } catch { error='Invalid Base64 input'; }
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('encode')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Encode</button><button onClick={()=>setMode('decode')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Decode</button></div><textarea readOnly value={error||output} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={error||output} filename="orbitboard-base64.txt"/></div>
 }
 function JwtDecoder() {
   const [token,setToken]=useState(''); let header='',payload='',error='';
-  try { if(token.trim()){const p=token.split('.'); if(p.length!==3) throw new Error('A JWT must contain three parts'); const dec=s=>{const normalized=s.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(s.length/4)*4,'='); return JSON.stringify(JSON.parse(decodeURIComponent(escape(atob(normalized)))),null,2)}; header=dec(p[0]);payload=dec(p[1]);} } catch(e){error='Invalid JWT: '+e.message;}
+  try { if(token.trim()){const p=token.split('.'); if(p.length!==3) throw new Error('A JWT must contain three parts'); const dec=s=>{const normalized=s.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(s.length/4)*4,'='); return JSON.stringify(JSON.parse(base64Decode(normalized)),null,2)}; header=dec(p[0]);payload=dec(p[1]);} } catch(e){error='Invalid JWT: '+e.message;}
+  try { if(token.trim()){const p=token.split('.'); if(p.length!==3) throw new Error('A JWT must contain three parts'); const dec=s=>{const normalized=s.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(s.length/4)*4,'='); return JSON.stringify(JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(normalized),c=>c.charCodeAt(0)))),null,2)}; header=dec(p[0]);payload=dec(p[1]);} } catch(e){error='Invalid JWT: '+e.message;}
   return <div className="space-y-4"><textarea value={token} onChange={e=>setToken(e.target.value)} placeholder="Paste JWT here" className="w-full h-32 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>{error&&<p className="text-sm text-red-400">{error}</p>}<div className="grid sm:grid-cols-2 gap-4"><textarea readOnly value={header} placeholder="Header" className="w-full h-52 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><textarea readOnly value={payload} placeholder="Payload" className="w-full h-52 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div><p className="text-xs text-slate-500">Decoded locally in your browser. Signature verification is not performed.</p></div>
 }
 function UnixTimestamp() {
@@ -521,7 +535,7 @@ function Sip() {
 }
 
 export default function ToolPage() {
-  const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
+  const {slug}=useParams(); const tool=TOOLS_BY_SLUG.get(slug); const info=TOOL_CONTENT[slug];
   const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'gratuity-calculator':GratuityCalculator,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'timezone-converter':GlobalTimeZoneConverter, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'csv-to-json':CsvToJson,'csv-to-xlsx':()=> <SpreadsheetFileTool type="csv-to-xlsx"/>,'json-to-xlsx':()=> <SpreadsheetFileTool type="json-to-xlsx"/>,'xlsx-to-csv':()=> <SpreadsheetFileTool type="xlsx-to-csv"/>, 'txt-to-pdf':TextToPdf, 'pdf-to-text':PdfToText, 'diff-checker':DiffChecker, 'json-to-xml':JsonToXml, 'xml-to-json':XmlToJson, 'markdown-to-html':MarkdownToHtml, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-workspace':PdfWorkspace, 'pdf-compressor':PdfCompressor, 'pdf-e-sign':PdfESign, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'income-tax-india':IndiaIncomeTaxCalculator,'income-tax-global':GlobalIncomeTaxCalculator,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
@@ -636,15 +650,24 @@ function JsonToXml() {
   const convert=()=>{try{setOutput('<?xml version="1.0" encoding="UTF-8"?>\n'+build(JSON.parse(input)));setError('');}catch(e){setError('Invalid JSON: '+e.message);setOutput('');}};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to XML</button>{error&&<p className="text-sm text-red-400">{error}</p>}{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.xml"/></>}</div>;
 }
+const xmlParser = new DOMParser();
+
 function XmlToJson() {
   const [input,setInput]=useState('<root><name>John Doe</name><role>Developer</role></root>'),[output,setOutput]=useState(''),[error,setError]=useState('');
-  const parseNode=node=>{if(!node.children.length)return node.textContent??'';const obj={};Array.from(node.children).forEach(child=>{const value=parseNode(child);obj[child.tagName]===undefined?obj[child.tagName]=value:obj[child.tagName]=[].concat(obj[child.tagName],value);});return obj;};
-  const convert=()=>{try{const doc=new DOMParser().parseFromString(input,'application/xml');if(doc.querySelector('parsererror'))throw new Error('Invalid XML');setOutput(JSON.stringify({[doc.documentElement.tagName]:parseNode(doc.documentElement)},null,2));setError('');}catch(e){setError(e.message);setOutput('');}};
+  const parseNode=node=>{if(!node.firstElementChild)return node.textContent??'';const obj={};for(let child=node.firstElementChild;child;child=child.nextElementSibling){const value=parseNode(child);const tag=child.tagName;if(obj[tag]===undefined)obj[tag]=value;else if(Array.isArray(obj[tag]))obj[tag].push(value);else obj[tag]=[obj[tag],value];}return obj;};
+  const convert=()=>{try{const doc=xmlParser.parseFromString(input,'application/xml');if(doc.querySelector('parsererror'))throw new Error('Invalid XML');setOutput(JSON.stringify({[doc.documentElement.tagName]:parseNode(doc.documentElement)},null,2));setError('');}catch(e){setError(e.message);setOutput('');}};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to JSON</button>{error&&<p className="text-sm text-red-400">{error}</p>}{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.json"/></>}</div>;
 }
+const REGEX_AMP = /&/g;
+const REGEX_LT = /</g;
+const REGEX_GT = />/g;
+const REGEX_BOLD = /\*\*(.+?)\*\*/g;
+const REGEX_ITALIC = /\*(.+?)\*/g;
+const REGEX_CODE = /`(.+?)`/g;
+
 function MarkdownToHtml() {
   const [input,setInput]=useState('# Hello OrbitBoard\n\nThis is **bold** and *italic*.\n\n- One\n- Two'),[output,setOutput]=useState('');
-  const inline=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>');
+  const inline=s=>s.replace(REGEX_AMP,'&amp;').replace(REGEX_LT,'&lt;').replace(REGEX_GT,'&gt;').replace(REGEX_BOLD,'<strong>$1</strong>').replace(REGEX_ITALIC,'<em>$1</em>').replace(REGEX_CODE,'<code>$1</code>');
   const convert=()=>{const lines=input.split(/\r?\n/),html=[];let list=false;for(const line of lines){if(line.startsWith('- ')){if(!list){html.push('<ul>');list=true;}html.push('<li>'+inline(line.slice(2))+'</li>');continue;}if(list){html.push('</ul>');list=false;}if(line.startsWith('# '))html.push('<h1>'+inline(line.slice(2))+'</h1>');else if(line.startsWith('## '))html.push('<h2>'+inline(line.slice(3))+'</h2>');else if(line.trim())html.push('<p>'+inline(line)+'</p>');}if(list)html.push('</ul>');setOutput(html.join('\n'));};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to HTML</button>{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.html"/></>}</div>;
 }
@@ -705,7 +728,7 @@ function PdfToImages({format='image/png'}) {
       setPages(rendered);setStatus(rendered.length+' page(s) rendered.');
     }catch{setStatus('Could not render this PDF.');}finally{setBusy(false);}
   };
-  const downloadAll=async()=>{for(const page of pages){const response=await fetch(page.data);downloadBlob(await response.blob(),`page-${page.number}.${format==='image/jpeg'?'jpg':'png'}`);}setStatus('Images downloaded.');};
+  const downloadAll=async()=>{await Promise.all(pages.map(async(page)=>{const response=await fetch(page.data);downloadBlob(await response.blob(),`page-${page.number}.${format==='image/jpeg'?'jpg':'png'}`);}));setStatus('Images downloaded.');};
   return <div className="space-y-5"><input type="file" accept="application/pdf" onChange={e=>{setFile(e.target.files?.[0]||null);setPages([]);setStatus('')}} className="block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm"/><button disabled={busy} onClick={load} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{busy?'Rendering…':'Render PDF Pages'}</button>{pages.length>0&&<><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{pages.map(p=><div key={p.number} className="rounded-2xl border border-slate-800 bg-slate-950 p-3"><img src={p.data} alt={'PDF page '+p.number} className="w-full rounded-lg bg-white"/><p className="mt-2 text-xs text-slate-400">Page {p.number}</p></div>)}</div><button onClick={downloadAll} className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold">Download all pages</button></>}{status&&<p aria-live="polite" className="text-sm text-slate-400">{status}</p>}<p className="text-xs text-slate-500">PDF rendering and conversion happen locally in your browser.</p></div>
 }
 
