@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 
-function ensureRows(value) {
+export function ensureRows(value) {
   if (!Array.isArray(value)) {
     throw new Error('Expected a JSON array of objects.');
   }
