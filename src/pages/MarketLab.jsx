@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
 import { runResearch as executeResearch } from '../market/research';
 
-import { DEMO_DAYS, DEMO_DOSSIER, runExperiment } from '../components/marketLab/marketLabData';
+import { DEMO_DAYS, runExperiment } from '../components/marketLab/marketLabData';
 import { FeatureCard } from '../components/marketLab/MarketLabUiComponents';
 import { MarketLabHero } from '../components/marketLab/MarketLabHero';
 import { ResearchSection } from '../components/marketLab/ResearchSection';
