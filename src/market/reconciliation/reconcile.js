@@ -17,8 +17,9 @@ function isUsable(record) {
   return validateEvidenceRecord(record).valid && record.value !== null && record.value !== undefined;
 }
 
-function buildObservations(records) {
-  return records.map(record => ({
+function reconcileGroup(key, records, rules) {
+  const representative = records[0] ?? null;
+  const observations = records.map(record => ({
     evidenceId: record.id,
     value: observationValue(record),
     unit: record.unit ?? null,
@@ -28,86 +29,79 @@ function buildObservations(records) {
     publishedAt: record.publishedAt ?? null,
     retrievedAt: record.retrievedAt ?? null
   }));
-}
 
-function buildValueGroups(usableRecords) {
-  const groupsMap = new Map();
-  for (const record of usableRecords) {
-    if (!groupsMap.has(record.value)) {
-      groupsMap.set(record.value, []);
-    }
-    groupsMap.get(record.value).push(record);
+  const invalid = records.filter(record => !validateEvidenceRecord(record).valid);
+  const usable = records.filter(isUsable);
+  const sources = [...new Set(usable.map(sourceIdentity))];
+
+  if (!usable.length) {
+    return {
+      key,
+      entity: representative?.entity ?? null,
+      metric: representative?.metric ?? null,
+      status: invalid.length ? RECONCILIATION_STATUS.INVALID : RECONCILIATION_STATUS.INSUFFICIENT_DATA,
+      selectedValue: null,
+      observations,
+      agreementCount: 0,
+      conflictCount: 0,
+      sourceCount: sources.length,
+      sources,
+      invalidCount: invalid.length,
+      rationale: invalid.length
+        ? 'No usable observations remain after evidence validation.'
+        : 'No usable observations are available for this evidence key.'
+    };
   }
 
-  return [...groupsMap.entries()]
-    .map(([value, group]) => ({
-      value,
-      count: group.length,
-      sources: [...new Set(group.map(sourceIdentity))]
-    }))
+  const values = usable.map(record => record.value);
+  const valueGroups = [...new Map(
+    usable.map(record => [record.value, usable.filter(item => item.value === record.value)])
+  ).entries()]
+    .map(([value, group]) => ({ value, count: group.length, sources: [...new Set(group.map(sourceIdentity))] }))
     .sort((a, b) => b.count - a.count);
-}
 
-function handleUnusableGroup(key, representative, observations, invalid, sources) {
-  const hasInvalid = invalid.length > 0;
-  return {
-    key,
-    entity: representative?.entity ?? null,
-    metric: representative?.metric ?? null,
-    status: hasInvalid ? RECONCILIATION_STATUS.INVALID : RECONCILIATION_STATUS.INSUFFICIENT_DATA,
-    selectedValue: null,
-    observations,
-    agreementCount: 0,
-    conflictCount: 0,
-    sourceCount: sources.length,
-    sources,
-    invalidCount: invalid.length,
-    rationale: hasInvalid
-      ? 'No usable observations remain after evidence validation.'
-      : 'No usable observations are available for this evidence key.'
-  };
-}
+  const distinctValues = valueGroups.map(group => group.value);
+  const agreementCount = valueGroups[0]?.count ?? 0;
+  const conflictCount = Math.max(0, usable.length - agreementCount);
 
-function handleSingleSourceGroup(key, usable, rules, observations, sources, invalidCount) {
-  const only = usable[0];
-  const canSelect = rules.allowSelectedValueOnSingleSource
-    && (!rules.singleSourceRequiresVerifiedEvidence || only.status === EVIDENCE_STATUS.VERIFIED);
+  if (distinctValues.length === 1) {
+    if (usable.length === 1) {
+      const only = usable[0];
+      const canSelect = rules.allowSelectedValueOnSingleSource
+        && (!rules.singleSourceRequiresVerifiedEvidence || only.status === EVIDENCE_STATUS.VERIFIED);
 
-  return {
-    key,
-    status: RECONCILIATION_STATUS.SINGLE_SOURCE,
-    selectedValue: canSelect ? only.value : null,
-    observations,
-    agreementCount: 1,
-    conflictCount: 0,
-    sourceCount: sources.length,
-    sources,
-    invalidCount,
-    rationale: canSelect
-      ? 'Only one usable source observation is available; value is retained with single-source provenance.'
-      : 'Only one usable source observation is available, but policy does not permit selecting it as reconciled.'
-  };
-}
+      return {
+        key,
+        status: RECONCILIATION_STATUS.SINGLE_SOURCE,
+        selectedValue: canSelect ? only.value : null,
+        observations,
+        agreementCount: 1,
+        conflictCount: 0,
+        sourceCount: sources.length,
+        sources,
+        invalidCount: invalid.length,
+        rationale: canSelect
+          ? 'Only one usable source observation is available; value is retained with single-source provenance.'
+          : 'Only one usable source observation is available, but policy does not permit selecting it as reconciled.'
+      };
+    }
 
-function handleAgreedGroup(key, representative, values, rules, usableLength, observations, sources, invalidCount) {
-  const isAgreed = valuesAgree(values, rules);
-  return {
-    key,
-    entity: representative?.entity ?? null,
-    metric: representative?.metric ?? null,
-    status: isAgreed ? RECONCILIATION_STATUS.AGREED : RECONCILIATION_STATUS.CONFLICTED,
-    selectedValue: rules.allowSelectedValueOnAgreement ? values[0] : null,
-    observations,
-    agreementCount: usableLength,
-    conflictCount: 0,
-    sourceCount: sources.length,
-    sources,
-    invalidCount,
-    rationale: 'All usable observations report the same value for the same evidence key.'
-  };
-}
+    return {
+      key,
+      entity: representative?.entity ?? null,
+      metric: representative?.metric ?? null,
+      status: valuesAgree(values, rules) ? RECONCILIATION_STATUS.AGREED : RECONCILIATION_STATUS.CONFLICTED,
+      selectedValue: rules.allowSelectedValueOnAgreement ? values[0] : null,
+      observations,
+      agreementCount: usable.length,
+      conflictCount: 0,
+      sourceCount: sources.length,
+      sources,
+      invalidCount: invalid.length,
+      rationale: 'All usable observations report the same value for the same evidence key.'
+    };
+  }
 
-function handleConflictedGroup(key, representative, agreementCount, conflictCount, valueGroups, observations, sources, invalidCount) {
   return {
     key,
     entity: representative?.entity ?? null,
@@ -125,41 +119,10 @@ function handleConflictedGroup(key, representative, agreementCount, conflictCoun
       sourceCount: group.sources.length,
       sources: group.sources
     })),
-    invalidCount,
+    invalidCount: invalid.length,
     rationale: `${agreementCount} observation${agreementCount === 1 ? '' : 's'} agree and ${conflictCount} conflict. No source is silently preferred.`
   };
 }
-
-function reconcileGroup(key, records, rules) {
-  const representative = records[0] ?? null;
-  const observations = buildObservations(records);
-
-  const invalid = records.filter(record => !validateEvidenceRecord(record).valid);
-  const usable = records.filter(isUsable);
-  const sources = [...new Set(usable.map(sourceIdentity))];
-
-  if (!usable.length) {
-    return handleUnusableGroup(key, representative, observations, invalid, sources);
-  }
-
-  const valueGroups = buildValueGroups(usable);
-  const distinctValues = valueGroups.map(group => group.value);
-  const agreementCount = valueGroups[0]?.count ?? 0;
-  const conflictCount = Math.max(0, usable.length - agreementCount);
-
-  if (distinctValues.length === 1) {
-    if (usable.length === 1) {
-      return handleSingleSourceGroup(key, usable, rules, observations, sources, invalid.length);
-    }
-
-    const values = usable.map(record => record.value);
-    return handleAgreedGroup(key, representative, values, rules, usable.length, observations, sources, invalid.length);
-  }
-
-  return handleConflictedGroup(key, representative, agreementCount, conflictCount, valueGroups, observations, sources, invalid.length);
-}
-
-export { reconcileGroup };
 
 export function reconcileEvidenceSet(records, options = {}) {
   if (!Array.isArray(records)) {

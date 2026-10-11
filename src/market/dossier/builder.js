@@ -1,5 +1,4 @@
 import { EVIDENCE_STATUS } from '../evidence';
-import { assessVolatilityRisk } from '../risk';
 import { DOSSIER_SECTIONS, DOSSIER_STATUS, createResearchDossier } from './dossierModel';
 
 const SECTION_METRICS = {
@@ -70,8 +69,7 @@ export function buildResearchDossier({
   evidence = [],
   reconciliations = { results: [] },
   signals = [],
-  contradictions = { contradictions: [] },
-  volatilityRisk = null
+  contradictions = { contradictions: [] }
 }) {
   const scopedEvidence = entityRecords(evidence, entity);
   const sectionEntries = Object.entries(SECTION_METRICS).map(([section, keys]) => [
@@ -79,22 +77,6 @@ export function buildResearchDossier({
     buildSection(scopedEvidence, keys)
   ]);
   const sections = Object.fromEntries(sectionEntries);
-
-  const resolvedVolatilityRisk = volatilityRisk ?? assessVolatilityRisk(scopedEvidence, entity);
-
-  sections[DOSSIER_SECTIONS.RISKS] = {
-    status: resolvedVolatilityRisk.status,
-    metrics: {
-      priceRangePct: resolvedVolatilityRisk.rangePct,
-      thresholdPct: resolvedVolatilityRisk.thresholdPct,
-      observationCount: resolvedVolatilityRisk.observationCount
-    },
-    volatility: resolvedVolatilityRisk,
-    evidenceCount: resolvedVolatilityRisk.observationCount,
-    evidenceIds: scopedEvidence
-      .filter(record => ['high', 'low'].includes(record.metric?.key))
-      .map(record => record.id)
-  };
 
   const contradictionItems = (contradictions.contradictions ?? []).filter(item =>
     item.entity?.exchange === entity.exchange && item.entity?.symbol === entity.symbol
@@ -114,10 +96,9 @@ export function buildResearchDossier({
     && scopedEvidence.every(record => record.status === EVIDENCE_STATUS.VERIFIED);
 
   const hasBlockingConflict = conflictedReconciliations.length > 0;
-  const hasVolatilityRisk = resolvedVolatilityRisk.status === 'FLAGGED';
   const status = !scopedEvidence.length
     ? DOSSIER_STATUS.BLOCKED
-    : hasBlockingConflict || hasVolatilityRisk
+    : hasBlockingConflict
       ? DOSSIER_STATUS.PARTIAL
       : allEvidenceVerified
         ? DOSSIER_STATUS.READY
@@ -130,9 +111,7 @@ export function buildResearchDossier({
     conflictedEvidenceCount: scopedEvidence.filter(record => record.status === EVIDENCE_STATUS.CONFLICTED).length,
     reconciliationConflictCount: conflictedReconciliations.length,
     contradictionCount: contradictionItems.length,
-    blockedSignalCount: signalItems.filter(signal => signal.status === 'BLOCKED').length,
-    volatilityRiskStatus: resolvedVolatilityRisk.status,
-    volatilityRiskFlagged: hasVolatilityRisk
+    blockedSignalCount: signalItems.filter(signal => signal.status === 'BLOCKED').length
   };
 
   return createResearchDossier({
