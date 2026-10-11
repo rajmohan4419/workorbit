@@ -15,7 +15,7 @@ export const RESEARCH_STATUS = Object.freeze({
 export function resolveResearchEntity(query, selection = {}) {
   const normalized = String(query ?? '').trim().toUpperCase();
   const market = selection.market ?? 'IN';
-  const assetType = selection.assetType ?? 'STOCKS';
+  const assetType = selection.assetType ?? (resolveIndex(query) ? 'INDICES' : 'STOCKS');
   const exchange = selection.exchange ?? 'NSE';
 
   if (normalized === 'INFY' || normalized === 'INFOSYS' || normalized === 'INFOSYS LIMITED') {
