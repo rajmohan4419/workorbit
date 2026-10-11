@@ -42,6 +42,7 @@ const PRESETS = [
 
 function getUtcTimestamp({ year, month, day, hour, minute, timeZone }) {
   const targetUtc = Date.UTC(year, month - 1, day, hour, minute);
+  const targetDate = new Date(targetUtc);
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone,
     year: 'numeric',
@@ -53,7 +54,7 @@ function getUtcTimestamp({ year, month, day, hour, minute, timeZone }) {
     hour12: false
   });
 
-  const parts = formatter.formatToParts(new Date(targetUtc));
+  const parts = formatter.formatToParts(targetDate);
   const partMap = {};
   for (const p of parts) {
     if (p.type !== 'literal') partMap[p.type] = parseInt(p.value, 10);
