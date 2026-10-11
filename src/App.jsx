@@ -35,6 +35,12 @@ function Instrumentation() {
     const runInstrumentation = async () => {
       if (cancelled) return;
       try {
+        const { loadGoogleAnalytics } = await import('./lib/analytics');
+        if (!cancelled) await loadGoogleAnalytics();
+      } catch {
+        // ignore deferred analytics load failure
+      }
+    };
         if (!analyticsLoadedRef.current) {
           const [{ loadGoogleAnalytics }, { recordVisit }] = await Promise.all([
             import('./lib/analytics'),
