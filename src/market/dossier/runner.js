@@ -1,7 +1,6 @@
 import { validateEvidenceSet } from '../evidence';
 import { reconcileEvidenceSet } from '../reconciliation';
 import { detectContradictions } from '../contradictions';
-import { assessVolatilityRisk } from '../risk';
 import { buildResearchDossier } from './builder';
 
 export function runResearchDossier({
@@ -13,7 +12,6 @@ export function runResearchDossier({
   const validation = validateEvidenceSet(evidence);
   const reconciliation = reconcileEvidenceSet(evidence);
   const contradictions = detectContradictions(evidence);
-  const volatilityRisk = assessVolatilityRisk(evidence, entity);
 
   const dossier = buildResearchDossier({
     entity,
@@ -21,8 +19,7 @@ export function runResearchDossier({
     evidence,
     reconciliations: reconciliation,
     signals,
-    contradictions,
-    volatilityRisk
+    contradictions
   });
 
   return {
@@ -30,7 +27,6 @@ export function runResearchDossier({
     validation,
     reconciliation,
     contradictions,
-    volatilityRisk,
     audit: {
       entity,
       asOf,
@@ -41,8 +37,6 @@ export function runResearchDossier({
       reconciliationKeys: reconciliation.summary.totalKeys,
       reconciliationConflicts: reconciliation.summary.conflicted,
       contradictionCount: contradictions.summary.total,
-      volatilityRiskStatus: volatilityRisk.status,
-      volatilityRangePct: volatilityRisk.rangePct,
       generatedAt: dossier.generatedAt
     }
   };

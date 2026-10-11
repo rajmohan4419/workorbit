@@ -1,46 +1,14 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
-  Clock3, FlaskConical, Search, Sparkles, Star, Trophy, WandSparkles
-} from 'lucide-react';
-import { TOOLS, TOOLS_BY_SLUG } from '../data/toolCatalog';
-import { preloadToolPage } from '../lib/toolPageLoader';
+import { TOOLS } from '../data/toolCatalog';
 import { logEvent } from '../lib/telemetry';
 
-const categories = ['Career', 'Finance', 'Everyday', 'Developer'];
-
-const categoryImages = {
-  Career: '/images/category-career.svg',
-  Finance: '/images/category-finance.svg',
-  Everyday: '/images/category-everyday.svg',
-  Developer: '/images/category-developer.svg'
-};
-
-const heroImage = '/images/orbitboard-hero.svg';
-
-const categoryMeta = {
-  Career: {
-    icon: BriefcaseBusiness,
-    label: 'Career & Salary',
-    description: 'Salary, offers, notice periods and career decisions.'
-  },
-  Finance: {
-    icon: Coins,
-    label: 'Money & Finance',
-    description: 'Loans, GST, investments and everyday money math.'
-  },
-  Everyday: {
-    icon: Calculator,
-    label: 'Everyday',
-    description: 'Converters and practical file utilities.'
-  },
-  Developer: {
-    icon: Code2,
-    label: 'Developer Tools',
-    description: 'Fast browser utilities for data and technical work.'
-  }
-};
+import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
+import { AsianGamesBanner } from '../components/toolsHome/AsianGamesBanner';
+import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
+import { CategoryExplorer } from '../components/toolsHome/CategoryExplorer';
+import { RecentToolsSection } from '../components/toolsHome/RecentToolsSection';
+import { PrivacySection, CatalogCalloutSection, ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 
 const intentMap = [
   { terms: ['salary', 'ctc', 'in hand', 'take home', 'take-home', 'hike', 'increment', 'offer', 'notice', 'experience'], slugs: ['ctc-to-inhand', 'salary-hike', 'offer-comparison', 'notice-period', 'experience'] },
@@ -53,17 +21,6 @@ const intentMap = [
   { terms: ['convert', 'converter'], slugs: ['length-converter', 'weight-converter', 'temperature-converter', 'time-converter', 'timezone-converter'] },
   { terms: ['percentage', 'percent', '%'], slugs: ['percentage'] }
 ];
-
-const visualKind = (slug) => {
-  if (['ctc-to-inhand', 'salary-hike', 'offer-comparison', 'notice-period', 'experience'].includes(slug)) return 'career';
-  if (['emi', 'gst', 'sip'].includes(slug)) return 'finance';
-  if (['json-formatter', 'json-to-csv', 'json-to-xml', 'xml-to-json', 'markdown-to-html', 'base64', 'jwt-decoder', 'unix-timestamp', 'uuid-generator', 'url-encoder', 'diff-checker'].includes(slug)) return 'code';
-  if (slug.includes('xlsx') || slug.includes('csv')) return 'sheet';
-  if (slug.includes('pdf') || slug === 'txt-to-pdf') return 'pdf';
-  if (slug.includes('image') || ['jpg-to-png', 'png-to-jpg', 'webp-to-jpg', 'svg-to-png'].includes(slug)) return 'image';
-  if (slug.includes('converter') || slug === 'percentage') return 'convert';
-  return 'tool';
-};
 
 export default function ToolsHome() {
   const [searchParams] = useSearchParams();
@@ -95,6 +52,7 @@ export default function ToolsHome() {
     window.addEventListener('orbitboard:visitor-count', handleCount);
     return () => window.removeEventListener('orbitboard:visitor-count', handleCount);
   }, []);
+
   useEffect(() => { localStorage.setItem('orbitboard:recent', JSON.stringify(recent)); }, [recent]);
 
   const toggleFavorite = (slug) => setFavorites(prev => prev.includes(slug) ? prev.filter(x => x !== slug) : [slug, ...prev]);
@@ -116,7 +74,7 @@ export default function ToolsHome() {
       return tokens.every(token => haystack.includes(token));
     });
     const intentSlugs = intentMap.filter(group => group.terms.some(term => q.includes(term))).flatMap(group => group.slugs);
-    const merged = [...direct, ...intentSlugs.map(slug => TOOLS_BY_SLUG.get(slug))].filter(Boolean);
+    const merged = [...direct, ...intentSlugs.map(slug => TOOLS.find(t => t.slug === slug))].filter(Boolean);
     return [...new Map(merged.map(tool => [tool.slug, tool])).values()].slice(0, 8);
   }, [query]);
 
@@ -125,351 +83,49 @@ export default function ToolsHome() {
     [category]
   );
 
-  const recentTools = recent.map(slug => TOOLS_BY_SLUG.get(slug)).filter(Boolean).slice(0, 4);
+  const recentTools = recent.map(slug => TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
   const showExplore = !query.trim() && !category;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur">
-        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-white">
-            ORBIT<span className="text-violet-400">BOARD</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link to="/market-lab" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-violet-800/60 bg-violet-950/30 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:border-violet-500/60 hover:text-white">
-              <FlaskConical size={13} /> Market Lab
-            </Link>
-            {visitorCount !== null && (
-              <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-[11px] font-medium text-slate-500" title="Unique visitors recorded by OrbitBoard">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
-                {visitorCount.toLocaleString()} visitors
-              </div>
-            )}
-            <div className="text-xs font-medium text-slate-500">Free • No sign-up</div>
-          </div>
-        </div>
-      </header>
+      <ToolsHomeHeader visitorCount={visitorCount} />
 
       <main className="px-4 sm:px-6">
-      <div className="border-b border-amber-900/40 bg-gradient-to-r from-amber-950/80 via-slate-900 to-violet-950/60">
-        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-3">
-          <a
-            href="https://www.aichi-nagoya2026.org/"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-amber-700/30 bg-slate-950/40 px-4 py-3 transition hover:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/60"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300">
-                <Trophy size={18} aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-rose-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400" aria-hidden="true" /> Live now
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-[.14em] text-slate-500">Asian Games 2026</span>
-                </div>
-                <p className="mt-0.5 truncate text-sm font-semibold text-white">Aichi–Nagoya · 19 Sep – 4 Oct</p>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 group-hover:text-amber-200 sm:shrink-0">
-              Schedule & live results <ArrowRight size={14} aria-hidden="true" />
-            </span>
-          </a>
-        </div>
-      </div>
+        <AsianGamesBanner />
 
         <section className="relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem]">
-          <img src={heroImage} alt="" aria-hidden="true" fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/90 to-slate-950" aria-hidden="true" />
-          <div className="relative z-10 w-full">
-            <div className="max-w-5xl mx-auto text-center">
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-400">
-                  <Sparkles size={14} /> Practical tools, one place
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-800/70 bg-emerald-950/40 px-3 py-1.5 text-xs font-semibold text-emerald-300">
-                  <span aria-hidden="true">🔒</span> Private · Secure · Free
-                </div>
-              </div>
-              <h1 className="mt-6 text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight">
-                What do you need to <span className="text-violet-400">get done?</span>
-              </h1>
-              <p className="mt-5 text-base sm:text-lg leading-7 text-slate-400">
-                Tell OrbitBoard what you are trying to do. We’ll take you straight to the right tool.
-              </p>
+          <ToolsHomeHero
+            query={query}
+            setQuery={setQuery}
+            setCategory={setCategory}
+            searchResults={searchResults}
+            addRecent={addRecent}
+            logEvent={logEvent}
+          />
 
-              <div className="mt-8 relative max-w-2xl mx-auto">
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 shadow-2xl shadow-violet-200/40 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/10">
-                  <Search size={22} className="text-slate-500 shrink-0" aria-hidden="true" />
-                  <label htmlFor="tool-search" className="sr-only">Describe what you need</label>
-                  <input
-                    id="tool-search"
-                    value={query}
-                    onChange={e => { setQuery(e.target.value); setCategory(null); }}
-                    placeholder="e.g. “I need my salary in hand”"
-                    className="w-full bg-transparent outline-none text-base placeholder:text-slate-600"
-                  />
-                  {query && <button type="button" onClick={() => setQuery('')} className="text-xs text-slate-500 hover:text-white">Clear</button>}
-                </div>
+          <CategoryExplorer
+            query={query}
+            category={category}
+            setCategory={setCategory}
+            chooseCategory={chooseCategory}
+            categoryTools={categoryTools}
+            addRecent={addRecent}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+          />
 
-                {query && (
-                  <div className="absolute z-20 mt-3 w-full rounded-2xl border border-slate-800 bg-slate-900 p-3 text-left shadow-2xl">
-                    <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      {searchResults.length ? 'We found these tools' : 'No direct match yet'}
-                    </div>
-                    {searchResults.map(tool => <ResultRow key={tool.slug} tool={tool} onUse={addRecent} />)}
-                    {!searchResults.length && (
-                      <div className="px-2 py-6 text-center text-sm text-slate-500">
-                        Try “salary”, “EMI”, “PDF”, “Excel”, “JSON” or “image”.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-8 relative h-10 hidden sm:block" aria-hidden="true">
-                <div className="absolute left-1/2 top-1/2 h-px w-72 -translate-x-1/2 bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
-                <OrbitNode className="left-[12%] top-0" label="Salary" />
-                <OrbitNode className="left-[30%] top-5" label="JSON" />
-                <OrbitNode className="right-[30%] top-5" label="EMI" />
-                <OrbitNode className="right-[12%] top-0" label="PDF" />
-              </div>
-
-              <div className="mt-2 flex flex-wrap justify-center gap-2">
-                {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => (
-                  <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-400 hover:border-violet-500/40 hover:text-violet-400">
-                    {example}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {!query && (
-              <div className="mt-12 max-w-6xl mx-auto">
-                <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[.2em] text-slate-600">
-                  <WandSparkles size={14} /> Explore by intent
-                </div>
-                <div className="mt-5 grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  {categories.map(name => {
-                    const meta = categoryMeta[name];
-                    const Icon = meta.icon;
-                    return (
-                      <button key={name} type="button" onClick={() => chooseCategory(name)} className="group relative overflow-hidden text-left rounded-2xl border border-slate-800 bg-slate-900 p-5 hover:-translate-y-1 hover:border-violet-500/50 transition">
-                        <img src={categoryImages[name]} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-20 transition duration-500 group-hover:scale-105 group-hover:opacity-30" />
-                        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-950/80 to-violet-950/50" aria-hidden="true" />
-                        <div className="relative z-10">
-                        <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-700 flex items-center justify-center"><Icon size={20} /></div>
-                        <h2 className="mt-4 font-bold text-white group-hover:text-violet-400">{meta.label}</h2>
-                        <p className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</p>
-                        <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-violet-400">Explore <ArrowRight size={13} /></span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {category && !query && (
-              <div className="mt-10 max-w-6xl mx-auto">
-                <button type="button" onClick={() => setCategory(null)} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-white">
-                  <ChevronLeft size={16} /> All areas
-                </button>
-                <div className="mt-4 flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Explore</p>
-                    <h2 className="mt-1 text-2xl font-black">{categoryMeta[category].label}</h2>
-                  </div>
-                  <span className="text-xs text-slate-600">{categoryTools.length} shown</span>
-                </div>
-                <div className="mt-5 grid sm:grid-cols-2 gap-4">
-                  {categoryTools.map(tool => <ToolCard key={tool.slug} tool={tool} onUse={addRecent} favorite={favorites.includes(tool.slug)} onFavorite={toggleFavorite} />)}
-                </div>
-              </div>
-            )}
-
-            {showExplore && recentTools.length > 0 && (
-              <div className="mt-10 max-w-5xl mx-auto">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                    <Clock3 size={14} /> Continue where you left off
-                  </div>
-                  <span className="text-xs text-slate-700">{recentTools.length} recent</span>
-                </div>
-                <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {recentTools.map(tool => <ResultRow key={tool.slug} tool={tool} onUse={addRecent} compact />)}
-                </div>
-              </div>
-            )}
-          </div>
+          <RecentToolsSection
+            showExplore={showExplore}
+            recentTools={recentTools}
+            addRecent={addRecent}
+          />
         </section>
 
-        <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-8 sm:py-10">
-          <div className="rounded-2xl border border-emerald-900/40 bg-emerald-950/20 px-5 py-5 sm:px-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-              <div className="max-w-2xl">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-emerald-300">
-                  <span aria-hidden="true">🔒</span> Your privacy matters
-                </div>
-                <h2 className="mt-2 text-lg sm:text-xl font-bold text-white">Private, secure & free by design.</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  No account is required for our core tools. Many file and data tools process your content directly in your browser, so your files can stay on your device instead of being uploaded to OrbitBoard.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-400 lg:min-w-[460px]">
-                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
-                  <div className="font-semibold text-white">No sign-up</div>
-                  <div className="mt-1">Use core tools without an account.</div>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
-                  <div className="font-semibold text-white">Browser-first</div>
-                  <div className="mt-1">Many tools process files locally.</div>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-3">
-                  <div className="font-semibold text-white">Free to use</div>
-                  <div className="mt-1">Core utilities stay accessible.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="max-w-[1440px] mx-auto border-t border-slate-900 py-10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">Still exploring?</p>
-              <h2 className="mt-1 text-xl font-bold">Every tool, when you need it.</h2>
-            </div>
-            <Link to="/tools" className="text-sm font-semibold text-violet-400 hover:text-violet-400">Open full catalogue <ArrowRight size={15} className="inline ml-1" /></Link>
-          </div>
-        </section>
+        <PrivacySection />
+        <CatalogCalloutSection />
       </main>
 
-      <footer className="border-t border-slate-900 py-8">
-        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-600">
-          <span>OrbitBoard • Practical tools for work & life</span>
-          <a
-            href="mailto:support@orbitboard.in?subject=OrbitBoard%20Collaboration"
-            className="font-medium text-slate-500 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-md px-1"
-          >
-            Collaboration? support@orbitboard.in
-          </a>
-        </div>
-      </footer>
+      <ToolsHomeFooter />
     </div>
   );
-}
-
-function ResultRow({ tool, onUse, compact = false, favorite = false, onFavorite }) {
-  return (
-    <div className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:border-violet-500/40">
-      <Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} onTouchStart={preloadToolPage} onClick={() => onUse(tool.slug)} className="min-w-0 flex-1 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-lg">
-        <ToolVisual tool={tool} compact />
-        <div className="min-w-0">
-          <div className="font-semibold text-sm text-white group-hover:text-violet-400 truncate">{tool.name}</div>
-          {!compact && <div className="mt-0.5 text-xs text-slate-500 truncate">{tool.description}</div>}
-        </div>
-        <ArrowRight size={15} className="shrink-0 text-slate-600 group-hover:text-violet-400" />
-      </Link>
-      {onFavorite && (
-        <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 text-slate-600 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
-          <Star size={15} fill={favorite ? 'currentColor' : 'none'} />
-        </button>
-      )}
-    </div>
-  );
-}
-
-function ToolCard({ tool, favorite, onFavorite, onUse }) {
-  return (
-    <Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} onTouchStart={preloadToolPage} onClick={() => onUse(tool.slug)} className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 hover:-translate-y-1 hover:border-violet-500/60 hover:bg-slate-900 transition focus:outline-none focus:ring-2 focus:ring-violet-500">
-      <ToolVisual tool={tool} />
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400">{tool.category}</span>
-            <h2 className="mt-1 text-lg font-bold group-hover:text-violet-400">{tool.name}</h2>
-          </div>
-          <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e => { e.preventDefault(); e.stopPropagation(); onFavorite(tool.slug); }} className="rounded-lg p-2 text-slate-500 hover:text-amber-300 focus:outline-none focus:ring-2 focus:ring-violet-500">
-            <Star size={17} fill={favorite ? 'currentColor' : 'none'} />
-          </button>
-        </div>
-        <p className="mt-2 text-sm leading-6 text-slate-400">{tool.description}</p>
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-400">Use tool <ArrowRight size={15} /></span>
-      </div>
-    </Link>
-  );
-}
-
-function ToolVisual({ tool, compact = false }) {
-  const kind = visualKind(tool.slug);
-  const height = compact ? 'h-11 w-14' : 'h-36 w-full';
-  const label = tool.icon;
-
-  return (
-    <div className={`relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-violet-950/40 ${height}`} aria-hidden="true">
-      <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,.35),transparent_35%)]" />
-      <svg viewBox="0 0 320 150" className="relative h-full w-full" fill="none">
-        {kind === 'career' && <>
-          <rect x="35" y="28" width="150" height="96" rx="12" fill="rgba(15,23,42,.9)" stroke="rgba(167,139,250,.45)" />
-          <rect x="54" y="46" width="55" height="8" rx="4" fill="rgba(167,139,250,.7)" />
-          <rect x="54" y="65" width="92" height="6" rx="3" fill="rgba(148,163,184,.35)" />
-          <rect x="54" y="80" width="72" height="6" rx="3" fill="rgba(148,163,184,.25)" />
-          <circle cx="238" cy="72" r="38" fill="rgba(124,58,237,.18)" stroke="rgba(167,139,250,.6)" />
-          <text x="238" y="84" textAnchor="middle" fontSize="34" fontWeight="800" fill="#c4b5fd">₹</text>
-          <path d="M205 116 L230 102 L251 110 L284 82" stroke="#34d399" strokeWidth="5" strokeLinecap="round" />
-        </>}
-        {kind === 'finance' && <>
-          <rect x="38" y="34" width="244" height="82" rx="16" fill="rgba(15,23,42,.92)" stroke="rgba(167,139,250,.45)" />
-          <text x="58" y="65" fontSize="12" fill="#94a3b8">ESTIMATE</text>
-          <text x="58" y="94" fontSize="27" fontWeight="800" fill="#f8fafc">₹ 12,500</text>
-          <path d="M196 96 C216 68 235 86 253 60 C262 48 272 48 280 40" stroke="#a78bfa" strokeWidth="5" strokeLinecap="round" />
-        </>}
-        {kind === 'code' && <>
-          <rect x="38" y="25" width="244" height="100" rx="14" fill="rgba(2,6,23,.95)" stroke="rgba(56,189,248,.35)" />
-          <circle cx="58" cy="43" r="4" fill="#fb7185" /><circle cx="72" cy="43" r="4" fill="#fbbf24" /><circle cx="86" cy="43" r="4" fill="#34d399" />
-          <text x="58" y="72" fontFamily="monospace" fontSize="17" fill="#c4b5fd">{label === '{}' ? '{ }' : label}</text>
-          <path d="M58 92 H177 M58 106 H143" stroke="#475569" strokeWidth="6" strokeLinecap="round" />
-        </>}
-        {kind === 'sheet' && <>
-          <rect x="62" y="20" width="196" height="112" rx="10" fill="rgba(15,23,42,.94)" stroke="rgba(52,211,153,.45)" />
-          {[0,1,2,3].map(i => <path key={i} d={`M62 ${48+i*21} H258`} stroke="rgba(71,85,105,.65)" />)}
-          {[0,1,2,3,4].map(i => <path key={i} d={`M${101+i*39} 20 V132`} stroke="rgba(71,85,105,.65)" />)}
-          <rect x="102" y="49" width="38" height="20" fill="rgba(52,211,153,.22)" />
-          <rect x="141" y="70" width="38" height="20" fill="rgba(167,139,250,.18)" />
-        </>}
-        {kind === 'pdf' && <>
-          <path d="M98 18 H197 L231 52 V132 H98 Z" fill="rgba(15,23,42,.95)" stroke="rgba(248,113,113,.45)" strokeWidth="2" />
-          <path d="M197 18 V53 H231" stroke="rgba(248,113,113,.45)" strokeWidth="2" />
-          <text x="115" y="86" fontSize="25" fontWeight="800" fill="#fca5a5">PDF</text>
-          <path d="M117 103 H209 M117 115 H190" stroke="#475569" strokeWidth="6" strokeLinecap="round" />
-        </>}
-        {kind === 'image' && <>
-          <rect x="44" y="27" width="232" height="98" rx="14" fill="rgba(15,23,42,.9)" stroke="rgba(96,165,250,.45)" />
-          <circle cx="103" cy="58" r="13" fill="rgba(250,204,21,.8)" />
-          <path d="M59 111 L118 74 L153 99 L190 68 L261 111 Z" fill="rgba(96,165,250,.28)" stroke="rgba(96,165,250,.7)" />
-          <text x="214" y="52" textAnchor="middle" fontSize="12" fill="#bfdbfe">{label}</text>
-        </>}
-        {kind === 'convert' && <>
-          <rect x="43" y="43" width="86" height="58" rx="12" fill="rgba(15,23,42,.95)" stroke="rgba(167,139,250,.45)" />
-          <rect x="191" y="43" width="86" height="58" rx="12" fill="rgba(15,23,42,.95)" stroke="rgba(167,139,250,.45)" />
-          <path d="M137 61 H183 M183 61 L173 53 M183 61 L173 69" stroke="#a78bfa" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M183 83 H137 M137 83 L147 75 M137 83 L147 91" stroke="#34d399" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          <text x="86" y="78" textAnchor="middle" fontSize="15" fontWeight="700" fill="#c4b5fd">{label}</text>
-          <text x="234" y="78" textAnchor="middle" fontSize="15" fontWeight="700" fill="#a7f3d0">NEW</text>
-        </>}
-        {kind === 'tool' && <>
-          <circle cx="160" cy="75" r="48" fill="rgba(124,58,237,.15)" stroke="rgba(167,139,250,.5)" />
-          <text x="160" y="86" textAnchor="middle" fontSize="28" fontWeight="800" fill="#c4b5fd">{label}</text>
-        </>}
-      </svg>
-      {!compact && <div className="absolute bottom-3 left-4 rounded-full border border-white/10 bg-slate-950/70 px-2.5 py-1 text-[10px] font-semibold text-slate-300 backdrop-blur">{tool.category}</div>}
-    </div>
-  );
-}
-
-function OrbitNode({ label, className }) {
-  return <span className={`absolute inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold text-slate-500 backdrop-blur ${className}`}><span className="h-1.5 w-1.5 rounded-full bg-violet-400" />{label}</span>;
 }
