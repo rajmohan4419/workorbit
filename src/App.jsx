@@ -60,6 +60,8 @@ function Instrumentation() {
             window.dispatchEvent(new CustomEvent('orbitboard:visitor-count', { detail: total }));
           }
         }
+      } catch {
+        // Telemetry failure is non-critical and handled silently
       } catch (error) {
         console.warn('[OrbitBoard instrumentation] deferred initialization failed', error);
       }
