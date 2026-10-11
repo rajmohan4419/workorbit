@@ -53,8 +53,7 @@ export default function PdfESign() {
       const output = await pdf.save();
       downloadBlob(new Blob([output], { type: 'application/pdf' }), (file.name.replace(/\.pdf$/i, '') || 'document') + '-signed.pdf');
       setStatus('Done — the signed PDF was downloaded.');
-    } catch (error) {
-      console.error(error);
+    } catch {
       setStatus('Could not sign this PDF. Try another document.');
     }
   };
