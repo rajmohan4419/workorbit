@@ -40,7 +40,7 @@ const PRESETS = [
   { label: 'Major Tech Hubs', source: 'Asia/Kolkata', destinations: ['America/New_York', 'America/Los_Angeles', 'Europe/London', 'Europe/Berlin', 'Asia/Dubai', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney'] },
 ];
 
-function getUtcTimestamp(year, month, day, hour, minute, timeZone) {
+function getUtcTimestamp({ year, month, day, hour, minute, timeZone }) {
   const targetUtc = Date.UTC(year, month - 1, day, hour, minute);
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone,
@@ -200,7 +200,7 @@ export default function GlobalTimeZoneConverter() {
     const [y, m, d] = sourceDate.split('-').map(Number);
     const [h, min] = sourceTime.split(':').map(Number);
     if (!y || !m || !d || isNaN(h) || isNaN(min)) return new Date();
-    return getUtcTimestamp(y, m, d, h, min, sourceZone);
+    return getUtcTimestamp({ year: y, month: m, day: d, hour: h, minute: min, timeZone: sourceZone });
   }, [sourceDate, sourceTime, sourceZone]);
 
   const sourceInfo = useMemo(() => {
