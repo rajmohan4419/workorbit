@@ -321,10 +321,20 @@ export default function MarketLab() {
       const result = await executeResearch({
         query,
         fetcher: async request => {
-          const { data, error } = await supabase.functions.invoke('market-research', { body: { query: request.index?.symbol ?? (request.issuer === 'Infosys Limited' ? 'INFY' : query) } });
-          if (error) throw new Error(error.message || 'Research function failed.');
-          if (!data?.records) throw new Error(data?.error || 'Research function returned no filing records.');
-          return data.records;
+          const fetchSingle = async req => {
+            const targetQuery = req?.index?.symbol ?? (req?.issuer === 'Infosys Limited' ? 'INFY' : query);
+            const { data, error } = await supabase.functions.invoke('market-research', { body: { query: targetQuery } });
+            if (error) throw new Error(error.message || 'Research function failed.');
+            if (!data?.records) throw new Error(data?.error || 'Research function returned no filing records.');
+            return data.records;
+          };
+
+          if (Array.isArray(request)) {
+            const results = await Promise.all(request.map(req => fetchSingle(req)));
+            return results.flat();
+          }
+
+          return await fetchSingle(request);
         }
       });
 
