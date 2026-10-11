@@ -4,7 +4,6 @@ import { TOOLS } from '../data/toolCatalog';
 import { logEvent } from '../lib/telemetry';
 
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
-import { AsianGamesBanner } from '../components/toolsHome/AsianGamesBanner';
 import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
 import { CategoryExplorer } from '../components/toolsHome/CategoryExplorer';
 import { RecentToolsSection } from '../components/toolsHome/RecentToolsSection';
@@ -87,13 +86,12 @@ export default function ToolsHome() {
   const showExplore = !query.trim() && !category;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="orbit-light min-h-screen bg-[#fbf8f3] text-stone-800">
       <ToolsHomeHeader visitorCount={visitorCount} />
 
       <main className="px-4 sm:px-6">
-        <AsianGamesBanner />
 
-        <section className="relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem]">
+        <section className="orbit-enter relative py-10 sm:py-12 overflow-hidden rounded-b-[2.5rem]">
           <ToolsHomeHero
             query={query}
             setQuery={setQuery}
