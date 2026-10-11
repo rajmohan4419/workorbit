@@ -1,4 +1,4 @@
-import { NEWS_DUPLICATE_STATUS, classifyNewsFreshness, DEFAULT_NEWS_RULES } from './newsRules';
+import { NEWS_DUPLICATE_STATUS, classifyNewsFreshness, DEFAULT_NEWS_RULES } from './newsRules.js';
 
 function normalizeText(value) {
   return String(value ?? '')
