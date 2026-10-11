@@ -46,3 +46,48 @@ body {
     display: none;
   }
 }
+
+
+/* OrbitBoard warm, low-glare refresh */
+:root {
+  color-scheme: light;
+  --orbit-canvas: #fbf8f3;
+  --orbit-surface: #ffffff;
+  --orbit-surface-soft: #f4efe7;
+  --orbit-border: #e7dfd3;
+  --orbit-ink: #292524;
+  --orbit-muted: #78716c;
+  --orbit-accent: #6d4bd1;
+}
+html { background: var(--orbit-canvas); scroll-behavior: smooth; }
+body { background: var(--orbit-canvas); color: var(--orbit-ink); }
+.orbit-light { background: var(--orbit-canvas); color: var(--orbit-ink); }
+.orbit-enter { animation: orbit-rise-in .55s cubic-bezier(.2,.7,.2,1) both; }
+.orbit-card-enter { animation: orbit-rise-in .45s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes orbit-rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes orbit-soft-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(109,75,209,0); }
+  50% { box-shadow: 0 8px 28px rgba(109,75,209,.09); }
+}
+.orbit-interactive { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.orbit-interactive:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(41,37,36,.07); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Apply the gentle entrance motion consistently across routed screens. */
+main { animation: orbit-rise-in .45s cubic-bezier(.2,.7,.2,1) both; }
+.orbit-light input, .orbit-light textarea, .orbit-light select {
+  color: #292524;
+  background-color: #fffdfa;
+  border-color: #ddd3c5;
+}
+.orbit-light a:focus-visible, .orbit-light button:focus-visible,
+.orbit-light input:focus-visible, .orbit-light select:focus-visible,
+.orbit-light textarea:focus-visible {
+  outline: 3px solid rgba(109,75,209,.38);
+  outline-offset: 2px;
+}
