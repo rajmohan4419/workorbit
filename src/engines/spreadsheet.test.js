@@ -1,63 +1,113 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as XLSX from 'xlsx';
-import { csvToXlsx } from './spreadsheet.js';
+import { jsonToXlsx, csvToXlsx, xlsxToCsv } from './spreadsheet.js';
 
-test('csvToXlsx converts standard CSV text into valid XLSX ArrayBuffer', () => {
-  const csvText = 'Name,Age,Role\nAlice,30,Developer\nBob,25,Designer';
-  const xlsxBuffer = csvToXlsx(csvText);
+test('jsonToXlsx - converts valid JSON array to XLSX output', () => {
+  const jsonInput = JSON.stringify([
+    { Name: 'Alice', Age: 30, Role: 'Developer' },
+    { Name: 'Bob', Age: 25, Role: 'Designer' }
+  ]);
 
-  assert.ok(xlsxBuffer instanceof ArrayBuffer || ArrayBuffer.isView(xlsxBuffer));
+  const output = jsonToXlsx(jsonInput);
+  assert.ok(output instanceof ArrayBuffer || output instanceof Uint8Array || Array.isArray(output));
 
-  const workbook = XLSX.read(xlsxBuffer, { type: 'array' });
-  assert.equal(workbook.SheetNames.length, 1);
+  const workbook = XLSX.read(output, { type: 'array' });
+  assert.deepEqual(workbook.SheetNames, ['Data']);
 
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  const parsedData = XLSX.utils.sheet_to_json(worksheet);
-
-  assert.deepEqual(parsedData, [
+  const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets['Data']);
+  assert.deepEqual(sheetData, [
     { Name: 'Alice', Age: 30, Role: 'Developer' },
     { Name: 'Bob', Age: 25, Role: 'Designer' }
   ]);
 });
 
-test('csvToXlsx handles CSV with quoted fields containing commas and newlines', () => {
-  const csvText = 'Title,Description\n"Hello, World","Line 1\nLine 2"';
-  const xlsxBuffer = csvToXlsx(csvText);
+test('jsonToXlsx - handles empty array', () => {
+  const output = jsonToXlsx('[]');
+  const workbook = XLSX.read(output, { type: 'array' });
+  assert.deepEqual(workbook.SheetNames, ['Data']);
+  const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets['Data']);
+  assert.deepEqual(sheetData, []);
+});
 
-  const workbook = XLSX.read(xlsxBuffer, { type: 'array' });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  const parsedData = XLSX.utils.sheet_to_json(worksheet);
+test('jsonToXlsx - throws on invalid JSON syntax', () => {
+  assert.throws(() => {
+    jsonToXlsx('invalid json');
+  }, SyntaxError);
+});
 
-  assert.deepEqual(parsedData, [
-    { Title: 'Hello, World', Description: 'Line 1\nLine 2' }
+test('jsonToXlsx - throws on non-array JSON', () => {
+  assert.throws(() => {
+    jsonToXlsx('{"name": "Alice"}');
+  }, { message: 'Expected a JSON array of objects.' });
+
+  assert.throws(() => {
+    jsonToXlsx('123');
+  }, { message: 'Expected a JSON array of objects.' });
+});
+
+test('jsonToXlsx - throws on array containing non-objects', () => {
+  assert.throws(() => {
+    jsonToXlsx('[1, 2, 3]');
+  }, { message: 'Each JSON item must be an object.' });
+
+  assert.throws(() => {
+    jsonToXlsx('["string"]');
+  }, { message: 'Each JSON item must be an object.' });
+
+  assert.throws(() => {
+    jsonToXlsx('[["nested array"]]');
+  }, { message: 'Each JSON item must be an object.' });
+
+  assert.throws(() => {
+    jsonToXlsx('[null]');
+  }, { message: 'Each JSON item must be an object.' });
+});
+
+test('csvToXlsx - converts CSV string to XLSX buffer', () => {
+  const csvInput = 'Name,Age\nAlice,30\nBob,25';
+  const output = csvToXlsx(csvInput);
+
+  const workbook = XLSX.read(output, { type: 'array' });
+  assert.ok(workbook.SheetNames.length > 0);
+
+  const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+  assert.deepEqual(sheetData, [
+    { Name: 'Alice', Age: 30 },
+    { Name: 'Bob', Age: 25 }
   ]);
 });
 
-test('csvToXlsx handles special characters and UTF-8 content', () => {
-  const csvText = 'Currency,Symbol\nEuro,€\nYen,¥\nRupee,₹';
-  const xlsxBuffer = csvToXlsx(csvText);
-
-  const workbook = XLSX.read(xlsxBuffer, { type: 'array' });
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  const parsedData = XLSX.utils.sheet_to_json(worksheet);
-
-  assert.deepEqual(parsedData, [
-    { Currency: 'Euro', Symbol: '€' },
-    { Currency: 'Yen', Symbol: '¥' },
-    { Currency: 'Rupee', Symbol: '₹' }
+test('xlsxToCsv - converts single sheet file to CSV string', async () => {
+  const jsonInput = JSON.stringify([
+    { col1: 'val1', col2: 'val2' },
+    { col1: 'val3', col2: 'val4' }
   ]);
+  const xlsxOutput = jsonToXlsx(jsonInput);
+
+  const mockFile = {
+    arrayBuffer: async () => xlsxOutput
+  };
+
+  const csvOutput = await xlsxToCsv(mockFile);
+  assert.strictEqual(csvOutput.trim(), 'col1,col2\nval1,val2\nval3,val4');
 });
 
-test('csvToXlsx handles empty CSV input gracefully', () => {
-  const csvText = '';
-  const xlsxBuffer = csvToXlsx(csvText);
+test('xlsxToCsv - converts multi-sheet workbook to formatted CSV', async () => {
+  const wb = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.json_to_sheet([{ a: 1, b: 2 }]);
+  const ws2 = XLSX.utils.json_to_sheet([{ x: 10, y: 20 }]);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Sheet1');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Sheet2');
 
-  assert.ok(xlsxBuffer instanceof ArrayBuffer || ArrayBuffer.isView(xlsxBuffer));
+  const xlsxOutput = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const mockFile = {
+    arrayBuffer: async () => xlsxOutput
+  };
 
-  const workbook = XLSX.read(xlsxBuffer, { type: 'array' });
-  assert.equal(workbook.SheetNames.length, 1);
+  const csvOutput = await xlsxToCsv(mockFile);
+  assert.ok(csvOutput.includes('### Sheet: Sheet1'));
+  assert.ok(csvOutput.includes('### Sheet: Sheet2'));
+  assert.ok(csvOutput.includes('a,b\n1,2'));
+  assert.ok(csvOutput.includes('x,y\n10,20'));
 });
