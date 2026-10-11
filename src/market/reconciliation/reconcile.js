@@ -1,6 +1,6 @@
-import { evidenceKey, EVIDENCE_STATUS } from '../evidence/evidenceModel.js';
-import { validateEvidenceRecord } from '../evidence/validator.js';
-import { RECONCILIATION_STATUS, DEFAULT_RECONCILIATION_RULES, valuesAgree } from './rules.js';
+import { evidenceKey, EVIDENCE_STATUS } from '../evidence/evidenceModel';
+import { validateEvidenceRecord } from '../evidence/validator';
+import { RECONCILIATION_STATUS, DEFAULT_RECONCILIATION_RULES, valuesAgree } from './rules';
 
 function sourceIdentity(record) {
   return [
