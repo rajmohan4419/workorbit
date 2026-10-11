@@ -1,5 +1,5 @@
-import { EVIDENCE_STATUS } from '../evidence';
-import { CONTRADICTION_SEVERITY, CONTRADICTION_TYPES, DEFAULT_CONTRADICTION_RULES } from './rules';
+import { EVIDENCE_STATUS } from '../evidence/index.js';
+import { CONTRADICTION_SEVERITY, CONTRADICTION_TYPES, DEFAULT_CONTRADICTION_RULES } from './rules.js';
 
 const RULE_DEFINITIONS = [
   {

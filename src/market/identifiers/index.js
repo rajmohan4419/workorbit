@@ -3,5 +3,5 @@ export {
   createSecurityIdentifier,
   identifierKey,
   matchIdentifier
-} from './identifierModel';
-export { createIdentifierResolver } from './identifierResolver';
+} from './identifierModel.js';
+export { createIdentifierResolver } from './identifierResolver.js';

@@ -1,1 +1,1 @@
-export { RESEARCH_STATUS, resolveResearchEntity, runResearch } from './researchRunner';
+export { RESEARCH_STATUS, resolveResearchEntity, runResearch } from './researchRunner.js';

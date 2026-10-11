@@ -1,13 +1,13 @@
-export { newsSource, newsAdapter, createNewsSource } from './newsAdapter';
+export { newsSource, newsAdapter, createNewsSource } from './newsAdapter.js';
 export {
   NEWS_FRESHNESS,
   NEWS_DUPLICATE_STATUS,
   DEFAULT_NEWS_RULES,
   classifyNewsFreshness
-} from './newsRules';
+} from './newsRules.js';
 export {
   enrichNewsEvidence,
   classifyNewsDuplicates,
   summarizeNewsIntelligence
-} from './newsIntelligence';export { ingestNewsSources } from './newsPipeline';
-export { verifyNewsEvidence, verificationSummary } from '../verification';
+} from './newsIntelligence.js';export { ingestNewsSources } from './newsPipeline.js';
+export { verifyNewsEvidence, verificationSummary } from '../verification/index.js';

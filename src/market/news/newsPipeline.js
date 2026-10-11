@@ -1,5 +1,5 @@
-import { normalizeSourcePayload } from '../sources';
-import { enrichNewsEvidence, summarizeNewsIntelligence } from './newsIntelligence';
+import { normalizeSourcePayload } from '../sources/index.js';
+import { enrichNewsEvidence, summarizeNewsIntelligence } from './newsIntelligence.js';
 
 /**
  * Normalize multiple news providers through the same source contract,

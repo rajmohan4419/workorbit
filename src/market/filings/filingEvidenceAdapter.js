@@ -1,5 +1,5 @@
-import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence';
-import { FILING_TYPES } from './filingModel';
+import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence/index.js';
+import { FILING_TYPES } from './filingModel.js';
 
 const METRIC_BY_TYPE = {
   [FILING_TYPES.FINANCIAL_RESULT]: 'earnings',

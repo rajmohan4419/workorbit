@@ -1,5 +1,5 @@
-import { assertConnector, createConnectorHealth } from './connectorContract';
-import { normalizeAdapterResult } from '../sources/sourceContract';
+import { assertConnector, createConnectorHealth } from './connectorContract.js';
+import { normalizeAdapterResult } from '../sources/sourceContract.js';
 
 export async function runConnector(connector, request = {}, context = {}) {
   assertConnector(connector);

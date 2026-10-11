@@ -1,4 +1,4 @@
-import { createSourceDescriptor, SOURCE_CAPABILITIES, SOURCE_TRUST } from '../sources/sourceContract';
+import { createSourceDescriptor, SOURCE_CAPABILITIES, SOURCE_TRUST } from '../sources/sourceContract.js';
 
 export const NSE_PRIMARY_SOURCE = createSourceDescriptor({
   id: 'nse-corporate-filings',

@@ -1,4 +1,4 @@
-import { createSignal, SIGNAL_STATUS, SIGNAL_TYPES } from './signalModel';
+import { createSignal, SIGNAL_STATUS, SIGNAL_TYPES } from './signalModel.js';
 
 export function buildNewsSignals(newsReconciliations = []) {
   return newsReconciliations.map(item => {

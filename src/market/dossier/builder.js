@@ -1,5 +1,5 @@
-import { EVIDENCE_STATUS } from '../evidence';
-import { DOSSIER_SECTIONS, DOSSIER_STATUS, createResearchDossier } from './dossierModel';
+import { EVIDENCE_STATUS } from '../evidence/index.js';
+import { DOSSIER_SECTIONS, DOSSIER_STATUS, createResearchDossier } from './dossierModel.js';
 
 const SECTION_METRICS = {
   [DOSSIER_SECTIONS.MARKET]: ['close', 'open', 'high', 'low', 'volume_index', 'oi', 'price_change', 'price_trend'],

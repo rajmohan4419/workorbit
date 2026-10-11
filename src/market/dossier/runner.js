@@ -1,7 +1,7 @@
-import { validateEvidenceSet } from '../evidence';
-import { reconcileEvidenceSet } from '../reconciliation';
-import { detectContradictions } from '../contradictions';
-import { buildResearchDossier } from './builder';
+import { validateEvidenceSet } from '../evidence/index.js';
+import { reconcileEvidenceSet } from '../reconciliation/index.js';
+import { detectContradictions } from '../contradictions/index.js';
+import { buildResearchDossier } from './builder.js';
 
 export function runResearchDossier({
   entity,

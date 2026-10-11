@@ -1,5 +1,5 @@
-import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence';
-import { assertSourceAdapter, normalizeAdapterResult } from './sourceContract';
+import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence/index.js';
+import { assertSourceAdapter, normalizeAdapterResult } from './sourceContract.js';
 
 export function normalizeSourcePayload(adapter, payload, context = {}) {
   assertSourceAdapter(adapter);

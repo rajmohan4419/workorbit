@@ -3,5 +3,5 @@ export {
   createConnectorDescriptor,
   assertConnector,
   createConnectorHealth
-} from './connectorContract';
-export { runConnector } from './connectorRunner';
+} from './connectorContract.js';
+export { runConnector } from './connectorRunner.js';
