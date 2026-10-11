@@ -1,4 +1,4 @@
-import { EVIDENCE_KINDS, EVIDENCE_STATUS, evidenceKey } from './evidenceModel.js';
+import { EVIDENCE_KINDS, EVIDENCE_STATUS, evidenceKey } from './evidenceModel';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:T.*)?$/;
 

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
@@ -10,7 +10,8 @@ import ExperimentBuilder from './pages/ExperimentBuilder';
 export default function App() {
   return (
     <BrowserRouter>
-      <Instrumentation />
+      <Analytics />
+      <Telemetry />
       <Routes>
         <Route path="/" element={<ToolsHome />} />
         <Route path="/tools" element={<ToolsCatalogue />} />
@@ -24,56 +25,58 @@ export default function App() {
   );
 }
 
-function Instrumentation() {
+function Analytics() {
+  useEffect(() => {
+    let cancelled = false;
+    let timer = null;
+
+    const load = async () => {
+      if (cancelled) return;
+      try {
+        const { loadGoogleAnalytics } = await import('./lib/analytics');
+        if (!cancelled) await loadGoogleAnalytics();
+      } catch (error) {
+        console.warn('[OrbitBoard analytics] deferred load failed', error);
+      }
+    };
+
+    const schedule = () => { timer = window.setTimeout(load, 8000); };
+
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule, { once: true });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', schedule);
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, []);
+
+  return null;
+}
+
+function Telemetry() {
   const location = useLocation();
-  const analyticsLoadedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     let timer = null;
 
-    const runInstrumentation = async () => {
+    const runTelemetry = async () => {
       if (cancelled) return;
       try {
-        const { loadGoogleAnalytics } = await import('./lib/analytics');
-        if (!cancelled) await loadGoogleAnalytics();
-      } catch {
-        // ignore deferred analytics load failure
-      }
-    };
-        if (!analyticsLoadedRef.current) {
-          const [{ loadGoogleAnalytics }, { recordVisit }] = await Promise.all([
-            import('./lib/analytics'),
-            import('./lib/telemetry')
-          ]);
-          if (cancelled) return;
-
-          const [, total] = await Promise.all([
-            loadGoogleAnalytics(),
-            recordVisit(location.pathname)
-          ]);
-
-          analyticsLoadedRef.current = true;
-
-          if (!cancelled && typeof total === 'number' && Number.isFinite(total)) {
-            window.dispatchEvent(new CustomEvent('orbitboard:visitor-count', { detail: total }));
-          }
-        } else {
-          const { recordVisit } = await import('./lib/telemetry');
-          if (cancelled) return;
-          const total = await recordVisit(location.pathname);
-          if (!cancelled && typeof total === 'number' && Number.isFinite(total)) {
-            window.dispatchEvent(new CustomEvent('orbitboard:visitor-count', { detail: total }));
-          }
+        const { recordVisit } = await import('./lib/telemetry');
+        if (cancelled) return;
+        const total = await recordVisit(location.pathname);
+        if (!cancelled && typeof total === 'number' && Number.isFinite(total)) {
+          window.dispatchEvent(new CustomEvent('orbitboard:visitor-count', { detail: total }));
         }
-      } catch {
-        // Telemetry failure is non-critical and handled silently
       } catch (error) {
-        console.warn('[OrbitBoard instrumentation] deferred initialization failed', error);
+        console.warn('[OrbitBoard telemetry] deferred telemetry failed', error);
       }
     };
 
-    const scheduleAfterLoad = () => { timer = window.setTimeout(runInstrumentation, 8000); };
+    const scheduleAfterLoad = () => { timer = window.setTimeout(runTelemetry, 8000); };
 
     if (document.readyState === 'complete') scheduleAfterLoad();
     else window.addEventListener('load', scheduleAfterLoad, { once: true });
