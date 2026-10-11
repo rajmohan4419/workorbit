@@ -19,13 +19,11 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
   useEffect(() => {
     const trimmed = query.trim();
     if (!trimmed) {
-      setResults([]);
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
     const timer = setTimeout(async () => {
+      setLoading(true);
       try {
         const res = await fetch(`/api/market/search?q=${encodeURIComponent(trimmed)}`);
         if (res.ok) {
@@ -63,6 +61,16 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
     setIsOpen(false);
   };
 
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setQuery(val);
+    setIsOpen(true);
+    if (!val.trim()) {
+      setResults([]);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative w-full max-w-2xl mx-auto" ref={containerRef}>
       <div className="relative flex items-center">
@@ -70,10 +78,7 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
         <input
           type="text"
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setIsOpen(true);
-          }}
+          onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           placeholder="Search stock by name or ticker (e.g. INFY, Reliance, AAPL)..."
           className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 py-3.5 pl-12 pr-10 text-sm sm:text-base text-white placeholder-slate-500 shadow-xl backdrop-blur transition focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
