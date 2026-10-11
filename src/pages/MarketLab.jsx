@@ -12,6 +12,7 @@ export default function MarketLab() {
 
   const [selectedSymbol, setSelectedSymbol] = useState(symbolParam);
   const [range, setRange] = useState('1y');
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const [stockData, setStockData] = useState(null);
   const [stockLoading, setStockLoading] = useState(true);
@@ -21,7 +22,7 @@ export default function MarketLab() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
 
-  // Trigger data load & analysis when selectedSymbol or range changes
+  // Trigger data load & analysis when selectedSymbol, range, or reloadTrigger changes
   useEffect(() => {
     let active = true;
     if (!selectedSymbol) return;
@@ -52,7 +53,7 @@ export default function MarketLab() {
     return () => {
       active = false;
     };
-  }, [selectedSymbol, range]);
+  }, [selectedSymbol, range, reloadTrigger]);
 
   useEffect(() => {
     let active = true;
@@ -87,7 +88,7 @@ export default function MarketLab() {
     return () => {
       active = false;
     };
-  }, [selectedSymbol]);
+  }, [selectedSymbol, reloadTrigger]);
 
   const handleSelectSymbol = (symbol) => {
     setSelectedSymbol(symbol);
@@ -99,8 +100,7 @@ export default function MarketLab() {
   };
 
   const handleRetry = () => {
-    // Force reload
-    setSelectedSymbol((prev) => prev);
+    setReloadTrigger((prev) => prev + 1);
   };
 
   return (
