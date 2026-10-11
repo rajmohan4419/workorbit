@@ -475,13 +475,27 @@ function JsonToCsv() {
   try { const rows=JSON.parse(input); if(!Array.isArray(rows)) throw new Error('JSON must be an array of objects'); if(rows.some(r=>!r||typeof r!=='object'||Array.isArray(r))) throw new Error('Each item must be an object'); const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))]; const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; csv=[keys.map(esc).join(','),...rows.map(r=>keys.map(k=>esc(typeof r[k]==='object'?JSON.stringify(r[k]):r[k])).join(','))].join('\n'); } catch(e){error=e.message;}
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>{error?<p className="text-sm text-red-400">{error}</p>:<textarea readOnly value={csv} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>}<ExportActions content={csv} filename="orbitboard-data.csv"/><p className="text-xs text-slate-500">Best for flat JSON arrays. Nested values are stored as JSON text.</p></div>
 }
+function base64Encode(str) {
+  const bytes = new TextEncoder().encode(str);
+  const binString = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+  return btoa(binString);
+}
+
+function base64Decode(str) {
+  const binString = atob(str);
+  const bytes = Uint8Array.from(binString, char => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
 function Base64Tool() {
   const [input,setInput]=useState('Hello OrbitBoard'); const [mode,setMode]=useState('encode'); let output='',error='';
+  try { output=mode==='encode'?base64Encode(input):base64Decode(input); } catch { error='Invalid Base64 input'; }
   try { output=mode==='encode'?btoa(String.fromCharCode(...new TextEncoder().encode(input))):new TextDecoder().decode(Uint8Array.from(atob(input),c=>c.charCodeAt(0))); } catch { error='Invalid Base64 input'; }
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><div className="flex gap-2"><button onClick={()=>setMode('encode')} className="rounded-xl bg-violet-600 px-4 py-2 text-sm">Encode</button><button onClick={()=>setMode('decode')} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Decode</button></div><textarea readOnly value={error||output} className="w-full h-40 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={error||output} filename="orbitboard-base64.txt"/></div>
 }
 function JwtDecoder() {
   const [token,setToken]=useState(''); let header='',payload='',error='';
+  try { if(token.trim()){const p=token.split('.'); if(p.length!==3) throw new Error('A JWT must contain three parts'); const dec=s=>{const normalized=s.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(s.length/4)*4,'='); return JSON.stringify(JSON.parse(base64Decode(normalized)),null,2)}; header=dec(p[0]);payload=dec(p[1]);} } catch(e){error='Invalid JWT: '+e.message;}
   try { if(token.trim()){const p=token.split('.'); if(p.length!==3) throw new Error('A JWT must contain three parts'); const dec=s=>{const normalized=s.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(s.length/4)*4,'='); return JSON.stringify(JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(normalized),c=>c.charCodeAt(0)))),null,2)}; header=dec(p[0]);payload=dec(p[1]);} } catch(e){error='Invalid JWT: '+e.message;}
   return <div className="space-y-4"><textarea value={token} onChange={e=>setToken(e.target.value)} placeholder="Paste JWT here" className="w-full h-32 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/>{error&&<p className="text-sm text-red-400">{error}</p>}<div className="grid sm:grid-cols-2 gap-4"><textarea readOnly value={header} placeholder="Header" className="w-full h-52 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><textarea readOnly value={payload} placeholder="Payload" className="w-full h-52 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/></div><p className="text-xs text-slate-500">Decoded locally in your browser. Signature verification is not performed.</p></div>
 }
