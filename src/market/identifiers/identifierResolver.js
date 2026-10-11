@@ -1,4 +1,4 @@
-import { IDENTIFIER_TYPES, createSecurityIdentifier, identifierKey } from './identifierModel';
+import { IDENTIFIER_TYPES, createSecurityIdentifier, identifierKey } from './identifierModel.js';
 
 export function createIdentifierResolver(seed = []) {
   const records = new Map();

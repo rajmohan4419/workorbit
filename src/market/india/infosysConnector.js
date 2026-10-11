@@ -1,5 +1,5 @@
-import { createSecurityIdentifier, IDENTIFIER_TYPES } from '../identifiers';
-import { createIndiaFilingConnector, runIndiaFilingConnector } from './indiaConnector';
+import { createSecurityIdentifier, IDENTIFIER_TYPES } from '../identifiers/index.js';
+import { createIndiaFilingConnector, runIndiaFilingConnector } from './indiaConnector.js';
 
 export const INFOSYS_SECURITY = Object.freeze({
   issuer: 'Infosys Limited',

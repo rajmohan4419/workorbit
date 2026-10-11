@@ -1,4 +1,4 @@
-import { createConnectorDescriptor, runConnector } from '../connectors';
+import { createConnectorDescriptor, runConnector } from '../connectors/index.js';
 
 export const INDEX_CONNECTOR_CAPABILITIES = Object.freeze({
   INDEX_DEFINITION: 'index_definition'

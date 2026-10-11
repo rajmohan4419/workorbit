@@ -1,5 +1,5 @@
-import { INFY_SYNTHETIC_DAILY } from './infySyntheticData';
-import { runExperiment } from '../experiments/engine';
+import { INFY_SYNTHETIC_DAILY } from './infySyntheticData.js';
+import { runExperiment } from '../experiments/engine.js';
 
 export const INFY_DEMO_EXPERIMENT = {
   universe: {

@@ -2,7 +2,7 @@ export {
   DOSSIER_STATUS,
   DOSSIER_SECTIONS,
   createResearchDossier
-} from './dossierModel';
+} from './dossierModel.js';
 
-export { buildResearchDossier } from './builder';
-export { runResearchDossier, createDossierInput } from './runner';
+export { buildResearchDossier } from './builder.js';
+export { runResearchDossier, createDossierInput } from './runner.js';

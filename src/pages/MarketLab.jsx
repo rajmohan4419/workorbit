@@ -47,6 +47,16 @@ export default function MarketLab() {
     setResearchResult(null);
 
     try {
+      let resolutionData = null;
+      try {
+        const { data: resData } = await supabase.functions.invoke('resolve-market-instrument', {
+          body: { query, market, assetType, exchange }
+        });
+        if (resData) resolutionData = resData;
+      } catch (err) {
+        console.warn('Instrument resolution via Gemini function failed or not configured', err);
+      }
+
       const res = await executeResearch({
         query,
         market,
@@ -63,12 +73,18 @@ export default function MarketLab() {
         }
       });
 
+      let customMessage = res.message;
+      if (res.status === 'UNSUPPORTED' && resolutionData?.matches?.length) {
+        customMessage = `No direct filing research connector found for "${query}". Gemini suggestion: ${resolutionData.matches.map(m => `${m.name} (${m.symbol})`).join(', ')}. ${resolutionData.message || ''}`;
+      }
+
       setResearchResult({
-        entity: res.entity?.symbol ?? query.toUpperCase(),
+        entity: res.entity?.symbol ?? resolutionData?.instrument?.symbol ?? query.toUpperCase(),
         status: res.status,
         dossier: res.dossier ?? null,
-        message: res.message ?? (res.status === 'READY' ? 'Research completed.' : 'Research completed with incomplete evidence coverage.'),
-        connector: res.connector ?? null
+        message: customMessage ?? (res.status === 'READY' ? 'Research completed.' : 'Research completed with incomplete evidence coverage.'),
+        connector: res.connector ?? null,
+        geminiResolution: resolutionData
       });
       setResearchStatus(res.status === 'FAILED' || res.status === 'BLOCKED' || res.status === 'UNSUPPORTED' ? 'blocked' : 'complete');
     } catch (error) {
@@ -78,21 +94,21 @@ export default function MarketLab() {
   }, [researchQuery, market, assetType, exchange]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="orbit-light min-h-screen bg-[#fbf8f3] text-stone-800">
       <SEO
         title="Market Lab | OrbitBoard"
         description="Test market hypotheses, inspect historical evidence and replay a demo market dataset with OrbitBoard Market Lab."
         canonical="https://orbitboard.in/market-lab"
       />
-      <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-[#e7dfd3] bg-[#fbf8f3]/95 backdrop-blur">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-xl font-black tracking-tight text-white">ORBIT<span className="text-violet-400">BOARD</span></Link>
-          <Link to="/tools" className="text-sm font-semibold text-slate-400 hover:text-white">All tools</Link>
+          <Link to="/" className="text-xl font-black tracking-tight text-stone-900">ORBIT<span className="text-violet-400">BOARD</span></Link>
+          <Link to="/tools" className="text-sm font-semibold text-slate-400 hover:text-stone-900">All tools</Link>
         </div>
       </header>
 
       <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-white"><ArrowLeft size={16} /> OrbitBoard home</Link>
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-stone-900"><ArrowLeft size={16} /> OrbitBoard home</Link>
         <MarketLabHero />
         <ResearchSection
           market={market}
@@ -127,10 +143,10 @@ export default function MarketLab() {
           <strong className="text-amber-200">Prototype note:</strong> Historical filing research currently supports Infosys on NSE and selected Indian indices. Market prices and live quotes are not yet connected; the experiment and replay panels use synthetic demo data.
         </section>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/" className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:border-violet-500/50 hover:text-white">Back to OrbitBoard</Link>
-          <Link to="/tools" className="rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-violet-400">Explore tools</Link>
+          <Link to="/" className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:border-violet-500/50 hover:text-stone-900">Back to OrbitBoard</Link>
+          <Link to="/tools" className="rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-bold text-stone-900 hover:bg-violet-400">Explore tools</Link>
         </div>
-        <p className="mt-10 text-xs text-slate-600">Demo market data shown in the experiment and replay panels is fictional and exists only to demonstrate the workflow.</p>
+        <p className="mt-10 text-xs text-stone-500">Demo market data shown in the experiment and replay panels is fictional and exists only to demonstrate the workflow.</p>
       </main>
     </div>
   );

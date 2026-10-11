@@ -1,5 +1,5 @@
-import { RECONCILIATION_STATUS } from '../reconciliation';
-import { createSignal, SIGNAL_STATUS, SIGNAL_TYPES } from './signalModel';
+import { RECONCILIATION_STATUS } from '../reconciliation/index.js';
+import { createSignal, SIGNAL_STATUS, SIGNAL_TYPES } from './signalModel.js';
 
 function signalTypeForMetric(metricKey = '') {
   if (metricKey === 'news_event') return SIGNAL_TYPES.NEWS_EVENT;

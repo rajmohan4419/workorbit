@@ -2,6 +2,6 @@ export {
   RECONCILIATION_STATUS,
   DEFAULT_RECONCILIATION_RULES,
   valuesAgree
-} from './rules';
+} from './rules.js';
 
-export { reconcileEvidenceSet } from './reconcile';
+export { reconcileEvidenceSet } from './reconcile.js';

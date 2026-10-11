@@ -1,4 +1,4 @@
-import { assessVerification, VERIFICATION_STATUS } from './verificationRules';
+import { assessVerification, VERIFICATION_STATUS } from './verificationRules.js';
 
 function sourceTrustOf(record) {
   return record.source?.trust ?? 'DISCOVERY';

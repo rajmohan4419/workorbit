@@ -1,5 +1,5 @@
-import { createConnectorDescriptor, runConnector } from '../connectors';
-import { filingAdapter } from '../filings';
+import { createConnectorDescriptor, runConnector } from '../connectors/index.js';
+import { filingAdapter } from '../filings/index.js';
 
 export const INDIA_CONNECTOR_CAPABILITIES = Object.freeze({
   CORPORATE_FILINGS: 'corporate_filings',

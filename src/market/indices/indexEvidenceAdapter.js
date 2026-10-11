@@ -1,4 +1,4 @@
-import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence';
+import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence/index.js';
 
 export function indexRecordsToEvidence(records = [], entity, context = {}) {
   return records.map((record, index) => createEvidenceRecord({

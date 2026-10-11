@@ -3,5 +3,5 @@ export {
   VERIFICATION_DECISION,
   DEFAULT_VERIFICATION_RULES,
   assessVerification
-} from './verificationRules';
-export { verifyNewsEvidence, verificationSummary } from './verifier';
+} from './verificationRules.js';
+export { verifyNewsEvidence, verificationSummary } from './verifier.js';

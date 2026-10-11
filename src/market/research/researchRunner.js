@@ -1,8 +1,8 @@
-import { runInfosysValidation } from '../india';
-import { filingsToEvidence } from '../filings';
-import { runIndiaIndexConnector, createIndiaIndexConnector, indexRecordsToEvidence, resolveIndex } from '../indices';
-import { runResearchDossier } from '../dossier';
-import { validateMarketSelection } from '../marketSelection';
+import { runInfosysValidation } from '../india/index.js';
+import { filingsToEvidence } from '../filings/index.js';
+import { runIndiaIndexConnector, createIndiaIndexConnector, indexRecordsToEvidence, resolveIndex } from '../indices/index.js';
+import { runResearchDossier } from '../dossier/index.js';
+import { validateMarketSelection } from '../marketSelection.js';
 
 export const RESEARCH_STATUS = Object.freeze({
   READY: 'READY',

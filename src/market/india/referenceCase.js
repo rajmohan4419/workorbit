@@ -1,4 +1,4 @@
-import { createSecurityIdentifier, IDENTIFIER_TYPES } from '../identifiers';
+import { createSecurityIdentifier, IDENTIFIER_TYPES } from '../identifiers/index.js';
 
 export const MARKET_LAB_REFERENCE_CASE = Object.freeze({
   issuer: 'Reference Indian listed company',

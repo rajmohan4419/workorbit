@@ -1,5 +1,5 @@
-import { createFilingRecord, FILING_STATUS, FILING_TYPES } from './filingModel';
-import { createSourceDescriptor, SOURCE_CAPABILITIES, SOURCE_TRUST } from '../sources/sourceContract';
+import { createFilingRecord, FILING_STATUS, FILING_TYPES } from './filingModel.js';
+import { createSourceDescriptor, SOURCE_CAPABILITIES, SOURCE_TRUST } from '../sources/sourceContract.js';
 
 export const filingSource = createSourceDescriptor({
   id: 'primary-filings',

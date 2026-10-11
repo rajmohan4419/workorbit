@@ -1,5 +1,5 @@
-import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence';
-import { createSourceDescriptor, SOURCE_CAPABILITIES, SOURCE_TRUST } from './sourceContract';
+import { createEvidenceRecord, EVIDENCE_KINDS, EVIDENCE_STATUS } from '../evidence/index.js';
+import { createSourceDescriptor, SOURCE_CAPABILITIES, SOURCE_TRUST } from './sourceContract.js';
 
 export const demoSource = createSourceDescriptor({
   id: 'orbitboard-demo',

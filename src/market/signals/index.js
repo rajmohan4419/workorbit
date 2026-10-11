@@ -2,7 +2,7 @@ export {
   SIGNAL_STATUS,
   SIGNAL_TYPES,
   createSignal
-} from './signalModel';
+} from './signalModel.js';
 
-export { buildSignals } from './signalEngine';
-export { buildNewsSignals } from './newsSignal';
+export { buildSignals } from './signalEngine.js';
+export { buildNewsSignals } from './newsSignal.js';

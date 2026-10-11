@@ -1,4 +1,4 @@
-import { runExperiment } from './engine';
+import { runExperiment } from './engine.js';
 
 const withCondition = (definition, condition) => ({
   ...definition,

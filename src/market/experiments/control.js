@@ -1,4 +1,4 @@
-import { runExperiment } from './engine';
+import { runExperiment } from './engine.js';
 
 const sameTriggerDateSet = (observations) => new Set(observations.map((item) => item.triggerDate));
 

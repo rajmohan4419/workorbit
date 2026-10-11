@@ -1,12 +1,32 @@
+import { useEffect, useRef } from 'react';
+
 export default function SampleAd() {
+  const adRef = useRef(false);
+
+  useEffect(() => {
+    if (adRef.current) return;
+    adRef.current = true;
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error('[OrbitBoard AdSense] push error', e);
+    }
+  }, []);
+
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-950 p-4" aria-label="Advertisement space">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">Advertisement · placeholder</p>
-        <span className="rounded-lg border border-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-600">Coming soon</span>
+    <section className="rounded-2xl border border-[#e7dfd3] bg-white p-4 shadow-sm" aria-label="Advertisement space">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Advertisement</p>
       </div>
-      <div className="mt-3 flex min-h-12 items-center justify-center rounded-xl border border-dashed border-slate-800 px-4 py-3 text-center text-xs text-slate-600">
-        A future ad provider can be added here after it has been reviewed and approved.
+      <div className="min-h-[90px] flex items-center justify-center overflow-hidden">
+        <ins
+          className="adsbygoogle"
+          style={{ display: 'block', width: '100%', textAlign: 'center' }}
+          data-ad-client="ca-pub-9160921653901381"
+          data-ad-slot="auto"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
       </div>
     </section>
   );
