@@ -125,10 +125,7 @@ export default function ToolsHome() {
     [category]
   );
 
-  const recentTools = useMemo(
-    () => recent.map(slug => TOOLS_BY_SLUG.get(slug)).filter(Boolean).slice(0, 4),
-    [recent]
-  );
+  const recentTools = recent.map(slug => TOOLS_BY_SLUG.get(slug)).filter(Boolean).slice(0, 4);
   const showExplore = !query.trim() && !category;
 
   return (
