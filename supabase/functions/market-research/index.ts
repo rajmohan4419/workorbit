@@ -95,6 +95,70 @@ function indexQuoteRecords(row: Record<string, unknown>, index: { name: string; 
     }))
 }
 
+
+function extractSetCookies(headers: Headers) {
+  const extended = headers as Headers & { getSetCookie?: () => string[] }
+  if (typeof extended.getSetCookie === 'function') return extended.getSetCookie()
+
+  const raw = headers.get('set-cookie') ?? ''
+  if (!raw) return []
+  return raw.split(/,(?=[^;,=]+=[^;,]+)/).map(value => value.trim()).filter(Boolean)
+}
+
+function mergeCookies(existing: string[], headers: Headers) {
+  const jar = new Map(existing.map(cookie => [cookie.split('=')[0], cookie]))
+  for (const cookie of extractSetCookies(headers)) {
+    const pair = cookie.split(';', 1)[0]
+    const name = pair.split('=', 1)[0]
+    if (name) jar.set(name, pair)
+  }
+  return Array.from(jar.values())
+}
+
+async function fetchNseAllIndices() {
+  const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'
+  const browserHeaders = {
+    'User-Agent': userAgent,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept-Encoding': 'gzip, deflate',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    'Upgrade-Insecure-Requests': '1'
+  }
+
+  let cookies: string[] = []
+  const homeResponse = await fetch('https://www.nseindia.com/', { headers: browserHeaders })
+  cookies = mergeCookies(cookies, homeResponse.headers)
+  await homeResponse.text()
+
+  // NSE's public API commonly expects a warmed browser session, not only a User-Agent.
+  // Visit the live-indices page with the same cookie jar before calling /api/allIndices.
+  const pageResponse = await fetch('https://www.nseindia.com/market-data/live-market-indices/heatmap', {
+    headers: {
+      ...browserHeaders,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      ...(cookies.length ? { Cookie: cookies.join('; ') } : {})
+    }
+  })
+  cookies = mergeCookies(cookies, pageResponse.headers)
+  await pageResponse.text()
+
+  const apiResponse = await fetch('https://www.nseindia.com/api/allIndices', {
+    headers: {
+      'User-Agent': userAgent,
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept-Encoding': 'gzip, deflate',
+      'Referer': 'https://www.nseindia.com/market-data/live-market-indices/heatmap',
+      'X-Requested-With': 'XMLHttpRequest',
+      ...(cookies.length ? { Cookie: cookies.join('; ') } : {})
+    }
+  })
+
+  return apiResponse
+}
+
 function parseNseAllIndices(payload: unknown, index: { name: string; url: string; type: string }, retrievedAt: string) {
   const rows = Array.isArray((payload as { data?: unknown[] })?.data) ? (payload as { data: unknown[] }).data : []
   const wanted = normalizeIndexName(index.name)
@@ -173,18 +237,21 @@ Deno.serve(async (request) => {
     }
 
     const retrievedAt = new Date().toISOString()
-    const nseResponse = await fetch('https://www.nseindia.com/api/allIndices', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; OrbitBoard Market Lab)',
-        'Accept': 'application/json,text/plain,*/*',
-        'Referer': 'https://www.nseindia.com/'
-      }
-    })
-
     let records: Array<Record<string, unknown>> = []
-    if (nseResponse.ok) {
-      const payload = await nseResponse.json()
-      records = parseNseAllIndices(payload, index, retrievedAt)
+    let nseStatus = 0
+    let sourceId = 'nse-all-indices'
+    let sourceProvider = 'NSE India all-indices endpoint'
+    let sourceUrl = 'https://www.nseindia.com/api/allIndices'
+
+    try {
+      const nseResponse = await fetchNseAllIndices()
+      nseStatus = nseResponse.status
+      if (nseResponse.ok) {
+        const payload = await nseResponse.json()
+        records = parseNseAllIndices(payload, index, retrievedAt)
+      }
+    } catch (error) {
+      nseStatus = 599
     }
 
     if (!records.length) {
@@ -194,9 +261,12 @@ Deno.serve(async (request) => {
           'Referer': 'https://www.niftyindices.com/'
         }
       })
-      if (!feedResponse.ok) throw new Error('NSE index sources returned HTTP ' + nseResponse.status + ' and live feed HTTP ' + feedResponse.status)
+      if (!feedResponse.ok) throw new Error('NSE index sources returned HTTP ' + nseStatus + ' and live feed HTTP ' + feedResponse.status)
       const payload = await feedResponse.json()
       records = parseLiveIndexFeed(payload, index, retrievedAt)
+      sourceId = 'nse-indices-live-feed'
+      sourceProvider = 'NSE Indices live index feed'
+      sourceUrl = LIVE_INDEX_FEED
     }
 
     if (!records.length) throw new Error(index.name + ' was not found in the official NSE index sources')
@@ -204,10 +274,10 @@ Deno.serve(async (request) => {
     return new Response(JSON.stringify({
       entity: { issuer: index.name, symbol: query, exchange: 'NSE', entityType: 'INDEX', indexType: index.type },
       source: {
-        id: 'nse-indices-live-feed',
-        provider: 'NSE Indices live index feed',
+        id: sourceId,
+        provider: sourceProvider,
         trust: 'PRIMARY',
-        url: LIVE_INDEX_FEED
+        url: sourceUrl
       },
       records,
       retrievedAt,
