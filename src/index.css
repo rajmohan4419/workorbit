@@ -77,3 +77,17 @@ body { background: var(--orbit-canvas); color: var(--orbit-ink); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Apply the gentle entrance motion consistently across routed screens. */
+main { animation: orbit-rise-in .45s cubic-bezier(.2,.7,.2,1) both; }
+.orbit-light input, .orbit-light textarea, .orbit-light select {
+  color: #292524;
+  background-color: #fffdfa;
+  border-color: #ddd3c5;
+}
+.orbit-light a:focus-visible, .orbit-light button:focus-visible,
+.orbit-light input:focus-visible, .orbit-light select:focus-visible,
+.orbit-light textarea:focus-visible {
+  outline: 3px solid rgba(109,75,209,.38);
+  outline-offset: 2px;
+}
