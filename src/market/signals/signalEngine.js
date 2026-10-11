@@ -1,3 +1,4 @@
+import { assessVolatilityRiskForEntities, VOLATILITY_STATUS } from '../risk';
 import { RECONCILIATION_STATUS } from '../reconciliation';
 import { createSignal, SIGNAL_STATUS, SIGNAL_TYPES } from './signalModel';
 
@@ -37,8 +38,37 @@ function buildGenericSignal(item) {
   });
 }
 
-export function buildSignals(reconciliation) {
+function entityKey(entity = {}) {
+  return [entity.exchange ?? '', entity.symbol ?? ''].join('|');
+}
+
+function applyVolatilityGate(signals, riskAssessments) {
+  const riskByEntity = new Map(
+    riskAssessments.map(item => [entityKey(item.entity), item])
+  );
+
+  return signals.map(signal => {
+    const risk = riskByEntity.get(entityKey(signal.entity));
+
+    if (!risk || risk.status !== VOLATILITY_STATUS.FLAGGED || signal.status === SIGNAL_STATUS.BLOCKED) {
+      return signal;
+    }
+
+    return {
+      ...signal,
+      status: SIGNAL_STATUS.BLOCKED,
+      strength: 'VOLATILITY_RISK',
+      headline: 'Signal blocked by volatility risk gate',
+      rationale: `${signal.rationale ?? 'Signal requires validation.'} ${risk.rationale}`
+    };
+  });
+}
+
+export function buildSignals(reconciliation, { evidence = [], riskAssessments = null } = {}) {
   if (!reconciliation?.results) return [];
 
-  return reconciliation.results.map(buildGenericSignal);
+  const signals = reconciliation.results.map(buildGenericSignal);
+  const risks = riskAssessments ?? assessVolatilityRiskForEntities(evidence);
+
+  return applyVolatilityGate(signals, risks);
 }
