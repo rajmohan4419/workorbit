@@ -1,11 +1,18 @@
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
-import MarketLab from './pages/MarketLab';
-import MarketSecurity from './pages/MarketSecurity';
-import ExperimentBuilder from './pages/ExperimentBuilder';
+
+const MarketLab = React.lazy(() => import('./pages/MarketLab'));
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm">
+      Loading...
+    </div>
+  );
+}
 
 export default function App() {
   return (
@@ -13,15 +20,16 @@ export default function App() {
       <AdSense />
       <Analytics />
       <Telemetry />
-      <Routes>
-        <Route path="/" element={<ToolsHome />} />
-        <Route path="/tools" element={<ToolsCatalogue />} />
-        <Route path="/market-lab" element={<MarketLab />} />
-        <Route path="/market/:symbol" element={<MarketSecurity />} />
-        <Route path="/market/:symbol/experiment" element={<ExperimentBuilder />} />
-        <Route path="/tools/:slug" element={<ToolPageRoute />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<ToolsHome />} />
+          <Route path="/tools" element={<ToolsCatalogue />} />
+          <Route path="/market-lab" element={<MarketLab />} />
+          <Route path="/market/:symbol" element={<MarketLab />} />
+          <Route path="/tools/:slug" element={<ToolPageRoute />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
@@ -80,7 +88,7 @@ function Telemetry() {
     const scheduleAfterLoad = () => { timer = window.setTimeout(runTelemetry, 8000); };
 
     if (document.readyState === 'complete') scheduleAfterLoad();
-    else window.addEventListener('load', scheduleAfterLoad, { once: true });
+    else window.addEventListener('load', scheduleAfterLoad);
 
     return () => {
       cancelled = true;
@@ -91,7 +99,6 @@ function Telemetry() {
 
   return null;
 }
-
 
 function AdSense() {
   useEffect(() => {

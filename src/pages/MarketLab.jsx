@@ -1,152 +1,187 @@
-import { useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import { ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
-import { runResearch as executeResearch } from '../market/research';
-
-import { DEMO_DAYS, runExperiment } from '../components/marketLab/marketLabData';
-import { FeatureCard } from '../components/marketLab/MarketLabUiComponents';
-import { MarketLabHero } from '../components/marketLab/MarketLabHero';
-import { ResearchSection } from '../components/marketLab/ResearchSection';
-import { ExperimentSection } from '../components/marketLab/ExperimentSection';
-import { EvidenceLedgerGrid } from '../components/marketLab/EvidenceLedgerGrid';
-import { DossierSection } from '../components/marketLab/DossierSection';
-import { MarketReplaySection } from '../components/marketLab/MarketReplaySection';
+import { StockSearch } from '../components/marketLab/StockSearch';
+import { StockHeaderChart } from '../components/marketLab/StockHeaderChart';
+import { StockNewsEventsAnalysis } from '../components/marketLab/StockNewsEventsAnalysis';
 
 export default function MarketLab() {
-  const [volumeThreshold, setVolumeThreshold] = useState(1.25);
-  const [oiThreshold, setOiThreshold] = useState(2);
-  const [forwardDays, setForwardDays] = useState(2);
-  const [researchQuery, setResearchQuery] = useState('INFY');
-  const [market, setMarket] = useState('IN');
-  const [assetType, setAssetType] = useState('STOCKS');
-  const [exchange, setExchange] = useState('NSE');
-  const [researchMode, setResearchMode] = useState('simple');
-  const [researchResult, setResearchResult] = useState(null);
-  const [researchStatus, setResearchStatus] = useState('idle');
-  const [result, setResult] = useState(() => runExperiment(DEMO_DAYS, 1.25, 2, 2));
-  const [replayIndex, setReplayIndex] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const symbolParam = searchParams.get('symbol') || 'INFY.NS';
 
-  const run = useCallback(() => setResult(runExperiment(DEMO_DAYS, volumeThreshold, oiThreshold, forwardDays)), [volumeThreshold, oiThreshold, forwardDays]);
-  const reset = useCallback(() => {
-    setVolumeThreshold(1.25);
-    setOiThreshold(2);
-    setForwardDays(2);
-    setResult(runExperiment(DEMO_DAYS, 1.25, 2, 2));
+  const [selectedSymbol, setSelectedSymbol] = useState(symbolParam);
+  const [range, setRange] = useState('1y');
+
+  const [stockData, setStockData] = useState(null);
+  const [stockLoading, setStockLoading] = useState(true);
+  const [stockError, setStockError] = useState(null);
+
+  const [analysisData, setAnalysisData] = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
+
+  // Fetch Stock Quote & History
+  const loadStockData = useCallback(async (symbolToFetch, rangeToFetch) => {
+    setStockLoading(true);
+    setStockError(null);
+    try {
+      const res = await fetch(
+        `/api/market/stock?symbol=${encodeURIComponent(symbolToFetch)}&range=${encodeURIComponent(rangeToFetch)}`
+      );
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to fetch stock data');
+      }
+      const data = await res.json();
+      setStockData(data);
+    } catch (err) {
+      console.error('[MarketLab stock fetch error]', err);
+      setStockError(err.message || 'Unable to load stock information.');
+    } finally {
+      setStockLoading(false);
+    }
   }, []);
 
-  const runResearch = useCallback(async () => {
-    const query = researchQuery.trim();
-    if (!query) {
-      setResearchResult({ entity: 'Unknown', status: 'UNSUPPORTED', dossier: null, message: 'Enter a company name or symbol before starting research.' });
-      setResearchStatus('blocked');
-      return;
-    }
-    setResearchStatus('running');
-    setResearchResult(null);
-
+  // Fetch Gemini AI Analysis
+  const loadAnalysis = useCallback(async (symbolToAnalyze) => {
+    setAnalysisLoading(true);
+    setAnalysisError(null);
+    setAnalysisData(null);
     try {
-      let resolutionData = null;
-      try {
-        const { data: resData } = await supabase.functions.invoke('resolve-market-instrument', {
-          body: { query, market, assetType, exchange }
-        });
-        if (resData) resolutionData = resData;
-      } catch (err) {
-        console.warn('Instrument resolution via Gemini function failed or not configured', err);
-      }
-
-      const res = await executeResearch({
-        query,
-        market,
-        assetType,
-        exchange,
-        fetcher: async request => {
-          const requestedSymbol = request.index?.symbol ?? (request.issuer === 'Infosys Limited' ? 'INFY' : query);
-          const { data, error } = await supabase.functions.invoke('market-research', {
-            body: { query: requestedSymbol, market, assetType, exchange }
-          });
-          if (error) throw new Error(error.message || 'Research function failed.');
-          if (!data?.records) throw new Error(data?.error || 'Research function returned no records.');
-          return data.records;
-        }
+      const res = await fetch('/api/market/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: symbolToAnalyze }),
       });
-
-      let customMessage = res.message;
-      if (res.status === 'UNSUPPORTED' && resolutionData?.matches?.length) {
-        customMessage = `No direct filing research connector found for "${query}". Gemini suggestion: ${resolutionData.matches.map(m => `${m.name} (${m.symbol})`).join(', ')}. ${resolutionData.message || ''}`;
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Failed to generate AI analysis');
       }
-
-      setResearchResult({
-        entity: res.entity?.symbol ?? resolutionData?.instrument?.symbol ?? query.toUpperCase(),
-        status: res.status,
-        dossier: res.dossier ?? null,
-        message: customMessage ?? (res.status === 'READY' ? 'Research completed.' : 'Research completed with incomplete evidence coverage.'),
-        connector: res.connector ?? null,
-        geminiResolution: resolutionData
-      });
-      setResearchStatus(res.status === 'FAILED' || res.status === 'BLOCKED' || res.status === 'UNSUPPORTED' ? 'blocked' : 'complete');
-    } catch (error) {
-      setResearchResult({ entity: query.toUpperCase(), status: 'FAILED', dossier: null, message: error.message || 'Research failed.' });
-      setResearchStatus('blocked');
+      const data = await res.json();
+      setAnalysisData(data);
+    } catch (err) {
+      console.error('[MarketLab analysis error]', err);
+      setAnalysisError(err.message || 'AI analysis unavailable at this time.');
+    } finally {
+      setAnalysisLoading(false);
     }
-  }, [researchQuery, market, assetType, exchange]);
+  }, []);
+
+  // Trigger data load when symbol or range changes
+  useEffect(() => {
+    if (selectedSymbol) {
+      loadStockData(selectedSymbol, range);
+    }
+  }, [selectedSymbol, range, loadStockData]);
+
+  // Trigger analysis when selectedSymbol changes
+  useEffect(() => {
+    if (selectedSymbol) {
+      loadAnalysis(selectedSymbol);
+    }
+  }, [selectedSymbol, loadAnalysis]);
+
+  const handleSelectSymbol = (symbol) => {
+    setSelectedSymbol(symbol);
+    setSearchParams({ symbol });
+  };
+
+  const handleRangeChange = (newRange) => {
+    setRange(newRange);
+  };
 
   return (
-    <div className="orbit-light min-h-screen bg-[#fbf8f3] text-stone-800">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <SEO
-        title="Market Lab | OrbitBoard"
-        description="Test market hypotheses, inspect historical evidence and replay a demo market dataset with OrbitBoard Market Lab."
+        title="Market Lab | AI Stock Research Assistant | OrbitBoard"
+        description="Search stocks for current price, historical data, news, company events, and objective AI research summaries with OrbitBoard Market Lab."
         canonical="https://orbitboard.in/market-lab"
       />
-      <header className="sticky top-0 z-30 border-b border-[#e7dfd3] bg-[#fbf8f3]/95 backdrop-blur">
+
+      <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-xl font-black tracking-tight text-stone-900">ORBIT<span className="text-violet-400">BOARD</span></Link>
-          <Link to="/tools" className="text-sm font-semibold text-slate-400 hover:text-stone-900">All tools</Link>
+          <Link to="/" className="text-xl font-black tracking-tight text-white">
+            ORBIT<span className="text-violet-400">BOARD</span>
+          </Link>
+          <Link to="/tools" className="text-sm font-semibold text-slate-400 hover:text-white">
+            All tools
+          </Link>
         </div>
       </header>
 
       <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-stone-900"><ArrowLeft size={16} /> OrbitBoard home</Link>
-        <MarketLabHero />
-        <ResearchSection
-          market={market}
-          setMarket={setMarket}
-          assetType={assetType}
-          setAssetType={setAssetType}
-          exchange={exchange}
-          setExchange={setExchange}
-          researchMode={researchMode}
-          setResearchMode={setResearchMode}
-          researchQuery={researchQuery}
-          setResearchQuery={setResearchQuery}
-          runResearch={runResearch}
-          researchResult={researchResult}
-          researchStatus={researchStatus}
-        />
-
-        <div className="mt-6 grid lg:grid-cols-[1.1fr_.9fr] gap-6">
-          <ExperimentSection volumeThreshold={volumeThreshold} setVolumeThreshold={setVolumeThreshold} oiThreshold={oiThreshold} setOiThreshold={setOiThreshold} forwardDays={forwardDays} setForwardDays={setForwardDays} reset={reset} run={run} />
-          <EvidenceLedgerGrid result={result} />
+        <div className="flex items-center justify-between">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-white">
+            <ArrowLeft size={16} /> OrbitBoard home
+          </Link>
         </div>
-        <DossierSection />
-        <MarketReplaySection replayIndex={replayIndex} setReplayIndex={setReplayIndex} />
 
-        <section className="mt-6 grid md:grid-cols-3 gap-4">
-          <FeatureCard title="Evidence first" text="Turn a hypothesis into measurable historical conditions instead of relying on a conversational guess." />
-          <FeatureCard title="Replay the context" text="Inspect what the market record looked like at a point in time before seeing the later outcome." />
-          <FeatureCard title="Research, don't predict" text="OrbitBoard helps users investigate market behaviour; it does not tell them what to buy or sell." />
-        </section>
+        {/* Hero Section */}
+        <div className="mt-6 text-center max-w-3xl mx-auto">
+          <span className="inline-flex items-center gap-2 rounded-full border border-violet-800/70 bg-violet-950/60 px-3.5 py-1.5 text-xs font-bold text-violet-300">
+            AI Stock Research Assistant
+          </span>
+          <h1 className="mt-4 text-3xl sm:text-5xl font-black tracking-tight text-white">
+            Research stocks with AI, without the noise.
+          </h1>
+          <p className="mt-3 text-sm sm:text-base text-slate-400">
+            Look up live quotes, historical performance, latest news, and objective AI summaries synthesized purely from public data.
+          </p>
 
-        <section className="mt-8 rounded-2xl border border-amber-900/50 bg-amber-950/20 p-5 text-sm leading-6 text-amber-200/80">
-          <strong className="text-amber-200">Prototype note:</strong> Historical filing research currently supports Infosys on NSE and selected Indian indices. Market prices and live quotes are not yet connected; the experiment and replay panels use synthetic demo data.
-        </section>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/" className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:border-violet-500/50 hover:text-stone-900">Back to OrbitBoard</Link>
-          <Link to="/tools" className="rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-bold text-stone-900 hover:bg-violet-400">Explore tools</Link>
+          <div className="mt-8">
+            <StockSearch onSelectSymbol={handleSelectSymbol} currentSymbol={selectedSymbol} />
+          </div>
         </div>
-        <p className="mt-10 text-xs text-stone-500">Demo market data shown in the experiment and replay panels is fictional and exists only to demonstrate the workflow.</p>
+
+        {/* Main Content Area */}
+        <div className="mt-10">
+          {stockLoading ? (
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-400 flex flex-col items-center justify-center gap-4 min-h-[300px]">
+              <Loader2 size={32} className="animate-spin text-violet-400" />
+              <p className="text-sm font-semibold">Loading stock market data for {selectedSymbol}...</p>
+            </div>
+          ) : stockError ? (
+            <div className="rounded-3xl border border-rose-900/60 bg-rose-950/20 p-8 text-center text-rose-300 max-w-xl mx-auto">
+              <AlertCircle size={32} className="mx-auto text-rose-400 mb-3" />
+              <h2 className="text-lg font-bold">Failed to load market data</h2>
+              <p className="mt-2 text-xs sm:text-sm text-rose-300/80">{stockError}</p>
+              <button
+                type="button"
+                onClick={() => loadStockData(selectedSymbol, range)}
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-rose-900/60 border border-rose-700 px-4 py-2 text-xs font-bold text-white hover:bg-rose-800"
+              >
+                <RefreshCw size={14} /> Retry
+              </button>
+            </div>
+          ) : stockData ? (
+            <div>
+              <StockHeaderChart
+                quote={stockData.quote}
+                history={stockData.history}
+                range={range}
+                onRangeChange={handleRangeChange}
+              />
+
+              <StockNewsEventsAnalysis
+                news={stockData.news}
+                events={stockData.events}
+                analysis={analysisData}
+                analysisLoading={analysisLoading}
+                analysisError={analysisError}
+              />
+
+              {/* Mandatory Disclaimer */}
+              <div className="mt-8 rounded-2xl border border-amber-900/50 bg-amber-950/30 p-4 text-xs sm:text-sm text-amber-200/90 text-center font-medium">
+                Educational research summary generated by AI from public data. Not investment advice or a recommendation. Data may be delayed or incomplete.
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-sm text-slate-500 py-12">
+              Select or search a stock ticker above to view research data.
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
