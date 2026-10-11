@@ -10,6 +10,7 @@ import ExperimentBuilder from './pages/ExperimentBuilder';
 export default function App() {
   return (
     <BrowserRouter>
+      <AdSense />
       <Analytics />
       <Telemetry />
       <Routes>
@@ -88,5 +89,20 @@ function Telemetry() {
     };
   }, [location.pathname]);
 
+  return null;
+}
+
+
+function AdSense() {
+  useEffect(() => {
+    const existing = document.querySelector('script[data-orbitboard-adsense]');
+    if (existing) return;
+    const script = document.createElement('script');
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.dataset.orbitboardAdsense = 'true';
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160921653901381';
+    document.head.appendChild(script);
+  }, []);
   return null;
 }
