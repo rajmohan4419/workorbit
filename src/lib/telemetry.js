@@ -25,8 +25,7 @@ export async function recordVisit(path = window.location.pathname) {
     });
     if (error) throw error;
     return Number(data);
-  } catch (error) {
-    console.warn('[OrbitBoard telemetry] visitor recording failed', error);
+  } catch {
     return null;
   }
 }
@@ -42,8 +41,8 @@ export async function logEvent(eventName, metadata = {}, level = 'info') {
       p_metadata: metadata
     });
     if (error) throw error;
-  } catch (error) {
-    console.warn('[OrbitBoard telemetry] event logging failed', error);
+  } catch {
+    // ignore event logging failure
   }
 }
 

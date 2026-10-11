@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Code2, BriefcaseBusiness, Coins, Calculator } from 'lucide-react';
-import { TOOLS } from '../data/tools';
+import { TOOLS, TOOLS_BY_SLUG } from '../data/tools';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, createEditedPdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
@@ -521,7 +521,7 @@ function Sip() {
 }
 
 export default function ToolPage() {
-  const {slug}=useParams(); const tool=TOOLS.find(t=>t.slug===slug); const info=TOOL_CONTENT[slug];
+  const {slug}=useParams(); const tool=TOOLS_BY_SLUG.get(slug); const info=TOOL_CONTENT[slug];
   const content=useMemo(()=>({ 'salary-hike':SalaryHike,'ctc-to-inhand':SalaryCalculator,'offer-comparison':Offer,'notice-period':Notice,'experience':Experience,'gratuity-calculator':GratuityCalculator,'percentage':Percentage,'length-converter':()=> <Converter type="length"/>,'weight-converter':()=> <Converter type="weight"/>,'temperature-converter':TemperatureConverter,'time-converter':()=> <Converter type="time"/>, 'timezone-converter':GlobalTimeZoneConverter, 'jpg-to-png':()=> <ImageConverter format="image/png"/>, 'png-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'webp-to-jpg':()=> <ImageConverter format="image/jpeg"/>, 'image-to-pdf':ImageToPdf, 'xlsx-to-pdf':XlsxToPdf, 'image-resizer':ImageResizer, 'svg-to-png':SvgToPng, 'csv-to-pdf':CsvToPdf, 'csv-to-json':CsvToJson,'csv-to-xlsx':()=> <SpreadsheetFileTool type="csv-to-xlsx"/>,'json-to-xlsx':()=> <SpreadsheetFileTool type="json-to-xlsx"/>,'xlsx-to-csv':()=> <SpreadsheetFileTool type="xlsx-to-csv"/>, 'txt-to-pdf':TextToPdf, 'pdf-to-text':PdfToText, 'diff-checker':DiffChecker, 'json-to-xml':JsonToXml, 'xml-to-json':XmlToJson, 'markdown-to-html':MarkdownToHtml, 'image-compressor':ImageCompressor, 'image-metadata-remover':ImageMetadataRemover, 'pdf-merge':PdfMerge, 'pdf-split':PdfSplit, 'pdf-extract-pages':PdfExtract, 'pdf-reorder':PdfReorder, 'pdf-workspace':PdfWorkspace, 'pdf-compressor':PdfCompressor, 'pdf-e-sign':PdfESign, 'pdf-to-jpg':()=> <PdfToImages format="image/jpeg"/>, 'pdf-to-png':()=> <PdfToImages format="image/png"/>, 'emi':Emi,'gst':Gst,'sip':Sip,'income-tax-india':IndiaIncomeTaxCalculator,'income-tax-global':GlobalIncomeTaxCalculator,'json-formatter':JsonFormatter,'json-to-csv':JsonToCsv,'base64':Base64Tool,'jwt-decoder':JwtDecoder,'unix-timestamp':UnixTimestamp,'uuid-generator':UuidGenerator,'url-encoder':UrlEncoder }[slug]),[slug]);
   useEffect(()=>{if(tool){document.title=tool.name+' | Free Online Tool | OrbitBoard'; const desc=info?.intro||tool.description;
     const setMeta=(name,content)=>{let m=document.querySelector('meta[name="'+name+'"]');if(!m){m=document.createElement('meta');m.name=name;document.head.appendChild(m);}m.content=content;};
@@ -636,15 +636,24 @@ function JsonToXml() {
   const convert=()=>{try{setOutput('<?xml version="1.0" encoding="UTF-8"?>\n'+build(JSON.parse(input)));setError('');}catch(e){setError('Invalid JSON: '+e.message);setOutput('');}};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to XML</button>{error&&<p className="text-sm text-red-400">{error}</p>}{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.xml"/></>}</div>;
 }
+const xmlParser = new DOMParser();
+
 function XmlToJson() {
   const [input,setInput]=useState('<root><name>John Doe</name><role>Developer</role></root>'),[output,setOutput]=useState(''),[error,setError]=useState('');
-  const parseNode=node=>{if(!node.children.length)return node.textContent??'';const obj={};Array.from(node.children).forEach(child=>{const value=parseNode(child);obj[child.tagName]===undefined?obj[child.tagName]=value:obj[child.tagName]=[].concat(obj[child.tagName],value);});return obj;};
-  const convert=()=>{try{const doc=new DOMParser().parseFromString(input,'application/xml');if(doc.querySelector('parsererror'))throw new Error('Invalid XML');setOutput(JSON.stringify({[doc.documentElement.tagName]:parseNode(doc.documentElement)},null,2));setError('');}catch(e){setError(e.message);setOutput('');}};
+  const parseNode=node=>{if(!node.firstElementChild)return node.textContent??'';const obj={};for(let child=node.firstElementChild;child;child=child.nextElementSibling){const value=parseNode(child);const tag=child.tagName;if(obj[tag]===undefined)obj[tag]=value;else if(Array.isArray(obj[tag]))obj[tag].push(value);else obj[tag]=[obj[tag],value];}return obj;};
+  const convert=()=>{try{const doc=xmlParser.parseFromString(input,'application/xml');if(doc.querySelector('parsererror'))throw new Error('Invalid XML');setOutput(JSON.stringify({[doc.documentElement.tagName]:parseNode(doc.documentElement)},null,2));setError('');}catch(e){setError(e.message);setOutput('');}};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-48 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to JSON</button>{error&&<p className="text-sm text-red-400">{error}</p>}{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.json"/></>}</div>;
 }
+const REGEX_AMP = /&/g;
+const REGEX_LT = /</g;
+const REGEX_GT = />/g;
+const REGEX_BOLD = /\*\*(.+?)\*\*/g;
+const REGEX_ITALIC = /\*(.+?)\*/g;
+const REGEX_CODE = /`(.+?)`/g;
+
 function MarkdownToHtml() {
   const [input,setInput]=useState('# Hello OrbitBoard\n\nThis is **bold** and *italic*.\n\n- One\n- Two'),[output,setOutput]=useState('');
-  const inline=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>');
+  const inline=s=>s.replace(REGEX_AMP,'&amp;').replace(REGEX_LT,'&lt;').replace(REGEX_GT,'&gt;').replace(REGEX_BOLD,'<strong>$1</strong>').replace(REGEX_ITALIC,'<em>$1</em>').replace(REGEX_CODE,'<code>$1</code>');
   const convert=()=>{const lines=input.split(/\r?\n/),html=[];let list=false;for(const line of lines){if(line.startsWith('- ')){if(!list){html.push('<ul>');list=true;}html.push('<li>'+inline(line.slice(2))+'</li>');continue;}if(list){html.push('</ul>');list=false;}if(line.startsWith('# '))html.push('<h1>'+inline(line.slice(2))+'</h1>');else if(line.startsWith('## '))html.push('<h2>'+inline(line.slice(3))+'</h2>');else if(line.trim())html.push('<p>'+inline(line)+'</p>');}if(list)html.push('</ul>');setOutput(html.join('\n'));};
   return <div className="space-y-4"><textarea value={input} onChange={e=>setInput(e.target.value)} className="w-full h-56 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><button onClick={convert} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold">Convert to HTML</button>{output&&<><textarea readOnly value={output} className="w-full h-64 rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono text-sm"/><ExportActions content={output} filename="orbitboard.html"/></>}</div>;
 }

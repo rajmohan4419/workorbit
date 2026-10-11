@@ -4,7 +4,7 @@ import {
   ArrowRight, BriefcaseBusiness, Calculator, ChevronLeft, Code2, Coins,
   Clock3, FlaskConical, Search, Sparkles, Star, Trophy, WandSparkles
 } from 'lucide-react';
-import { TOOLS } from '../data/toolCatalog';
+import { TOOLS, TOOLS_BY_SLUG } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
 import { logEvent } from '../lib/telemetry';
 
@@ -116,7 +116,7 @@ export default function ToolsHome() {
       return tokens.every(token => haystack.includes(token));
     });
     const intentSlugs = intentMap.filter(group => group.terms.some(term => q.includes(term))).flatMap(group => group.slugs);
-    const merged = [...direct, ...intentSlugs.map(slug => TOOLS.find(t => t.slug === slug))].filter(Boolean);
+    const merged = [...direct, ...intentSlugs.map(slug => TOOLS_BY_SLUG.get(slug))].filter(Boolean);
     return [...new Map(merged.map(tool => [tool.slug, tool])).values()].slice(0, 8);
   }, [query]);
 
@@ -125,7 +125,10 @@ export default function ToolsHome() {
     [category]
   );
 
-  const recentTools = recent.map(slug => TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
+  const recentTools = useMemo(
+    () => recent.map(slug => TOOLS_BY_SLUG.get(slug)).filter(Boolean).slice(0, 4),
+    [recent]
+  );
   const showExplore = !query.trim() && !category;
 
   return (
