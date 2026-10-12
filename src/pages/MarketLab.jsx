@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/layout/SEO';
@@ -12,6 +12,7 @@ export default function MarketLab() {
 
   const [selectedSymbol, setSelectedSymbol] = useState(symbolParam);
   const [range, setRange] = useState('1y');
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const [stockData, setStockData] = useState(null);
   const [stockLoading, setStockLoading] = useState(true);
@@ -21,66 +22,73 @@ export default function MarketLab() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
 
-  // Fetch Stock Quote & History
-  const loadStockData = useCallback(async (symbolToFetch, rangeToFetch) => {
-    setStockLoading(true);
-    setStockError(null);
-    try {
-      const res = await fetch(
-        `/api/market/stock?symbol=${encodeURIComponent(symbolToFetch)}&range=${encodeURIComponent(rangeToFetch)}`
-      );
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || 'Failed to fetch stock data');
-      }
-      const data = await res.json();
-      setStockData(data);
-    } catch (err) {
-      console.error('[MarketLab stock fetch error]', err);
-      setStockError(err.message || 'Unable to load stock information.');
-    } finally {
-      setStockLoading(false);
-    }
-  }, []);
-
-  // Fetch Gemini AI Analysis
-  const loadAnalysis = useCallback(async (symbolToAnalyze) => {
-    setAnalysisLoading(true);
-    setAnalysisError(null);
-    setAnalysisData(null);
-    try {
-      const res = await fetch('/api/market/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol: symbolToAnalyze }),
-      });
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || 'Failed to generate AI analysis');
-      }
-      const data = await res.json();
-      setAnalysisData(data);
-    } catch (err) {
-      console.error('[MarketLab analysis error]', err);
-      setAnalysisError(err.message || 'AI analysis unavailable at this time.');
-    } finally {
-      setAnalysisLoading(false);
-    }
-  }, []);
-
-  // Trigger data load when symbol or range changes
+  // Trigger data load & analysis when selectedSymbol, range, or reloadTrigger changes
   useEffect(() => {
-    if (selectedSymbol) {
-      loadStockData(selectedSymbol, range);
-    }
-  }, [selectedSymbol, range, loadStockData]);
+    let active = true;
+    if (!selectedSymbol) return;
 
-  // Trigger analysis when selectedSymbol changes
-  useEffect(() => {
-    if (selectedSymbol) {
-      loadAnalysis(selectedSymbol);
+    async function fetchData() {
+      setStockLoading(true);
+      setStockError(null);
+      try {
+        const res = await fetch(
+          `/api/market/stock?symbol=${encodeURIComponent(selectedSymbol)}&range=${encodeURIComponent(range)}`
+        );
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          throw new Error(errJson.error || 'Failed to fetch stock data');
+        }
+        const data = await res.json();
+        if (active) setStockData(data);
+      } catch (err) {
+        console.error('[MarketLab stock fetch error]', err);
+        if (active) setStockError(err.message || 'Unable to load stock information.');
+      } finally {
+        if (active) setStockLoading(false);
+      }
     }
-  }, [selectedSymbol, loadAnalysis]);
+
+    fetchData();
+
+    return () => {
+      active = false;
+    };
+  }, [selectedSymbol, range, reloadTrigger]);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedSymbol) return;
+
+    async function fetchAnalysis() {
+      setAnalysisLoading(true);
+      setAnalysisError(null);
+      setAnalysisData(null);
+      try {
+        const res = await fetch('/api/market/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol: selectedSymbol }),
+        });
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          throw new Error(errJson.error || 'Failed to generate AI analysis');
+        }
+        const data = await res.json();
+        if (active) setAnalysisData(data);
+      } catch (err) {
+        console.error('[MarketLab analysis error]', err);
+        if (active) setAnalysisError(err.message || 'AI analysis unavailable at this time.');
+      } finally {
+        if (active) setAnalysisLoading(false);
+      }
+    }
+
+    fetchAnalysis();
+
+    return () => {
+      active = false;
+    };
+  }, [selectedSymbol, reloadTrigger]);
 
   const handleSelectSymbol = (symbol) => {
     setSelectedSymbol(symbol);
@@ -89,6 +97,10 @@ export default function MarketLab() {
 
   const handleRangeChange = (newRange) => {
     setRange(newRange);
+  };
+
+  const handleRetry = () => {
+    setReloadTrigger((prev) => prev + 1);
   };
 
   return (
@@ -148,7 +160,7 @@ export default function MarketLab() {
               <p className="mt-2 text-xs sm:text-sm text-rose-300/80">{stockError}</p>
               <button
                 type="button"
-                onClick={() => loadStockData(selectedSymbol, range)}
+                onClick={handleRetry}
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-rose-900/60 border border-rose-700 px-4 py-2 text-xs font-bold text-white hover:bg-rose-800"
               >
                 <RefreshCw size={14} /> Retry

@@ -31,14 +31,14 @@ export function StockHeaderChart({ quote, history, range, onRangeChange }) {
   }, [change, changePercent]);
 
   // Compute SVG line path coordinates
-  const { pathD, areaD, points, minVal, maxVal } = useMemo(() => {
+  const { pathD, areaD, points } = useMemo(() => {
     if (!history || history.length < 2) {
-      return { pathD: '', areaD: '', points: [], minVal: 0, maxVal: 0 };
+      return { pathD: '', areaD: '', points: [] };
     }
 
     const closes = history.map((h) => h.close).filter((c) => c != null);
     if (closes.length < 2) {
-      return { pathD: '', areaD: '', points: [], minVal: 0, maxVal: 0 };
+      return { pathD: '', areaD: '', points: [] };
     }
 
     const min = Math.min(...closes);
@@ -67,7 +67,7 @@ export function StockHeaderChart({ quote, history, range, onRangeChange }) {
     const lastPt = pts[pts.length - 1];
     const aStr = `${dStr} L ${lastPt.x.toFixed(1)} ${height} L ${firstPt.x.toFixed(1)} ${height} Z`;
 
-    return { pathD: dStr, areaD: aStr, points: pts, minVal: min, maxVal: max };
+    return { pathD: dStr, areaD: aStr, points: pts };
   }, [history]);
 
   const activePoint = hoverIndex !== null && points[hoverIndex] ? points[hoverIndex] : null;

@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, expect } from 'vitest';
 import { ensureRows, jsonToXlsx } from './spreadsheet.js';
 
 describe('spreadsheet engine - ensureRows & jsonToXlsx', () => {
@@ -15,20 +14,13 @@ describe('spreadsheet engine - ensureRows & jsonToXlsx', () => {
       ];
 
       for (const input of invalidInputs) {
-        assert.throws(
-          () => ensureRows(input),
-          {
-            name: 'Error',
-            message: 'Expected a JSON array of objects.',
-          },
-          `Expected ensureRows to throw for input: ${JSON.stringify(input)}`
-        );
+        expect(() => ensureRows(input)).toThrow('Expected a JSON array of objects.');
       }
     });
 
     it('returns an empty array when input is an empty array', () => {
       const result = ensureRows([]);
-      assert.deepStrictEqual(result, []);
+      expect(result).toEqual([]);
     });
 
     it('throws an error when array contains non-object or invalid items', () => {
@@ -45,14 +37,7 @@ describe('spreadsheet engine - ensureRows & jsonToXlsx', () => {
       ];
 
       for (const input of invalidArrays) {
-        assert.throws(
-          () => ensureRows(input),
-          {
-            name: 'Error',
-            message: 'Each JSON item must be an object.',
-          },
-          `Expected ensureRows to throw for array: ${JSON.stringify(input)}`
-        );
+        expect(() => ensureRows(input)).toThrow('Each JSON item must be an object.');
       }
     });
 
@@ -62,8 +47,8 @@ describe('spreadsheet engine - ensureRows & jsonToXlsx', () => {
         { id: 2, name: 'Bob' },
       ];
       const result = ensureRows(validRows);
-      assert.strictEqual(result, validRows);
-      assert.deepStrictEqual(result, [
+      expect(result).toBe(validRows);
+      expect(result).toEqual([
         { id: 1, name: 'Alice' },
         { id: 2, name: 'Bob' },
       ]);
@@ -74,34 +59,22 @@ describe('spreadsheet engine - ensureRows & jsonToXlsx', () => {
     it('successfully converts valid JSON string array to spreadsheet array', () => {
       const jsonString = JSON.stringify([{ name: 'Item 1', price: 10 }]);
       const result = jsonToXlsx(jsonString);
-      assert.ok(result);
+      expect(result).toBeTruthy();
       const length = result.byteLength ?? result.length;
-      assert.ok(length > 0);
+      expect(length).toBeGreaterThan(0);
     });
 
     it('successfully handles empty JSON array string', () => {
       const result = jsonToXlsx('[]');
-      assert.ok(result);
+      expect(result).toBeTruthy();
     });
 
     it('throws Expected a JSON array of objects error for non-array JSON', () => {
-      assert.throws(
-        () => jsonToXlsx('{"key": "value"}'),
-        {
-          name: 'Error',
-          message: 'Expected a JSON array of objects.',
-        }
-      );
+      expect(() => jsonToXlsx('{"key": "value"}')).toThrow('Expected a JSON array of objects.');
     });
 
     it('throws Each JSON item must be an object error for JSON array of primitives', () => {
-      assert.throws(
-        () => jsonToXlsx('[1, 2, 3]'),
-        {
-          name: 'Error',
-          message: 'Each JSON item must be an object.',
-        }
-      );
+      expect(() => jsonToXlsx('[1, 2, 3]')).toThrow('Each JSON item must be an object.');
     });
   });
 });
