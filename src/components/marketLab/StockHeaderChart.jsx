@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
+import { createChart } from 'lightweight-charts';
 
 const RANGES = [
   { label: '1M', value: '1mo' },
@@ -9,20 +10,21 @@ const RANGES = [
 ];
 
 export function StockHeaderChart({ quote, history, range, onRangeChange }) {
-  const [hoverIndex, setHoverIndex] = useState(null);
+  const chartContainerRef = useRef(null);
+  const chartInstanceRef = useRef(null);
 
   const price = quote?.price;
   const change = quote?.change;
-  const changePercent = quote?.change_percent;
+  const changePercent = quote?.changePct ?? quote?.change_percent;
   const isPositive = (change ?? 0) >= 0;
 
   const formattedPrice = useMemo(() => {
     if (price == null) return '—';
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(quote?.currency === 'INR' ? 'en-IN' : 'en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(price);
-  }, [price]);
+  }, [price, quote?.currency]);
 
   const formattedChange = useMemo(() => {
     if (change == null) return '';
@@ -30,78 +32,113 @@ export function StockHeaderChart({ quote, history, range, onRangeChange }) {
     return `${sign}${change.toFixed(2)} (${sign}${(changePercent ?? 0).toFixed(2)}%)`;
   }, [change, changePercent]);
 
-  // Compute SVG line path coordinates
-  const { pathD, areaD, points } = useMemo(() => {
-    if (!history || history.length < 2) {
-      return { pathD: '', areaD: '', points: [] };
+  // Lightweight Charts Integration
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    // Clean up existing chart
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.remove();
+      chartInstanceRef.current = null;
     }
 
-    const closes = history.map((h) => h.close).filter((c) => c != null);
-    if (closes.length < 2) {
-      return { pathD: '', areaD: '', points: [] };
-    }
+    if (!history || history.length === 0) return;
 
-    const min = Math.min(...closes);
-    const max = Math.max(...closes);
-    const rangeVal = max - min || 1;
-
-    const width = 800;
-    const height = 220;
-    const padding = 20;
-
-    const pts = history.map((item, idx) => {
-      const x = padding + (idx / (history.length - 1)) * (width - 2 * padding);
-      const y =
-        height -
-        padding -
-        ((item.close - min) / rangeVal) * (height - 2 * padding);
-      return { x, y, date: item.date, close: item.close };
+    const chart = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth,
+      height: 220,
+      layout: {
+        background: { type: 'solid', color: 'transparent' },
+        textColor: '#94a3b8',
+      },
+      grid: {
+        vertLines: { color: 'rgba(51, 65, 85, 0.3)' },
+        horzLines: { color: 'rgba(51, 65, 85, 0.3)' },
+      },
+      timeScale: {
+        borderVisible: false,
+        timeVisible: true,
+      },
+      rightPriceScale: {
+        borderVisible: false,
+      },
     });
 
-    const dStr = pts.reduce(
-      (acc, p, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`,
-      ''
-    );
+    chartInstanceRef.current = chart;
 
-    const firstPt = pts[0];
-    const lastPt = pts[pts.length - 1];
-    const aStr = `${dStr} L ${lastPt.x.toFixed(1)} ${height} L ${firstPt.x.toFixed(1)} ${height} Z`;
+    const areaSeries = chart.addAreaSeries({
+      lineColor: isPositive ? '#10b981' : '#f43f5e',
+      topColor: isPositive ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)',
+      bottomColor: isPositive ? 'rgba(16, 185, 129, 0.0)' : 'rgba(244, 63, 94, 0.0)',
+      lineWidth: 2,
+    });
 
-    return { pathD: dStr, areaD: aStr, points: pts };
-  }, [history]);
+    const formattedData = history
+      .filter((h) => h && h.date && typeof h.close === 'number')
+      .map((h) => ({
+        time: h.date,
+        value: h.close,
+      }))
+      .sort((a, b) => (a.time > b.time ? 1 : -1));
 
-  const activePoint = hoverIndex !== null && points[hoverIndex] ? points[hoverIndex] : null;
+    if (formattedData.length > 0) {
+      areaSeries.setData(formattedData);
+      chart.timeScale().fitContent();
+    }
+
+    const handleResize = () => {
+      if (chartContainerRef.current && chartInstanceRef.current) {
+        chartInstanceRef.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.remove();
+        chartInstanceRef.current = null;
+      }
+    };
+  }, [history, isPositive]);
 
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-8 shadow-2xl backdrop-blur">
+    <div className="rounded-3xl border border-stone-200 bg-white p-5 sm:p-8 shadow-sm">
       {/* Header Info */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-slate-800/80">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-stone-200">
         <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <span>{quote?.currency || 'USD'}</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-stone-500">
+            <span>{quote?.currency || 'INR'}</span>
             <span>•</span>
-            <span>{quote?.market_state || 'REGULAR'}</span>
+            <span>{quote?.marketState || quote?.market_state || 'REGULAR'}</span>
             {quote?.symbol && (
-              <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-violet-300 font-bold">
+              <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-stone-800 font-bold border border-stone-200">
                 {quote.symbol}
+              </span>
+            )}
+            {quote?.delayed && (
+              <span className="rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold border border-amber-200">
+                Delayed
               </span>
             )}
           </div>
 
-          <h1 className="mt-2 text-3xl sm:text-4xl font-black text-white tracking-tight">
-            {quote?.name || quote?.symbol}
+          <h1 className="mt-2 text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
+            {quote?.name || quote?.symbol || 'Stock Overview'}
           </h1>
 
           <div className="mt-3 flex items-baseline gap-3">
-            <span className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+            <span className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900">
               {quote?.currency === 'INR' ? '₹' : '$'}{formattedPrice}
             </span>
             {change != null && (
               <span
                 className={`inline-flex items-center gap-1 rounded-xl px-3 py-1 text-sm font-bold ${
                   isPositive
-                    ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60'
-                    : 'bg-rose-950/80 text-rose-400 border border-rose-800/60'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-rose-50 text-rose-700 border border-rose-200'
                 }`}
               >
                 {isPositive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
@@ -109,10 +146,15 @@ export function StockHeaderChart({ quote, history, range, onRangeChange }) {
               </span>
             )}
           </div>
+          {quote?.asOf && (
+            <div className="mt-2 text-xs text-stone-500 flex items-center gap-1">
+              <Clock size={12} /> as of {new Date(quote.asOf).toLocaleString()}
+            </div>
+          )}
         </div>
 
         {/* Range Toggle Buttons */}
-        <div className="flex items-center gap-1.5 rounded-2xl border border-slate-800 bg-slate-950 p-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 rounded-2xl border border-stone-200 bg-stone-50 p-1.5 shrink-0">
           {RANGES.map((r) => (
             <button
               key={r.value}
@@ -120,8 +162,8 @@ export function StockHeaderChart({ quote, history, range, onRangeChange }) {
               onClick={() => onRangeChange(r.value)}
               className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition ${
                 range === r.value
-                  ? 'bg-violet-600 text-white shadow-lg'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-stone-900 text-white shadow-sm'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
               }`}
             >
               {r.label}
@@ -130,119 +172,18 @@ export function StockHeaderChart({ quote, history, range, onRangeChange }) {
         </div>
       </div>
 
-      {/* Metric Cards Grid */}
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs sm:text-sm">
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-3.5">
-          <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-wider">Day Range</span>
-          <span className="mt-1 font-bold text-slate-200 block">
-            {quote?.day_range?.low != null ? `${quote.day_range.low} - ${quote.day_range.high}` : 'Not available'}
-          </span>
-        </div>
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-3.5">
-          <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-wider">52-Wk Range</span>
-          <span className="mt-1 font-bold text-slate-200 block">
-            {quote?.fifty_two_week_range?.low != null ? `${quote.fifty_two_week_range.low} - ${quote.fifty_two_week_range.high}` : 'Not available'}
-          </span>
-        </div>
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-3.5">
-          <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-wider">Volume</span>
-          <span className="mt-1 font-bold text-slate-200 block">
-            {quote?.volume != null ? quote.volume.toLocaleString() : 'Not available'}
-          </span>
-        </div>
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-3.5">
-          <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-wider">Market Cap</span>
-          <span className="mt-1 font-bold text-slate-200 block">
-            {quote?.market_cap != null ? `${(quote.market_cap / 1e9).toFixed(2)}B` : 'Not available'}
-          </span>
-        </div>
-      </div>
-
-      {/* SVG Price Line Chart */}
-      <div className="relative mt-6 pt-4 border-t border-slate-800/60">
-        <div className="flex justify-between items-center text-xs text-slate-500 mb-2">
-          <span className="font-semibold text-slate-400">Historical Price Track ({range.toUpperCase()})</span>
-          {activePoint && (
-            <span className="font-bold text-violet-300 bg-violet-950/60 border border-violet-800/50 rounded-lg px-2.5 py-1 flex items-center gap-2">
-              <Clock size={12} /> {activePoint.date}: {quote?.currency === 'INR' ? '₹' : '$'}{activePoint.close}
-            </span>
-          )}
+      {/* SVG Price Line Chart / Lightweight Charts container */}
+      <div className="relative mt-6 pt-4 border-t border-stone-200">
+        <div className="flex justify-between items-center text-xs text-stone-500 mb-2">
+          <span className="font-semibold text-stone-700">Historical Price Track ({range.toUpperCase()})</span>
         </div>
 
-        {points.length > 1 ? (
-          <div className="relative w-full h-[220px]">
-            <svg
-              viewBox="0 0 800 220"
-              className="w-full h-full overflow-visible"
-              onMouseLeave={() => setHoverIndex(null)}
-            >
-              <defs>
-                <linearGradient id="chartGradientGreen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                </linearGradient>
-                <linearGradient id="chartGradientRed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-
-              {/* Area Fill */}
-              <path
-                d={areaD}
-                fill={isPositive ? 'url(#chartGradientGreen)' : 'url(#chartGradientRed)'}
-              />
-
-              {/* Line */}
-              <path
-                d={pathD}
-                fill="none"
-                stroke={isPositive ? '#10b981' : '#f43f5e'}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* Hover targets & indicator */}
-              {points.map((pt, idx) => (
-                <g key={pt.date || idx}>
-                  <rect
-                    x={pt.x - 8}
-                    y={0}
-                    width={16}
-                    height={220}
-                    fill="transparent"
-                    className="cursor-pointer"
-                    onMouseEnter={() => setHoverIndex(idx)}
-                  />
-                  {hoverIndex === idx && (
-                    <g>
-                      <line
-                        x1={pt.x}
-                        y1={0}
-                        x2={pt.x}
-                        y2={220}
-                        stroke="#a78bfa"
-                        strokeWidth="1"
-                        strokeDasharray="4 4"
-                      />
-                      <circle
-                        cx={pt.x}
-                        cy={pt.y}
-                        r="5"
-                        fill="#8b5cf6"
-                        stroke="#ffffff"
-                        strokeWidth="2"
-                      />
-                    </g>
-                  )}
-                </g>
-              ))}
-            </svg>
-          </div>
+        {history && history.length > 0 ? (
+          <div ref={chartContainerRef} className="w-full h-[220px]" />
         ) : (
-          <div className="flex h-[180px] items-center justify-center text-sm text-slate-500">
-            Historical price chart unavailable for this symbol/range.
+          <div className="flex h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-stone-50 p-6 text-center text-sm text-stone-500">
+            <p className="font-medium text-stone-700">Historical price data is unavailable</p>
+            <p className="text-xs text-stone-500 mt-1">No configured provider is supplying historical price data for this range.</p>
           </div>
         )}
       </div>
