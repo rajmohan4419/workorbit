@@ -854,5 +854,31 @@ export const TOOL_CONTENT = {
       ['Is this a digital certificate signature?', 'No. This tool adds a visible signature mark to the document; it is not a cryptographic certificate-based digital signature.'],
       ['Is the PDF uploaded?', 'No. The PDF is processed locally in your browser.']
     ]
+  },
+  'password-generator': {
+    intro: 'Generate cryptographically secure passwords with custom lengths, character sets, and entropy strength calculation directly in your browser.',
+    keywords: 'password generator, strong password generator, random password generator online, secure password generator, password entropy calculator',
+    how: [
+      'Select your desired password length (8 to 64 characters).',
+      'Toggle character options including uppercase, lowercase, numbers, symbols, or exclude ambiguous characters.',
+      'Click Generate Password to create a new secure password.',
+      'Copy the generated password to your clipboard or check its calculated entropy bits.'
+    ],
+    faq: [
+      ['Are generated passwords stored or sent to a server?', 'No. Passwords are generated 100% locally in your browser using the Web Crypto API (`window.crypto.getRandomValues`). Nothing is transmitted or saved.'],
+      ['What is password entropy?', 'Password entropy is a mathematical measure of a password\'s randomness and resistance to brute-force attacks, measured in bits.'],
+      ['Why exclude ambiguous characters?', 'Ambiguous characters like 1, l, I, 0, O can easily be mistaken for one another when typed manually or printed. Excluding them prevents transcription errors.']
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Secure Password Generation & Entropy Guide</h2>
+        <p>
+          Creating strong, unpredictable passwords is one of the most fundamental steps in protecting online accounts against brute-force and dictionary attacks.
+        </p>
+        <p>
+          Our <strong>Password Generator</strong> utilizes the browser's native cryptographic engine (<code>window.crypto.getRandomValues</code>) to ensure high randomness without relying on server-side processing or external network requests.
+        </p>
+      </div>
+    )
   }
 };
