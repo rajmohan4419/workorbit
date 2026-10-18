@@ -52,4 +52,5 @@ export const TOOLS = [
   { slug: 'unix-timestamp', name: 'Unix Timestamp Converter', description: 'Convert Unix timestamps to readable dates and back.', category: 'Developer', icon: 'TS' },
   { slug: 'uuid-generator', name: 'UUID Generator', description: 'Generate random UUID v4 identifiers instantly.', category: 'Developer', icon: 'ID' },
   { slug: 'url-encoder', name: 'URL Encoder / Decoder', description: 'Encode or decode URL components safely and quickly.', category: 'Developer', icon: '%2F' },
+  { slug: 'password-generator', name: 'Password Generator', description: 'Generate strong, secure passwords with entropy calculation directly in your browser.', category: 'Developer', icon: '🔑' },
 ];

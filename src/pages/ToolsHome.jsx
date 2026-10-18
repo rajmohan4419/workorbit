@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Calculator, FileText, Image, Code2 } from 'lucide-react';
 import { TOOLS } from '../data/toolCatalog';
@@ -8,7 +8,7 @@ import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
 import { CategoryExplorer } from '../components/toolsHome/CategoryExplorer';
 import { RecentToolsSection } from '../components/toolsHome/RecentToolsSection';
-import { ToolCard } from '../components/toolsHome/ToolCard';
+import { ToolCard, MicroCard } from '../components/toolsHome/ToolCard';
 import { PrivacySection, CatalogCalloutSection, ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 
 const intentMap = [
@@ -24,6 +24,7 @@ const intentMap = [
 ];
 
 const featuredSlugs = ['ctc-to-inhand', 'emi', 'pdf-workspace', 'jpg-to-png', 'json-formatter', 'percentage', 'gratuity-calculator', 'timezone-converter'];
+
 const categoryLinks = [
   { label: 'Documents', detail: 'PDF and file tools', icon: FileText, query: 'PDF' },
   { label: 'Images', detail: 'Convert and resize', icon: Image, query: 'image' },
@@ -32,16 +33,19 @@ const categoryLinks = [
 ];
 
 export default function ToolsHome() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get('q') || searchParams.get('search') || '';
+  const urlCategory = searchParams.get('category') || null;
+
   const [query, setQuery] = useState(urlQuery);
   const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
-  const [category, setCategory] = useState(null);
+  const [category, setCategory] = useState(urlCategory);
 
   if (urlQuery !== prevUrlQuery) {
     setPrevUrlQuery(urlQuery);
     setQuery(urlQuery);
   }
+
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }
   });
@@ -68,13 +72,18 @@ export default function ToolsHome() {
   const chooseCategory = (name) => {
     setCategory(name);
     setQuery('');
+    if (name) {
+      setSearchParams({ category: name });
+    } else {
+      setSearchParams({});
+    }
     logEvent('category.explored', { category: name });
   };
 
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    const tokens = q.split(/\\s+/).filter(Boolean);
+    const tokens = q.split(/\s+/).filter(Boolean);
     const direct = TOOLS.filter(tool => {
       const haystack = [tool.name, tool.description, tool.category, tool.slug, tool.slug.replace(/-/g, ' ')].join(' ').toLowerCase();
       return tokens.every(token => haystack.includes(token));
@@ -84,46 +93,110 @@ export default function ToolsHome() {
     return [...new Map(merged.map(tool => [tool.slug, tool])).values()].slice(0, 8);
   }, [query]);
 
-  const categoryTools = useMemo(() => category ? TOOLS.filter(tool => tool.category === category).slice(0, 10) : [], [category]);
+  const categoryTools = useMemo(() => category ? TOOLS.filter(tool => tool.category === category) : [], [category]);
   const featuredTools = featuredSlugs.map(slug => TOOLS.find(tool => tool.slug === slug)).filter(Boolean);
+  const catalogTools = useMemo(() => {
+    if (category) return TOOLS.filter(tool => tool.category === category);
+    return TOOLS.slice(0, 9);
+  }, [category]);
+
   const recentTools = recent.map(slug => TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
   const showExplore = !query.trim() && !category;
 
   return (
-    <div className="orbit-light min-h-screen bg-[#fbf8f3] text-stone-800">
-      <ToolsHomeHeader visitorCount={visitorCount} />
-      <main className="mx-auto w-full max-w-[1440px] px-4 pb-8 sm:px-6">
-        <ToolsHomeHero query={query} setQuery={setQuery} setCategory={setCategory} searchResults={searchResults} addRecent={addRecent} logEvent={logEvent} />
+    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors">
+      <ToolsHomeHeader visitorCount={visitorCount} onSelectCategory={chooseCategory} />
 
-        {!query.trim() && !category && (
-          <>
-            <section className="mx-auto max-w-6xl pb-8">
-              <div className="mb-3 flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Jump right in</p>
-                  <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 sm:text-2xl">Popular tools</h2>
-                </div>
-                <a href="/tools" className="inline-flex min-h-10 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-violet-800 hover:bg-violet-50">All tools <ArrowRight size={15} /></a>
+      <main className="mx-auto w-full max-w-[1440px] px-4 pb-8 sm:px-6">
+        {/* Zone 1: Concise Hero Headline & Floating Search Bar with Category Chips */}
+        <ToolsHomeHero
+          query={query}
+          setQuery={setQuery}
+          category={category}
+          setCategory={chooseCategory}
+          searchResults={searchResults}
+          addRecent={addRecent}
+          logEvent={logEvent}
+        />
+
+        {/* Zone 2: Featured / Popular Micro-cards Grid (Compact Carousel/Grid on Mobile) */}
+        {!query.trim() && (
+          <section className="mx-auto max-w-6xl pb-8 pt-4">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">Popular Workflows</p>
+                <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">
+                  Frequently used utilities
+                </h2>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {featuredTools.map(tool => <ToolCard key={tool.slug} tool={tool} onUse={addRecent} favorite={favorites.includes(tool.slug)} onFavorite={toggleFavorite} />)}
-              </div>
-            </section>
-            <section className="mx-auto max-w-6xl border-t border-stone-200 py-7">
-              <div className="mb-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-stone-500">Browse by category</p>
-                <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 sm:text-2xl">What are you working on?</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {categoryLinks.map(({ label, detail, icon: Icon, query: suggestedQuery, category: suggestedCategory }) => (
-                  <button key={label} type="button" onClick={() => suggestedCategory ? chooseCategory(suggestedCategory) : setQuery(suggestedQuery)} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-stone-200 bg-white p-3 text-left transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-sm sm:p-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Icon size={20} /></span>
-                    <span className="min-w-0"><span className="block text-sm font-semibold text-stone-900">{label}</span><span className="mt-1 block text-xs leading-5 text-stone-500">{detail}</span></span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          </>
+              <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/50 transition">
+                View All <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {featuredTools.map(tool => (
+                <MicroCard key={tool.slug} tool={tool} onUse={addRecent} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Zone 3: Standard Cards Grid Section with Category Header & View All link */}
+        <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
+          <div className="mb-6 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">
+                {category ? `${category} Tools` : 'Catalog Essentials'}
+              </p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">
+                {category ? `Explore ${category} Utilities` : 'Standard Work Tools'}
+              </h2>
+            </div>
+            <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/50 transition">
+              View All <ArrowRight size={15} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {catalogTools.map(tool => (
+              <ToolCard
+                key={tool.slug}
+                tool={tool}
+                onUse={addRecent}
+                favorite={favorites.includes(tool.slug)}
+                onFavorite={toggleFavorite}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Category Quick Selector Cards */}
+        {showExplore && (
+          <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Browse by Work Context</p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">What are you working on?</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {categoryLinks.map(({ label, detail, icon: Icon, query: suggestedQuery, category: suggestedCategory }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => suggestedCategory ? chooseCategory(suggestedCategory) : setQuery(suggestedQuery)}
+                  className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 text-left transition hover:-translate-y-0.5 hover:border-violet-300 dark:hover:border-violet-600 hover:shadow-xs"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+                    <Icon size={20} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-stone-900 dark:text-stone-100">{label}</span>
+                    <span className="mt-0.5 block text-xs text-stone-500 dark:text-stone-400">{detail}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
         )}
 
         <CategoryExplorer query={query} category={category} setCategory={setCategory} chooseCategory={chooseCategory} categoryTools={categoryTools} addRecent={addRecent} favorites={favorites} toggleFavorite={toggleFavorite} />
@@ -131,6 +204,7 @@ export default function ToolsHome() {
         <PrivacySection />
         <CatalogCalloutSection />
       </main>
+
       <ToolsHomeFooter />
     </div>
   );
