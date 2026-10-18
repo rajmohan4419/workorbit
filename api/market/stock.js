@@ -8,34 +8,52 @@ import { checkRateLimit, getMarketCache } from '../_lib/supabaseClient.js';
 
 const VALID_RANGES = ['1mo', '6mo', '1y', '5y'];
 
+const PROVIDER_KEY = process.env.FINNHUB_API_KEY; // set in Vercel/Supabase env
+
+async function fetchQuote(symbol) {
+  const r = await fetch(
+    `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${PROVIDER_KEY}`
+  );
+  if (!r.ok) throw new Error(`Finnhub quote ${r.status}`);
+  const q = await r.json();
+  if (!q.c) return null; // Finnhub returns zeros for unknown symbols
+  return { price: q.c, change: q.d, changePct: q.dp, high: q.h, low: q.l, open: q.o, prevClose: q.pc };
+}
+
 export async function fetchStockData(symbol, rangePeriod = '1y') {
-  const cacheKey = `stock:${symbol.toUpperCase()}:${rangePeriod}`;
-  const cachedData = await getMarketCache(cacheKey);
-  if (cachedData) {
-    return cachedData;
+  const sym = symbol.toUpperCase();
+  const cacheKey = `stock:${sym}:${rangePeriod}`;
+  const cached = await getMarketCache(cacheKey);
+  if (cached) return cached;
+
+  if (!PROVIDER_KEY) {
+    return {
+      error: 'Market data provider is not configured.',
+      code: 'PROVIDER_UNAVAILABLE',
+      symbol: sym,
+      quote: null, history: [], news: [],
+      events: { earnings: [], dividends: [], splits: [] },
+      stats: computeStatistics(null, []),
+      asOf: new Date().toISOString(),
+      delayed: true,
+      data_availability: { quote: false, history: false, news: false, events: false },
+    };
   }
 
-  // Currently no live provider is configured (Yahoo Finance excluded).
-  // Per requirements: Return explicit unavailable-data response indicating provider is unconfigured.
+  const quote = await fetchQuote(sym);
   const responseData = {
-    error: 'Market data provider is currently unavailable.',
-    code: 'PROVIDER_UNAVAILABLE',
-    symbol: symbol.toUpperCase(),
-    quote: null,
-    history: [],
+    symbol: sym,
+    quote,
+    history: [],          // add a history call here later
     news: [],
     events: { earnings: [], dividends: [], splits: [] },
     stats: computeStatistics(null, []),
     asOf: new Date().toISOString(),
     delayed: true,
-    data_availability: {
-      quote: false,
-      history: false,
-      news: false,
-      events: false,
-    },
+    data_availability: { quote: !!quote, history: false, news: false, events: false },
   };
 
+  await setMarketCache(cacheKey, responseData, 60); // 60s TTL; check your helper's signature
   return responseData;
 }
 
