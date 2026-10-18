@@ -1,18 +1,8 @@
-import React, { Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
-
-const MarketLab = React.lazy(() => import('./pages/MarketLab'));
-
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm">
-      Loading...
-    </div>
-  );
-}
 
 export default function App() {
   return (
@@ -20,17 +10,16 @@ export default function App() {
       <AdSense />
       <Analytics />
       <Telemetry />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<ToolsHome />} />
-          <Route path="/tools" element={<ToolsCatalogue />} />
-          <Route path="/market-lab" element={<MarketLab />} />
-          <Route path="/market-lab/:symbol" element={<MarketLab />} />
-          <Route path="/market/:symbol" element={<MarketLab />} />
-          <Route path="/tools/:slug" element={<ToolPageRoute />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route path="/" element={<ToolsHome />} />
+        <Route path="/tools" element={<ToolsCatalogue />} />
+        {/* Market Lab is temporarily hidden; keep its implementation for a future re-enable. */}
+        <Route path="/market-lab" element={<Navigate to="/" replace />} />
+        <Route path="/market-lab/:symbol" element={<Navigate to="/" replace />} />
+        <Route path="/market/:symbol" element={<Navigate to="/" replace />} />
+        <Route path="/tools/:slug" element={<ToolPageRoute />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
@@ -94,7 +83,7 @@ function Telemetry() {
     return () => {
       cancelled = true;
       window.removeEventListener('load', scheduleAfterLoad);
-      if (timer !== null) window.clearTimeout(timer);
+      window.clearTimeout(timer);
     };
   }, [location.pathname]);
 

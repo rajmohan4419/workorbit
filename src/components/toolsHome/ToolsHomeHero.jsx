@@ -1,5 +1,4 @@
-import { Search, Sparkles, FlaskConical, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, Sparkles } from 'lucide-react';
 import { ResultRow } from './ToolCard';
 
 export function ToolsHomeHero({ query, setQuery, setCategory, searchResults, addRecent, logEvent }) {
@@ -33,13 +32,6 @@ export function ToolsHomeHero({ query, setQuery, setCategory, searchResults, add
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {['Salary in hand', 'EMI', 'Format JSON', 'Convert Excel', 'Resize image'].map(example => <button key={example} type="button" onClick={() => { setQuery(example); logEvent('search.suggestion_used', { suggestion: example }); }} className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 hover:border-violet-300 hover:text-[var(--orbit-accent)]">{example}</button>)}
         </div>
-        <Link to="/market-lab" className="group mx-auto mt-10 flex max-w-3xl flex-col items-start gap-4 rounded-2xl border border-violet-200 bg-violet-50 p-5 text-left transition hover:border-violet-300 hover:bg-violet-100 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-          <div className="flex items-start gap-4">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--orbit-accent)] text-white"><FlaskConical size={23} /></span>
-            <span><span className="block text-xs font-bold uppercase tracking-[.16em] text-[var(--orbit-accent)]">Explore Market Lab</span><span className="mt-1 block text-lg font-bold text-stone-900 sm:text-xl">Investigate stocks with evidence, not guesswork.</span><span className="mt-1 block text-sm leading-5 text-stone-600">Start with supported Indian stocks and market indices.</span></span>
-          </div>
-          <span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--orbit-accent)]">Explore <ArrowRight size={16} className="transition group-hover:translate-x-1" /></span>
-        </Link>
       </div>
     </section>
   );
