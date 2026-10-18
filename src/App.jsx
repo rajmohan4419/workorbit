@@ -25,6 +25,7 @@ export default function App() {
           <Route path="/" element={<ToolsHome />} />
           <Route path="/tools" element={<ToolsCatalogue />} />
           <Route path="/market-lab" element={<MarketLab />} />
+          <Route path="/market-lab/:symbol" element={<MarketLab />} />
           <Route path="/market/:symbol" element={<MarketLab />} />
           <Route path="/tools/:slug" element={<ToolPageRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
