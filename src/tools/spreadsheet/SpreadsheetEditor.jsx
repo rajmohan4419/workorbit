@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Download, Upload, Plus, Trash2, Search, RotateCcw } from 'lucide-react';
 
 const INITIAL_DATA = [
