@@ -4,11 +4,15 @@ import {
   validateSymbol,
 } from '../_lib/common.js';
 import { computeStatistics } from '../_lib/stats.js';
-import { checkRateLimit, getMarketCache } from '../_lib/supabaseClient.js';
+import {
+  checkRateLimit,
+  getMarketCache,
+  setMarketCache,
+} from '../_lib/supabaseClient.js';
 
 const VALID_RANGES = ['1mo', '6mo', '1y', '5y'];
 
-const PROVIDER_KEY = process.env.FINNHUB_API_KEY; // set in Vercel/Supabase env
+const PROVIDER_KEY = globalThis.process?.env?.FINNHUB_API_KEY; // set in Vercel environment
 
 async function fetchQuote(symbol) {
   const r = await fetch(
@@ -53,7 +57,7 @@ export async function fetchStockData(symbol, rangePeriod = '1y') {
     data_availability: { quote: !!quote, history: false, news: false, events: false },
   };
 
-  await setMarketCache(cacheKey, responseData, 60); // 60s TTL; check your helper's signature
+  await setMarketCache(cacheKey, responseData, 60); // 60s TTL
   return responseData;
 }
 
