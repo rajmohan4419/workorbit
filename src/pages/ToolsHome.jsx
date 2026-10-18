@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, BriefcaseBusiness, Calculator, FileText, Image, Code2 } from 'lucide-react';
+import { ArrowRight, Calculator, FileText, Image, Code2 } from 'lucide-react';
 import { TOOLS } from '../data/toolCatalog';
 import { logEvent } from '../lib/telemetry';
 
