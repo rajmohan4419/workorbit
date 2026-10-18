@@ -42,7 +42,7 @@ function ToolShell({ tool, info }) {
                 <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
                   <CategoryIcon size={14}/>{tool.category} tool
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 mt-3">{tool.name}</h1>
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 mt-3">{info?.h1 || tool.name}</h1>
                 <p className="mt-3 text-sm sm:text-base leading-7 text-stone-600">{info?.intro || tool.description}</p>
               </div>
               <div className="relative overflow-hidden rounded-3xl border border-[#e7dfd3] bg-[#fbf8f3] min-h-44 sm:min-h-52">

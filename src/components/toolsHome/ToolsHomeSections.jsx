@@ -33,10 +33,26 @@ export function CatalogCalloutSection() {
 
 export function ToolsHomeFooter() {
   return (
-    <footer className="border-t border-stone-200 bg-white py-7">
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-between gap-3 px-4 text-center text-sm text-stone-500 sm:flex-row sm:px-6 sm:text-left">
-        <span>OrbitBoard · Practical tools for work and life</span>
-        <a href="mailto:support@orbitboard.in?subject=OrbitBoard%20Collaboration" className="rounded-md px-1 font-medium text-stone-600 hover:text-violet-800 focus:outline-none focus:ring-2 focus:ring-violet-500">Collaboration? support@orbitboard.in</a>
+    <footer className="border-t border-slate-900 py-8">
+      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 space-y-6 text-sm text-slate-600">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-stone-600">
+          <span className="font-bold text-stone-800 uppercase tracking-wider">Popular Utilities:</span>
+          <Link to="/tools/notice-period" className="hover:text-violet-700 underline">Notice Period Calculator</Link>
+          <Link to="/tools/experience" className="hover:text-violet-700 underline">Calculate Work Experience</Link>
+          <Link to="/tools/image-compressor" className="hover:text-violet-700 underline">Online Compressor</Link>
+          <Link to="/tools/diff-checker" className="hover:text-violet-700 underline">Code Compare Online Free</Link>
+          <Link to="/tools/weight-converter" className="hover:text-violet-700 underline">How to Calculate Grams</Link>
+          <Link to="/tools/ctc-to-inhand" className="hover:text-violet-700 underline">CTC to In-Hand Salary</Link>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span>OrbitBoard • Practical tools for work & life</span>
+          <a
+            href="mailto:support@orbitboard.in?subject=OrbitBoard%20Collaboration"
+            className="font-medium text-slate-500 hover:text-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded-md px-1"
+          >
+            Collaboration? support@orbitboard.in
+          </a>
+        </div>
       </div>
     </footer>
   );
