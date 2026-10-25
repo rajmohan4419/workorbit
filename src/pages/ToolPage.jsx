@@ -5,6 +5,8 @@ import { TOOLS, LISTED_TOOLS } from '../data/toolCatalog';
 import { computeCompoundInterest, COMPOUND_FREQUENCIES } from '../tools/finance/compoundInterest';
 import { computeFdMaturity, FD_DEFAULT_FREQUENCY } from '../tools/finance/fdMaturity';
 import { computeRdMaturity, RD_DEFAULT_FREQUENCY } from '../tools/finance/rdMaturity';
+import { computeLoanAmortization } from '../tools/finance/loanAmortization';
+import { computeHraExemption } from '../tools/finance/hraExemption';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
@@ -156,6 +158,90 @@ function RdMaturity() {
         <Result label="Maturity amount" value={`₹ ${money(result.maturity)}`} highlight />
         <Result label="Total deposited" value={`₹ ${money(result.invested)}`} />
         <Result label="Interest earned" value={`₹ ${money(result.interest)}`} />
+      </div>
+    </div>
+  );
+}
+
+function LoanAmortization() {
+  const [principal, setPrincipal] = useState('1000000'), [rate, setRate] = useState('9'), [years, setYears] = useState('5'), [months, setMonths] = useState('0');
+  const result = computeLoanAmortization({ principal, annualRatePct: rate, years, months });
+
+  return (
+    <div className="space-y-8">
+      <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+        <div className="lg:col-span-7 space-y-4">
+          <Field label="Loan amount (₹)" value={principal} onChange={setPrincipal} />
+          <Field label="Interest rate per year (%)" value={rate} onChange={setRate} />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Tenure: years" value={years} onChange={setYears} />
+            <Field label="Tenure: months" value={months} onChange={setMonths} />
+          </div>
+        </div>
+        <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
+          <Result label="Monthly EMI" value={`₹ ${money(result.emi)}`} highlight />
+          <Result label="Total interest" value={`₹ ${money(result.totalInterest)}`} />
+          <Result label="Total payment" value={`₹ ${money(result.totalPayment)}`} />
+        </div>
+      </div>
+
+      {result.yearly.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-stone-700 dark:text-stone-200">Yearly breakdown</h3>
+          <div className="overflow-x-auto rounded-2xl border border-[var(--orbit-border)]">
+            <table className="w-full text-sm">
+              <thead className="bg-stone-50 dark:bg-stone-800/50 text-left text-xs uppercase tracking-wide text-stone-600 dark:text-stone-300">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Year</th>
+                  <th className="px-4 py-3 font-semibold text-right">Principal paid</th>
+                  <th className="px-4 py-3 font-semibold text-right">Interest paid</th>
+                  <th className="px-4 py-3 font-semibold text-right">Closing balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.yearly.map(row => (
+                  <tr key={row.year} className="border-t border-[var(--orbit-border)] text-stone-900 dark:text-stone-100">
+                    <td className="px-4 py-3">{row.year}</td>
+                    <td className="px-4 py-3 text-right">₹ {money(row.principalPaid)}</td>
+                    <td className="px-4 py-3 text-right">₹ {money(row.interestPaid)}</td>
+                    <td className="px-4 py-3 text-right">₹ {money(row.closingBalance)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HraExemption() {
+  const [basic, setBasic] = useState('600000'), [hra, setHra] = useState('240000'), [rent, setRent] = useState('240000'), [metro, setMetro] = useState('yes');
+  const result = computeHraExemption({ basicAnnual: basic, hraReceivedAnnual: hra, rentPaidAnnual: rent, metro: metro === 'yes' });
+  const bindingText = {
+    actualHra: 'Your actual HRA is the lowest limit.',
+    percentOfBasic: `${metro === 'yes' ? '50%' : '40%'} of basic salary is the lowest limit.`,
+    rentMinusTenPercent: 'Rent paid minus 10% of basic salary is the lowest limit.',
+  };
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="lg:col-span-7 space-y-4">
+        <Field label="Annual basic salary (₹)" value={basic} onChange={setBasic} />
+        <Field label="Annual HRA received (₹)" value={hra} onChange={setHra} />
+        <Field label="Annual rent paid (₹)" value={rent} onChange={setRent} />
+        <SelectField label="Where do you live?" value={metro} onChange={setMetro}>
+          <option value="yes">Metro: Delhi, Mumbai, Kolkata or Chennai</option>
+          <option value="no">Non-metro city</option>
+        </SelectField>
+      </div>
+      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
+        <Result label="Tax-exempt HRA" value={`₹ ${money(result.exempt)}`} highlight />
+        <Result label="Taxable HRA" value={`₹ ${money(result.taxable)}`} />
+        <p className="text-xs leading-5 text-stone-600 dark:text-stone-300 px-1">
+          {result.exempt > 0 ? bindingText[result.binding] : 'No exemption applies with these figures.'} This follows the old tax regime. Confirm details with your tax adviser or employer.
+        </p>
       </div>
     </div>
   );
@@ -1598,7 +1684,7 @@ export default function ToolPage() {
     'json-to-xlsx': () => <SpreadsheetFileTool type="json-to-xlsx" />, 'xlsx-to-csv': () => <SpreadsheetFileTool type="xlsx-to-csv" />, 'txt-to-pdf': TextToPdf, 'pdf-to-text': PdfToText, 'diff-checker': DiffChecker,
     'json-to-xml': JsonToXml, 'xml-to-json': XmlToJson, 'markdown-to-html': MarkdownToHtml, 'image-compressor': ImageCompressor, 'image-metadata-remover': ImageMetadataRemover, 'pdf-merge': PdfMerge, 'pdf-split': PdfSplit,
     'pdf-extract-pages': PdfExtract, 'pdf-reorder': PdfReorder, 'pdf-workspace': PdfWorkspace, 'pdf-compressor': PdfCompressor, 'pdf-e-sign': PdfESign, 'pdf-to-jpg': () => <PdfToImages format="image/jpeg" />, 'pdf-to-png': () => <PdfToImages format="image/png" />,
-    'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
+    'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'loan-amortization-calculator': LoanAmortization, 'hra-exemption-calculator-india': HraExemption, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
     'jwt-decoder': JwtDecoder, 'unix-timestamp': UnixTimestamp, 'uuid-generator': UuidGenerator, 'url-encoder': UrlEncoder,
     'password-generator': PasswordGenerator
   }[slug]), [slug]);
@@ -1635,13 +1721,13 @@ export default function ToolPage() {
   const related = LISTED_TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
 
   return (
-    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex flex-col justify-between">
+    <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex flex-col justify-between">
       <div>
         <ToolsHomeHeader />
         <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
 
         <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 space-y-8">
-          <div ref={workspaceRef} className="rounded-3xl border border-[var(--orbit-border)] bg-white dark:bg-stone-950 p-5 sm:p-8 shadow-sm">
+          <div ref={workspaceRef} className="rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] p-5 sm:p-8 shadow-sm">
             {Tool ? <Tool /> : <ComingSoon tool={tool} />}
           </div>
 

@@ -19,12 +19,12 @@ function ToolShell({ tool, info }) {
   const related = TOOLS.filter(item => item.category === tool.category && item.slug !== tool.slug).slice(0, 3);
 
   return (
-    <div className="orbit-light min-h-screen bg-[#fbf8f3] text-stone-800">
-      <header className="sticky top-0 z-20 border-b border-[#e7dfd3] bg-[#fbf8f3]/95 backdrop-blur">
+    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800">
+      <header className="sticky top-0 z-20 border-b border-[var(--orbit-border)] bg-[var(--orbit-canvas)]/95 backdrop-blur">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" aria-label="OrbitBoard home" className="text-lg font-black text-stone-900 flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-400 via-violet-500 to-indigo-500 p-0.5">
-              <div className="w-full h-full bg-[#fbf8f3] rounded-[7px] flex items-center justify-center text-violet-700 text-xs font-black">O</div>
+              <div className="w-full h-full bg-[var(--orbit-canvas)] rounded-[7px] flex items-center justify-center text-violet-700 text-xs font-black">O</div>
             </div>
             ORBIT<span className="text-violet-600">BOARD</span>
           </Link>
@@ -35,7 +35,7 @@ function ToolShell({ tool, info }) {
       </header>
 
       <main>
-        <section className="border-b border-[#e7dfd3] bg-white">
+        <section className="border-b border-[var(--orbit-border)] bg-white">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 sm:py-7">
             <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-6 items-center">
               <div>
@@ -45,7 +45,7 @@ function ToolShell({ tool, info }) {
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 mt-3">{info?.h1 || tool.name}</h1>
                 <p className="mt-3 text-sm sm:text-base leading-7 text-stone-600">{info?.intro || tool.description}</p>
               </div>
-              <div className="relative overflow-hidden rounded-3xl border border-[#e7dfd3] bg-[#fbf8f3] min-h-44 sm:min-h-52">
+              <div className="relative overflow-hidden rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-canvas)] min-h-44 sm:min-h-52">
                 <img src={tool.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
                 <div className="relative h-full min-h-44 sm:min-h-52 p-5 flex items-end">
                   <div>
@@ -59,7 +59,7 @@ function ToolShell({ tool, info }) {
         </section>
 
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 grid lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
-          <section className="rounded-3xl border border-[#e7dfd3] bg-white p-5 sm:p-8 shadow-sm">
+          <section className="rounded-3xl border border-[var(--orbit-border)] bg-white p-5 sm:p-8 shadow-sm">
             <div className="mb-5 flex flex-wrap gap-2">
               <div className="h-9 w-24 rounded-xl bg-stone-200 animate-pulse" />
               <div className="h-9 w-20 rounded-xl bg-stone-200 animate-pulse" />
@@ -73,7 +73,7 @@ function ToolShell({ tool, info }) {
           </section>
 
           <aside className="hidden lg:block">
-            <div className="sticky top-24 rounded-2xl border border-[#e7dfd3] bg-white p-5 shadow-sm">
+            <div className="sticky top-24 rounded-2xl border border-[var(--orbit-border)] bg-white p-5 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">More {tool.category} tools</p>
               <div className="mt-4 space-y-2">
                 {related.map(item => (
@@ -97,7 +97,7 @@ export default function ToolPageRoute() {
 
   if (!tool) {
     return (
-      <div className="orbit-light min-h-screen bg-[#fbf8f3] text-stone-900 p-10">
+      <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-900 p-10">
         <Link to="/tools" className="text-violet-700 font-semibold">← Tools</Link>
         <h1 className="text-2xl font-bold mt-8">Tool not found</h1>
       </div>

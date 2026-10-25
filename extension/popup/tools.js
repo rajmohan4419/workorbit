@@ -58,7 +58,9 @@ globalThis.ORBITBOARD_TOOLS = [
   { slug: "uuid-generator", name: "UUID Generator", description: "Generate random UUID v4 identifiers instantly.", category: "Developer", icon: "ID" },
   { slug: "url-encoder", name: "URL Encoder / Decoder", description: "Encode or decode URL components safely and quickly.", category: "Developer", icon: "%2F" },
   { slug: "password-generator", name: "Password Generator", description: "Generate strong, secure passwords with entropy calculation directly in your browser.", category: "Developer", icon: "🔑" },
+  { slug: "loan-amortization-calculator", name: "Loan Amortization Calculator", description: "See your EMI, total interest and a year-by-year repayment schedule for a loan.", category: "Finance", icon: "₹" },
   { slug: "fd-maturity-calculator", name: "FD Maturity Calculator", description: "Estimate the maturity amount and interest on a fixed deposit, with quarterly or other compounding.", category: "Finance", icon: "₹" },
   { slug: "rd-maturity-calculator", name: "RD Maturity Calculator", description: "Estimate the maturity amount and interest on a monthly recurring deposit.", category: "Finance", icon: "₹" },
   { slug: "compound-interest-calculator", name: "Compound Interest Calculator", description: "Estimate how an investment grows with compound interest, with yearly, quarterly, monthly or daily compounding.", category: "Finance", icon: "🧮" },
+  { slug: "hra-exemption-calculator-india", name: "HRA Exemption Calculator", description: "Estimate how much of your House Rent Allowance is tax-exempt under the old tax regime.", category: "Finance", icon: "₹" },
 ];

@@ -738,6 +738,34 @@ export const TOOL_CONTENT = {
       ['Is RD interest taxable?', 'Interest on recurring deposits is taxable as income at your slab rate. Banks deduct TDS at 10% when annual interest from a bank exceeds ₹40,000 (₹50,000 for senior citizens). Confirm current limits with your bank or a tax adviser.']
     ]
   },
+  'loan-amortization-calculator': {
+    intro: 'Understand your EMI, how much of each payment goes to interest, and how the balance falls each year.',
+    keywords: 'loan amortization calculator, loan repayment schedule, EMI schedule India, home loan amortization',
+    how: [
+      'Enter the loan amount and the annual interest rate.',
+      'Enter the loan tenure in years and months.',
+      'Review the EMI and the yearly breakdown to see principal and interest paid over time.'
+    ],
+    faq: [
+      ['Why do I pay more interest early in the loan?', 'Interest is charged on the outstanding balance. Early on the balance is high, so more of each EMI goes to interest.'],
+      ['Does prepaying reduce interest?', 'Usually yes, because prepayments lower the balance that interest is charged on. Check whether your lender charges a prepayment fee.'],
+      ['Are the figures exact for my lender?', 'This is a standard reducing-balance estimate. Your lender may round EMIs or apply different terms, so check your loan statement.']
+    ]
+  },
+  'hra-exemption-calculator-india': {
+    intro: 'Work out how much of your House Rent Allowance is exempt from tax under the old regime.',
+    keywords: 'HRA exemption calculator, HRA calculator India, HRA tax exemption, house rent allowance calculator',
+    how: [
+      'Enter your annual basic salary and the HRA you receive each year.',
+      'Enter the total rent you paid in the year.',
+      'Choose whether you live in a metro city. The exemption is calculated from the lowest of three limits.'
+    ],
+    faq: [
+      ['Which cities count as metro for HRA?', 'For HRA purposes, Delhi, Mumbai, Kolkata and Chennai are metro cities. Other cities count as non-metro.'],
+      ['Can I claim HRA under the new tax regime?', 'No. HRA exemption applies under the old tax regime. Under the new regime it is not available.'],
+      ['Do I need rent receipts?', 'Yes. Keep rent receipts and, if annual rent exceeds a set amount, your landlord’s PAN. Your employer may ask for these.']
+    ]
+  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',
