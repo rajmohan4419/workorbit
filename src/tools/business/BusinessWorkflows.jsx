@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Field, Result } from '../../components/tools/ToolFields';
 import { ImportPanel } from '../../components/tools/ImportPanel';
-import { money } from '../../lib/toolFormat';
-import { mapColumns } from '../../lib/csv';
+import { money, downloadBlob } from '../../lib/toolFormat';
+import { mapColumns, toCsv } from '../../lib/csv';
+import { applyLookup } from '../../lib/lookup';
 import { computeAging, AGING_BUCKETS, INVOICE_ALIASES } from './invoiceAging';
 import { computeDecisionMatrix } from './decisionMatrix';
 
@@ -25,11 +26,41 @@ const MATRIX_TEMPLATE = [
 
 export function InvoiceAging() {
   const [invoices, setInvoices] = useState([blankInvoice(1), blankInvoice(2)]);
+  const [customColumns, setCustomColumns] = useState([]);
+  const [newColumn, setNewColumn] = useState('');
   const [asOf, setAsOf] = useState(today());
+  const [groupBy, setGroupBy] = useState('');
   const [importNote, setImportNote] = useState(null);
+  const [lookupTable, setLookupTable] = useState(null);
+  const [lookupConfig, setLookupConfig] = useState({ invoiceKey: 'customer', lookupKey: '', returnCol: '' });
+  const [lookupNote, setLookupNote] = useState(null);
 
   const update = (i, key, value) => setInvoices(prev => prev.map((r, idx) => (idx === i ? { ...r, [key]: value } : r)));
+  const updateExtra = (i, col, value) => setInvoices(prev => prev.map((r, idx) => (idx === i ? { ...r, extra: { ...r.extra, [col]: value } } : r)));
   const remove = (i) => setInvoices(prev => prev.filter((_, idx) => idx !== i));
+
+  const builtInLabels = ['invoice', 'customer', 'amount', 'paid', 'due date', 'invoice date', 'terms (days)'];
+
+  const addColumn = () => {
+    const name = newColumn.trim();
+    if (!name) return;
+    if (builtInLabels.includes(name.toLowerCase()) || customColumns.includes(name)) {
+      setImportNote({ type: 'error', text: `"${name}" already exists as a column.` });
+      return;
+    }
+    setCustomColumns(prev => [...prev, name]);
+    setInvoices(prev => prev.map(r => ({ ...r, extra: { ...r.extra, [name]: '' } })));
+    setNewColumn('');
+  };
+
+  const removeColumn = (name) => {
+    setCustomColumns(prev => prev.filter(c => c !== name));
+    setInvoices(prev => prev.map(r => {
+      const rest = Object.fromEntries(Object.entries(r.extra || {}).filter(([k]) => k !== name));
+      return { ...r, extra: rest };
+    }));
+    if (groupBy === name) setGroupBy('');
+  };
 
   const handleImport = ({ headers, records }) => {
     const map = mapColumns(headers, INVOICE_ALIASES);
@@ -40,6 +71,8 @@ export function InvoiceAging() {
       setImportNote({ type: 'error', text: `Missing column(s): ${missing.join(', ')}. Use the template for the expected headings.` });
       return;
     }
+    const known = Object.values(map).filter(Boolean);
+    const extraHeaders = headers.map(h => h.trim()).filter(h => h && !known.includes(h));
     const rows = records.map((rec, i) => ({
       id: map.id ? rec[map.id] : `Row ${i + 1}`,
       customer: map.customer ? rec[map.customer] : '',
@@ -48,20 +81,71 @@ export function InvoiceAging() {
       dueDate: map.dueDate ? rec[map.dueDate] : '',
       invoiceDate: map.invoiceDate ? rec[map.invoiceDate] : '',
       termsDays: map.termsDays ? rec[map.termsDays] : '',
+      extra: Object.fromEntries(extraHeaders.map(h => [h, rec[h] ?? ''])),
     }));
+    setCustomColumns(extraHeaders);
     setInvoices(rows);
-    setImportNote({ type: 'ok', text: `Imported ${rows.length} invoice(s). You can still edit them below.` });
+    setGroupBy('');
+    setImportNote({
+      type: 'ok',
+      text: `Imported ${rows.length} invoice(s)${extraHeaders.length ? ` and ${extraHeaders.length} custom column(s): ${extraHeaders.join(', ')}` : ''}.`,
+    });
+  };
+
+  const handleLookupImport = ({ headers, records }) => {
+    setLookupTable({ headers, records });
+    setLookupConfig({
+      invoiceKey: 'customer',
+      lookupKey: headers[0] || '',
+      returnCol: headers[1] || '',
+    });
+    setLookupNote({ type: 'ok', text: `Lookup table loaded: ${records.length} row(s). Choose the columns to match, then apply.` });
+  };
+
+  const applyLookupNow = () => {
+    if (!lookupTable || !lookupConfig.lookupKey || !lookupConfig.returnCol) {
+      setLookupNote({ type: 'error', text: 'Load a lookup table and choose the key and return columns first.' });
+      return;
+    }
+    const keys = invoices.map(inv => (lookupConfig.invoiceKey === 'customer' ? inv.customer : inv.extra?.[lookupConfig.invoiceKey] ?? ''));
+    const res = applyLookup({
+      rowKeys: keys,
+      lookupRows: lookupTable.records,
+      lookupKey: lookupConfig.lookupKey,
+      returnCol: lookupConfig.returnCol,
+    });
+    const col = lookupConfig.returnCol;
+    if (!customColumns.includes(col)) setCustomColumns(prev => [...prev, col]);
+    setInvoices(prev => prev.map((inv, i) => ({ ...inv, extra: { ...inv.extra, [col]: res.values[i] } })));
+
+    const parts = [`Matched ${res.matched} row(s)`, `${res.unmatched} had no match`];
+    if (res.duplicates.length) parts.push(`duplicate keys in the lookup table, first row used: ${res.duplicates.join(', ')}`);
+    setLookupNote({ type: res.unmatched || res.duplicates.length ? 'info' : 'ok', text: `${parts.join('; ')}. Column "${col}" is now filled.` });
+  };
+
+  const exportCsv = () => {
+    if (!r) return;
+    const bucketLabel = Object.fromEntries(AGING_BUCKETS.map(b => [b.key, b.label]));
+    const header = ['Invoice', 'Customer', 'Balance', 'Days overdue', 'Bucket', ...customColumns];
+    const body = r.rows.map(row => [
+      row.id, row.customer, row.balance, row.daysOverdue, bucketLabel[row.bucket],
+      ...customColumns.map(c => row.extra?.[c] ?? ''),
+    ]);
+    const blob = new Blob([toCsv([header, ...body])], { type: 'text/csv;charset=utf-8' });
+    downloadBlob(blob, `invoice-aging-${asOf}.csv`);
   };
 
   const result = useMemo(() => {
     try {
-      return { data: computeAging({ invoices, asOf }), error: null };
+      return { data: computeAging({ invoices, asOf, groupBy: groupBy || null }), error: null };
     } catch (err) {
       return { data: null, error: err.message };
     }
-  }, [invoices, asOf]);
+  }, [invoices, asOf, groupBy]);
 
   const r = result.data;
+  const keyOptions = ['customer', ...customColumns];
+  const lookupColumns = lookupTable?.headers || [];
 
   return (
     <div className="space-y-6">
@@ -79,7 +163,27 @@ export function InvoiceAging() {
         <div className="lg:col-span-7 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Report as of" type="date" value={asOf} onChange={setAsOf} />
+            <label className="block">
+              <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Group balances by</span>
+              <select value={groupBy} onChange={e => setGroupBy(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base">
+                <option value="">Nothing (overall only)</option>
+                {customColumns.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
           </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input aria-label="New column name" placeholder="Add a column, e.g. Region or Sales rep" value={newColumn}
+              onChange={e => setNewColumn(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addColumn(); } }}
+              className="flex-1 rounded-xl border border-[var(--orbit-border)] px-3 py-2 min-h-[40px] bg-white dark:bg-stone-900 text-sm" />
+            <button type="button" onClick={addColumn}
+              className="px-4 py-2 min-h-[40px] rounded-xl border border-[var(--orbit-border)] text-sm font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800">
+              Add column
+            </button>
+          </div>
+
           <div className="overflow-x-auto rounded-2xl border border-[var(--orbit-border)]">
             <table className="w-full text-sm">
               <thead className="bg-stone-50 dark:bg-stone-800/50 text-left text-xs text-stone-600 dark:text-stone-300">
@@ -89,7 +193,12 @@ export function InvoiceAging() {
                   <th className="px-3 py-2 font-semibold">Amount</th>
                   <th className="px-3 py-2 font-semibold">Paid</th>
                   <th className="px-3 py-2 font-semibold">Due date</th>
-                  <th className="px-3 py-2"><span className="sr-only">Remove</span></th>
+                  {customColumns.map(c => (
+                    <th key={c} className="px-3 py-2 font-semibold whitespace-nowrap">
+                      {c} <button type="button" onClick={() => removeColumn(c)} aria-label={`Remove column ${c}`} className="ml-1 text-rose-700 dark:text-rose-300">×</button>
+                    </th>
+                  ))}
+                  <th className="px-3 py-2"><span className="sr-only">Remove row</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -100,16 +209,66 @@ export function InvoiceAging() {
                     <td className="p-2"><input aria-label="Amount" inputMode="decimal" value={inv.amount} onChange={e => update(i, 'amount', e.target.value)} className="w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
                     <td className="p-2"><input aria-label="Amount paid" inputMode="decimal" value={inv.paid} onChange={e => update(i, 'paid', e.target.value)} className="w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
                     <td className="p-2"><input aria-label="Due date" placeholder="DD/MM/YYYY" value={inv.dueDate} onChange={e => update(i, 'dueDate', e.target.value)} className="w-full min-w-[120px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
+                    {customColumns.map(c => (
+                      <td key={c} className="p-2"><input aria-label={`${c} for invoice ${i + 1}`} value={inv.extra?.[c] ?? ''} onChange={e => updateExtra(i, c, e.target.value)} className="w-full min-w-[110px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
+                    ))}
                     <td className="p-2 text-right"><button type="button" onClick={() => remove(i)} className="text-xs font-semibold text-rose-700 dark:text-rose-300 px-2 py-1">Remove</button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <button type="button" onClick={() => setInvoices(prev => [...prev, blankInvoice(prev.length + 1)])}
+          <button type="button" onClick={() => setInvoices(prev => [...prev, { ...blankInvoice(prev.length + 1), extra: Object.fromEntries(customColumns.map(c => [c, ''])) }])}
             className="px-4 py-2 min-h-[40px] rounded-xl border border-[var(--orbit-border)] text-sm font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800">
             Add invoice
           </button>
+
+          <div className="rounded-2xl border border-[var(--orbit-border)] p-4 space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">Look up a column from another table</p>
+              <p className="text-xs text-stone-600 dark:text-stone-300">Like a VLOOKUP: for each invoice, find a matching row in a second CSV and copy one of its columns across.</p>
+            </div>
+            <ImportPanel
+              title="Upload the lookup table"
+              templateName="lookup-template.csv"
+              templateRows={[['Customer', 'Region', 'Credit Limit'], ['Acme Pvt Ltd', 'South', '500000'], ['Beta Traders', 'North', '200000']]}
+              onParsed={handleLookupImport}
+            />
+            {lookupTable && (
+              <div className="grid sm:grid-cols-3 gap-3">
+                <label className="block">
+                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Match invoices using</span>
+                  <select value={lookupConfig.invoiceKey} onChange={e => setLookupConfig(c => ({ ...c, invoiceKey: e.target.value }))}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-3 py-2 text-sm">
+                    {keyOptions.map(k => <option key={k} value={k}>{k === 'customer' ? 'Customer' : k}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Lookup table key column</span>
+                  <select value={lookupConfig.lookupKey} onChange={e => setLookupConfig(c => ({ ...c, lookupKey: e.target.value }))}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-3 py-2 text-sm">
+                    {lookupColumns.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Copy this column</span>
+                  <select value={lookupConfig.returnCol} onChange={e => setLookupConfig(c => ({ ...c, returnCol: e.target.value }))}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-3 py-2 text-sm">
+                    {lookupColumns.filter(h => h !== lookupConfig.lookupKey).map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </label>
+              </div>
+            )}
+            {lookupTable && (
+              <button type="button" onClick={applyLookupNow}
+                className="px-4 py-2 min-h-[40px] rounded-xl bg-accent-600 text-white text-sm font-semibold hover:bg-accent-700">
+                Apply lookup
+              </button>
+            )}
+            {lookupNote && (
+              <p role="status" className={`text-xs font-medium ${lookupNote.type === 'error' ? 'text-rose-700 dark:text-rose-300' : lookupNote.type === 'info' ? 'text-amber-800 dark:text-amber-300' : 'text-accent-700 dark:text-accent-300'}`}>{lookupNote.text}</p>
+            )}
+          </div>
         </div>
 
         <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
@@ -121,6 +280,22 @@ export function InvoiceAging() {
               {AGING_BUCKETS.map(b => (
                 <Result key={b.key} label={b.label} value={money(r.buckets[b.key])} />
               ))}
+              {groupBy && r.byGroup.length > 0 && (
+                <div className="rounded-xl border border-[var(--orbit-border)] p-4">
+                  <p className="text-xs font-semibold text-stone-700 dark:text-stone-200 mb-2">By {groupBy}</p>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {r.byGroup.map(g => (
+                        <tr key={g.group} className="border-t border-[var(--orbit-border)] first:border-t-0">
+                          <td className="py-1.5">{g.group}</td>
+                          <td className="py-1.5 text-right">{money(g.balance)}</td>
+                          <td className="py-1.5 text-right text-xs text-rose-700 dark:text-rose-300">{money(g.overdue)} overdue</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               {r.byCustomer.length > 0 && (
                 <div className="rounded-xl border border-[var(--orbit-border)] p-4">
                   <p className="text-xs font-semibold text-stone-700 dark:text-stone-200 mb-2">Largest balances</p>
@@ -131,6 +306,10 @@ export function InvoiceAging() {
                   </ol>
                 </div>
               )}
+              <button type="button" onClick={exportCsv} disabled={r.rows.length === 0}
+                className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] text-sm font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-50">
+                Download outstanding invoices (CSV)
+              </button>
               {r.warnings.length > 0 && (
                 <ul className="text-xs text-amber-800 dark:text-amber-300 space-y-1">
                   {r.warnings.map(w => <li key={w}>{w}</li>)}

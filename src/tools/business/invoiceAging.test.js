@@ -82,3 +82,32 @@ describe('computeAging', () => {
     expect(() => computeAging({ invoices: [], asOf: 'nope' })).toThrow();
   });
 });
+
+describe('custom columns and grouping', () => {
+  it('groups balances by a custom column', () => {
+    const r = computeAging({
+      asOf,
+      groupBy: 'Region',
+      invoices: [
+        { id: 'A', customer: 'Acme', amount: 1000, dueDate: '2026-10-01', extra: { Region: 'South' } },
+        { id: 'B', customer: 'Beta', amount: 500, dueDate: '2026-11-30', extra: { Region: 'South' } },
+        { id: 'C', customer: 'Gamma', amount: 700, dueDate: '2026-10-01', extra: { Region: ' North ' } },
+        { id: 'D', customer: 'Delta', amount: 300, dueDate: '2026-10-01', extra: {} },
+      ],
+    });
+    expect(r.byGroup).toEqual([
+      { group: 'South', balance: 1500, overdue: 1000 },
+      { group: 'North', balance: 700, overdue: 700 },
+      { group: 'Unassigned', balance: 300, overdue: 300 },
+    ]);
+  });
+
+  it('carries custom values through to each outstanding row', () => {
+    const r = computeAging({
+      asOf,
+      invoices: [{ id: 'A', customer: 'Acme', amount: 1000, dueDate: '2026-10-01', extra: { 'Sales rep': 'Priya' } }],
+    });
+    expect(r.rows[0].extra).toEqual({ 'Sales rep': 'Priya' });
+    expect(r.byGroup).toEqual([]);
+  });
+});
