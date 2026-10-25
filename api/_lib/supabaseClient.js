@@ -6,6 +6,11 @@ const serviceRoleKey = globalThis.process?.env?.SUPABASE_SERVICE_ROLE_KEY;
 
 let supabaseAdmin = null;
 
+/** Service-role client for server-only code. Returns null when not configured. */
+export function getAdminClient() {
+  return supabaseAdmin;
+}
+
 if (supabaseUrl && serviceRoleKey) {
   try {
     supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
@@ -42,7 +47,8 @@ export async function hashIp(ip) {
  * @param {number} windowSeconds
  * @returns {Promise<boolean>} true if rate limited, false if allowed
  */
-export async function checkRateLimit(clientIp, endpoint, limit = 20, windowSeconds = 60) {
+export async function checkRateLimit(clientIp, endpoint, limit = 20, windowSeconds = 60, options = {}) {
+  const { failClosed = false } = options;
   if (supabaseAdmin) {
     try {
       const ipHash = await hashIp(clientIp);
@@ -63,9 +69,12 @@ export async function checkRateLimit(clientIp, endpoint, limit = 20, windowSecon
     } catch (e) {
       console.warn('[RATE LIMIT EXCEPTION]', e.message);
     }
+    // The shared store was reachable configuration-wise but failed.
+    // Endpoints with material cost must fail closed rather than fall back.
+    if (failClosed) return true;
   }
 
-  // Fallback to in-memory rate limiter
+  // Best-effort per-instance fallback (not globally consistent).
   return rateLimiter.isRateLimited(clientIp, endpoint, limit, windowSeconds);
 }
 

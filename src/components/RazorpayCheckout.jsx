@@ -2,9 +2,12 @@ import { useState, useCallback } from 'react';
 import { CreditCard, CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
 import { loadRazorpayScript } from '../lib/razorpay';
 
+// Must match the server price list in api/_lib/products.js. The server enforces it.
+const AMOUNT_OPTIONS_INR = [100, 500, 1000];
+
 export function RazorpayCheckout({
-  amount = 500, // Amount in INR (e.g. 500 = ₹500)
-  currency = 'INR',
+  productId,
+  amount = 500, // Default selection in INR. Must be one of AMOUNT_OPTIONS_INR.
   title = 'OrbitBoard Pro Access',
   description = 'Support OrbitBoard & unlock Pro features',
   prefillName = '',
@@ -17,7 +20,9 @@ export function RazorpayCheckout({
   buttonClassName,
   showAmountSelector = false,
 }) {
-  const [selectedAmount, setSelectedAmount] = useState(amount);
+  const [selectedAmount, setSelectedAmount] = useState(
+    AMOUNT_OPTIONS_INR.includes(amount) ? amount : AMOUNT_OPTIONS_INR[0]
+  );
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error' | 'info', message: string, details?: object }
 
@@ -37,24 +42,22 @@ export function RazorpayCheckout({
         throw new Error('Razorpay Key ID is not configured in VITE_RAZORPAY_KEY_ID.');
       }
 
-      // Step 2: Convert INR to paise (minimum 100 paise = ₹1)
-      const amountInPaise = Math.round(Number(selectedAmount) * 100);
-      if (amountInPaise < 100) {
-        throw new Error('Minimum payment amount is ₹1 (100 paise).');
+      if (!productId) {
+        throw new Error('This payment option is not configured.');
+      }
+      if (!AMOUNT_OPTIONS_INR.includes(selectedAmount)) {
+        throw new Error('Please choose one of the listed amounts.');
       }
 
-      // Step 3: Create order via backend endpoint
+      // Step 2: Create order via backend. The server sets the price and currency.
       const response = await fetch('/api/create-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: amountInPaise,
-          currency,
-          notes: {
-            title,
-          },
+          productId,
+          amountInr: selectedAmount,
         }),
       });
 
@@ -164,9 +167,8 @@ export function RazorpayCheckout({
       if (onError) onError(err);
     }
   }, [
+    productId,
     selectedAmount,
-    currency,
-    title,
     description,
     prefillName,
     prefillEmail,
@@ -194,7 +196,7 @@ export function RazorpayCheckout({
             Select Amount (₹)
           </label>
           <div className="grid grid-cols-3 gap-2 mb-2">
-            {[100, 500, 1000].map((preset) => (
+            {AMOUNT_OPTIONS_INR.map((preset) => (
               <button
                 key={preset}
                 type="button"
@@ -208,16 +210,6 @@ export function RazorpayCheckout({
                 ₹{preset}
               </button>
             ))}
-          </div>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400 font-semibold">₹</span>
-            <input
-              type="number"
-              min="1"
-              value={selectedAmount}
-              onChange={(e) => setSelectedAmount(Math.max(1, Number(e.target.value)))}
-              className="w-full pl-8 pr-3 py-2 min-h-[44px] rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm font-semibold text-stone-900 dark:text-stone-100 outline-none focus:border-violet-500"
-            />
           </div>
         </div>
       )}
