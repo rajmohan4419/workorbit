@@ -1,6 +1,8 @@
-/* global process */
-import Razorpay from 'razorpay';
+/* global Buffer */
 import { getCorsHeaders } from './_lib/common.js';
+import { parseOrderRequest } from './_lib/products.js';
+import { getRazorpay, requireAdmin } from './_lib/payments.js';
+import crypto from 'crypto';
 
 export async function parseRequestBody(req) {
   if (req.body) {
@@ -16,7 +18,7 @@ export async function parseRequestBody(req) {
     for await (const chunk of req) {
       buffers.push(chunk);
     }
-    const bodyStr = globalThis.Buffer.concat(buffers).toString('utf-8');
+    const bodyStr = Buffer.concat(buffers).toString('utf-8');
     if (bodyStr) return JSON.parse(bodyStr);
   } catch {
     return {};
@@ -25,8 +27,7 @@ export async function parseRequestBody(req) {
 }
 
 export default async function handler(req, res) {
-  const origin = req.headers?.origin;
-  const corsHeaders = getCorsHeaders(origin);
+  const corsHeaders = getCorsHeaders(req.headers?.origin);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, corsHeaders);
@@ -40,60 +41,68 @@ export default async function handler(req, res) {
     return;
   }
 
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret) {
-    res.writeHead(401, corsHeaders);
-    res.end(JSON.stringify({ error: 'Razorpay API credentials missing or invalid' }));
+  const razorpay = getRazorpay();
+  if (!razorpay) {
+    console.error('[CREATE ORDER] Razorpay credentials missing');
+    res.writeHead(500, corsHeaders);
+    res.end(JSON.stringify({ error: 'Payments are temporarily unavailable' }));
     return;
   }
 
   const body = await parseRequestBody(req);
-  const rawAmount = body.amount;
-  const amount = Number(rawAmount);
-
-  if (rawAmount === undefined || rawAmount === null || Number.isNaN(amount) || amount < 100) {
+  const parsed = parseOrderRequest(body);
+  if (parsed.error) {
     res.writeHead(400, corsHeaders);
-    res.end(JSON.stringify({ error: 'Amount must be at least 100 paise' }));
+    res.end(JSON.stringify({ error: parsed.error }));
     return;
   }
 
-  const currency = body.currency || 'INR';
-  const receipt = body.receipt || `rcpt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  const notes = body.notes || {};
+  let admin;
+  try {
+    admin = requireAdmin();
+  } catch {
+    res.writeHead(503, corsHeaders);
+    res.end(JSON.stringify({ error: 'Payments are temporarily unavailable' }));
+    return;
+  }
+
+  // Receipt is generated on the server and is not taken from the client.
+  const receipt = `rcpt_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
 
   try {
-    const instance = new Razorpay({
-      key_id: keyId,
-      key_secret: keySecret,
+    const order = await razorpay.orders.create({
+      amount: parsed.amountPaise,
+      currency: parsed.currency,
+      receipt,
+      notes: { productId: parsed.productId },
     });
 
-    const order = await instance.orders.create({
-      amount,
-      currency,
+    const { error: insertError } = await admin.from('payment_orders').insert({
+      razorpay_order_id: order.id,
+      product_id: parsed.productId,
+      amount_paise: parsed.amountPaise,
+      currency: parsed.currency,
       receipt,
-      notes,
+      status: 'created',
     });
+    if (insertError) {
+      // Without a stored record we cannot verify the payment later, so refuse.
+      console.error('[CREATE ORDER] could not store order', insertError.message);
+      res.writeHead(500, corsHeaders);
+      res.end(JSON.stringify({ error: 'Could not start checkout. Please try again.' }));
+      return;
+    }
 
     res.writeHead(200, corsHeaders);
-    res.end(
-      JSON.stringify({
-        order_id: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        receipt: order.receipt,
-        status: order.status,
-      })
-    );
+    res.end(JSON.stringify({
+      order_id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      status: order.status,
+    }));
   } catch (err) {
-    console.error('[CREATE ORDER ERROR]:', err);
-    const statusCode = err?.statusCode === 401 ? 401 : 500;
-    res.writeHead(statusCode, corsHeaders);
-    res.end(
-      JSON.stringify({
-        error: err?.error?.description || err?.message || 'Failed to create Razorpay order',
-      })
-    );
+    console.error('[CREATE ORDER ERROR]', err?.message || err);
+    res.writeHead(500, corsHeaders);
+    res.end(JSON.stringify({ error: 'Could not start checkout. Please try again.' }));
   }
 }

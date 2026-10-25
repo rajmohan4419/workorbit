@@ -248,7 +248,7 @@ export default async function handler(req, res) {
   }
 
   const clientIp = getClientIp(req);
-  const isLimited = await checkRateLimit(clientIp, 'analyze', 5, 60);
+  const isLimited = await checkRateLimit(clientIp, 'analyze', 5, 60, { failClosed: true });
   if (isLimited) {
     res.writeHead(429, corsHeaders);
     res.end(JSON.stringify({ error: 'Rate limit exceeded. Maximum 5 analysis requests per minute.' }));

@@ -44,6 +44,7 @@ export function SupportCheckoutSection() {
         </div>
         <div className="shrink-0 w-full lg:w-auto flex justify-center">
           <RazorpayCheckout
+            productId="support-orbitboard"
             amount={500}
             title="OrbitBoard Pro Support"
             description="Unlock Pro features and support fast web tools"

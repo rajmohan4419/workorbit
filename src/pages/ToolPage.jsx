@@ -2,15 +2,13 @@ import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState, useRef } from 'react';
 import { ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronDown, ChevronRight } from 'lucide-react';
 import { TOOLS, LISTED_TOOLS } from '../data/toolCatalog';
-import { computeCompoundInterest, COMPOUND_FREQUENCIES } from '../tools/finance/compoundInterest';
-import { computeFdMaturity, FD_DEFAULT_FREQUENCY } from '../tools/finance/fdMaturity';
-import { computeRdMaturity, RD_DEFAULT_FREQUENCY } from '../tools/finance/rdMaturity';
-import { computeLoanAmortization } from '../tools/finance/loanAmortization';
-import { computeHraExemption } from '../tools/finance/hraExemption';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
 import { csvToXlsx, jsonToXlsx, xlsxToCsv } from '../engines/spreadsheet';
+import { Field, Result, ComingSoon } from '../components/tools/ToolFields';
+import { money, num, downloadBlob } from '../lib/toolFormat';
+import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemption } from '../tools/finance/FinanceCalculators';
 import SampleAd from '../components/SampleAd';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
@@ -21,232 +19,6 @@ const GlobalIncomeTaxCalculator = lazy(() => import('../tools/finance/GlobalInco
 const PdfESign = lazy(() => import('../tools/pdf/PdfESign'));
 const GlobalTimeZoneConverter = lazy(() => import('../tools/GlobalTimeZoneConverter'));
 
-const money = n => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.max(0, Number(n) || 0));
-const num = v => Math.max(0, Number(v) || 0);
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function Field({ label, value, onChange, type = 'number', placeholder }) {
-  return (
-    <label className="block">
-      <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{label}</span>
-      <input
-        type={type}
-        min={type === 'number' ? 0 : undefined}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-900/50 min-h-[44px]"
-      />
-    </label>
-  );
-}
-
-function Result({ label, value, highlight = false }) {
-  return (
-    <div className={`rounded-xl border px-4 py-3 flex items-center justify-between min-h-[44px] ${highlight ? 'border-violet-400/60 bg-violet-50/80 dark:bg-violet-950/50 dark:border-violet-700' : 'border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800/50'}`}>
-      <span className="text-xs font-medium text-stone-600 dark:text-stone-300">{label}</span>
-      <strong className={highlight ? 'text-base sm:text-lg text-violet-700 dark:text-violet-300 font-bold' : 'text-sm text-stone-900 dark:text-stone-100 font-semibold'}>{value}</strong>
-    </div>
-  );
-}
-
-function ComingSoon({ tool }) {
-  return (
-    <div className="max-w-xl space-y-4 py-6">
-      <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100">{tool.name} is coming soon</h3>
-      <p className="text-sm leading-6 text-stone-600 dark:text-stone-300">
-        This tool isn't available yet. Explore the tools that work today.
-      </p>
-      <Link to="/tools" className="inline-flex min-h-[44px] items-center gap-1 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 transition">
-        Browse available tools <ArrowRight size={16} />
-      </Link>
-    </div>
-  );
-}
-
-function SelectField({ label, value, onChange, children }) {
-  return (
-    <label className="block">
-      <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{label}</span>
-      <div className="relative mt-1.5">
-        <select
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 pl-4 pr-11 py-3 text-base text-stone-900 dark:text-stone-100 min-h-[44px]"
-        >
-          {children}
-        </select>
-        <ChevronDown size={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-stone-500" />
-      </div>
-    </label>
-  );
-}
-
-function CompoundInterest() {
-  const [principal, setPrincipal] = useState('100000'), [rate, setRate] = useState('10'), [years, setYears] = useState('5'), [frequency, setFrequency] = useState('1');
-  const result = computeCompoundInterest({ principal, annualRatePct: rate, years, timesPerYear: frequency });
-
-  return (
-    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
-      <div className="lg:col-span-7 space-y-4">
-        <Field label="Initial principal (₹)" value={principal} onChange={setPrincipal} />
-        <Field label="Annual interest rate (%)" value={rate} onChange={setRate} />
-        <Field label="Time period (years)" value={years} onChange={setYears} />
-        <SelectField label="Compounding frequency" value={frequency} onChange={setFrequency}>
-          {COMPOUND_FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-        </SelectField>
-      </div>
-      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
-        <Result label="Maturity amount" value={`₹ ${money(result.amount)}`} highlight />
-        <Result label="Interest earned" value={`₹ ${money(result.interest)}`} />
-        <Result label="Effective annual rate" value={`${result.effectiveRatePct.toFixed(2)}%`} />
-      </div>
-    </div>
-  );
-}
-
-function FdMaturity() {
-  const [principal, setPrincipal] = useState('100000'), [rate, setRate] = useState('7'), [years, setYears] = useState('1'), [months, setMonths] = useState('0'), [frequency, setFrequency] = useState(String(FD_DEFAULT_FREQUENCY));
-  const result = computeFdMaturity({ principal, annualRatePct: rate, years, months, timesPerYear: frequency });
-
-  return (
-    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
-      <div className="lg:col-span-7 space-y-4">
-        <Field label="Deposit amount (₹)" value={principal} onChange={setPrincipal} />
-        <Field label="Interest rate per year (%)" value={rate} onChange={setRate} />
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Tenure: years" value={years} onChange={setYears} />
-          <Field label="Tenure: months" value={months} onChange={setMonths} />
-        </div>
-        <SelectField label="Compounding frequency" value={frequency} onChange={setFrequency}>
-          {COMPOUND_FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-        </SelectField>
-      </div>
-      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
-        <Result label="Maturity amount" value={`₹ ${money(result.amount)}`} highlight />
-        <Result label="Interest earned" value={`₹ ${money(result.interest)}`} />
-        <Result label="Effective annual rate" value={`${result.effectiveRatePct.toFixed(2)}%`} />
-      </div>
-    </div>
-  );
-}
-
-function RdMaturity() {
-  const [deposit, setDeposit] = useState('1000'), [rate, setRate] = useState('6.5'), [years, setYears] = useState('1'), [months, setMonths] = useState('0'), [frequency, setFrequency] = useState(String(RD_DEFAULT_FREQUENCY));
-  const result = computeRdMaturity({ monthlyDeposit: deposit, annualRatePct: rate, years, months, timesPerYear: frequency });
-
-  return (
-    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
-      <div className="lg:col-span-7 space-y-4">
-        <Field label="Monthly deposit (₹)" value={deposit} onChange={setDeposit} />
-        <Field label="Interest rate per year (%)" value={rate} onChange={setRate} />
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Tenure: years" value={years} onChange={setYears} />
-          <Field label="Tenure: months" value={months} onChange={setMonths} />
-        </div>
-        <SelectField label="Compounding frequency" value={frequency} onChange={setFrequency}>
-          {COMPOUND_FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-        </SelectField>
-      </div>
-      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
-        <Result label="Maturity amount" value={`₹ ${money(result.maturity)}`} highlight />
-        <Result label="Total deposited" value={`₹ ${money(result.invested)}`} />
-        <Result label="Interest earned" value={`₹ ${money(result.interest)}`} />
-      </div>
-    </div>
-  );
-}
-
-function LoanAmortization() {
-  const [principal, setPrincipal] = useState('1000000'), [rate, setRate] = useState('9'), [years, setYears] = useState('5'), [months, setMonths] = useState('0');
-  const result = computeLoanAmortization({ principal, annualRatePct: rate, years, months });
-
-  return (
-    <div className="space-y-8">
-      <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
-        <div className="lg:col-span-7 space-y-4">
-          <Field label="Loan amount (₹)" value={principal} onChange={setPrincipal} />
-          <Field label="Interest rate per year (%)" value={rate} onChange={setRate} />
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Field label="Tenure: years" value={years} onChange={setYears} />
-            <Field label="Tenure: months" value={months} onChange={setMonths} />
-          </div>
-        </div>
-        <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
-          <Result label="Monthly EMI" value={`₹ ${money(result.emi)}`} highlight />
-          <Result label="Total interest" value={`₹ ${money(result.totalInterest)}`} />
-          <Result label="Total payment" value={`₹ ${money(result.totalPayment)}`} />
-        </div>
-      </div>
-
-      {result.yearly.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-bold text-stone-700 dark:text-stone-200">Yearly breakdown</h3>
-          <div className="overflow-x-auto rounded-2xl border border-[var(--orbit-border)]">
-            <table className="w-full text-sm">
-              <thead className="bg-stone-50 dark:bg-stone-800/50 text-left text-xs uppercase tracking-wide text-stone-600 dark:text-stone-300">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Year</th>
-                  <th className="px-4 py-3 font-semibold text-right">Principal paid</th>
-                  <th className="px-4 py-3 font-semibold text-right">Interest paid</th>
-                  <th className="px-4 py-3 font-semibold text-right">Closing balance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.yearly.map(row => (
-                  <tr key={row.year} className="border-t border-[var(--orbit-border)] text-stone-900 dark:text-stone-100">
-                    <td className="px-4 py-3">{row.year}</td>
-                    <td className="px-4 py-3 text-right">₹ {money(row.principalPaid)}</td>
-                    <td className="px-4 py-3 text-right">₹ {money(row.interestPaid)}</td>
-                    <td className="px-4 py-3 text-right">₹ {money(row.closingBalance)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function HraExemption() {
-  const [basic, setBasic] = useState('600000'), [hra, setHra] = useState('240000'), [rent, setRent] = useState('240000'), [metro, setMetro] = useState('yes');
-  const result = computeHraExemption({ basicAnnual: basic, hraReceivedAnnual: hra, rentPaidAnnual: rent, metro: metro === 'yes' });
-  const bindingText = {
-    actualHra: 'Your actual HRA is the lowest limit.',
-    percentOfBasic: `${metro === 'yes' ? '50%' : '40%'} of basic salary is the lowest limit.`,
-    rentMinusTenPercent: 'Rent paid minus 10% of basic salary is the lowest limit.',
-  };
-
-  return (
-    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
-      <div className="lg:col-span-7 space-y-4">
-        <Field label="Annual basic salary (₹)" value={basic} onChange={setBasic} />
-        <Field label="Annual HRA received (₹)" value={hra} onChange={setHra} />
-        <Field label="Annual rent paid (₹)" value={rent} onChange={setRent} />
-        <SelectField label="Where do you live?" value={metro} onChange={setMetro}>
-          <option value="yes">Metro: Delhi, Mumbai, Kolkata or Chennai</option>
-          <option value="no">Non-metro city</option>
-        </SelectField>
-      </div>
-      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
-        <Result label="Tax-exempt HRA" value={`₹ ${money(result.exempt)}`} highlight />
-        <Result label="Taxable HRA" value={`₹ ${money(result.taxable)}`} />
-        <p className="text-xs leading-5 text-stone-600 dark:text-stone-300 px-1">
-          {result.exempt > 0 ? bindingText[result.binding] : 'No exemption applies with these figures.'} This follows the old tax regime. Confirm details with your tax adviser or employer.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function PasswordGenerator() {
   const [length, setLength] = useState(16);
   const [useUpper, setUseUpper] = useState(true);
@@ -254,26 +26,11 @@ function PasswordGenerator() {
   const [useNumbers, setUseNumbers] = useState(true);
   const [useSymbols, setUseSymbols] = useState(true);
   const [excludeAmbiguous, setExcludeAmbiguous] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [password, setPassword] = useState('');
 
-  const password = useMemo(() => {
-    let chars = '';
-    if (useUpper) chars += excludeAmbiguous ? 'ABCDEFGHJKLMNPQRSTUVWXYZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    if (useLower) chars += excludeAmbiguous ? 'abcdefghijkmnpqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz';
-    if (useNumbers) chars += excludeAmbiguous ? '23456789' : '0123456789';
-    if (useSymbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  // Password will be generated on demand via generate()
 
-    if (!chars) return '';
-
-    const array = new Uint32Array(length);
-    crypto.getRandomValues(array);
-    let res = '';
-    for (let i = 0; i < length; i++) {
-      res += chars[array[i] % chars.length];
-    }
-    return res;
-  }, [length, useUpper, useLower, useNumbers, useSymbols, excludeAmbiguous, refreshKey]);
 
   const poolSize = (useUpper ? (excludeAmbiguous ? 24 : 26) : 0) +
                    (useLower ? (excludeAmbiguous ? 24 : 26) : 0) +
@@ -284,7 +41,21 @@ function PasswordGenerator() {
 
   const strength = entropy < 40 ? 'Weak' : entropy < 65 ? 'Moderate' : entropy < 90 ? 'Strong' : 'Very Strong';
 
-  const generate = () => setRefreshKey(k => k + 1);
+  const generate = () => {
+    let chars = '';
+    if (useUpper) chars += excludeAmbiguous ? 'ABCDEFGHJKLMNPQRSTUVWXYZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (useLower) chars += excludeAmbiguous ? 'abcdefghijkmnpqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz';
+    if (useNumbers) chars += excludeAmbiguous ? '23456789' : '0123456789';
+    if (useSymbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    if (!chars) { setPassword(''); return; }
+    const array = new Uint32Array(length);
+    crypto.getRandomValues(array);
+    let res = '';
+    for (let i = 0; i < length; i++) {
+      res += chars[array[i] % chars.length];
+    }
+    setPassword(res);
+  };
 
   const copyToClipboard = async () => {
     if (!password) return;

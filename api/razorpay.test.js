@@ -1,239 +1,143 @@
 /* global process, Buffer */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import crypto from 'crypto';
 import createOrderHandler from './create-order.js';
 import verifyPaymentHandler from './verify-payment.js';
-import crypto from 'crypto';
+import { parseOrderRequest, PRODUCTS } from './_lib/products.js';
+import { checkPaymentAgainstOrder } from './_lib/paymentRules.js';
 
-vi.mock('razorpay', () => {
-  return {
-    default: class MockRazorpay {
-      constructor({ key_id }) {
-        if (key_id === 'invalid_key') {
-          const err = new Error('Auth failed');
-          err.statusCode = 401;
-          throw err;
-        }
-        this.orders = {
-          create: vi.fn().mockImplementation(async (params) => {
-            if (params.amount < 100) {
-              throw new Error('Amount must be at least 100 paise');
-            }
-            return {
-              id: 'order_mock123',
-              amount: params.amount,
-              currency: params.currency || 'INR',
-              receipt: params.receipt || 'rcpt_123',
-              status: 'created',
-            };
-          }),
-        };
-      }
-    },
-  };
-});
+vi.mock('razorpay', () => ({
+  default: class MockRazorpay {
+    constructor() {
+      this.orders = { create: vi.fn(), fetch: vi.fn() };
+      this.payments = { fetch: vi.fn() };
+    }
+  },
+}));
 
-// Helper to create mock req and res objects
-function createMockReqRes(options = {}) {
+function mockReqRes({ method = 'POST', headers = {}, body = null, rawBody = null } = {}) {
   const req = {
-    method: options.method || 'POST',
-    headers: options.headers || {},
-    body: options.body !== undefined ? options.body : null,
+    method,
+    headers,
+    body,
     async *[Symbol.asyncIterator]() {
-      if (options.rawBody) {
-        yield Buffer.from(options.rawBody);
-      }
+      if (rawBody !== null) yield Buffer.from(rawBody);
     },
   };
-
-  let statusCode = 200;
-  let headers = {};
-  let body = '';
-
+  let status = 200;
+  let text = '';
   const res = {
-    writeHead: (code, h) => {
-      statusCode = code;
-      headers = h;
-    },
-    end: (data) => {
-      body = data;
-    },
-    getStatus: () => statusCode,
-    getHeaders: () => headers,
-    getBody: () => (body ? JSON.parse(body) : null),
+    writeHead: (code) => { status = code; },
+    end: (data) => { text = data; },
   };
-
-  return { req, res };
+  return { req, res, status: () => status, json: () => JSON.parse(text || '{}') };
 }
 
-describe('Razorpay Create Order Endpoint (/api/create-order)', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    process.env = { ...originalEnv };
+describe('parseOrderRequest (server-side price list)', () => {
+  it('accepts a listed amount and derives paise on the server', () => {
+    const r = parseOrderRequest({ productId: 'support-orbitboard', amountInr: 500 });
+    expect(r).toEqual({ productId: 'support-orbitboard', amountPaise: 50000, currency: 'INR' });
   });
 
-  afterEach(() => {
-    process.env = originalEnv;
-    vi.restoreAllMocks();
+  it('rejects amounts that are not in the preset list', () => {
+    expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 1 }).error).toBeTruthy();
+    expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 999999 }).error).toBeTruthy();
+    expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: '500' }).error).toBeTruthy();
   });
 
-  it('handles OPTIONS preflight request', async () => {
-    const { req, res } = createMockReqRes({ method: 'OPTIONS' });
-    await createOrderHandler(req, res);
-    expect(res.getStatus()).toBe(204);
+  it('rejects unknown products, including prototype keys', () => {
+    expect(parseOrderRequest({ productId: 'nope', amountInr: 100 }).error).toBeTruthy();
+    expect(parseOrderRequest({ productId: '__proto__', amountInr: 100 }).error).toBeTruthy();
   });
 
-  it('rejects non-POST methods with 405', async () => {
-    const { req, res } = createMockReqRes({ method: 'GET' });
-    await createOrderHandler(req, res);
-    expect(res.getStatus()).toBe(405);
-    expect(res.getBody()).toEqual({ error: 'Method not allowed' });
-  });
-
-  it('returns 401 when Razorpay credentials are missing', async () => {
-    delete process.env.RAZORPAY_KEY_ID;
-    delete process.env.RAZORPAY_KEY_SECRET;
-    const { req, res } = createMockReqRes({ method: 'POST', body: { amount: 50000 } });
-    await createOrderHandler(req, res);
-    expect(res.getStatus()).toBe(401);
-    expect(res.getBody().error).toContain('missing or invalid');
-  });
-
-  it('returns 400 when amount is less than 100 paise', async () => {
-    process.env.RAZORPAY_KEY_ID = 'rzp_test_mock';
-    process.env.RAZORPAY_KEY_SECRET = 'secret_mock';
-
-    const { req, res } = createMockReqRes({ method: 'POST', body: { amount: 50 } });
-    await createOrderHandler(req, res);
-    expect(res.getStatus()).toBe(400);
-    expect(res.getBody().error).toBe('Amount must be at least 100 paise');
-  });
-
-  it('returns 400 when amount is missing or not a number', async () => {
-    process.env.RAZORPAY_KEY_ID = 'rzp_test_mock';
-    process.env.RAZORPAY_KEY_SECRET = 'secret_mock';
-
-    const { req, res } = createMockReqRes({ method: 'POST', body: {} });
-    await createOrderHandler(req, res);
-    expect(res.getStatus()).toBe(400);
-    expect(res.getBody().error).toBe('Amount must be at least 100 paise');
-  });
-
-  it('creates order successfully for valid amount >= 100 paise', async () => {
-    process.env.RAZORPAY_KEY_ID = 'rzp_test_mock';
-    process.env.RAZORPAY_KEY_SECRET = 'secret_mock';
-
-    const { req, res } = createMockReqRes({
-      method: 'POST',
-      body: { amount: 50000, currency: 'INR', receipt: 'rcpt_123' },
-    });
-
-    await createOrderHandler(req, res);
-    expect(res.getStatus()).toBe(200);
-    expect(res.getBody()).toEqual({
-      order_id: 'order_mock123',
-      amount: 50000,
-      currency: 'INR',
-      receipt: 'rcpt_123',
-      status: 'created',
-    });
-  });
-
-  it('returns 401 if Razorpay authentication fails', async () => {
-    process.env.RAZORPAY_KEY_ID = 'invalid_key';
-    process.env.RAZORPAY_KEY_SECRET = 'secret_mock';
-
-    const { req, res } = createMockReqRes({
-      method: 'POST',
-      body: { amount: 50000 },
-    });
-
-    await createOrderHandler(req, res);
-    expect(res.getStatus()).toBe(401);
+  it('rejects currencies other than the product currency', () => {
+    expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 100, currency: 'USD' }).error).toBeTruthy();
+    expect(PRODUCTS['support-orbitboard'].currency).toBe('INR');
   });
 });
 
-describe('Razorpay Payment Verification Endpoint (/api/verify-payment)', () => {
-  const originalEnv = process.env;
-  const SECRET = 'test_secret_12345';
+describe('checkPaymentAgainstOrder', () => {
+  const orderRecord = { razorpay_order_id: 'order_1', amount_paise: 50000, currency: 'INR' };
+  const goodPayment = { id: 'pay_1', order_id: 'order_1', status: 'captured', amount: 50000, currency: 'INR' };
+  const goodOrder = { id: 'order_1', amount: 50000, currency: 'INR' };
 
+  it('accepts a captured payment that matches the stored order', () => {
+    const r = checkPaymentAgainstOrder({ orderRecord, orderId: 'order_1', paymentId: 'pay_1', payment: goodPayment, razorpayOrder: goodOrder });
+    expect(r.ok).toBe(true);
+  });
+
+  it('rejects an unknown order', () => {
+    expect(checkPaymentAgainstOrder({ orderRecord: null, orderId: 'order_x', paymentId: 'pay_1', payment: goodPayment }).ok).toBe(false);
+  });
+
+  it('rejects a payment for a different order', () => {
+    const r = checkPaymentAgainstOrder({ orderRecord, orderId: 'order_1', paymentId: 'pay_1', payment: { ...goodPayment, order_id: 'order_2' } });
+    expect(r.ok).toBe(false);
+  });
+
+  it('rejects a payment that was not captured', () => {
+    const r = checkPaymentAgainstOrder({ orderRecord, orderId: 'order_1', paymentId: 'pay_1', payment: { ...goodPayment, status: 'authorized' } });
+    expect(r.ok).toBe(false);
+  });
+
+  it('rejects an amount that differs from the stored order', () => {
+    const r = checkPaymentAgainstOrder({ orderRecord, orderId: 'order_1', paymentId: 'pay_1', payment: { ...goodPayment, amount: 100 } });
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe('create-order endpoint', () => {
   beforeEach(() => {
-    process.env = { ...originalEnv, RAZORPAY_KEY_SECRET: SECRET };
+    process.env.RAZORPAY_KEY_ID = 'rzp_test_key';
+    process.env.RAZORPAY_KEY_SECRET = 'secret';
   });
-
   afterEach(() => {
-    process.env = originalEnv;
-    vi.restoreAllMocks();
-  });
-
-  it('handles OPTIONS preflight request', async () => {
-    const { req, res } = createMockReqRes({ method: 'OPTIONS' });
-    await verifyPaymentHandler(req, res);
-    expect(res.getStatus()).toBe(204);
-  });
-
-  it('returns 405 for non-POST method', async () => {
-    const { req, res } = createMockReqRes({ method: 'GET' });
-    await verifyPaymentHandler(req, res);
-    expect(res.getStatus()).toBe(405);
-  });
-
-  it('returns 401 if KEY_SECRET is missing', async () => {
+    delete process.env.RAZORPAY_KEY_ID;
     delete process.env.RAZORPAY_KEY_SECRET;
-    const { req, res } = createMockReqRes({ method: 'POST', body: {} });
-    await verifyPaymentHandler(req, res);
-    expect(res.getStatus()).toBe(401);
   });
 
-  it('returns 400 when missing required payment fields', async () => {
-    const { req, res } = createMockReqRes({
-      method: 'POST',
-      body: { razorpay_order_id: 'order_123' },
-    });
-    await verifyPaymentHandler(req, res);
-    expect(res.getStatus()).toBe(400);
-    expect(res.getBody().error).toBe('Missing required payment verification fields');
+  it('returns 405 for non-POST', async () => {
+    const { req, res, status } = mockReqRes({ method: 'GET' });
+    await createOrderHandler(req, res);
+    expect(status()).toBe(405);
   });
 
-  it('returns 400 on signature mismatch', async () => {
-    const { req, res } = createMockReqRes({
-      method: 'POST',
-      body: {
-        razorpay_order_id: 'order_123',
-        razorpay_payment_id: 'pay_123',
-        razorpay_signature: 'invalid_signature_hex_value_here_that_is_64_chars_long_0000000',
-      },
-    });
-    await verifyPaymentHandler(req, res);
-    expect(res.getStatus()).toBe(400);
-    expect(res.getBody().success).toBe(false);
-    expect(res.getBody().error).toBe('Invalid payment signature');
+  it('returns 400 for an amount outside the price list, before touching any store', async () => {
+    const { req, res, status, json } = mockReqRes({ body: { productId: 'support-orbitboard', amountInr: 1 } });
+    await createOrderHandler(req, res);
+    expect(status()).toBe(400);
+    expect(json().error).toBeTruthy();
   });
 
-  it('returns 200 on valid signature match', async () => {
-    const orderId = 'order_ABC123';
-    const paymentId = 'pay_XYZ789';
-    const validSignature = crypto
-      .createHmac('sha256', SECRET)
-      .update(`${orderId}|${paymentId}`)
-      .digest('hex');
+  it('returns 500 (not 401) when Razorpay credentials are missing', async () => {
+    delete process.env.RAZORPAY_KEY_ID;
+    const { req, res, status } = mockReqRes({ body: { productId: 'support-orbitboard', amountInr: 100 } });
+    await createOrderHandler(req, res);
+    expect(status()).toBe(500);
+  });
+});
 
-    const { req, res } = createMockReqRes({
-      method: 'POST',
-      body: {
-        razorpay_order_id: orderId,
-        razorpay_payment_id: paymentId,
-        razorpay_signature: validSignature,
-      },
+describe('verify-payment endpoint', () => {
+  const secret = 'test_secret';
+  beforeEach(() => { process.env.RAZORPAY_KEY_SECRET = secret; });
+  afterEach(() => { delete process.env.RAZORPAY_KEY_SECRET; });
+
+  it('returns 400 when the signature does not match, before any store or network call', async () => {
+    const { req, res, status, json } = mockReqRes({
+      body: { razorpay_order_id: 'order_1', razorpay_payment_id: 'pay_1', razorpay_signature: 'bad' },
     });
-
     await verifyPaymentHandler(req, res);
-    expect(res.getStatus()).toBe(200);
-    expect(res.getBody()).toEqual({
-      success: true,
-      message: 'Payment verified successfully',
-      order_id: orderId,
-      payment_id: paymentId,
+    expect(status()).toBe(400);
+    expect(json().success).toBe(false);
+  });
+
+  it('fails closed on a correctly signed pair when the store is not configured', async () => {
+    const good = crypto.createHmac('sha256', secret).update('order_1|pay_1').digest('hex');
+    const { req, res, status } = mockReqRes({
+      body: { razorpay_order_id: 'order_1', razorpay_payment_id: 'pay_1', razorpay_signature: good },
     });
+    await verifyPaymentHandler(req, res);
+    // Store is not configured in tests, so verification must fail closed rather than succeed.
+    expect(status()).toBe(500);
   });
 });

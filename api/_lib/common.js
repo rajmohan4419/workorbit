@@ -31,14 +31,17 @@ export function validateQuery(q) {
 }
 
 /**
-  * Simple in-memory rate limiter.
-  * Note: In serverless environments (e.g. Vercel Functions), this rate limiter state
-  * is preserved per lambda instance container across warm invocations.
-  */
+ * In-memory rate limiter. Per warm serverless instance only, so it is a
+ * best-effort fallback. Authoritative limits come from the shared store
+ * (see supabaseClient.checkRateLimit). Memory is bounded by MAX_KEYS.
+ */
+const MAX_KEYS = 5000;
+
 export class RateLimiter {
-  constructor() {
+  constructor(maxKeys = MAX_KEYS) {
     // Key: `${ip}:${endpoint}` => Array of timestamp numbers
     this.requests = new Map();
+    this.maxKeys = maxKeys;
   }
 
   isRateLimited(ip, endpoint, limit = 20, windowSeconds = 60) {
@@ -49,25 +52,31 @@ export class RateLimiter {
       (ts) => now - ts < windowMs
     );
 
+    let limited = false;
     if (timestamps.length >= limit) {
-      this.requests.set(key, timestamps);
-      return true;
+      limited = true;
+    } else {
+      timestamps.push(now);
     }
 
-    timestamps.push(now);
+    // Re-insert so Map order reflects recency, then evict the oldest keys.
+    this.requests.delete(key);
     this.requests.set(key, timestamps);
-    return false;
+    while (this.requests.size > this.maxKeys) {
+      this.requests.delete(this.requests.keys().next().value);
+    }
+    return limited;
   }
 }
 
 /**
-  * Simple in-memory CacheManager.
-  * Note: In serverless environments, this cache state is kept per warm instance container.
-  */
+ * Simple in-memory cache. Per warm instance; bounded by maxKeys.
+ */
 export class CacheManager {
-  constructor() {
+  constructor(maxKeys = MAX_KEYS) {
     // Key => { value, expiry }
     this.cache = new Map();
+    this.maxKeys = maxKeys;
   }
 
   get(key) {
@@ -83,7 +92,11 @@ export class CacheManager {
 
   set(key, value, ttlSeconds) {
     const expiry = Date.now() + ttlSeconds * 1000;
+    this.cache.delete(key);
     this.cache.set(key, { value, expiry });
+    while (this.cache.size > this.maxKeys) {
+      this.cache.delete(this.cache.keys().next().value);
+    }
   }
 }
 
@@ -152,33 +165,84 @@ export function filterAnalysisData(data) {
   return { valid: true, rejections: [] };
 }
 
+/**
+ * Client IP for rate limiting. Only trusts headers that the platform sets.
+ * Order: x-vercel-forwarded-for (set by Vercel), then the right-most
+ * x-forwarded-for hop (appended by the edge proxy, not by the client),
+ * then x-real-ip, then the socket address.
+ */
 export function getClientIp(req) {
   if (!req) return '127.0.0.1';
   const headers = req.headers || {};
-  const xForwardedFor = headers['x-forwarded-for'] || headers['X-Forwarded-For'];
-  if (xForwardedFor) {
-    return String(xForwardedFor).split(',')[0].trim();
+
+  const vercelIp = headers['x-vercel-forwarded-for'];
+  if (vercelIp) {
+    return String(vercelIp).split(',')[0].trim();
   }
-  const xRealIp = headers['x-real-ip'] || headers['X-Real-IP'];
-  if (xRealIp) {
-    return String(xRealIp).trim();
+
+  const xff = headers['x-forwarded-for'];
+  if (xff) {
+    const hops = String(xff).split(',').map((s) => s.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1];
   }
+
+  const realIp = headers['x-real-ip'];
+  if (realIp) {
+    return String(realIp).trim();
+  }
+
   if (req.socket && req.socket.remoteAddress) {
     return req.socket.remoteAddress;
   }
   return '127.0.0.1';
 }
 
-export function getCorsHeaders(origin) {
-  let allowedOrigin = 'https://orbitboard.in';
-  if (origin && (origin.includes('localhost') || origin.includes('orbitboard.in') || origin.includes('127.0.0.1'))) {
-    allowedOrigin = origin;
+/**
+ * Exact-match origin allowlist. Parses the Origin as a URL and compares
+ * scheme + host + port with the allowlist. Substring matching is not used,
+ * so https://orbitboard.in.attacker.example is rejected.
+ */
+const DEFAULT_TRUSTED_ORIGINS = [
+  'https://orbitboard.in',
+  'https://www.orbitboard.in',
+  'https://app.orbitboard.in',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
+export function resolveAllowedOrigin(origin, extraOrigins = []) {
+  if (!origin || typeof origin !== 'string') return null;
+
+  let url;
+  try {
+    url = new URL(origin);
+  } catch {
+    return null;
   }
 
+  // Reject credentials, paths and anything that is not a bare origin.
+  if (url.username || url.password) return null;
+  if (url.pathname !== '/' || url.search || url.hash) return null;
+
+  const normalised = `${url.protocol}//${url.host}`;
+  const allowed = new Set([...DEFAULT_TRUSTED_ORIGINS, ...extraOrigins]);
+  return allowed.has(normalised) ? normalised : null;
+}
+
+function configuredOrigins() {
+  const raw = globalThis.process?.env?.ALLOWED_ORIGINS || '';
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+export function getCorsHeaders(origin) {
+  const allowed = resolveAllowedOrigin(origin, configuredOrigins());
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
+    // Untrusted origins get the production origin, which the browser will
+    // then refuse to expose to the caller's script.
+    'Access-Control-Allow-Origin': allowed || 'https://orbitboard.in',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Vary': 'Origin',
     'Content-Type': 'application/json',
   };
 }
