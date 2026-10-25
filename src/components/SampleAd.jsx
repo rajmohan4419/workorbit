@@ -1,33 +1,53 @@
-import { useEffect, useRef } from 'react';
+// Remove: import React from 'react';
 
-export default function SampleAd() {
-  const adRef = useRef(false);
+const OFFERS = {
+  finance: {
+    badge: 'Tax & Investment',
+    headline: 'Optimize your AY 2026–27 Tax Return',
+    subtext: 'File in 3 minutes or get an expert CA consultation.',
+    cta: 'File on ClearTax →',
+    link: 'https://cleartax.in/?ref=orbitboard',
+  },
+  career: {
+    badge: 'Career Growth',
+    headline: 'Benchmarking your compensation?',
+    subtext: 'Get an ATS-optimized resume and live compensation data.',
+    cta: 'Review Resume →',
+    link: 'https://topmate.io/?ref=orbitboard',
+  },
+  default: {
+    badge: '100% Free & Local',
+    headline: 'Processed locally in your browser',
+    subtext: 'No servers, zero data storage. Keep OrbitBoard running fast.',
+    cta: 'Buy me a Coffee (₹49) ☕',
+    link: 'https://rzp.io/l/orbitboard-tip',
+  }
+};
 
-  useEffect(() => {
-    if (adRef.current) return;
-    adRef.current = true;
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-      console.error('[OrbitBoard AdSense] push error', e);
-    }
-  }, []);
+export default function ContextualCard({ category }) {
+  const offer = OFFERS[category] || OFFERS.default;
 
   return (
-    <section className="rounded-2xl border border-[#e7dfd3] bg-white p-4 shadow-sm" aria-label="Advertisement space">
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Advertisement</p>
+    <div className="my-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="text-left space-y-1">
+        <span className="text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+          {offer.badge}
+        </span>
+        <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          {offer.headline}
+        </h4>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          {offer.subtext}
+        </p>
       </div>
-      <div className="min-h-[90px] flex items-center justify-center overflow-hidden">
-        <ins
-          className="adsbygoogle"
-          style={{ display: 'block', width: '100%', textAlign: 'center' }}
-          data-ad-client="ca-pub-9160921653901381"
-          data-ad-slot="auto"
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-      </div>
-    </section>
+      <a
+        href={offer.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="shrink-0 px-4 py-2 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+      >
+        {offer.cta}
+      </a>
+    </div>
   );
 }
