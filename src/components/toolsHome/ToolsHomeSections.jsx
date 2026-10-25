@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText, Heart } from 'lucide-react';
-import { RazorpayPaymentButton } from '../RazorpayPaymentButton';
+import { RazorpayCheckout } from '../RazorpayCheckout';
 
 export function PrivacySection() {
   return (
@@ -39,11 +39,17 @@ export function SupportCheckoutSection() {
             Upgrade to OrbitBoard Pro
           </h2>
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-            Support fast, privacy-first web utilities. Help keep OrbitBoard free, independent, and continuously improving.
+            Support fast, privacy-first web utilities. Get instant access to Pro workspace tools, priority serverless processing, and early access features.
           </p>
         </div>
         <div className="shrink-0 w-full lg:w-auto flex justify-center items-center">
-          <RazorpayPaymentButton buttonId="pl_Ts1A8URfk03elY" />
+          <RazorpayCheckout
+            productId="support-orbitboard"
+            amount={500}
+            title="OrbitBoard Pro Support"
+            description="Unlock Pro features and support fast web tools"
+            showAmountSelector={true}
+          />
         </div>
       </div>
     </section>

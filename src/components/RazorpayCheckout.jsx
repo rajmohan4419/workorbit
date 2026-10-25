@@ -38,6 +38,9 @@ export function RazorpayCheckout({
       }
 
       const keyId = await (async () => {
+        if (import.meta.env.VITE_RAZORPAY_KEY_ID) {
+          return import.meta.env.VITE_RAZORPAY_KEY_ID;
+        }
         const resp = await fetch('/api/razorpay-key');
         if (!resp.ok) throw new Error('Unable to fetch Razorpay public key');
         const { key } = await resp.json();
@@ -47,9 +50,7 @@ export function RazorpayCheckout({
         throw new Error('Razorpay Key ID is not configured (public key fetch failed).');
       }
 
-      if (!productId) {
-        throw new Error('This payment option is not configured.');
-      }
+      const effectiveProductId = productId || 'support-orbitboard';
       if (!AMOUNT_OPTIONS_INR.includes(selectedAmount)) {
         throw new Error('Please choose one of the listed amounts.');
       }
@@ -61,8 +62,10 @@ export function RazorpayCheckout({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          productId,
+          productId: effectiveProductId,
+          amount: selectedAmount * 100,
           amountInr: selectedAmount,
+          currency: 'INR',
         }),
       });
 
