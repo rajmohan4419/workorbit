@@ -63,4 +63,5 @@ globalThis.ORBITBOARD_TOOLS = [
   { slug: "rd-maturity-calculator", name: "RD Maturity Calculator", description: "Estimate the maturity amount and interest on a monthly recurring deposit.", category: "Finance", icon: "₹" },
   { slug: "compound-interest-calculator", name: "Compound Interest Calculator", description: "Estimate how an investment grows with compound interest, with yearly, quarterly, monthly or daily compounding.", category: "Finance", icon: "🧮" },
   { slug: "hra-exemption-calculator-india", name: "HRA Exemption Calculator", description: "Estimate how much of your House Rent Allowance is tax-exempt under the old tax regime.", category: "Finance", icon: "₹" },
+  { slug: "saas-retention-calculator", name: "SaaS Retention Calculator", description: "Work out net and gross revenue retention, churn, LTV, CAC and CAC payback from your own numbers.", category: "Business", icon: "📈" },
 ];

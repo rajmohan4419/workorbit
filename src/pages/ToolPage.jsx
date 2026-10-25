@@ -9,6 +9,7 @@ import { csvToXlsx, jsonToXlsx, xlsxToCsv } from '../engines/spreadsheet';
 import { Field, Result, ComingSoon } from '../components/tools/ToolFields';
 import { money, num, downloadBlob } from '../lib/toolFormat';
 import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemption } from '../tools/finance/FinanceCalculators';
+import { SaasRetention } from '../tools/business/BusinessCalculators';
 import SampleAd from '../components/SampleAd';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
@@ -1456,7 +1457,7 @@ export default function ToolPage() {
     'json-to-xlsx': () => <SpreadsheetFileTool type="json-to-xlsx" />, 'xlsx-to-csv': () => <SpreadsheetFileTool type="xlsx-to-csv" />, 'txt-to-pdf': TextToPdf, 'pdf-to-text': PdfToText, 'diff-checker': DiffChecker,
     'json-to-xml': JsonToXml, 'xml-to-json': XmlToJson, 'markdown-to-html': MarkdownToHtml, 'image-compressor': ImageCompressor, 'image-metadata-remover': ImageMetadataRemover, 'pdf-merge': PdfMerge, 'pdf-split': PdfSplit,
     'pdf-extract-pages': PdfExtract, 'pdf-reorder': PdfReorder, 'pdf-workspace': PdfWorkspace, 'pdf-compressor': PdfCompressor, 'pdf-e-sign': PdfESign, 'pdf-to-jpg': () => <PdfToImages format="image/jpeg" />, 'pdf-to-png': () => <PdfToImages format="image/png" />,
-    'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'loan-amortization-calculator': LoanAmortization, 'hra-exemption-calculator-india': HraExemption, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
+    'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'loan-amortization-calculator': LoanAmortization, 'hra-exemption-calculator-india': HraExemption, 'saas-retention-calculator': SaasRetention, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
     'jwt-decoder': JwtDecoder, 'unix-timestamp': UnixTimestamp, 'uuid-generator': UuidGenerator, 'url-encoder': UrlEncoder,
     'password-generator': PasswordGenerator
   }[slug]), [slug]);

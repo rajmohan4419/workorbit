@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, Sun, Moon, ArrowRight, BriefcaseBusiness, Coins, Code2, Calculator, Sparkles } from 'lucide-react';
+import { Search, Menu, X, Sun, Moon, ArrowRight, BriefcaseBusiness, Coins, Code2, Calculator, Sparkles, TrendingUp } from 'lucide-react';
 import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
 import { usePro } from '../../context/ProContext';
@@ -9,6 +9,7 @@ const categories = [
   { name: 'Finance', label: 'Finance', icon: Coins },
   { name: 'Career', label: 'Career', icon: BriefcaseBusiness },
   { name: 'Developer', label: 'Developer', icon: Code2 },
+  { name: 'Business', label: 'Business', icon: TrendingUp },
   { name: 'Everyday', label: 'Productivity', icon: Calculator },
 ];
 

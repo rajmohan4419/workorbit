@@ -5,6 +5,7 @@ const categoryChips = [
   { name: 'All', label: 'All' },
   { name: 'Finance', label: 'Finance' },
   { name: 'Career', label: 'Career' },
+  { name: 'Business', label: 'Business' },
   { name: 'Developer', label: 'Developer' },
   { name: 'Everyday', label: 'Everyday' },
 ];

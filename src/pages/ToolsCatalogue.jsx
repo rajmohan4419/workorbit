@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins, Search, TrendingUp } from 'lucide-react';
 import { LISTED_TOOLS } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
 
 const categories = [
   { name: 'All', label: 'All utilities', icon: Search },
   { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness },
+  { name: 'Business', label: 'Business & SaaS', icon: TrendingUp },
   { name: 'Finance', label: 'Money & Finance', icon: Coins },
   { name: 'Everyday', label: 'Everyday Utilities', icon: Calculator },
   { name: 'Developer', label: 'Developer Tools', icon: Code2 }

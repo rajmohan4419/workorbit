@@ -766,6 +766,20 @@ export const TOOL_CONTENT = {
       ['Do I need rent receipts?', 'Yes. Keep rent receipts and, if annual rent exceeds a set amount, your landlord’s PAN. Your employer may ask for these.']
     ]
   },
+  'saas-retention-calculator': {
+    intro: 'Measure how well your recurring revenue holds up over a year, and whether your acquisition spend pays back.',
+    keywords: 'SaaS retention calculator, net revenue retention calculator, NRR calculator, gross revenue retention, LTV CAC calculator, CAC payback calculator, SaaS churn calculator',
+    how: [
+      'Enter your starting monthly recurring revenue (MRR) and the expansion, downgrade and churned MRR over 12 months.',
+      'Enter the number of customers you started with, how many churned, and your acquisition spend and new customers over the same period.',
+      'Enter average monthly revenue per customer and gross margin. Review the ratings, which are rough guides rather than targets.'
+    ],
+    faq: [
+      ['What is net revenue retention?', 'Net revenue retention (NRR) is the revenue you keep from existing customers, including expansion, after downgrades and churn. Above 100% means existing customers grow your revenue on their own.'],
+      ['How is gross revenue retention different?', 'Gross revenue retention (GRR) ignores expansion and only counts what you keep after downgrades and churn. It can never exceed 100%.'],
+      ['Why does LTV show a dash?', 'Lifetime value depends on churn. If no customers churned, the implied lifetime is infinite, so the calculator does not show a number.']
+    ]
+  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',
