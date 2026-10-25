@@ -1762,7 +1762,7 @@ export default function ToolPage() {
     );
   }
 
-  const Tool = content || (() => <SmartUniversalTool tool={tool} />);
+  const Tool = content || SmartUniversalTool;
   const related = TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
 
   return (
