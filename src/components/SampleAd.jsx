@@ -1,29 +1,25 @@
-import { RazorpayPaymentButton } from './RazorpayPaymentButton';
+import { RazorpayCheckout } from './RazorpayCheckout';
 
 const OFFERS = {
   finance: {
     badge: 'Buy me a Coffee ☕',
     headline: 'Found this financial tool helpful? Buy me a coffee',
     subtext: '100% free, private and processed locally in your browser. Keep OrbitBoard running fast.',
-    isPaymentButton: true,
   },
   career: {
     badge: 'Buy me a Coffee ☕',
     headline: 'Found this career tool helpful? Buy me a coffee',
     subtext: '100% free, private and processed locally in your browser. Keep OrbitBoard running fast.',
-    isPaymentButton: true,
   },
   developer: {
     badge: 'Buy me a Coffee ☕',
     headline: 'Found this developer tool useful? Buy me a coffee',
     subtext: '100% free, zero data storage, and client-side. Keep OrbitBoard running fast.',
-    isPaymentButton: true,
   },
   default: {
     badge: 'Buy me a Coffee ☕',
     headline: 'Enjoying this tool? Buy me a coffee',
     subtext: '100% free, private and processed locally in your browser. Keep OrbitBoard running fast.',
-    isPaymentButton: true,
   }
 };
 
@@ -45,7 +41,15 @@ export default function ContextualCard({ category }) {
         </p>
       </div>
       <div className="shrink-0 flex items-center justify-center">
-        <RazorpayPaymentButton buttonId="pl_Ts1A8URfk03elY" />
+        <RazorpayCheckout
+          productId="coffee-orbitboard"
+          amount={49}
+          compact={true}
+          showAmountSelector={true}
+          buttonText="Buy me a Coffee (₹49) ☕"
+          title="Buy me a Coffee"
+          description="Support OrbitBoard & keep tools fast and free"
+        />
       </div>
     </div>
   );

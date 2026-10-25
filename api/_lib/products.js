@@ -10,6 +10,11 @@ export const PRODUCTS = {
     currency: 'INR',
     amountsInr: [100, 500, 1000],
   },
+  'coffee-orbitboard': {
+    title: 'Buy me a Coffee',
+    currency: 'INR',
+    amountsInr: [49, 99, 199],
+  },
 };
 
 export const ALLOWED_CURRENCIES = new Set(['INR']);

@@ -1,13 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { CreditCard, CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
 import { loadRazorpayScript } from '../lib/razorpay';
 
-// Must match the server price list in api/_lib/products.js. The server enforces it.
-const AMOUNT_OPTIONS_INR = [100, 500, 1000];
+// Default presets
+const DEFAULT_AMOUNT_OPTIONS = [100, 500, 1000];
+const COFFEE_AMOUNT_OPTIONS = [49, 99, 199];
 
 export function RazorpayCheckout({
-  productId,
-  amount = 500, // Default selection in INR. Must be one of AMOUNT_OPTIONS_INR.
+  productId = 'support-orbitboard',
+  amount = 500, // Default selection in INR.
+  amountOptions,
   title = 'OrbitBoard Pro Access',
   description = 'Support OrbitBoard & unlock Pro features',
   prefillName = '',
@@ -19,9 +21,13 @@ export function RazorpayCheckout({
   buttonText,
   buttonClassName,
   showAmountSelector = false,
+  compact = false,
 }) {
+  const effectiveOptions = useMemo(() => {
+    return amountOptions || (productId === 'coffee-orbitboard' ? COFFEE_AMOUNT_OPTIONS : DEFAULT_AMOUNT_OPTIONS);
+  }, [amountOptions, productId]);
   const [selectedAmount, setSelectedAmount] = useState(
-    AMOUNT_OPTIONS_INR.includes(amount) ? amount : AMOUNT_OPTIONS_INR[0]
+    effectiveOptions.includes(amount) ? amount : effectiveOptions[0]
   );
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // { type: 'success' | 'error' | 'info', message: string, details?: object }
@@ -51,7 +57,7 @@ export function RazorpayCheckout({
       }
 
       const effectiveProductId = productId || 'support-orbitboard';
-      if (!AMOUNT_OPTIONS_INR.includes(selectedAmount)) {
+      if (!effectiveOptions.includes(selectedAmount)) {
         throw new Error('Please choose one of the listed amounts.');
       }
 
@@ -184,7 +190,79 @@ export function RazorpayCheckout({
     onSuccess,
     onError,
     onCancel,
+    effectiveOptions,
   ]);
+
+  if (compact) {
+    const computedButtonText = buttonText
+      ? buttonText.replace(/₹\d+/, `₹${selectedAmount}`)
+      : `Pay ₹${selectedAmount} with Razorpay`;
+
+    return (
+      <div className="flex flex-col items-center sm:items-end gap-2">
+        {showAmountSelector && (
+          <div className="flex items-center gap-1.5" role="group" aria-label="Select coffee amount">
+            {effectiveOptions.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setSelectedAmount(preset)}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                  selectedAmount === preset
+                    ? 'border-violet-600 bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-500 shadow-xs'
+                    : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-300 dark:hover:border-stone-700'
+                }`}
+              >
+                ₹{preset}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleCheckout}
+          disabled={loading}
+          className={
+            buttonClassName ||
+            'shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl bg-violet-600 hover:bg-violet-500 text-white transition-colors inline-flex items-center justify-center gap-2 shadow-xs disabled:opacity-50'
+          }
+        >
+          {loading ? (
+            <>
+              <Loader2 size={15} className="animate-spin" />
+              <span>Opening…</span>
+            </>
+          ) : (
+            <span>{computedButtonText}</span>
+          )}
+        </button>
+
+        {status && (
+          <div
+            className={`text-[11px] font-medium flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
+              status.type === 'success'
+                ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60'
+                : status.type === 'error'
+                ? 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60'
+                : 'text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800'
+            }`}
+          >
+            {status.type === 'success' && <CheckCircle2 size={13} className="text-emerald-600" />}
+            {status.type === 'error' && <AlertCircle size={13} className="text-rose-600" />}
+            <span>{status.message}</span>
+            <button
+              type="button"
+              onClick={() => setStatus(null)}
+              className="opacity-60 hover:opacity-100 ml-1 p-0.5"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-xs">
@@ -204,7 +282,7 @@ export function RazorpayCheckout({
             Select Amount (₹)
           </label>
           <div className="grid grid-cols-3 gap-2 mb-2">
-            {AMOUNT_OPTIONS_INR.map((preset) => (
+            {effectiveOptions.map((preset) => (
               <button
                 key={preset}
                 type="button"
