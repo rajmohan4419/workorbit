@@ -18,7 +18,7 @@ export function CategoryExplorer({ query, category, setCategory, categoryTools, 
       </button>
       <div className="mt-3 flex items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Browse category</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-700">Browse category</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-stone-900">{meta.label}</h2>
           <p className="mt-1 text-sm text-stone-600">{meta.description}</p>
         </div>

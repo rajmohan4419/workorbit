@@ -1,22 +1,42 @@
 @import "tailwindcss";
 
+@import "@fontsource/literata/400.css";
+@import "@fontsource/literata/600.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+
 @custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-accent-50: #eef6f2;
+  --color-accent-100: #d9ebe2;
+  --color-accent-200: #b4d7c6;
+  --color-accent-300: #8cc2a8;
+  --color-accent-400: #62aa8a;
+  --color-accent-500: #3d8f70;
+  --color-accent-600: #1f6b55;
+  --color-accent-700: #1a5846;
+  --color-accent-800: #17473a;
+  --color-accent-900: #143b31;
+  --color-accent-950: #0b231d;
+}
 
 @theme {
   --color-brand-accent: #A78BFA;
   --color-brand-warm: #FAFAF9;
 
-  --color-violet-50: #F5F3FF;
-  --color-violet-100: #EDE9FE;
-  --color-violet-200: #DDD6FE;
-  --color-violet-300: #C4B5FD;
-  --color-violet-400: #A78BFA;
-  --color-violet-500: #8B5CF6;
-  --color-violet-600: #7C3AED;
-  --color-violet-700: #6D28D9;
-  --color-violet-800: #5B21B6;
-  --color-violet-900: #4C1D95;
-  --color-violet-950: #2E1065;
+  --color-accent-50: #F5F3FF;
+  --color-accent-100: #EDE9FE;
+  --color-accent-200: #DDD6FE;
+  --color-accent-300: #C4B5FD;
+  --color-accent-400: #A78BFA;
+  --color-accent-500: #8B5CF6;
+  --color-accent-600: #7C3AED;
+  --color-accent-700: #6D28D9;
+  --color-accent-800: #5B21B6;
+  --color-accent-900: #4C1D95;
+  --color-accent-950: #2E1065;
 
   --color-indigo-50: #EEF2FF;
   --color-indigo-100: #E0E7FF;
@@ -51,28 +71,28 @@ body {
 /* OrbitBoard warm theme variables & dark mode support */
 :root {
   color-scheme: light;
-  --orbit-canvas: #f5f3fb;
+  --orbit-canvas: #f7f5ef;
   --orbit-surface: #ffffff;
-  --orbit-surface-soft: #eeebf7;
-  --orbit-border: #dcd6ea;
-  --orbit-ink: #1e1b2e;
-  --orbit-ink-soft: #3b3650;
-  --orbit-muted: #5b5672;
-  --orbit-accent: #6d4bd1;
-  --orbit-accent-soft: #ece7ff;
+  --orbit-surface-soft: #efece3;
+  --orbit-border: #ddd8cb;
+  --orbit-ink: #1c211e;
+  --orbit-ink-soft: #3a423d;
+  --orbit-muted: #5d665f;
+  --orbit-accent: #1f6b55;
+  --orbit-accent-soft: #e3efe9;
 }
 
 .dark {
   color-scheme: dark;
-  --orbit-canvas: #161827;
-  --orbit-surface: #1f2236;
-  --orbit-surface-soft: #272b42;
-  --orbit-border: #3a3f5c;
-  --orbit-ink: #ecebfa;
-  --orbit-ink-soft: #d6d5ee;
-  --orbit-muted: #b4b7d3;
-  --orbit-accent: #b9a4ff;
-  --orbit-accent-soft: rgba(185, 164, 255, 0.14);
+  --orbit-canvas: #121513;
+  --orbit-surface: #1a1e1b;
+  --orbit-surface-soft: #222824;
+  --orbit-border: #353d37;
+  --orbit-ink: #ece9df;
+  --orbit-ink-soft: #d3d0c5;
+  --orbit-muted: #a6ada5;
+  --orbit-accent: #7cc7a9;
+  --orbit-accent-soft: rgba(124, 199, 169, 0.14);
 }
 
 html {
@@ -173,9 +193,9 @@ input, textarea, select {
 .dark .orbit-tool .bg-stone-800,
 .dark .orbit-tool .bg-stone-800\/50,
 .dark .orbit-tool .bg-stone-50 { background-color: var(--orbit-surface-soft); }
-.dark .orbit-tool .bg-violet-950\/50 { background-color: var(--orbit-accent-soft); }
-.dark .orbit-tool .border-violet-700 { border-color: rgba(185, 164, 255, 0.45); }
-.dark .orbit-tool .text-violet-300 { color: #cdbcff; }
+.dark .orbit-tool .bg-accent-950\/50 { background-color: var(--orbit-accent-soft); }
+.dark .orbit-tool .border-accent-700 { border-color: rgba(185, 164, 255, 0.45); }
+.dark .orbit-tool .text-accent-300 { color: #cdbcff; }
 .dark .orbit-tool .text-stone-100,
 .dark .orbit-tool .text-stone-200 { color: var(--orbit-ink); }
 .dark .orbit-tool .text-stone-300,
@@ -188,4 +208,19 @@ input, textarea, select {
 .orbit-tool input:focus, .orbit-tool select:focus {
   border-color: var(--orbit-accent);
   box-shadow: 0 0 0 3px var(--orbit-accent-soft);
+}
+
+/* Type: Literata for headings, IBM Plex Sans for interface and body text */
+body { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-feature-settings: 'kern', 'liga'; }
+h1, h2, h3 { font-family: 'Literata', Georgia, 'Times New Roman', serif; letter-spacing: -0.01em; }
+h1 { font-weight: 600; }
+
+/* Motion: keep state changes, drop decorative movement for people who ask for less */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

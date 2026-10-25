@@ -81,10 +81,10 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           placeholder="Search stock by name or ticker (e.g. INFY, Reliance, AAPL)..."
-          className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 py-3.5 pl-12 pr-10 text-sm sm:text-base text-white placeholder-slate-500 shadow-xl backdrop-blur transition focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+          className="w-full rounded-2xl border border-slate-800 bg-slate-900/90 py-3.5 pl-12 pr-10 text-sm sm:text-base text-white placeholder-slate-500 shadow-xl backdrop-blur transition focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
         />
         {loading ? (
-          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-violet-400" size={18} />
+          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-accent-400" size={18} />
         ) : query ? (
           <button
             type="button"
@@ -104,7 +104,7 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
         <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900/95 p-2 shadow-2xl backdrop-blur">
           {loading && results.length === 0 ? (
             <div className="p-4 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
-              <Loader2 size={16} className="animate-spin text-violet-400" /> Searching market listings...
+              <Loader2 size={16} className="animate-spin text-accent-400" /> Searching market listings...
             </div>
           ) : results.length > 0 ? (
             results.map((item) => (
@@ -112,7 +112,7 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
                 key={item.symbol}
                 type="button"
                 onClick={() => handleSelect(item)}
-                className="w-full flex items-center justify-between rounded-xl p-3 text-left transition hover:bg-violet-950/40 hover:border-violet-500/30 border border-transparent"
+                className="w-full flex items-center justify-between rounded-xl p-3 text-left transition hover:bg-accent-950/40 hover:border-accent-500/30 border border-transparent"
               >
                 <div>
                   <div className="font-bold text-white flex items-center gap-2">
@@ -125,7 +125,7 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
                   </div>
                   <div className="text-xs text-slate-400 line-clamp-1">{item.name}</div>
                 </div>
-                <TrendingUp size={16} className="text-slate-600 group-hover:text-violet-400" />
+                <TrendingUp size={16} className="text-slate-600 group-hover:text-accent-400" />
               </button>
             ))
           ) : !loading && query.trim() ? (
@@ -146,7 +146,7 @@ export function StockSearch({ onSelectSymbol, currentSymbol }) {
             onClick={() => handleSelect(item)}
             className={`rounded-full border px-2.5 py-1 transition ${
               currentSymbol === item.symbol
-                ? 'border-violet-500 bg-violet-950/60 text-violet-300 font-bold'
+                ? 'border-accent-500 bg-accent-950/60 text-accent-300 font-bold'
                 : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700 hover:text-white'
             }`}
           >

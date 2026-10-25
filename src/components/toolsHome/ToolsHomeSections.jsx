@@ -32,7 +32,7 @@ export function SupportCheckoutSection() {
     <section id="support" className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="max-w-xl">
-          <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">
+          <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">
             Support & Pro Membership
           </p>
           <h2 className="mt-1 text-xl font-bold text-stone-900 dark:text-stone-100 sm:text-2xl">
@@ -61,10 +61,10 @@ export function CatalogCalloutSection() {
     <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-violet-700 dark:text-violet-400">Still exploring?</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-700 dark:text-accent-400">Still exploring?</p>
           <h2 className="mt-1 text-xl font-bold text-stone-900 dark:text-stone-100">Every tool, when you need it.</h2>
         </div>
-        <Link to="/tools" className="inline-flex min-h-[44px] items-center gap-1 self-start rounded-xl px-4 py-2.5 text-sm font-semibold text-violet-800 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition">
+        <Link to="/tools" className="inline-flex min-h-[44px] items-center gap-1 self-start rounded-xl px-4 py-2.5 text-sm font-semibold text-accent-800 dark:text-accent-300 hover:bg-accent-50 dark:hover:bg-accent-900/30 transition">
           Open full catalogue <ArrowRight size={16} />
         </Link>
       </div>
@@ -108,7 +108,7 @@ export function ToolsHomeFooter() {
             <ul className="space-y-2 text-sm">
               {popularLinks.map(link => (
                 <li key={link.path}>
-                  <Link to={link.path} className="hover:text-violet-700 dark:hover:text-violet-400 transition min-h-[36px] inline-flex items-center">
+                  <Link to={link.path} className="hover:text-accent-700 dark:hover:text-accent-400 transition min-h-[36px] inline-flex items-center">
                     {link.label}
                   </Link>
                 </li>
@@ -122,7 +122,7 @@ export function ToolsHomeFooter() {
             <ul className="space-y-2 text-sm">
               {categoryLinks.map(link => (
                 <li key={link.label}>
-                  <Link to={link.path} className="hover:text-violet-700 dark:hover:text-violet-400 transition min-h-[36px] inline-flex items-center">
+                  <Link to={link.path} className="hover:text-accent-700 dark:hover:text-accent-400 transition min-h-[36px] inline-flex items-center">
                     {link.label}
                   </Link>
                 </li>
@@ -137,11 +137,11 @@ export function ToolsHomeFooter() {
               {utilityLinks.map(link => (
                 <li key={link.label}>
                   {link.external ? (
-                    <a href={link.path} target="_blank" rel="noopener noreferrer" className="hover:text-violet-700 dark:hover:text-violet-400 transition min-h-[36px] inline-flex items-center gap-1.5">
+                    <a href={link.path} target="_blank" rel="noopener noreferrer" className="hover:text-accent-700 dark:hover:text-accent-400 transition min-h-[36px] inline-flex items-center gap-1.5">
                       <link.icon size={15} /> {link.label}
                     </a>
                   ) : (
-                    <Link to={link.path} className="hover:text-violet-700 dark:hover:text-violet-400 transition min-h-[36px] inline-flex items-center gap-1.5">
+                    <Link to={link.path} className="hover:text-accent-700 dark:hover:text-accent-400 transition min-h-[36px] inline-flex items-center gap-1.5">
                       <link.icon size={15} /> {link.label}
                     </Link>
                   )}
@@ -153,7 +153,7 @@ export function ToolsHomeFooter() {
           {/* Col 4: Brand & Contact */}
           <div>
             <Link to="/" className="text-lg font-black tracking-tight text-stone-900 dark:text-stone-100">
-              ORBIT<span className="text-violet-600 dark:text-violet-400">BOARD</span>
+              ORBIT<span className="text-accent-600 dark:text-accent-400">BOARD</span>
             </Link>
             <p className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">
               Free, fast, and privacy-first web utilities designed for daily work, career decisions, and developer efficiency.
@@ -161,7 +161,7 @@ export function ToolsHomeFooter() {
             <div className="mt-4">
               <a
                 href="mailto:support@orbitboard.in?subject=OrbitBoard%20Support"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700 dark:text-violet-400 hover:underline min-h-[44px]"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent-700 dark:text-accent-400 hover:underline min-h-[44px]"
               >
                 support@orbitboard.in
               </a>
@@ -179,7 +179,7 @@ export function ToolsHomeFooter() {
             <ul className="mt-3 space-y-2 text-sm border-t border-[var(--orbit-border)] pt-3">
               {popularLinks.map(link => (
                 <li key={link.path}>
-                  <Link to={link.path} className="block py-2 min-h-[44px] flex items-center text-stone-700 dark:text-stone-300 hover:text-violet-700">
+                  <Link to={link.path} className="block py-2 min-h-[44px] flex items-center text-stone-700 dark:text-stone-300 hover:text-accent-700">
                     {link.label}
                   </Link>
                 </li>
@@ -195,7 +195,7 @@ export function ToolsHomeFooter() {
             <ul className="mt-3 space-y-2 text-sm border-t border-[var(--orbit-border)] pt-3">
               {categoryLinks.map(link => (
                 <li key={link.label}>
-                  <Link to={link.path} className="block py-2 min-h-[44px] flex items-center text-stone-700 dark:text-stone-300 hover:text-violet-700">
+                  <Link to={link.path} className="block py-2 min-h-[44px] flex items-center text-stone-700 dark:text-stone-300 hover:text-accent-700">
                     {link.label}
                   </Link>
                 </li>

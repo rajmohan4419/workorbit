@@ -92,8 +92,8 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand Logo (Left) */}
           <Link to="/" aria-label="OrbitBoard home" className="text-xl font-black tracking-tight text-stone-900 dark:text-stone-100 flex items-center gap-2 shrink-0">
-            <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-xs">O</span>
-            ORBIT<span className="text-violet-600 dark:text-violet-400">BOARD</span>
+            <span className="w-8 h-8 rounded-xl bg-accent-600 flex items-center justify-center text-white text-xs font-black shadow-xs">O</span>
+            ORBIT<span className="text-accent-600 dark:text-accent-400">BOARD</span>
           </Link>
 
           {/* Desktop Navigation Category Links */}
@@ -103,7 +103,7 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
                 key={cat.name}
                 type="button"
                 onClick={() => handleCategoryClick(cat.name)}
-                className="px-3.5 py-2 min-h-[44px] rounded-xl hover:bg-stone-200/60 dark:hover:bg-stone-800 transition text-stone-700 dark:text-stone-200 hover:text-violet-700 dark:hover:text-violet-400 font-semibold"
+                className="px-3.5 py-2 min-h-[44px] rounded-xl hover:bg-stone-200/60 dark:hover:bg-stone-800 transition text-stone-700 dark:text-stone-200 hover:text-accent-700 dark:hover:text-accent-400 font-semibold"
               >
                 {cat.label}
               </button>
@@ -136,7 +136,7 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-stone-500 dark:text-stone-400 hover:border-violet-400 dark:hover:border-violet-500 text-xs font-medium shadow-xs transition"
+              className="flex items-center gap-2.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-stone-500 dark:text-stone-400 hover:border-accent-400 dark:hover:border-accent-500 text-xs font-medium shadow-xs transition"
             >
               <Search size={16} className="text-stone-400" />
               <span>Search tools…</span>
@@ -206,7 +206,7 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-[var(--orbit-border)] pb-4">
                 <Link to="/" onClick={() => setDrawerOpen(false)} className="text-lg font-black text-stone-900 dark:text-white">
-                  ORBIT<span className="text-violet-600">BOARD</span>
+                  ORBIT<span className="text-accent-600">BOARD</span>
                 </Link>
                 <button
                   type="button"
@@ -219,16 +219,16 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
 
               {/* Categories Links */}
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 mb-3">Categories</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400 mb-3">Categories</p>
                 <nav className="space-y-2">
                   {categories.map(({ name, label, icon: Icon }) => (
                     <button
                       key={name}
                       type="button"
                       onClick={() => handleCategoryClick(name)}
-                      className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-left text-sm font-semibold text-stone-800 dark:text-stone-100 hover:border-violet-400"
+                      className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-left text-sm font-semibold text-stone-800 dark:text-stone-100 hover:border-accent-400"
                     >
-                      <Icon size={18} className="text-violet-600 dark:text-violet-400" />
+                      <Icon size={18} className="text-accent-600 dark:text-accent-400" />
                       <span>{label}</span>
                     </button>
                   ))}
@@ -306,7 +306,7 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
                   key={cat}
                   type="button"
                   onClick={() => setSearchQuery(cat === 'All' ? '' : cat)}
-                  className="px-3 py-1.5 min-h-[36px] text-xs font-medium rounded-full border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-stone-700 shrink-0 transition"
+                  className="px-3 py-1.5 min-h-[36px] text-xs font-medium rounded-full border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:border-accent-400 hover:bg-accent-50 dark:hover:bg-stone-700 shrink-0 transition"
                 >
                   {cat}
                 </button>
@@ -322,15 +322,15 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
                     type="button"
                     onMouseEnter={() => preloadToolPage(tool.slug)}
                     onClick={() => handleToolClick(tool.slug)}
-                    className="w-full flex items-center justify-between p-3 min-h-[44px] rounded-xl border border-stone-100 dark:border-stone-800 hover:border-violet-300 dark:hover:border-violet-600 bg-stone-50/50 dark:bg-stone-800/50 hover:bg-violet-50/60 dark:hover:bg-violet-900/20 text-left transition group"
+                    className="w-full flex items-center justify-between p-3 min-h-[44px] rounded-xl border border-stone-100 dark:border-stone-800 hover:border-accent-300 dark:hover:border-accent-600 bg-stone-50/50 dark:bg-stone-800/50 hover:bg-accent-50/60 dark:hover:bg-accent-900/20 text-left transition group"
                   >
                     <div>
-                      <div className="font-bold text-sm text-stone-900 dark:text-stone-100 group-hover:text-violet-700 dark:group-hover:text-violet-400">
+                      <div className="font-bold text-sm text-stone-900 dark:text-stone-100 group-hover:text-accent-700 dark:group-hover:text-accent-400">
                         {tool.name}
                       </div>
                       <div className="text-xs text-stone-500 dark:text-stone-400 truncate max-w-md">{tool.description}</div>
                     </div>
-                    <span className="text-xs font-semibold text-violet-600 dark:text-violet-400 shrink-0">Open →</span>
+                    <span className="text-xs font-semibold text-accent-600 dark:text-accent-400 shrink-0">Open →</span>
                   </button>
                 ))
               ) : searchQuery ? (

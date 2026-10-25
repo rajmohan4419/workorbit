@@ -79,7 +79,7 @@ export default function PdfESign() {
         </label>
       </div>
 
-      <button type="button" onClick={sign} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold hover:bg-violet-500">Add signature & download</button>
+      <button type="button" onClick={sign} className="rounded-xl bg-accent-600 px-4 py-2.5 text-sm font-semibold hover:bg-accent-500">Add signature & download</button>
       {status && <p aria-live="polite" className="text-sm text-slate-400">{status}</p>}
 
       <p className="text-xs text-slate-500">This adds a visible signature mark to the PDF locally in your browser. It is not a cryptographic digital signature or a certificate-based signature.</p>

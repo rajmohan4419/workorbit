@@ -133,7 +133,7 @@ export default function GlobalIncomeTaxCalculator() {
         </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Annual income / taxable income ({COUNTRIES[country].currency})</span>
-          <input type="number" min="0" value={income} onChange={e => setIncome(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-violet-500" />
+          <input type="number" min="0" value={income} onChange={e => setIncome(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-accent-500" />
         </label>
       </div>
 
@@ -148,9 +148,9 @@ export default function GlobalIncomeTaxCalculator() {
       )}
 
       <div className="grid sm:grid-cols-2 gap-3">
-        <div className="rounded-xl border border-violet-500/40 bg-violet-950/20 px-4 py-3 flex items-center justify-between">
+        <div className="rounded-xl border border-accent-500/40 bg-accent-950/20 px-4 py-3 flex items-center justify-between">
           <span className="text-xs text-slate-400">Estimated income tax</span>
-          <strong className="text-lg text-violet-300">{COUNTRIES[country].currency} {format(result.tax)}</strong>
+          <strong className="text-lg text-accent-300">{COUNTRIES[country].currency} {format(result.tax)}</strong>
         </div>
         <div className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 flex items-center justify-between">
           <span className="text-xs text-slate-400">Effective tax rate</span>

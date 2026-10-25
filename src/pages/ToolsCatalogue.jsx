@@ -32,9 +32,9 @@ export default function ToolsCatalogue() {
       <header className="sticky top-0 z-30 border-b border-[#e7dfd3] bg-[#fbf8f3]/95 backdrop-blur">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="text-xl font-black tracking-tight text-stone-900" aria-label="OrbitBoard home">
-            ORBIT<span className="text-violet-600">BOARD</span>
+            ORBIT<span className="text-accent-600">BOARD</span>
           </Link>
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-stone-600 hover:text-violet-700">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-stone-600 hover:text-accent-700">
             <ArrowLeft size={15} /> Back home
           </Link>
         </div>
@@ -42,7 +42,7 @@ export default function ToolsCatalogue() {
 
       <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
         <div className="orbit-enter max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-violet-700">OrbitBoard catalogue</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-accent-700">OrbitBoard catalogue</p>
           <h1 className="mt-3 text-4xl sm:text-5xl font-black tracking-tight text-stone-900">Every tool, when you need it.</h1>
           <p className="mt-4 text-base leading-7 text-stone-600">A calmer, organised workspace for work, money, everyday tasks and developer workflows.</p>
         </div>
@@ -51,13 +51,13 @@ export default function ToolsCatalogue() {
           <div className="grid gap-3 md:grid-cols-[minmax(220px,.7fr)_minmax(0,1.3fr)]">
             <label className="flex flex-col gap-2 text-sm font-semibold text-stone-700">
               Browse category
-              <select value={category} onChange={e => setCategory(e.target.value)} className="h-12 rounded-xl border border-[#ddd3c5] bg-[#fffdfa] px-3 text-stone-800 outline-none focus:ring-2 focus:ring-violet-300">
+              <select value={category} onChange={e => setCategory(e.target.value)} className="h-12 rounded-xl border border-[#ddd3c5] bg-[#fffdfa] px-3 text-stone-800 outline-none focus:ring-2 focus:ring-accent-300">
                 {categories.map(item => <option key={item.name} value={item.name}>{item.label}</option>)}
               </select>
             </label>
             <label className="flex flex-col gap-2 text-sm font-semibold text-stone-700">
               Find a utility
-              <span className="flex h-12 items-center gap-2 rounded-xl border border-[#ddd3c5] bg-[#fffdfa] px-3 focus-within:ring-2 focus-within:ring-violet-300">
+              <span className="flex h-12 items-center gap-2 rounded-xl border border-[#ddd3c5] bg-[#fffdfa] px-3 focus-within:ring-2 focus-within:ring-accent-300">
                 <Search size={17} className="text-stone-400" />
                 <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search by name or purpose…" className="min-w-0 flex-1 bg-transparent text-stone-800 outline-none placeholder:text-stone-400" />
               </span>
@@ -75,10 +75,10 @@ export default function ToolsCatalogue() {
               <tbody>
                 {filteredTools.map((tool, index) => (
                   <tr key={tool.slug} className="orbit-interactive border-t border-[#eee7de] hover:bg-[#fffdfa]" style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}>
-                    <td className="px-5 py-4"><Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} className="font-semibold text-stone-900 hover:text-violet-700">{tool.name}</Link></td>
-                    <td className="px-5 py-4"><span className="inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">{tool.category}</span></td>
+                    <td className="px-5 py-4"><Link to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} onFocus={preloadToolPage} className="font-semibold text-stone-900 hover:text-accent-700">{tool.name}</Link></td>
+                    <td className="px-5 py-4"><span className="inline-flex rounded-full bg-accent-50 px-2.5 py-1 text-xs font-semibold text-accent-700">{tool.category}</span></td>
                     <td className="max-w-xl px-5 py-4 text-sm leading-6 text-stone-600">{tool.description}</td>
-                    <td className="px-5 py-4"><Link aria-label={`Open ${tool.name}`} to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} className="inline-flex rounded-lg p-2 text-violet-700 hover:bg-violet-50"><ArrowRight size={17}/></Link></td>
+                    <td className="px-5 py-4"><Link aria-label={`Open ${tool.name}`} to={`/tools/${tool.slug}`} onMouseEnter={preloadToolPage} className="inline-flex rounded-lg p-2 text-accent-700 hover:bg-accent-50"><ArrowRight size={17}/></Link></td>
                   </tr>
                 ))}
                 {!filteredTools.length && <tr><td colSpan="4" className="px-5 py-12 text-center text-sm text-stone-500">No utilities match that search. Try another term or category.</td></tr>}

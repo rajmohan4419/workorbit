@@ -10,7 +10,7 @@ export default function PresetSelector({ presets, onSelectPreset }) {
             key={p.label}
             type="button"
             onClick={() => onSelectPreset(p)}
-            className="rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-violet-500/50 hover:text-violet-400 hover:bg-slate-900 transition"
+            className="rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-accent-500/50 hover:text-accent-400 hover:bg-slate-900 transition"
           >
             {p.label}
           </button>

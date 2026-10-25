@@ -124,12 +124,12 @@ export default function ToolsHome() {
           <section className="mx-auto max-w-6xl pb-8 pt-4">
             <div className="mb-4 flex items-end justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">Popular Workflows</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">Popular Workflows</p>
                 <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">
                   Frequently used utilities
                 </h2>
               </div>
-              <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/50 transition">
+              <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/50 transition">
                 View All <ArrowRight size={15} />
               </Link>
             </div>
@@ -146,14 +146,14 @@ export default function ToolsHome() {
         <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
           <div className="mb-6 flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">
+              <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">
                 {category ? `${category} Tools` : 'Catalog Essentials'}
               </p>
               <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">
                 {category ? `Explore ${category} Utilities` : 'Standard Work Tools'}
               </h2>
             </div>
-            <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/50 transition">
+            <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/50 transition">
               View All <ArrowRight size={15} />
             </Link>
           </div>
@@ -184,9 +184,9 @@ export default function ToolsHome() {
                   key={label}
                   type="button"
                   onClick={() => suggestedCategory ? chooseCategory(suggestedCategory) : setQuery(suggestedQuery)}
-                  className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 text-left transition hover:-translate-y-0.5 hover:border-violet-300 dark:hover:border-violet-600 hover:shadow-xs"
+                  className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 text-left transition.5 hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-xs"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300">
                     <Icon size={20} />
                   </span>
                   <span className="min-w-0">

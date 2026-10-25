@@ -192,7 +192,7 @@ export default function GlobalTimeZoneConverter() {
 
       <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs text-slate-400 space-y-2">
         <p className="font-semibold text-slate-300 flex items-center gap-1.5">
-          <ArrowRight size={14} className="text-violet-400" /> Daylight Saving Time (DST) Awareness
+          <ArrowRight size={14} className="text-accent-400" /> Daylight Saving Time (DST) Awareness
         </p>
         <p>
           Calculations use real IANA time zones (e.g., <code className="text-slate-300">America/New_York</code>, <code className="text-slate-300">Europe/London</code>, <code className="text-slate-300">Asia/Kolkata</code>). Daylight saving time transitions (such as EDT/EST, BST/GMT, AEDT/AEST) are evaluated dynamically based on the specific date you select.

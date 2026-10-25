@@ -15,7 +15,7 @@ export function ToolVisual({ tool, compact = false }) {
   const label = tool.icon;
 
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-violet-950/40 ${height}`} aria-hidden="true">
+    <div className={`relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-accent-950/40 ${height}`} aria-hidden="true">
       <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,.35),transparent_35%)]" />
       <svg viewBox="0 0 320 150" className="relative h-full w-full" fill="none">
         {kind === 'career' && <>
@@ -77,5 +77,5 @@ export function ToolVisual({ tool, compact = false }) {
 }
 
 export function OrbitNode({ label, className }) {
-  return <span className={`absolute inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold text-slate-500 backdrop-blur ${className}`}><span className="h-1.5 w-1.5 rounded-full bg-violet-400" />{label}</span>;
+  return <span className={`absolute inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold text-slate-500 backdrop-blur ${className}`}><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />{label}</span>;
 }

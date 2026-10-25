@@ -14,7 +14,7 @@ export default function DestinationZoneSelector({
     <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5 space-y-4 shadow-lg">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
-          <Globe size={16} className="text-violet-400" />
+          <Globe size={16} className="text-accent-400" />
           Compare Destination Time Zones ({selectedDestinations.length} selected)
         </div>
 
@@ -44,7 +44,7 @@ export default function DestinationZoneSelector({
           value={filterQuery}
           onChange={e => setFilterQuery(e.target.value)}
           placeholder="Search destination time zones or cities..."
-          className="w-full rounded-xl border border-slate-800 bg-slate-900 pl-10 pr-4 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-violet-500"
+          className="w-full rounded-xl border border-slate-800 bg-slate-900 pl-10 pr-4 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-accent-500"
         />
       </div>
 
@@ -59,9 +59,9 @@ export default function DestinationZoneSelector({
               key={tz.id}
               className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition select-none ${
                 isSource
-                  ? 'border-violet-500/40 bg-violet-950/30 opacity-70 cursor-not-allowed'
+                  ? 'border-accent-500/40 bg-accent-950/30 opacity-70 cursor-not-allowed'
                   : isChecked
-                  ? 'border-violet-500/60 bg-slate-900 text-white'
+                  ? 'border-accent-500/60 bg-slate-900 text-white'
                   : 'border-slate-800/80 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-slate-200'
               }`}
             >
@@ -70,7 +70,7 @@ export default function DestinationZoneSelector({
                 disabled={isSource}
                 checked={isChecked}
                 onChange={() => onToggleDestination(tz.id)}
-                className="rounded border-slate-700 bg-slate-900 text-violet-600 focus:ring-violet-500 shrink-0"
+                className="rounded border-slate-700 bg-slate-900 text-accent-600 focus:ring-accent-500 shrink-0"
               />
               <div className="min-w-0">
                 <div className="font-semibold truncate">{tz.name}</div>

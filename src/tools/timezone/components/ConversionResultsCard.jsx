@@ -31,7 +31,7 @@ export default function ConversionResultsCard({ conversion, isCopied, onCopySing
 
       <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-900">
         <div className="text-left sm:text-right">
-          <div className="text-base sm:text-lg font-bold text-violet-300 font-mono">
+          <div className="text-base sm:text-lg font-bold text-accent-300 font-mono">
             {info.formatted}
           </div>
           <div className="text-xs text-slate-500 font-medium">

@@ -2,7 +2,7 @@ import { ArrowRight, Trophy } from 'lucide-react';
 
 export function AsianGamesBanner() {
   return (
-    <div className="border-b border-amber-900/40 bg-gradient-to-r from-amber-950/80 via-slate-900 to-violet-950/60">
+    <div className="border-b border-amber-900/40 bg-gradient-to-r from-amber-950/80 via-slate-900 to-accent-950/60">
       <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-3">
         <a
           href="https://www.aichi-nagoya2026.org/"

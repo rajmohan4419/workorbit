@@ -7,18 +7,18 @@ export function StockNewsEventsAnalysis({ news, events, analysis, analysisLoadin
       <div className="lg:col-span-8 space-y-8">
 
         {/* AI Analysis Card */}
-        <section className="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-stone-50 p-6 sm:p-8 shadow-sm relative overflow-hidden">
+        <section className="rounded-3xl border border-accent-200 bg-gradient-to-br from-accent-50 via-white to-stone-50 p-6 sm:p-8 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-            <Sparkles size={160} className="text-violet-600" />
+            <Sparkles size={160} className="text-accent-600" />
           </div>
 
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 border border-violet-200 text-violet-700">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent-100 border border-accent-200 text-accent-700">
                 <Sparkles size={20} />
               </span>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-violet-700">Gemini 2.5 Flash</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-accent-700">Gemini 2.5 Flash</span>
                 <h2 className="text-2xl font-black text-stone-900">AI Evidence Summary</h2>
               </div>
             </div>
@@ -47,14 +47,14 @@ export function StockNewsEventsAnalysis({ news, events, analysis, analysisLoadin
             <div className="mt-6 space-y-6 text-stone-800">
               {/* Executive Summary */}
               <div className="rounded-2xl border border-stone-200 bg-white p-5 leading-relaxed text-sm sm:text-base">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-violet-700 mb-2">Executive Overview</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-accent-700 mb-2">Executive Overview</h3>
                 <p>{analysis.summary}</p>
               </div>
 
               {/* News Takeaways */}
               {analysis.news_takeaways && analysis.news_takeaways.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-violet-700 mb-3 flex items-center gap-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-accent-700 mb-3 flex items-center gap-2">
                     <CheckCircle2 size={14} /> Key News Insights & Citations
                   </h3>
                   <div className="space-y-2.5">
@@ -66,7 +66,7 @@ export function StockNewsEventsAnalysis({ news, events, analysis, analysisLoadin
                             href={item.source_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 shrink-0 text-[11px] font-bold text-violet-700 hover:text-violet-900 underline"
+                            className="inline-flex items-center gap-1 shrink-0 text-[11px] font-bold text-accent-700 hover:text-accent-900 underline"
                           >
                             Source <ExternalLink size={12} />
                           </a>
@@ -82,7 +82,7 @@ export function StockNewsEventsAnalysis({ news, events, analysis, analysisLoadin
               {/* Event Timeline */}
               {analysis.timeline && analysis.timeline.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-violet-700 mb-3 flex items-center gap-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-accent-700 mb-3 flex items-center gap-2">
                     <CalendarDays size={14} /> Event Timeline
                   </h3>
                   <div className="space-y-2.5">
@@ -98,7 +98,7 @@ export function StockNewsEventsAnalysis({ news, events, analysis, analysisLoadin
                               href={item.source_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-violet-700 hover:text-violet-900 text-xs shrink-0 inline-flex items-center gap-1 font-semibold"
+                              className="text-accent-700 hover:text-accent-900 text-xs shrink-0 inline-flex items-center gap-1 font-semibold"
                             >
                               Link <ExternalLink size={12} />
                             </a>
@@ -162,7 +162,7 @@ export function StockNewsEventsAnalysis({ news, events, analysis, analysisLoadin
                   className="rounded-2xl border border-stone-200 bg-stone-50/50 p-4 transition hover:border-stone-300"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <h3 className="font-bold text-sm sm:text-base text-stone-900 hover:text-violet-700">
+                    <h3 className="font-bold text-sm sm:text-base text-stone-900 hover:text-accent-700">
                       <a href={item.url || item.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5">
                         {item.title}
                         <ExternalLink size={14} className="shrink-0 text-stone-400" />

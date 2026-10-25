@@ -27,7 +27,7 @@ export default function MarketSecurity() {
       <SEO title="INFY Market Research | OrbitBoard" description="Research market data, events, news and reproducible experiments for INFY in OrbitBoard's prototype research workspace." canonical="https://orbitboard.in/market/INFY" />
       <header className="sticky top-0 z-30 border-b border-[#e7dfd3] bg-[#fbf8f3]/95 backdrop-blur">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="text-xl font-black tracking-tight text-white">ORBIT<span className="text-violet-400">BOARD</span></Link>
+          <Link to="/" className="text-xl font-black tracking-tight text-white">ORBIT<span className="text-accent-400">BOARD</span></Link>
           <Link to="/market-lab" className="text-sm font-semibold text-stone-600 hover:text-stone-900">Market Lab</Link>
         </div>
       </header>
@@ -35,7 +35,7 @@ export default function MarketSecurity() {
         <Link to="/market-lab" className="inline-flex items-center gap-2 text-sm text-stone-600 hover:text-stone-900"><ArrowLeft size={16} /> Market Lab</Link>
         <section className="mt-6 rounded-3xl border border-[#e7dfd3] bg-white p-6 sm:p-8">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-violet-800/70 bg-violet-950/60 px-3 py-1.5 text-xs font-bold text-violet-300">Market Research</span>
+            <span className="rounded-full border border-accent-800/70 bg-accent-950/60 px-3 py-1.5 text-xs font-bold text-accent-300">Market Research</span>
             <span className="rounded-full border border-amber-800/60 bg-amber-950/30 px-3 py-1.5 text-xs font-semibold text-amber-300">Prototype · synthetic data</span>
           </div>
           <div className="mt-5 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -50,7 +50,7 @@ export default function MarketSecurity() {
 
         <nav className="mt-5 flex gap-2 overflow-x-auto border-b border-[#e7dfd3] pb-px">
           {[['overview','Overview'],['market','Market'],['news','News'],['events','Events'],['experiments','Experiments']].map(([key,label]) => (
-            <button key={key} type="button" onClick={() => setTab(key)} className={`shrink-0 border-b-2 px-4 py-3 text-sm font-bold ${tab === key ? 'border-violet-400 text-white' : 'border-transparent text-stone-600 hover:text-stone-900'}`}>{label}</button>
+            <button key={key} type="button" onClick={() => setTab(key)} className={`shrink-0 border-b-2 px-4 py-3 text-sm font-bold ${tab === key ? 'border-accent-400 text-white' : 'border-transparent text-stone-600 hover:text-stone-900'}`}>{label}</button>
           ))}
         </nav>
 
@@ -70,14 +70,14 @@ function Overview({ latest, experiment, onExperiments }) {
   const five = experiment?.results?.[5];
   return <section className="mt-6 grid lg:grid-cols-[1.1fr_.9fr] gap-6">
     <div className="rounded-2xl border border-[#e7dfd3] bg-white p-6">
-      <p className="text-xs font-bold uppercase tracking-[.18em] text-violet-400">Research snapshot</p><h2 className="mt-2 text-2xl font-black">What is in the record?</h2>
+      <p className="text-xs font-bold uppercase tracking-[.18em] text-accent-400">Research snapshot</p><h2 className="mt-2 text-2xl font-black">What is in the record?</h2>
       <div className="mt-6 grid sm:grid-cols-3 gap-3"><Stat label="Latest close" value={formatNumber(latest.close)} icon={Activity} /><Stat label="Data sessions" value="520" icon={CalendarDays} /><Stat label="Synthetic events" value="11" icon={Newspaper} /></div>
       <p className="mt-6 text-sm leading-6 text-stone-600">The production version will replace this deterministic demo with licensed market data and timestamped source records. The page structure stays the same.</p>
     </div>
     <div className="rounded-2xl border border-[#e7dfd3] bg-white p-6">
       <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-400">Experiment evidence</p><h2 className="mt-2 text-2xl font-black">One reproducible test</h2>
       {five && <div className="mt-5 grid grid-cols-2 gap-3"><Stat label="Observations" value={five.observations} /><Stat label="Positive rate" value={five.positiveRate == null ? '—' : `${five.positiveRate.toFixed(1)}%`} /><Stat label="Median return" value={five.medianReturn == null ? '—' : `${five.medianReturn >= 0 ? '+' : ''}${five.medianReturn.toFixed(2)}%`} /><Stat label="Benchmark" value="Not supplied" /></div>}
-      <button type="button" onClick={onExperiments} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2.5 text-sm font-bold"><FlaskConical size={16} /> Inspect experiment</button>
+      <button type="button" onClick={onExperiments} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-accent-500 px-4 py-2.5 text-sm font-bold"><FlaskConical size={16} /> Inspect experiment</button>
     </div>
   </section>;
 }
@@ -99,12 +99,12 @@ function Events({ items }) {
 function Experiments({ experiment, onBuild }) {
   const rows = Object.values(experiment?.results || {});
   return <section className="mt-6 rounded-2xl border border-[#e7dfd3] bg-white p-6">
-    <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-violet-400">Experiment engine</p><h2 className="mt-1 text-2xl font-black">Volume + OI hypothesis</h2></div><button type="button" onClick={onBuild} className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-4 py-2 text-sm font-bold"><Play size={15} /> Build an experiment</button></div>
+    <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-accent-400">Experiment engine</p><h2 className="mt-1 text-2xl font-black">Volume + OI hypothesis</h2></div><button type="button" onClick={onBuild} className="inline-flex items-center gap-2 rounded-xl bg-accent-500 px-4 py-2 text-sm font-bold"><Play size={15} /> Build an experiment</button></div>
     <p className="mt-3 text-sm text-stone-600">Trigger: volume ratio ≥ 1.75× baseline and open-interest change ≥ 2%. The same definition is evaluated over three forward windows.</p>
     <div className="mt-6 grid md:grid-cols-3 gap-4">{rows.map(item => <div key={item.window} className="rounded-xl border border-[#e7dfd3] bg-[#fbf8f3] p-4"><p className="text-xs font-bold text-stone-600">{item.window}-session window</p><p className="mt-3 text-2xl font-black">{item.observations}</p><p className="text-xs uppercase tracking-wider text-stone-500">observations</p><p className="mt-4 text-sm">Median return <strong>{item.medianReturn == null ? '—' : `${item.medianReturn >= 0 ? '+' : ''}${item.medianReturn.toFixed(2)}%`}</strong></p><p className="mt-1 text-sm text-stone-600">Positive {item.positiveRate == null ? '—' : `${item.positiveRate.toFixed(1)}%`}</p></div>)}</div>
   </section>;
 }
 
 function Stat({ label, value, icon: Icon }) {
-  return <div className="rounded-xl border border-[#e7dfd3] bg-[#fbf8f3] p-3">{Icon && <Icon size={15} className="text-violet-400" />}<p className="mt-2 text-lg font-black">{value}</p><p className="text-[10px] uppercase tracking-wider text-stone-500">{label}</p></div>;
+  return <div className="rounded-xl border border-[#e7dfd3] bg-[#fbf8f3] p-3">{Icon && <Icon size={15} className="text-accent-400" />}<p className="mt-2 text-lg font-black">{value}</p><p className="text-[10px] uppercase tracking-wider text-stone-500">{label}</p></div>;
 }

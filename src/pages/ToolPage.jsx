@@ -74,7 +74,7 @@ function PasswordGenerator() {
         <label className="block space-y-2">
           <div className="flex justify-between items-center text-xs font-semibold text-stone-700 dark:text-stone-300">
             <span>Password Length</span>
-            <span className="text-sm font-bold text-violet-700 dark:text-violet-400">{length} characters</span>
+            <span className="text-sm font-bold text-accent-700 dark:text-accent-400">{length} characters</span>
           </div>
           <input
             type="range"
@@ -82,7 +82,7 @@ function PasswordGenerator() {
             max="64"
             value={length}
             onChange={e => setLength(Number(e.target.value))}
-            className="w-full accent-violet-600 h-2 bg-stone-200 dark:bg-stone-800 rounded-lg cursor-pointer"
+            className="w-full accent-accent-600 h-2 bg-stone-200 dark:bg-stone-800 rounded-lg cursor-pointer"
           />
         </label>
 
@@ -92,22 +92,22 @@ function PasswordGenerator() {
           <div className="grid sm:grid-cols-2 gap-3">
             <label className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 px-4 py-3 flex items-center justify-between min-h-[44px] cursor-pointer">
               <span className="text-sm font-medium text-stone-800 dark:text-stone-200">Uppercase (A-Z)</span>
-              <input type="checkbox" checked={useUpper} onChange={e => setUseUpper(e.target.checked)} className="w-5 h-5 rounded text-violet-600" />
+              <input type="checkbox" checked={useUpper} onChange={e => setUseUpper(e.target.checked)} className="w-5 h-5 rounded text-accent-600" />
             </label>
 
             <label className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 px-4 py-3 flex items-center justify-between min-h-[44px] cursor-pointer">
               <span className="text-sm font-medium text-stone-800 dark:text-stone-200">Lowercase (a-z)</span>
-              <input type="checkbox" checked={useLower} onChange={e => setUseLower(e.target.checked)} className="w-5 h-5 rounded text-violet-600" />
+              <input type="checkbox" checked={useLower} onChange={e => setUseLower(e.target.checked)} className="w-5 h-5 rounded text-accent-600" />
             </label>
 
             <label className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 px-4 py-3 flex items-center justify-between min-h-[44px] cursor-pointer">
               <span className="text-sm font-medium text-stone-800 dark:text-stone-200">Numbers (0-9)</span>
-              <input type="checkbox" checked={useNumbers} onChange={e => setUseNumbers(e.target.checked)} className="w-5 h-5 rounded text-violet-600" />
+              <input type="checkbox" checked={useNumbers} onChange={e => setUseNumbers(e.target.checked)} className="w-5 h-5 rounded text-accent-600" />
             </label>
 
             <label className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 px-4 py-3 flex items-center justify-between min-h-[44px] cursor-pointer">
               <span className="text-sm font-medium text-stone-800 dark:text-stone-200">Symbols (!@#$)</span>
-              <input type="checkbox" checked={useSymbols} onChange={e => setUseSymbols(e.target.checked)} className="w-5 h-5 rounded text-violet-600" />
+              <input type="checkbox" checked={useSymbols} onChange={e => setUseSymbols(e.target.checked)} className="w-5 h-5 rounded text-accent-600" />
             </label>
           </div>
 
@@ -116,17 +116,17 @@ function PasswordGenerator() {
               <span className="block text-sm font-medium text-stone-800 dark:text-stone-200">Exclude Ambiguous Characters</span>
               <span className="block text-xs text-stone-500 dark:text-stone-400">Avoids 0, O, I, l, 1</span>
             </div>
-            <input type="checkbox" checked={excludeAmbiguous} onChange={e => setExcludeAmbiguous(e.target.checked)} className="w-5 h-5 rounded text-violet-600" />
+            <input type="checkbox" checked={excludeAmbiguous} onChange={e => setExcludeAmbiguous(e.target.checked)} className="w-5 h-5 rounded text-accent-600" />
           </label>
         </div>
 
-        <button onClick={generate} className="w-full rounded-xl bg-violet-600 text-white py-3 px-5 font-semibold hover:bg-violet-500 transition min-h-[44px]">
+        <button onClick={generate} className="w-full rounded-xl bg-accent-600 text-white py-3 px-5 font-semibold hover:bg-accent-500 transition min-h-[44px]">
           Regenerate Password
         </button>
       </div>
 
       <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20 h-fit">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">Generated Output</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">Generated Output</h3>
 
         <div className="rounded-2xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 space-y-3">
           <textarea
@@ -139,7 +139,7 @@ function PasswordGenerator() {
           <button
             onClick={copyToClipboard}
             disabled={!password}
-            className="w-full rounded-xl bg-violet-600 text-white py-2.5 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50 transition min-h-[44px]"
+            className="w-full rounded-xl bg-accent-600 text-white py-2.5 text-sm font-semibold hover:bg-accent-500 disabled:opacity-50 transition min-h-[44px]"
           >
             {copied ? 'Copied to Clipboard!' : 'Copy Password'}
           </button>
@@ -246,11 +246,11 @@ function SalaryCalculator() {
               <span className="block text-xs font-semibold text-stone-800 dark:text-stone-200">EPF calculation</span>
               <span className="block text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">Cap employee PF at ₹1,800/month</span>
             </span>
-            <input type="checkbox" checked={pfCap} onChange={e => setPfCap(e.target.checked)} className="w-5 h-5 rounded text-violet-600" />
+            <input type="checkbox" checked={pfCap} onChange={e => setPfCap(e.target.checked)} className="w-5 h-5 rounded text-accent-600" />
           </label>
           <label className="block">
             <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Tax regime</span>
-            <select value={regime} onChange={e => setRegime(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-violet-500 min-h-[44px]">
+            <select value={regime} onChange={e => setRegime(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500 min-h-[44px]">
               <option value="new">New regime (default)</option>
               <option value="old">Old regime</option>
             </select>
@@ -258,7 +258,7 @@ function SalaryCalculator() {
         </div>
         <label className="block">
           <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Professional tax state</span>
-          <select value={state} onChange={e => setState(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-violet-500 min-h-[44px]">
+          <select value={state} onChange={e => setState(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500 min-h-[44px]">
             <option>Karnataka</option>
             <option value="none">Other / calculate separately</option>
           </select>
@@ -266,7 +266,7 @@ function SalaryCalculator() {
       </div>
 
       <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20 h-fit">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">Take-Home Summary</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">Take-Home Summary</h3>
         <div className="space-y-3">
           <Result label="Estimated monthly take-home" value={`₹ ${money(result.monthlyTakeHome)}`} highlight />
           <Result label="Estimated annual take-home" value={`₹ ${money(result.annualTakeHome)}`} highlight />
@@ -347,7 +347,7 @@ function Offer() {
         <Field label="Basic salary as % of CTC" value={basicPct} onChange={setBasicPct} />
         <label className="block">
           <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Tax regime</span>
-          <select value={regime} onChange={e => setRegime(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-violet-500 min-h-[44px]">
+          <select value={regime} onChange={e => setRegime(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500 min-h-[44px]">
             <option value="new">New regime</option>
             <option value="old">Old regime</option>
           </select>
@@ -424,10 +424,10 @@ function ExportActions({ content, filename = 'orbitboard-result.txt' }) {
 
   return (
     <div className="flex flex-wrap gap-2 pt-2">
-      <button type="button" onClick={copy} className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2.5 text-sm font-semibold hover:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 min-h-[44px]">
+      <button type="button" onClick={copy} className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2.5 text-sm font-semibold hover:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500 min-h-[44px]">
         {copied ? 'Copied!' : 'Copy result'}
       </button>
-      <button type="button" onClick={download} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-300 min-h-[44px]">
+      <button type="button" onClick={download} className="rounded-xl bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-300 min-h-[44px]">
         Export .txt
       </button>
     </div>
@@ -544,7 +544,7 @@ function ImageConverter({ format }) {
             <input type="range" min="0.5" max="1" step="0.01" value={quality} onChange={e => setQuality(e.target.value)} className="mt-2 w-full" />
           </label>
         )}
-        <button onClick={convert} className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-500 min-h-[44px] min-w-[44px]">
+        <button onClick={convert} className="rounded-xl bg-accent-600 px-5 py-3 text-sm font-semibold text-white hover:bg-accent-500 min-h-[44px] min-w-[44px]">
           Convert to {ext.toUpperCase()}
         </button>
       </div>
@@ -636,7 +636,7 @@ function JsonFormatter() {
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-56 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base text-stone-900 dark:text-stone-100 min-h-[44px]" />
       <div className="flex gap-2">
-        <button onClick={() => setMode('format')} className="rounded-xl bg-violet-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">Format</button>
+        <button onClick={() => setMode('format')} className="rounded-xl bg-accent-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">Format</button>
         <button onClick={() => setMode('minify')} className="rounded-xl border border-[var(--orbit-border)] px-4 py-2.5 text-sm font-semibold min-h-[44px]">Minify</button>
       </div>
       {error ? <p className="text-sm text-red-400">Invalid JSON: {error}</p> : (
@@ -674,7 +674,7 @@ function Base64Tool() {
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-40 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
       <div className="flex gap-2">
-        <button onClick={() => setMode('encode')} className="rounded-xl bg-violet-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">Encode</button>
+        <button onClick={() => setMode('encode')} className="rounded-xl bg-accent-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">Encode</button>
         <button onClick={() => setMode('decode')} className="rounded-xl border border-[var(--orbit-border)] px-4 py-2.5 text-sm font-semibold min-h-[44px]">Decode</button>
       </div>
       <textarea readOnly value={error || output} className="w-full h-40 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base" />
@@ -725,7 +725,7 @@ function UuidGenerator() {
   return (
     <div className="space-y-4">
       <Field label="Number of UUIDs" value={count} onChange={setCount} />
-      <button onClick={() => setIds(Array.from({ length: Math.min(50, Math.max(1, Math.floor(num(count)))) }, () => crypto.randomUUID()))} className="rounded-xl bg-violet-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">
+      <button onClick={() => setIds(Array.from({ length: Math.min(50, Math.max(1, Math.floor(num(count)))) }, () => crypto.randomUUID()))} className="rounded-xl bg-accent-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">
         Generate UUIDs
       </button>
       <textarea readOnly value={ids.join('\n')} className="w-full h-56 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base" />
@@ -742,7 +742,7 @@ function UrlEncoder() {
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-40 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
       <div className="flex gap-2">
-        <button onClick={() => setMode('encode')} className="rounded-xl bg-violet-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">Encode</button>
+        <button onClick={() => setMode('encode')} className="rounded-xl bg-accent-600 text-white px-4 py-2.5 text-sm font-semibold min-h-[44px]">Encode</button>
         <button onClick={() => setMode('decode')} className="rounded-xl border border-[var(--orbit-border)] px-4 py-2.5 text-sm font-semibold min-h-[44px]">Decode</button>
       </div>
       <textarea readOnly value={output} className="w-full h-40 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base" />
@@ -798,7 +798,7 @@ function ImageResizer() {
         <Field label="Width (px)" value={width} onChange={setWidth} />
         <Field label="Height (px, optional)" value={height} onChange={setHeight} placeholder="Auto from aspect ratio" />
       </div>
-      <button onClick={resize} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Resize & Download</button>
+      <button onClick={resize} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Resize & Download</button>
       {preview && <img src={preview} alt="Resized preview" className="max-h-72 max-w-full rounded-2xl border border-[var(--orbit-border)] object-contain" />}
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
@@ -823,7 +823,7 @@ function SvgToPng() {
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-48 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
       <Field label="Scale" value={scale} onChange={setScale} />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PNG</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PNG</button>
       {preview && <img src={preview} alt="Converted PNG" className="max-h-72 max-w-full rounded-2xl border border-[var(--orbit-border)] object-contain" />}
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
@@ -853,7 +853,7 @@ function CsvToPdf() {
   return (
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-52 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert CSV to PDF</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert CSV to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -875,7 +875,7 @@ function XlsxToPdf() {
   return (
     <div className="space-y-4">
       <input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e => { setFile(e.target.files?.[0] || null); setStatus(''); }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert XLSX to PDF</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert XLSX to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -926,7 +926,7 @@ function ImageToPdf() {
     <div className="space-y-4">
       <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { setFile(e.target.files?.[0] || null); setStatus(''); }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
       {preview && <img src={preview} alt="PDF preview" className="max-h-72 max-w-full rounded-2xl border border-[var(--orbit-border)] object-contain" />}
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -952,7 +952,7 @@ function DiffChecker() {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <label className="inline-flex items-center gap-2 text-xs font-semibold text-stone-700 dark:text-stone-300 cursor-pointer min-h-[44px]">
-          <input type="checkbox" checked={ignoreWhitespace} onChange={e => setIgnoreWhitespace(e.target.checked)} className="w-4 h-4 rounded text-violet-600" /> Ignore whitespace
+          <input type="checkbox" checked={ignoreWhitespace} onChange={e => setIgnoreWhitespace(e.target.checked)} className="w-4 h-4 rounded text-accent-600" /> Ignore whitespace
         </label>
         <Result label="Changed lines" value={String(changed)} highlight />
       </div>
@@ -964,7 +964,7 @@ function DiffChecker() {
           </thead>
           <tbody>
             {rows.map(r => (
-              <tr key={r.n} className={r.same ? 'border-t border-[var(--orbit-border)]/50' : 'border-t border-violet-400/30 bg-violet-50/50 dark:bg-violet-950/30'}>
+              <tr key={r.n} className={r.same ? 'border-t border-[var(--orbit-border)]/50' : 'border-t border-accent-400/30 bg-accent-50/50 dark:bg-accent-950/30'}>
                 <td className="p-3 text-stone-400 font-mono">{r.n}</td>
                 <td className="p-3 font-mono whitespace-pre-wrap break-all text-stone-800 dark:text-stone-200">{r.left}</td>
                 <td className="p-3 font-mono whitespace-pre-wrap break-all text-stone-800 dark:text-stone-200">{r.right}</td>
@@ -995,7 +995,7 @@ function ImageMetadataRemover() {
   return (
     <div className="space-y-4">
       <input type="file" accept="image/*" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-      <button onClick={clean} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Remove Metadata & Download</button>
+      <button onClick={clean} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Remove Metadata & Download</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -1022,7 +1022,7 @@ function ImageCompressor() {
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
       <div className="lg:col-span-7 space-y-4">
         <input type="file" accept="image/*" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-        <button onClick={compress} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold hover:bg-violet-500 min-h-[44px]">Compress & Download</button>
+        <button onClick={compress} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold hover:bg-accent-500 min-h-[44px]">Compress & Download</button>
       </div>
       <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
         {after > 0 && (
@@ -1068,7 +1068,7 @@ function SpreadsheetFileTool({ type }) {
           <textarea value={text} onChange={e => { setText(e.target.value); if (isCsv) setFile(null) }} placeholder={isJson ? 'Paste a JSON array of objects…' : 'Paste CSV data or choose a file…'} className="w-full h-64 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
         </>
       )}
-      <button disabled={busy} onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">
+      <button disabled={busy} onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">
         {busy ? 'Converting…' : type === 'xlsx-to-csv' ? 'Convert to CSV' : 'Convert to XLSX'}
       </button>
       {type === 'xlsx-to-csv' && text && (
@@ -1089,7 +1089,7 @@ function CsvToJson() {
   return (
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-52 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to JSON</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to JSON</button>
       {error && <p className="text-sm text-red-400">{error}</p>}
       {output && (
         <div className="overflow-x-auto no-scrollbar space-y-3">
@@ -1109,7 +1109,7 @@ function TextToPdf() {
     <div className="space-y-4">
       <input type="file" accept=".txt,text/plain" onChange={async e => { const f = e.target.files?.[0]; if (f) { setFile(f); setText(await f.text()); } }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Or paste text here…" className="w-full h-64 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -1122,7 +1122,7 @@ function PdfToText() {
   return (
     <div className="space-y-4">
       <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setText(''); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-      <button disabled={busy} onClick={extract} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Text'}</button>
+      <button disabled={busy} onClick={extract} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Text'}</button>
       <textarea readOnly value={text} placeholder="Extracted text will appear here…" className="w-full h-72 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base" />
       {text && <ExportActions content={text} filename="orbitboard-extracted.txt" />}
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
@@ -1139,7 +1139,7 @@ function JsonToXml() {
   return (
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-48 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to XML</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to XML</button>
       {error && <p className="text-sm text-red-400">{error}</p>}
       {output && (
         <div className="overflow-x-auto no-scrollbar space-y-3">
@@ -1159,7 +1159,7 @@ function XmlToJson() {
   return (
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-48 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to JSON</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to JSON</button>
       {error && <p className="text-sm text-red-400">{error}</p>}
       {output && (
         <div className="overflow-x-auto no-scrollbar space-y-3">
@@ -1189,7 +1189,7 @@ function MarkdownToHtml() {
   return (
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-56 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to HTML</button>
+      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to HTML</button>
       {output && (
         <div className="overflow-x-auto no-scrollbar space-y-3">
           <textarea readOnly value={output} className="w-full h-64 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base" />
@@ -1216,7 +1216,7 @@ function PdfMerge() {
           {files.map((f, i) => <li key={f.name + i} className="rounded-xl bg-stone-50 dark:bg-stone-800 px-4 py-2.5 text-sm text-stone-800 dark:text-stone-200">{i + 1}. {f.name}</li>)}
         </ol>
       )}
-      <button disabled={busy} onClick={merge} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Merging…' : 'Merge PDFs'}</button>
+      <button disabled={busy} onClick={merge} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Merging…' : 'Merge PDFs'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -1238,7 +1238,7 @@ function PdfExtract() {
     <div className="space-y-4">
       <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
       <Field label="Pages to extract" value={pages} onChange={setPages} type="text" placeholder="Example: 1,3,5-7" />
-      <button disabled={busy} onClick={extract} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Pages'}</button>
+      <button disabled={busy} onClick={extract} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Pages'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -1251,7 +1251,7 @@ function PdfSplit() {
   return (
     <div className="space-y-4">
       <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-      <button onClick={split} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Split into Pages</button>
+      <button onClick={split} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Split into Pages</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -1267,7 +1267,7 @@ function PdfToImages({ format = 'image/png' }) {
   return (
     <div className="space-y-4">
       <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setPages([]); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-      <button disabled={busy} onClick={load} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Rendering…' : 'Render PDF Pages'}</button>
+      <button disabled={busy} onClick={load} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Rendering…' : 'Render PDF Pages'}</button>
       {pages.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {pages.map(p => <div key={p.number} className="rounded-2xl border border-[var(--orbit-border)] p-3"><img src={p.data} alt={'Page ' + p.number} className="w-full rounded-lg bg-white" /><p className="mt-2 text-xs text-stone-600 dark:text-stone-400">Page {p.number}</p></div>)}
@@ -1288,7 +1288,7 @@ function PdfCompressor() {
   return (
     <div className="space-y-4">
       <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStats(null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-      <button disabled={busy} onClick={compress} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Optimizing…' : 'Optimize & Download'}</button>
+      <button disabled={busy} onClick={compress} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Optimizing…' : 'Optimize & Download'}</button>
       {stats && (
         <div className="grid sm:grid-cols-2 gap-3">
           <Result label="Original Size" value={(stats.before / 1024).toFixed(1) + ' KB'} />
@@ -1311,7 +1311,7 @@ function PdfWorkspace() {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setPages([]); setStatus('') }} className="flex-1 min-w-60 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-        <button disabled={busy} onClick={renderPdf} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Working…' : 'Open PDF'}</button>
+        <button disabled={busy} onClick={renderPdf} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Working…' : 'Open PDF'}</button>
       </div>
       {pages.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -1334,7 +1334,7 @@ function PdfReorder() {
     <div className="space-y-4">
       <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
       <Field label="Page order" value={order} onChange={setOrder} type="text" placeholder="Example: 3,1,2,4" />
-      <button disabled={busy} onClick={reorder} className="rounded-xl bg-violet-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Saving…' : 'Reorder & Download'}</button>
+      <button disabled={busy} onClick={reorder} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Saving…' : 'Reorder & Download'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -1387,9 +1387,9 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
     <div className="border-b border-[var(--orbit-border)] bg-[var(--orbit-canvas)] py-6 sm:py-8 transition-colors">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-medium text-stone-500 dark:text-stone-400 mb-3">
-          <Link to="/" className="hover:text-violet-600 transition">Home</Link>
+          <Link to="/" className="hover:text-accent-600 transition">Home</Link>
           <ChevronRight size={13} />
-          <Link to={`/tools?category=${tool.category}`} className="hover:text-violet-600 transition">{tool.category}</Link>
+          <Link to={`/tools?category=${tool.category}`} className="hover:text-accent-600 transition">{tool.category}</Link>
           <ChevronRight size={13} />
           <span className="text-stone-900 dark:text-stone-100 font-bold truncate">{tool.name}</span>
         </nav>
@@ -1407,7 +1407,7 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
               onClick={share}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-violet-400 transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-accent-400 transition"
             >
               <Share2 size={15} />
               <span>{shared ? 'Link copied!' : 'Share'}</span>
@@ -1415,7 +1415,7 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
 
             <button
               onClick={reset}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-violet-400 transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-accent-400 transition"
             >
               <RotateCcw size={15} />
               <span>Reset</span>
@@ -1423,7 +1423,7 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
 
             <button
               onClick={toggleFullscreen}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-violet-400 transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-accent-400 transition"
             >
               <Maximize2 size={15} />
               <span>Fullscreen</span>
@@ -1484,7 +1484,7 @@ export default function ToolPage() {
   if (!tool) {
     return (
       <div className="min-h-screen bg-[var(--orbit-canvas)] text-stone-900 dark:text-stone-100 p-10">
-        <Link to="/tools" className="text-violet-600 font-semibold">← Tools</Link>
+        <Link to="/tools" className="text-accent-600 font-semibold">← Tools</Link>
         <h1 className="text-2xl font-bold mt-8">Tool not found</h1>
       </div>
     );
@@ -1495,7 +1495,7 @@ export default function ToolPage() {
 
   return (
     <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex flex-col justify-between">
-      <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-violet-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
+      <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-accent-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
       <div>
         <ToolsHomeHeader />
         <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
@@ -1503,8 +1503,8 @@ export default function ToolPage() {
         <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
           <ToolUsageBanner tool={tool} />
 
-          <div id="tool-workspace" ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-violet-500/10 dark:ring-violet-400/10">
-            <div className="h-1.5 w-full bg-gradient-to-r from-violet-600 via-indigo-500 to-violet-400 opacity-80" />
+          <div id="tool-workspace" ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10">
+            <div className="h-1.5 w-full bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-400 opacity-80" />
             <div className="p-5 sm:p-8">
               {Tool ? <Tool /> : <ComingSoon tool={tool} />}
             </div>
@@ -1524,7 +1524,7 @@ export default function ToolPage() {
                 <ol className="mt-4 space-y-3 border-t border-[var(--orbit-border)] pt-4">
                   {info.how.map((step, i) => (
                     <li key={step} className="flex gap-3 text-sm leading-6 text-stone-600 dark:text-stone-300">
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-300 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-accent-100 dark:bg-accent-900 text-accent-700 dark:text-accent-300 flex items-center justify-center text-xs font-bold">{i + 1}</span>
                       {step}
                     </li>
                   ))}
@@ -1563,7 +1563,7 @@ export default function ToolPage() {
           )}
 
           <div className="pt-8 border-t border-[var(--orbit-border)]">
-            <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 mb-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400 mb-4">
               More {tool.category} Tools
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1571,20 +1571,20 @@ export default function ToolPage() {
                 <Link
                   key={r.slug}
                   to={`/tools/${r.slug}`}
-                  className="group flex flex-col justify-between p-4 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-violet-400 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 min-h-[104px]"
+                  className="group flex flex-col justify-between p-4 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-accent-400.5 hover:shadow-md transition-all duration-200 min-h-[104px]"
                 >
                   <div className="flex items-start gap-3">
                     {r.icon && (
-                      <span className="shrink-0 w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 font-bold text-xs flex items-center justify-center border border-violet-200/60 dark:border-violet-800/60 group-hover:scale-105 transition-transform">
+                      <span className="shrink-0 w-8 h-8 rounded-xl bg-accent-100 dark:bg-accent-950 text-accent-700 dark:text-accent-300 font-bold text-xs flex items-center justify-center border border-accent-200/60 dark:border-accent-800/60 group-hover:scale-105 transition-transform">
                         {r.icon}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <span className="font-bold text-sm text-stone-800 dark:text-stone-200 group-hover:text-violet-700 dark:group-hover:text-violet-400 block truncate">{r.name}</span>
+                      <span className="font-bold text-sm text-stone-800 dark:text-stone-200 group-hover:text-accent-700 dark:group-hover:text-accent-400 block truncate">{r.name}</span>
                       <p className="mt-1 text-xs text-stone-500 dark:text-stone-400 line-clamp-2 leading-5">{r.description}</p>
                     </div>
                   </div>
-                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-violet-600 dark:text-violet-400 group-hover:translate-x-1 transition-transform">
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-accent-600 dark:text-accent-400 group-hover:translate-x-1 transition-transform">
                     Open tool <ArrowRight size={14} />
                   </span>
                 </Link>

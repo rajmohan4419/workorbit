@@ -20,7 +20,7 @@ export const TOOL_CONTENT = {
           When evaluating your job offers or planning a career move, understanding your net take-home salary is closely tied to managing your transition timeline. Before submitting your official resignation letter, ensure you evaluate both your pay structure and your employment contracts.
         </p>
         <p>
-          Need to calculate your last working day after handing in your written notice? Use our dedicated <Link to="/tools/notice-period" className="text-violet-700 underline font-semibold">Notice Period Calculator</Link> to accurately determine your notice period length, whether it is 30 days, 60 days, or 90 days.
+          Need to calculate your last working day after handing in your written notice? Use our dedicated <Link to="/tools/notice-period" className="text-accent-700 underline font-semibold">Notice Period Calculator</Link> to accurately determine your notice period length, whether it is 30 days, 60 days, or 90 days.
         </p>
       </div>
     )
@@ -44,7 +44,7 @@ export const TOOL_CONTENT = {
           A salary hike often comes with job changes or promotion. During any job transition, check your contract to understand your notice period obligations before serving written notice.
         </p>
         <p>
-          To plan your last working day during resignation, try our free <Link to="/tools/notice-period" className="text-violet-700 underline font-semibold">Notice Period Calculator</Link> to calculate calendar days or working day timelines accurately.
+          To plan your last working day during resignation, try our free <Link to="/tools/notice-period" className="text-accent-700 underline font-semibold">Notice Period Calculator</Link> to calculate calendar days or working day timelines accurately.
         </p>
       </div>
     )
@@ -68,7 +68,7 @@ export const TOOL_CONTENT = {
           Accepting a new job offer usually requires handing in your resignation letter at your current company. Be sure to calculate your minimum notice period and check whether your current employer enforces garden leave or payment in lieu of notice.
         </p>
         <p>
-          Calculate your notice duration easily using our online <Link to="/tools/notice-period" className="text-violet-700 underline font-semibold">Notice Period Calculator</Link>.
+          Calculate your notice duration easily using our online <Link to="/tools/notice-period" className="text-accent-700 underline font-semibold">Notice Period Calculator</Link>.
         </p>
       </div>
     )
@@ -114,18 +114,18 @@ export const TOOL_CONTENT = {
         <p>
           Our online <strong>period calculator</strong> helps employees across the UK, India, US, and globally compute exit dates instantly. If you are also calculating overall career tenure or salary transitions, check out our companion tools:
         </p>
-        <ul className="list-disc pl-6 space-y-2 text-violet-800 font-medium">
+        <ul className="list-disc pl-6 space-y-2 text-accent-800 font-medium">
           <li>
-            <Link to="/tools/notice-period" className="underline hover:text-violet-900">Notice Period Calculator</Link> — Calculate your exact last working day.
+            <Link to="/tools/notice-period" className="underline hover:text-accent-900">Notice Period Calculator</Link> — Calculate your exact last working day.
           </li>
           <li>
-            <Link to="/tools/experience" className="underline hover:text-violet-900">Work Experience Calculator</Link> — Count your total professional tenure between start date and end date.
+            <Link to="/tools/experience" className="underline hover:text-accent-900">Work Experience Calculator</Link> — Count your total professional tenure between start date and end date.
           </li>
           <li>
-            <Link to="/tools/ctc-to-inhand" className="underline hover:text-violet-900">CTC to In-Hand Salary Calculator</Link> — Estimate take-home pay for new offers.
+            <Link to="/tools/ctc-to-inhand" className="underline hover:text-accent-900">CTC to In-Hand Salary Calculator</Link> — Estimate take-home pay for new offers.
           </li>
           <li>
-            <Link to="/tools/offer-comparison" className="underline hover:text-violet-900">Offer Comparison Tool</Link> — Compare two competing job offers side-by-side.
+            <Link to="/tools/offer-comparison" className="underline hover:text-accent-900">Offer Comparison Tool</Link> — Compare two competing job offers side-by-side.
           </li>
         </ul>
 
@@ -163,7 +163,7 @@ export const TOOL_CONTENT = {
 
         <h3 className="text-lg font-bold text-stone-800">Calculating Tenure across Career Steps</h3>
         <p>
-          To accurately compute total professional service, enter your official start date and end date. If you are currently changing jobs and planning your resignation date, combine this tool with our <Link to="/tools/notice-period" className="text-violet-700 underline font-semibold">Notice Period Calculator</Link> to ensure seamless transitions between employment contracts.
+          To accurately compute total professional service, enter your official start date and end date. If you are currently changing jobs and planning your resignation date, combine this tool with our <Link to="/tools/notice-period" className="text-accent-700 underline font-semibold">Notice Period Calculator</Link> to ensure seamless transitions between employment contracts.
         </p>
 
         <h3 className="text-lg font-bold text-stone-800">Experience Counters in Other Contexts</h3>
@@ -923,7 +923,7 @@ export const TOOL_CONTENT = {
           When leaving a company after serving five or more years, you become eligible for gratuity payout. Before serving your written notice, check your contract and calculate your final exit date.
         </p>
         <p>
-          Use our <Link to="/tools/notice-period" className="text-violet-700 underline font-semibold">Notice Period Calculator</Link> to accurately determine your last working day.
+          Use our <Link to="/tools/notice-period" className="text-accent-700 underline font-semibold">Notice Period Calculator</Link> to accurately determine your last working day.
         </p>
       </div>
     )

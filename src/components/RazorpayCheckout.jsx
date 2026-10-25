@@ -267,7 +267,7 @@ export function RazorpayCheckout({
   return (
     <div className="w-full max-w-md rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-xs">
       <div className="flex items-center gap-3 border-b border-[var(--orbit-border)] pb-4 mb-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-100 dark:bg-accent-950 text-accent-700 dark:text-accent-300">
           <CreditCard size={20} />
         </div>
         <div>
@@ -289,8 +289,8 @@ export function RazorpayCheckout({
                 onClick={() => setSelectedAmount(preset)}
                 className={`py-2 px-3 min-h-[44px] rounded-xl text-xs font-bold transition border ${
                   selectedAmount === preset
-                    ? 'border-violet-600 bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300'
-                    : 'border-stone-200 dark:border-stone-700 hover:border-violet-300 text-stone-700 dark:text-stone-300'
+                    ? 'border-accent-600 bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300'
+                    : 'border-stone-200 dark:border-stone-700 hover:border-accent-300 text-stone-700 dark:text-stone-300'
                 }`}
               >
                 ₹{preset}
@@ -306,7 +306,7 @@ export function RazorpayCheckout({
         disabled={loading}
         className={
           buttonClassName ||
-          'w-full min-h-[48px] inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 dark:bg-violet-500 hover:bg-violet-700 dark:hover:bg-violet-600 text-white font-bold text-sm shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed'
+          'w-full min-h-[48px] inline-flex items-center justify-center gap-2 rounded-xl bg-accent-600 dark:bg-accent-500 hover:bg-accent-700 dark:hover:bg-accent-600 text-white font-bold text-sm shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed'
         }
       >
         {loading ? (

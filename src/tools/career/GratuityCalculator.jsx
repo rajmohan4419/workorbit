@@ -13,7 +13,7 @@ function Field({ label, value, onChange, type = 'number', min = 0, step = '1' })
         step={step}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-violet-500"
+        className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-accent-500"
       />
     </label>
   );
@@ -21,9 +21,9 @@ function Field({ label, value, onChange, type = 'number', min = 0, step = '1' })
 
 function Result({ label, value, highlight = false }) {
   return (
-    <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${highlight ? 'border-violet-500/40 bg-violet-950/20' : 'border-slate-800 bg-slate-950'}`}>
+    <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${highlight ? 'border-accent-500/40 bg-accent-950/20' : 'border-slate-800 bg-slate-950'}`}>
       <span className="text-xs text-slate-400">{label}</span>
-      <strong className={highlight ? 'text-lg text-violet-300' : 'text-sm text-white'}>{value}</strong>
+      <strong className={highlight ? 'text-lg text-accent-300' : 'text-sm text-white'}>{value}</strong>
     </div>
   );
 }

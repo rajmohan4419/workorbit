@@ -133,7 +133,7 @@ export default function MarketLab() {
       <header className="sticky top-0 z-30 border-b border-[#e7dfd3] bg-[#fbf8f3]/95 backdrop-blur">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="text-xl font-black tracking-tight text-stone-900">
-            ORBIT<span className="text-violet-600">BOARD</span>
+            ORBIT<span className="text-accent-600">BOARD</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/market-lab" className="text-sm font-semibold text-stone-700 hover:text-stone-900">
@@ -155,7 +155,7 @@ export default function MarketLab() {
 
         {/* Hero / Search Section */}
         <div className="mt-6 text-center max-w-3xl mx-auto">
-          <span className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3.5 py-1.5 text-xs font-bold text-violet-800">
+          <span className="inline-flex items-center gap-2 rounded-full border border-accent-200 bg-accent-50 px-3.5 py-1.5 text-xs font-bold text-accent-800">
             AI Stock Research Assistant
           </span>
           <h1 className="mt-4 text-3xl sm:text-5xl font-black tracking-tight text-stone-900">
@@ -174,7 +174,7 @@ export default function MarketLab() {
         <div className="mt-10">
           {stockLoading ? (
             <div className="rounded-3xl border border-stone-200 bg-white p-12 text-center text-stone-500 flex flex-col items-center justify-center gap-4 min-h-[300px] shadow-sm">
-              <Loader2 size={32} className="animate-spin text-violet-600" />
+              <Loader2 size={32} className="animate-spin text-accent-600" />
               <p className="text-sm font-semibold">Loading research data for {currentSymbol}...</p>
             </div>
           ) : stockError && !stockData ? (

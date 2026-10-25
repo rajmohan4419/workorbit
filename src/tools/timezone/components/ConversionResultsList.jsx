@@ -19,7 +19,7 @@ export default function ConversionResultsList({
           <button
             type="button"
             onClick={onCopyAll}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-accent-600 px-4 py-2 text-xs font-semibold text-white hover:bg-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-400 transition"
           >
             {copiedAll ? <Check size={14} /> : <Copy size={14} />}
             {copiedAll ? 'Copied All Results!' : 'Copy All Results'}
