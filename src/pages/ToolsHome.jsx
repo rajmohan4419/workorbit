@@ -9,7 +9,7 @@ import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
 import { CategoryExplorer } from '../components/toolsHome/CategoryExplorer';
 import { RecentToolsSection } from '../components/toolsHome/RecentToolsSection';
 import { ToolCard, MicroCard } from '../components/toolsHome/ToolCard';
-import { PrivacySection, CatalogCalloutSection, ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
+import { PrivacySection, CatalogCalloutSection, SupportCheckoutSection, ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 
 const intentMap = [
   { terms: ['salary', 'ctc', 'in hand', 'take home', 'take-home', 'hike', 'increment', 'offer', 'notice', 'experience'], slugs: ['ctc-to-inhand', 'salary-hike', 'offer-comparison', 'notice-period', 'experience'] },
@@ -202,6 +202,7 @@ export default function ToolsHome() {
         <CategoryExplorer query={query} category={category} setCategory={setCategory} chooseCategory={chooseCategory} categoryTools={categoryTools} addRecent={addRecent} favorites={favorites} toggleFavorite={toggleFavorite} />
         <RecentToolsSection showExplore={showExplore} recentTools={recentTools} addRecent={addRecent} />
         <PrivacySection />
+        <SupportCheckoutSection />
         <CatalogCalloutSection />
       </main>
 

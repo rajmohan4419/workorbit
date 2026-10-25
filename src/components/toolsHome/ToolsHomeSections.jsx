@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText } from 'lucide-react';
+import { RazorpayCheckout } from '../RazorpayCheckout';
 
 export function PrivacySection() {
   return (
@@ -20,6 +21,34 @@ export function PrivacySection() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function SupportCheckoutSection() {
+  return (
+    <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="max-w-xl">
+          <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">
+            Support & Pro Membership
+          </p>
+          <h2 className="mt-1 text-xl font-bold text-stone-900 dark:text-stone-100 sm:text-2xl">
+            Upgrade to OrbitBoard Pro
+          </h2>
+          <p className="mt-2 text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+            Support fast, privacy-first web utilities. Get instant access to Pro workspace tools, priority serverless processing, and early access features.
+          </p>
+        </div>
+        <div className="shrink-0 w-full lg:w-auto flex justify-center">
+          <RazorpayCheckout
+            amount={500}
+            title="OrbitBoard Pro Support"
+            description="Unlock Pro features and support fast web tools"
+            showAmountSelector={true}
+          />
         </div>
       </div>
     </section>
