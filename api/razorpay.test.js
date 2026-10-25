@@ -54,6 +54,16 @@ describe('parseOrderRequest (server-side price list)', () => {
     expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 100, currency: 'USD' }).error).toBeTruthy();
     expect(PRODUCTS['support-orbitboard'].currency).toBe('INR');
   });
+
+  it('accepts direct amount in paise >= 100', () => {
+    const res = parseOrderRequest({ amount: 50000, currency: 'INR', receipt: 'rcpt_1' });
+    expect(res).toEqual({ productId: 'custom', amountPaise: 50000, currency: 'INR', receipt: 'rcpt_1' });
+  });
+
+  it('rejects direct amount in paise < 100', () => {
+    const res = parseOrderRequest({ amount: 50 });
+    expect(res.error).toBe('Amount must be at least 100 paise');
+  });
 });
 
 describe('checkPaymentAgainstOrder', () => {

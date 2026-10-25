@@ -66,8 +66,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Receipt is generated on the server and is not taken from the client.
-  const receipt = `rcpt_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
+  // Use provided receipt or generate a unique server receipt
+  const receipt = parsed.receipt || `rcpt_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
 
   try {
     const order = await razorpay.orders.create({
@@ -102,7 +102,8 @@ export default async function handler(req, res) {
     }));
   } catch (err) {
     console.error('[CREATE ORDER ERROR]', err?.message || err);
-    res.writeHead(500, corsHeaders);
-    res.end(JSON.stringify({ error: 'Could not start checkout. Please try again.' }));
+    const statusCode = err?.statusCode === 401 ? 401 : 500;
+    res.writeHead(statusCode, corsHeaders);
+    res.end(JSON.stringify({ error: err?.error?.description || err?.message || 'Could not start checkout. Please try again.' }));
   }
 }
