@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins, Search } from 'lucide-react';
-import { TOOLS } from '../data/toolCatalog';
+import { LISTED_TOOLS } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
 
 const categories = [
@@ -18,7 +18,7 @@ export default function ToolsCatalogue() {
   const [category, setCategory] = useState('All');
   const [query, setQuery] = useState('');
 
-  const filteredTools = useMemo(() => TOOLS.filter(tool => {
+  const filteredTools = useMemo(() => LISTED_TOOLS.filter(tool => {
     const categoryMatch = category === 'All' || tool.category === category;
     const haystack = `${tool.name} ${tool.description} ${tool.slug}`.toLowerCase();
     return categoryMatch && haystack.includes(query.trim().toLowerCase());

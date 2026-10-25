@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, Sun, Moon, ArrowRight, BriefcaseBusiness, Coins, Code2, Calculator } from 'lucide-react';
-import { TOOLS } from '../../data/toolCatalog';
+import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
 
 const categories = [
@@ -57,7 +57,7 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
-    return TOOLS.filter(
+    return LISTED_TOOLS.filter(
       (tool) =>
         tool.name.toLowerCase().includes(q) ||
         tool.description.toLowerCase().includes(q) ||
