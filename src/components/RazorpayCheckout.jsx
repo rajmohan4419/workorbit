@@ -10,8 +10,8 @@ export function RazorpayCheckout({
   productId = 'support-orbitboard',
   amount = 500, // Default selection in INR.
   amountOptions,
-  title = 'OrbitBoard Pro Access',
-  description = 'Support OrbitBoard & unlock Pro features',
+  title = 'OrbitBoard Support',
+  description = 'Help cover hosting and development',
   prefillName = '',
   prefillEmail = '',
   prefillContact = '',
@@ -69,7 +69,6 @@ export function RazorpayCheckout({
         },
         body: JSON.stringify({
           productId: effectiveProductId,
-          amount: selectedAmount * 100,
           amountInr: selectedAmount,
           currency: 'INR',
         }),

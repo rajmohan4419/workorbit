@@ -3,17 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
-import { ProProvider, usePro } from './context/ProContext';
-import { ProUpgradeModal } from './components/ProUpgradeModal';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <ProProvider>
         <AdSense />
         <Analytics />
         <Telemetry />
-        <ProUpgradeModal />
         <Routes>
           <Route path="/" element={<ToolsHome />} />
           <Route path="/tools" element={<ToolsCatalogue />} />
@@ -24,7 +20,6 @@ export default function App() {
           <Route path="/tools/:slug" element={<ToolPageRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </ProProvider>
     </BrowserRouter>
   );
 }
@@ -96,10 +91,7 @@ function Telemetry() {
 }
 
 function AdSense() {
-  const { isPro } = usePro();
-
   useEffect(() => {
-    if (isPro) return;
     const existing = document.querySelector('script[data-orbitboard-adsense]');
     if (existing) return;
     const script = document.createElement('script');
@@ -108,7 +100,7 @@ function AdSense() {
     script.dataset.orbitboardAdsense = 'true';
     script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160921653901381';
     document.head.appendChild(script);
-  }, [isPro]);
+  }, []);
 
   return null;
 }

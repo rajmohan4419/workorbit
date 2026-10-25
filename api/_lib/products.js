@@ -1,19 +1,13 @@
 /**
  * Server-side catalogue of payable products. The server is the only source
  * of truth for amounts and currency. Client-supplied amounts are accepted only
- * if they match one of these preset values exactly, or if a direct amount
- * in paise (>= 100) is supplied.
+ * if they match one of these preset values exactly.
  */
 export const PRODUCTS = {
   'support-orbitboard': {
     title: 'OrbitBoard Support',
     currency: 'INR',
     amountsInr: [100, 500, 1000],
-  },
-  'pro-monthly': {
-    title: 'OrbitBoard Pro - 1 Month Access',
-    currency: 'INR',
-    amountsInr: [19],
   },
   'coffee-orbitboard': {
     title: 'Buy me a Coffee',
@@ -29,25 +23,7 @@ export const ALLOWED_CURRENCIES = new Set(['INR']);
  * or { error }.
  */
 export function parseOrderRequest(body) {
-  // Direct amount in paise support (Minimum amount: 100 paise = 1 INR)
-  if (typeof body?.amount === 'number' && Number.isFinite(body.amount)) {
-    const amountPaise = Math.round(body.amount);
-    if (amountPaise < 100) {
-      return { error: 'Amount must be at least 100 paise' };
-    }
-    const currency = typeof body?.currency === 'string' ? body.currency.toUpperCase() : 'INR';
-    if (!ALLOWED_CURRENCIES.has(currency)) {
-      return { error: 'Unsupported currency' };
-    }
-    return {
-      productId: typeof body?.productId === 'string' ? body.productId : 'custom',
-      amountPaise,
-      currency,
-      receipt: typeof body?.receipt === 'string' ? body.receipt : undefined,
-    };
-  }
-
-  // Pre-configured product catalogue selection
+  // Catalogue selection only. Client-chosen amounts are not accepted.
   const productId = typeof body?.productId === 'string' ? body.productId : '';
   const product = Object.prototype.hasOwnProperty.call(PRODUCTS, productId)
     ? PRODUCTS[productId]

@@ -13,7 +13,6 @@ import { SaasRetention, SalesPipelineForecaster, SaasPricing } from '../tools/bu
 import SampleAd from '../components/SampleAd';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
-import { ToolUsageBanner } from '../components/tools/ToolUsageBanner';
 
 const GratuityCalculator = lazy(() => import('../tools/career/GratuityCalculator'));
 const IndiaIncomeTaxCalculator = lazy(() => import('../tools/finance/IndiaIncomeTaxCalculator'));
@@ -1501,8 +1500,6 @@ export default function ToolPage() {
         <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
 
         <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
-          <ToolUsageBanner tool={tool} />
-
           <div id="tool-workspace" ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10">
             <div className="h-1.5 w-full bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-400 opacity-80" />
             <div className="p-5 sm:p-8">

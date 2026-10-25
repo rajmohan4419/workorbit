@@ -33,21 +33,21 @@ export function SupportCheckoutSection() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="max-w-xl">
           <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">
-            Support & Pro Membership
+            Support OrbitBoard
           </p>
           <h2 className="mt-1 text-xl font-bold text-stone-900 dark:text-stone-100 sm:text-2xl">
-            Upgrade to OrbitBoard Pro
+            Keep these tools free
           </h2>
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-            Support fast, privacy-first web utilities. Get instant access to Pro workspace tools, priority serverless processing, and early access features.
+            Every tool is free, with no sign-up. If one saves you time, you can help cover hosting and development with a one-time contribution.
           </p>
         </div>
         <div className="shrink-0 w-full lg:w-auto flex justify-center items-center">
           <RazorpayCheckout
             productId="support-orbitboard"
             amount={500}
-            title="OrbitBoard Pro Support"
-            description="Unlock Pro features and support fast web tools"
+            title="OrbitBoard Support"
+            description="Help cover hosting and development"
             showAmountSelector={true}
           />
         </div>
@@ -90,7 +90,7 @@ export function ToolsHomeFooter() {
   ];
 
   const utilityLinks = [
-    { label: 'Support & Pro', path: '/#support', icon: Heart },
+    { label: 'Support', path: '/#support', icon: Heart },
     { label: 'Privacy Policy', path: '#privacy', icon: ShieldCheck },
     { label: 'Terms of Service', path: '#terms', icon: FileText },
     { label: 'Sitemap', path: '/tools', icon: Globe },

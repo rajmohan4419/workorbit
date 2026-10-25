@@ -39,11 +39,6 @@ describe('parseOrderRequest (server-side price list)', () => {
     expect(r).toEqual({ productId: 'support-orbitboard', amountPaise: 50000, currency: 'INR' });
   });
 
-  it('accepts pro-monthly subscription tier at 19 INR', () => {
-    const r = parseOrderRequest({ productId: 'pro-monthly', amountInr: 19 });
-    expect(r).toEqual({ productId: 'pro-monthly', amountPaise: 1900, currency: 'INR' });
-  });
-
   it('rejects amounts that are not in the preset list', () => {
     expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 1 }).error).toBeTruthy();
     expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 999999 }).error).toBeTruthy();
@@ -60,15 +55,6 @@ describe('parseOrderRequest (server-side price list)', () => {
     expect(PRODUCTS['support-orbitboard'].currency).toBe('INR');
   });
 
-  it('accepts direct amount in paise >= 100', () => {
-    const res = parseOrderRequest({ amount: 50000, currency: 'INR', receipt: 'rcpt_1' });
-    expect(res).toEqual({ productId: 'custom', amountPaise: 50000, currency: 'INR', receipt: 'rcpt_1' });
-  });
-
-  it('rejects direct amount in paise < 100', () => {
-    const res = parseOrderRequest({ amount: 50 });
-    expect(res.error).toBe('Amount must be at least 100 paise');
-  });
 });
 
 describe('checkPaymentAgainstOrder', () => {
