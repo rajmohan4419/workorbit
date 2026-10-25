@@ -184,9 +184,7 @@ export const TOOLS = [
   { slug: "number-to-words", name: "Number to Words", description: "Number to Words utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "roman-numeral-converter", name: "Roman Numeral Converter", description: "Roman Numeral Converter utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
   { slug: "color-format-converter", name: "Color Format Converter", description: "Color Format Converter utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
-  { slug: "loan-emi-calculator", name: "Loan EMI Calculator", description: "Loan EMI Calculator utility directly in your browser.", category: "Finance", icon: "Σ", status: "planned" },
   { slug: "loan-amortization-calculator", name: "Loan Amortization Calculator", description: "See your EMI, total interest and a year-by-year repayment schedule for a loan.", category: "Finance", icon: "₹", status: "live" },
-  { slug: "gst-calculator-india", name: "GST Calculator India", description: "GST Calculator India utility directly in your browser.", category: "Finance", icon: "Σ", status: "planned" },
   { slug: "salary-take-home-calculator-india", name: "Salary Take-Home Calculator India", description: "Salary Take-Home Calculator India utility directly in your browser.", category: "Finance", icon: "Σ", status: "planned" },
   { slug: "ctc-to-in-hand-calculator", name: "CTC to In-Hand Calculator", description: "CTC to In-Hand Calculator utility directly in your browser.", category: "Finance", icon: "Σ", status: "planned" },
   { slug: "gratuity-calculator-india", name: "Gratuity Calculator India", description: "Gratuity Calculator India utility directly in your browser.", category: "Finance", icon: "Σ", status: "planned" },
@@ -246,8 +244,6 @@ export const TOOLS = [
   { slug: "meta-tag-checker", name: "Meta Tag Checker", description: "Meta Tag Checker utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "open-graph-previewer", name: "Open Graph Previewer", description: "Open Graph Previewer utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "twitter-card-previewer", name: "Twitter Card Previewer", description: "Twitter Card Previewer utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
-  { slug: "robotstxt-generator", name: "Robots.txt Generator", description: "Robots.txt Generator utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
-  { slug: "robotstxt-tester", name: "Robots.txt Tester", description: "Robots.txt Tester utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "xml-sitemap-generator", name: "XML Sitemap Generator", description: "XML Sitemap Generator utility directly in your browser.", category: "Developer", icon: "{}", status: "planned" },
   { slug: "sitemap-validator", name: "Sitemap Validator", description: "Sitemap Validator utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "canonical-url-checker", name: "Canonical URL Checker", description: "Canonical URL Checker utility directly in your browser.", category: "Developer", icon: "{}", status: "planned" },
@@ -315,7 +311,6 @@ export const TOOLS = [
   { slug: "meeting-time-zone-planner", name: "Meeting Time Zone Planner", description: "Meeting Time Zone Planner utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "world-clock-converter", name: "World Clock Converter", description: "World Clock Converter utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
   { slug: "age-on-a-date-calculator", name: "Age on a Date Calculator", description: "Age on a Date Calculator utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
-  { slug: "date-addsubtract-tool", name: "Date Add/Subtract Tool", description: "Date Add/Subtract Tool utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "wedding-budget-calculator", name: "Wedding Budget Calculator", description: "Wedding Budget Calculator utility directly in your browser.", category: "Finance", icon: "Σ", status: "planned" },
   { slug: "household-budget-planner", name: "Household Budget Planner", description: "Household Budget Planner utility directly in your browser.", category: "Finance", icon: "₹", status: "planned" },
   { slug: "savings-goal-calculator", name: "Savings Goal Calculator", description: "Savings Goal Calculator utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
@@ -337,12 +332,8 @@ export const TOOLS = [
   { slug: "youtube-ab-thumbnail-tester", name: "YouTube A/B Thumbnail Tester", description: "YouTube A/B Thumbnail Tester utility directly in your browser.", category: "Everyday", icon: "IMG", status: "planned" },
   { slug: "youtube-description-template-generator", name: "YouTube Description Template Generator", description: "YouTube Description Template Generator utility directly in your browser.", category: "Everyday", icon: "▶️", status: "planned" },
   { slug: "youtube-channel-id-finder", name: "YouTube Channel ID Finder", description: "YouTube Channel ID Finder utility directly in your browser.", category: "Everyday", icon: "▶️", status: "planned" },
-  { slug: "unix-timestamp-converter", name: "Unix Timestamp Converter", description: "Convert timestamps and dates utility directly in your browser.", category: "Developer", icon: "{}", status: "planned" },
-  { slug: "sip-calculator", name: "SIP Calculator", description: "Project SIP outcomes with assumptions, not guarantees utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
-  { slug: "percentage-calculator", name: "Percentage Calculator", description: "Calculate percentages and percentage change utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
   { slug: "robots-txt-generator", name: "Robots.txt Generator", description: "Generate robots.txt rules utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "robots-txt-tester", name: "Robots.txt Tester", description: "Check URL paths against rules utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
-  { slug: "notice-period-calculator", name: "Notice Period Calculator", description: "Estimate last working date from notice rules utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
   { slug: "date-add-subtract-tool", name: "Date Add/Subtract Tool", description: "Add days, weeks or months to a date utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
   { slug: "saas-retention-calculator", name: "SaaS Retention Calculator", description: "Work out net and gross revenue retention, churn, LTV, CAC and CAC payback from your own numbers.", category: "Business", icon: "↗", status: "live" },
   { slug: "sales-pipeline-forecaster", name: "Sales Pipeline Forecaster", description: "Weight your open deals by stage and win rate to see expected revenue, coverage and the gap to target.", category: "Business", icon: "≡", status: "live" },
@@ -350,5 +341,18 @@ export const TOOLS = [
   { slug: "invoice-aging-report", name: "Invoice Aging Report", description: "Upload your invoices as a CSV to see what is outstanding, how overdue it is, and which customers owe the most.", category: "Business", icon: "AR", status: "live" },
   { slug: "weighted-decision-matrix", name: "Weighted Decision Matrix", description: "Score vendors or options against weighted criteria, from a CSV or by hand, and see them ranked.", category: "Business", icon: "⚖", status: "live" },
 ];
+
+// Old or duplicate slugs that now point at the tool that replaced them.
+export const SLUG_REDIRECTS = {
+  "notice-period-calculator": "notice-period",
+  "percentage-calculator": "percentage",
+  "sip-calculator": "sip",
+  "unix-timestamp-converter": "unix-timestamp",
+  "robotstxt-generator": "robots-txt-generator",
+  "robotstxt-tester": "robots-txt-tester",
+  "date-addsubtract-tool": "date-add-subtract-tool",
+  "gst-calculator-india": "gst",
+  "loan-emi-calculator": "emi"
+};
 
 export const LISTED_TOOLS = TOOLS.filter(tool => tool.status === 'live');
