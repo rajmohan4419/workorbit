@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand-accent: #A78BFA;
   --color-brand-warm: #FAFAF9;
@@ -48,25 +50,29 @@ body {
 
 /* OrbitBoard warm theme variables & dark mode support */
 :root {
-  color-scheme: light dark;
-  --orbit-canvas: #fbf8f3;
+  color-scheme: light;
+  --orbit-canvas: #f5f3fb;
   --orbit-surface: #ffffff;
-  --orbit-surface-soft: #f4efe7;
-  --orbit-border: #e7dfd3;
-  --orbit-ink: #292524;
-  --orbit-muted: #78716c;
+  --orbit-surface-soft: #eeebf7;
+  --orbit-border: #dcd6ea;
+  --orbit-ink: #1e1b2e;
+  --orbit-ink-soft: #3b3650;
+  --orbit-muted: #5b5672;
   --orbit-accent: #6d4bd1;
+  --orbit-accent-soft: #ece7ff;
 }
 
 .dark {
   color-scheme: dark;
-  --orbit-canvas: #121110;
-  --orbit-surface: #1c1917;
-  --orbit-surface-soft: #292524;
-  --orbit-border: #383531;
-  --orbit-ink: #f5f5f4;
-  --orbit-muted: #a8a29e;
-  --orbit-accent: #a78bfa;
+  --orbit-canvas: #161827;
+  --orbit-surface: #1f2236;
+  --orbit-surface-soft: #272b42;
+  --orbit-border: #3a3f5c;
+  --orbit-ink: #ecebfa;
+  --orbit-ink-soft: #d6d5ee;
+  --orbit-muted: #b4b7d3;
+  --orbit-accent: #b9a4ff;
+  --orbit-accent-soft: rgba(185, 164, 255, 0.14);
 }
 
 html {
@@ -131,15 +137,15 @@ input, textarea, select {
 }
 
 .dark input, .dark textarea, .dark select {
-  color: #f5f5f4;
-  background-color: #1c1917;
-  border-color: #383531;
+  color: var(--orbit-ink);
+  background-color: var(--orbit-surface);
+  border-color: var(--orbit-border);
 }
 
 .orbit-light input, .orbit-light textarea, .orbit-light select {
-  color: #292524;
-  background-color: #fffdfa;
-  border-color: #ddd3c5;
+  color: var(--orbit-ink);
+  background-color: var(--orbit-surface);
+  border-color: #cfc8e0;
 }
 
 .orbit-light a:focus-visible, .orbit-light button:focus-visible,
@@ -159,4 +165,27 @@ input, textarea, select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Tool workspace: map the older warm/stone utilities onto the calm palette in dark mode */
+.dark .orbit-tool .bg-stone-950,
+.dark .orbit-tool .bg-stone-900 { background-color: var(--orbit-surface); }
+.dark .orbit-tool .bg-stone-800,
+.dark .orbit-tool .bg-stone-800\/50,
+.dark .orbit-tool .bg-stone-50 { background-color: var(--orbit-surface-soft); }
+.dark .orbit-tool .bg-violet-950\/50 { background-color: var(--orbit-accent-soft); }
+.dark .orbit-tool .border-violet-700 { border-color: rgba(185, 164, 255, 0.45); }
+.dark .orbit-tool .text-violet-300 { color: #cdbcff; }
+.dark .orbit-tool .text-stone-100,
+.dark .orbit-tool .text-stone-200 { color: var(--orbit-ink); }
+.dark .orbit-tool .text-stone-300,
+.dark .orbit-tool .text-stone-700 { color: var(--orbit-ink-soft); }
+.dark .orbit-tool .text-stone-400,
+.dark .orbit-tool .text-stone-500,
+.dark .orbit-tool .text-stone-600 { color: var(--orbit-muted); }
+
+/* Friendlier focus ring on tool inputs */
+.orbit-tool input:focus, .orbit-tool select:focus {
+  border-color: var(--orbit-accent);
+  box-shadow: 0 0 0 3px var(--orbit-accent-soft);
 }
