@@ -37,9 +37,14 @@ export function RazorpayCheckout({
         throw new Error('Failed to load Razorpay SDK. Please check your internet connection.');
       }
 
-      const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      const keyId = await (async () => {
+        const resp = await fetch('/api/razorpay-key');
+        if (!resp.ok) throw new Error('Unable to fetch Razorpay public key');
+        const { key } = await resp.json();
+        return key;
+      })();
       if (!keyId) {
-        throw new Error('Razorpay Key ID is not configured in VITE_RAZORPAY_KEY_ID.');
+        throw new Error('Razorpay Key ID is not configured (public key fetch failed).');
       }
 
       if (!productId) {
