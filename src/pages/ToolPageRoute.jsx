@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
-import { TOOLS } from '../data/toolCatalog';
+import { TOOLS, SLUG_REDIRECTS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { loadToolPage } from '../lib/toolPageLoader';
 
@@ -94,6 +94,10 @@ export default function ToolPageRoute() {
   const { slug } = useParams();
   const tool = TOOLS.find(item => item.slug === slug);
   const info = TOOL_CONTENT[slug];
+
+  if (!tool && SLUG_REDIRECTS[slug]) {
+    return <Navigate to={`/tools/${SLUG_REDIRECTS[slug]}`} replace />;
+  }
 
   if (!tool) {
     return (
