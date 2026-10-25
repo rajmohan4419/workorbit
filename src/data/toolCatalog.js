@@ -191,7 +191,7 @@ export const TOOLS = [
   { slug: "ctc-to-in-hand-calculator", name: "CTC to In-Hand Calculator", description: "CTC to In-Hand Calculator utility directly in your browser.", category: "Finance", icon: "🧮", status: "planned" },
   { slug: "gratuity-calculator-india", name: "Gratuity Calculator India", description: "Gratuity Calculator India utility directly in your browser.", category: "Finance", icon: "🧮", status: "planned" },
   { slug: "pf-calculator-india", name: "PF Calculator India", description: "PF Calculator India utility directly in your browser.", category: "Everyday", icon: "🧮", status: "planned" },
-  { slug: "fd-maturity-calculator", name: "FD Maturity Calculator", description: "FD Maturity Calculator utility directly in your browser.", category: "Everyday", icon: "🧮", status: "planned" },
+  { slug: "fd-maturity-calculator", name: "FD Maturity Calculator", description: "Estimate the maturity amount and interest on a fixed deposit, with quarterly or other compounding.", category: "Finance", icon: "₹", status: "live" },
   { slug: "rd-maturity-calculator", name: "RD Maturity Calculator", description: "RD Maturity Calculator utility directly in your browser.", category: "Everyday", icon: "🧮", status: "planned" },
   { slug: "compound-interest-calculator", name: "Compound Interest Calculator", description: "Estimate how an investment grows with compound interest, with yearly, quarterly, monthly or daily compounding.", category: "Finance", icon: "🧮", status: "live" },
   { slug: "simple-interest-calculator", name: "Simple Interest Calculator", description: "Simple Interest Calculator utility directly in your browser.", category: "Finance", icon: "🧮", status: "planned" },

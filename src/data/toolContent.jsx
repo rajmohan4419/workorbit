@@ -710,6 +710,20 @@ export const TOOL_CONTENT = {
       ['Are the results guaranteed?', 'No. The calculator assumes a fixed rate. Actual returns on savings, deposits and investments can vary.']
     ]
   },
+  'fd-maturity-calculator': {
+    intro: 'Check how much a fixed deposit will be worth at maturity, with interest compounded at the frequency your bank uses.',
+    keywords: 'FD calculator, fixed deposit calculator India, FD maturity calculator, FD interest calculator',
+    how: [
+      'Enter the amount you plan to deposit.',
+      'Enter the interest rate per year offered by the bank.',
+      'Enter the tenure in years and months, then choose the compounding frequency. Most banks compound quarterly.'
+    ],
+    faq: [
+      ['Do banks compound FD interest quarterly?', 'Many Indian banks compound fixed deposit interest quarterly, but this varies. Check the terms of your deposit.'],
+      ['Is the maturity amount before or after TDS?', 'This calculator shows the amount before tax. TDS may be deducted on interest, which reduces the amount you receive.'],
+      ['Are FD returns guaranteed?', 'The rate is fixed for the deposit term at most banks, but the actual maturity depends on the bank and terms you agreed to.']
+    ]
+  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',
