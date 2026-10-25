@@ -21,9 +21,15 @@ export function Field({ label, value, onChange, type = 'number', placeholder }) 
 
 export function Result({ label, value, highlight = false }) {
   return (
-    <div className={`rounded-xl border px-4 py-3 flex items-center justify-between min-h-[44px] ${highlight ? 'border-violet-400/60 bg-violet-50/80 dark:bg-violet-950/50 dark:border-violet-700' : 'border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800/50'}`}>
-      <span className="text-xs font-medium text-stone-600 dark:text-stone-300">{label}</span>
-      <strong className={highlight ? 'text-base sm:text-lg text-violet-700 dark:text-violet-300 font-bold' : 'text-sm text-stone-900 dark:text-stone-100 font-semibold'}>{value}</strong>
+    <div className={`rounded-xl border px-4 py-3 min-h-[44px] ${highlight
+      ? 'border-violet-400/60 bg-violet-50/80 dark:bg-violet-950/50 dark:border-violet-700 flex flex-col gap-1'
+      : 'border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3'
+    }`}>
+      <span className={`text-xs font-medium shrink-0 ${highlight ? 'text-violet-600 dark:text-violet-400' : 'text-stone-600 dark:text-stone-300'}`}>{label}</span>
+      <strong className={highlight
+        ? 'text-lg sm:text-xl text-violet-700 dark:text-violet-300 font-bold break-words'
+        : 'text-sm text-stone-900 dark:text-stone-100 font-semibold sm:text-right break-words min-w-0'
+      }>{value}</strong>
     </div>
   );
 }

@@ -1402,7 +1402,7 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
               onClick={share}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-violet-400 transition"
@@ -1493,19 +1493,23 @@ export default function ToolPage() {
 
   return (
     <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex flex-col justify-between">
+      <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-violet-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
       <div>
         <ToolsHomeHeader />
         <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
 
-        <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 space-y-8">
-          <div ref={workspaceRef} className="rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] p-5 sm:p-8 shadow-sm">
-            {Tool ? <Tool /> : <ComingSoon tool={tool} />}
+        <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8">
+          <div id="tool-workspace" ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-violet-500/10 dark:ring-violet-400/10">
+            <div className="h-1.5 w-full bg-gradient-to-r from-violet-600 via-indigo-500 to-violet-400 opacity-80" />
+            <div className="p-5 sm:p-8">
+              {Tool ? <Tool /> : <ComingSoon tool={tool} />}
+            </div>
           </div>
 
-          <SampleAd />
+          <SampleAd category={tool?.category} />
 
           {info && (
-            <div className="space-y-4 pt-4 border-t border-[var(--orbit-border)]">
+            <div className="space-y-4 pt-8 border-t border-[var(--orbit-border)]">
               <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Tool Guide & Information</h2>
 
               <details className="group rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5">
@@ -1554,7 +1558,7 @@ export default function ToolPage() {
             </div>
           )}
 
-          <div className="pt-6 border-t border-[var(--orbit-border)]">
+          <div className="pt-8 border-t border-[var(--orbit-border)]">
             <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400 mb-4">
               More {tool.category} Tools
             </p>
@@ -1563,10 +1567,22 @@ export default function ToolPage() {
                 <Link
                   key={r.slug}
                   to={`/tools/${r.slug}`}
-                  className="flex items-center justify-between p-4 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-violet-400 transition min-h-[44px]"
+                  className="group flex flex-col justify-between p-4 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-violet-400 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 min-h-[104px]"
                 >
-                  <span className="font-semibold text-sm text-stone-800 dark:text-stone-200 truncate">{r.name}</span>
-                  <ArrowRight size={16} className="text-violet-600 shrink-0" />
+                  <div className="flex items-start gap-3">
+                    {r.icon && (
+                      <span className="shrink-0 w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 font-bold text-xs flex items-center justify-center border border-violet-200/60 dark:border-violet-800/60 group-hover:scale-105 transition-transform">
+                        {r.icon}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <span className="font-bold text-sm text-stone-800 dark:text-stone-200 group-hover:text-violet-700 dark:group-hover:text-violet-400 block truncate">{r.name}</span>
+                      <p className="mt-1 text-xs text-stone-500 dark:text-stone-400 line-clamp-2 leading-5">{r.description}</p>
+                    </div>
+                  </div>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-violet-600 dark:text-violet-400 group-hover:translate-x-1 transition-transform">
+                    Open tool <ArrowRight size={14} />
+                  </span>
                 </Link>
               ))}
             </div>

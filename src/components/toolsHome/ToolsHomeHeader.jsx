@@ -84,6 +84,7 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
 
   return (
     <>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-violet-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to content</a>
       <header className="sticky top-0 z-30 border-b border-[var(--orbit-border)] bg-[var(--orbit-canvas)]/95 backdrop-blur transition-colors">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           {/* Brand Logo (Left) */}

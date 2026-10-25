@@ -15,6 +15,13 @@ const OFFERS = {
     cta: 'Review Resume →',
     link: 'https://topmate.io/?ref=orbitboard',
   },
+  developer: {
+    badge: 'Developer Resources',
+    headline: 'Build & Ship Web Apps Faster',
+    subtext: 'Free database, auth, and storage with instant deployment.',
+    cta: 'Explore Supabase →',
+    link: 'https://supabase.com',
+  },
   default: {
     badge: '100% Free & Local',
     headline: 'Processed locally in your browser',
@@ -25,18 +32,19 @@ const OFFERS = {
 };
 
 export default function ContextualCard({ category }) {
-  const offer = OFFERS[category] || OFFERS.default;
+  const key = typeof category === 'string' ? category.toLowerCase().trim() : '';
+  const offer = OFFERS[key] || OFFERS.default;
 
   return (
-    <div className="my-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div className="text-left space-y-1">
-        <span className="text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+    <div className="my-6 rounded-2xl border border-[var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="text-left space-y-1.5">
+        <span className="text-[11px] font-semibold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
           {offer.badge}
         </span>
-        <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+        <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
           {offer.headline}
         </h4>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-stone-500 dark:text-stone-400 leading-5">
           {offer.subtext}
         </p>
       </div>
@@ -44,7 +52,7 @@ export default function ContextualCard({ category }) {
         href={offer.link}
         target="_blank"
         rel="noopener noreferrer"
-        className="shrink-0 px-4 py-2 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+        className="shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl bg-violet-600 hover:bg-violet-500 text-white transition-colors inline-flex items-center justify-center"
       >
         {offer.cta}
       </a>
