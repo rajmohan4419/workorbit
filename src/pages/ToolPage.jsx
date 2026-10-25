@@ -3,6 +3,7 @@ import { lazy, useEffect, useMemo, useState, useRef } from 'react';
 import { ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronDown, ChevronRight } from 'lucide-react';
 import { TOOLS, LISTED_TOOLS } from '../data/toolCatalog';
 import { computeCompoundInterest, COMPOUND_FREQUENCIES } from '../tools/finance/compoundInterest';
+import { computeFdMaturity, FD_DEFAULT_FREQUENCY } from '../tools/finance/fdMaturity';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
@@ -66,6 +67,24 @@ function ComingSoon({ tool }) {
   );
 }
 
+function SelectField({ label, value, onChange, children }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{label}</span>
+      <div className="relative mt-1.5">
+        <select
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full appearance-none rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 pl-4 pr-11 py-3 text-base text-stone-900 dark:text-stone-100 min-h-[44px]"
+        >
+          {children}
+        </select>
+        <ChevronDown size={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-stone-500" />
+      </div>
+    </label>
+  );
+}
+
 function CompoundInterest() {
   const [principal, setPrincipal] = useState('100000'), [rate, setRate] = useState('10'), [years, setYears] = useState('5'), [frequency, setFrequency] = useState('1');
   const result = computeCompoundInterest({ principal, annualRatePct: rate, years, timesPerYear: frequency });
@@ -76,12 +95,35 @@ function CompoundInterest() {
         <Field label="Initial principal (₹)" value={principal} onChange={setPrincipal} />
         <Field label="Annual interest rate (%)" value={rate} onChange={setRate} />
         <Field label="Time period (years)" value={years} onChange={setYears} />
-        <label className="block">
-          <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Compounding frequency</span>
-          <select value={frequency} onChange={e => setFrequency(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 min-h-[44px]">
-            {COMPOUND_FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-          </select>
-        </label>
+        <SelectField label="Compounding frequency" value={frequency} onChange={setFrequency}>
+          {COMPOUND_FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+        </SelectField>
+      </div>
+      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
+        <Result label="Maturity amount" value={`₹ ${money(result.amount)}`} highlight />
+        <Result label="Interest earned" value={`₹ ${money(result.interest)}`} />
+        <Result label="Effective annual rate" value={`${result.effectiveRatePct.toFixed(2)}%`} />
+      </div>
+    </div>
+  );
+}
+
+function FdMaturity() {
+  const [principal, setPrincipal] = useState('100000'), [rate, setRate] = useState('7'), [years, setYears] = useState('1'), [months, setMonths] = useState('0'), [frequency, setFrequency] = useState(String(FD_DEFAULT_FREQUENCY));
+  const result = computeFdMaturity({ principal, annualRatePct: rate, years, months, timesPerYear: frequency });
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="lg:col-span-7 space-y-4">
+        <Field label="Deposit amount (₹)" value={principal} onChange={setPrincipal} />
+        <Field label="Interest rate per year (%)" value={rate} onChange={setRate} />
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Tenure: years" value={years} onChange={setYears} />
+          <Field label="Tenure: months" value={months} onChange={setMonths} />
+        </div>
+        <SelectField label="Compounding frequency" value={frequency} onChange={setFrequency}>
+          {COMPOUND_FREQUENCIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+        </SelectField>
       </div>
       <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
         <Result label="Maturity amount" value={`₹ ${money(result.amount)}`} highlight />
@@ -1529,7 +1571,7 @@ export default function ToolPage() {
     'json-to-xlsx': () => <SpreadsheetFileTool type="json-to-xlsx" />, 'xlsx-to-csv': () => <SpreadsheetFileTool type="xlsx-to-csv" />, 'txt-to-pdf': TextToPdf, 'pdf-to-text': PdfToText, 'diff-checker': DiffChecker,
     'json-to-xml': JsonToXml, 'xml-to-json': XmlToJson, 'markdown-to-html': MarkdownToHtml, 'image-compressor': ImageCompressor, 'image-metadata-remover': ImageMetadataRemover, 'pdf-merge': PdfMerge, 'pdf-split': PdfSplit,
     'pdf-extract-pages': PdfExtract, 'pdf-reorder': PdfReorder, 'pdf-workspace': PdfWorkspace, 'pdf-compressor': PdfCompressor, 'pdf-e-sign': PdfESign, 'pdf-to-jpg': () => <PdfToImages format="image/jpeg" />, 'pdf-to-png': () => <PdfToImages format="image/png" />,
-    'compound-interest-calculator': CompoundInterest, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
+    'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
     'jwt-decoder': JwtDecoder, 'unix-timestamp': UnixTimestamp, 'uuid-generator': UuidGenerator, 'url-encoder': UrlEncoder,
     'password-generator': PasswordGenerator
   }[slug]), [slug]);
