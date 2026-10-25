@@ -1,3 +1,4 @@
+/* eslint-env node */
 export default async function handler(req, res) {
   // Simple same‑origin check (adjust as needed for your security model)
   const origin = req.headers.origin || '';
