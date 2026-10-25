@@ -724,6 +724,20 @@ export const TOOL_CONTENT = {
       ['Are FD returns guaranteed?', 'The rate is fixed for the deposit term at most banks, but the actual maturity depends on the bank and terms you agreed to.']
     ]
   },
+  'rd-maturity-calculator': {
+    intro: 'Estimate how much a monthly recurring deposit will grow to by the end of its tenure.',
+    keywords: 'RD calculator, recurring deposit calculator India, RD maturity calculator, RD interest calculator',
+    how: [
+      'Enter the amount you will deposit each month.',
+      'Enter the interest rate per year offered by the bank.',
+      'Enter the tenure in years and months, then choose the compounding frequency. Most banks compound quarterly.'
+    ],
+    faq: [
+      ['How is RD interest calculated?', 'Each monthly instalment earns interest from the month it is paid until maturity. Banks use their own rounding, so the final amount may differ slightly.'],
+      ['Why is my bank amount different?', 'Banks may calculate interest on a different basis, round each instalment, or apply penalties for missed payments. Check your bank statement for the exact figure.'],
+      ['Is RD interest taxable?', 'Interest on recurring deposits is taxable as income at your slab rate. Banks deduct TDS at 10% when annual interest from a bank exceeds ₹40,000 (₹50,000 for senior citizens). Confirm current limits with your bank or a tax adviser.']
+    ]
+  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',
