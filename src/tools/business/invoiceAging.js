@@ -44,7 +44,7 @@ export function bucketFor(daysOverdue) {
  * asOf: a Date or date string used as "today".
  * Returns totals per bucket, per customer, the invoice list and any row warnings.
  */
-export function computeAging({ invoices, asOf }) {
+export function computeAging({ invoices, asOf, groupBy = null }) {
   const today = asOf instanceof Date
     ? Date.UTC(asOf.getUTCFullYear(), asOf.getUTCMonth(), asOf.getUTCDate())
     : parseDate(asOf);
@@ -82,6 +82,8 @@ export function computeAging({ invoices, asOf }) {
       balance,
       daysOverdue,
       bucket: bucketFor(daysOverdue).key,
+      extra: inv.extra || {},
+      group: groupBy ? (String(inv.extra?.[groupBy] ?? '').trim() || 'Unassigned') : null,
     });
   });
 
@@ -94,6 +96,15 @@ export function computeAging({ invoices, asOf }) {
     byCustomerMap[r.customer] = (byCustomerMap[r.customer] || 0) + r.balance;
   }
 
+  const groupMap = {};
+  for (const r of rows) {
+    if (!r.group) continue;
+    const g = (groupMap[r.group] ||= { group: r.group, balance: 0, overdue: 0 });
+    g.balance += r.balance;
+    if (r.daysOverdue > 0) g.overdue += r.balance;
+  }
+  const byGroup = Object.values(groupMap).sort((a, b) => b.balance - a.balance);
+
   const byCustomer = Object.entries(byCustomerMap)
     .map(([customer, balance]) => ({ customer, balance }))
     .sort((a, b) => b.balance - a.balance);
@@ -105,6 +116,7 @@ export function computeAging({ invoices, asOf }) {
     overduePct: outstanding > 0 ? (overdue / outstanding) * 100 : null,
     buckets,
     byCustomer,
+    byGroup,
     rows: rows.sort((a, b) => b.daysOverdue - a.daysOverdue),
     warnings,
   };
