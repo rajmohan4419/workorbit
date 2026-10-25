@@ -39,6 +39,11 @@ describe('parseOrderRequest (server-side price list)', () => {
     expect(r).toEqual({ productId: 'support-orbitboard', amountPaise: 50000, currency: 'INR' });
   });
 
+  it('accepts pro-monthly subscription tier at 19 INR', () => {
+    const r = parseOrderRequest({ productId: 'pro-monthly', amountInr: 19 });
+    expect(r).toEqual({ productId: 'pro-monthly', amountPaise: 1900, currency: 'INR' });
+  });
+
   it('rejects amounts that are not in the preset list', () => {
     expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 1 }).error).toBeTruthy();
     expect(parseOrderRequest({ productId: 'support-orbitboard', amountInr: 999999 }).error).toBeTruthy();
