@@ -808,6 +808,34 @@ export const TOOL_CONTENT = {
       ['Does the annual discount change MRR?', 'No. MRR is the monthly figure, so it is calculated before any annual discount. The annual price shows what a customer pays for a year.']
     ]
   },
+  'invoice-aging-report': {
+    intro: 'See which invoices are outstanding, how long they have been overdue, and which customers owe the most, without building an ageing sheet by hand.',
+    keywords: 'invoice aging report, accounts receivable aging, AR aging calculator, outstanding invoices report, debtors ageing, receivables report India',
+    how: [
+      'Download the template, or list your invoices with an invoice number, customer, amount, amount paid and due date.',
+      'Upload the CSV, or edit the rows directly. Dates can be YYYY-MM-DD or DD/MM/YYYY.',
+      'Choose the "as of" date and read the buckets, the overdue total and the largest balances.'
+    ],
+    faq: [
+      ['Is my data uploaded anywhere?', 'No. The CSV is read in your browser and is not sent to a server.'],
+      ['Why does a row say it was skipped?', 'The amount is missing or not a positive number, or there is no readable due date. The message names the invoice so you can fix it.'],
+      ['Can I use an Excel file?', 'Save it as CSV first (File, then Save As or Download, then Comma-separated values). Excel files are not read directly.']
+    ]
+  },
+  'weighted-decision-matrix': {
+    intro: 'Compare vendors, candidates or options on the criteria that matter, with each criterion weighted by its importance.',
+    keywords: 'weighted decision matrix, decision matrix template, vendor selection scoring, weighted scoring model, options comparison spreadsheet',
+    how: [
+      'Download the template, or list your criteria with a weight, then one column per option.',
+      'Score each option from 0 to 10 for each criterion. Upload the CSV, or enter the scores directly.',
+      'Read the ranking. Change the weights to see whether the winner depends on one criterion.'
+    ],
+    faq: [
+      ['How are the weights used?', 'Each score is multiplied by its weight, the results are added up, and the total is divided by the sum of the weights. Only the relative sizes of the weights matter.'],
+      ['What if a score is missing?', 'A missing score counts as zero and the tool tells you which option it affects.'],
+      ['Does this choose the best option for me?', 'No. It makes your priorities explicit. The scores still reflect your judgement, so check them before deciding.']
+    ]
+  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',
