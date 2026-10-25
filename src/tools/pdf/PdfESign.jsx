@@ -1,13 +1,5 @@
 import { useState } from 'react';
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
+import { downloadBlob } from '../../lib/toolFormat';
 
 export default function PdfESign() {
   const [file, setFile] = useState(null);

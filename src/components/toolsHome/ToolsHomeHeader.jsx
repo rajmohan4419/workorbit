@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, Sun, Moon, ArrowRight, BriefcaseBusiness, Coins, Code2, Calculator } from 'lucide-react';
+import { Search, Menu, X, Sun, Moon, ArrowRight, BriefcaseBusiness, Coins, Code2, Calculator, Sparkles } from 'lucide-react';
 import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
+import { usePro } from '../../context/ProContext';
 
 const categories = [
   { name: 'Finance', label: 'Finance', icon: Coins },
@@ -13,6 +14,7 @@ const categories = [
 
 export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery }) {
   const navigate = useNavigate();
+  const { isPro, daysRemaining, openProModal } = usePro();
   const [isDark, setIsDark] = useState(() => {
     try {
       return localStorage.getItem('orbitboard:theme') === 'dark' || document.documentElement.classList.contains('dark');
@@ -115,6 +117,21 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
 
           {/* Desktop Search Trigger & Controls (Right) */}
           <div className="hidden sm:flex items-center gap-3">
+            {isPro ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
+                ⚡ Pro ({daysRemaining}d)
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openProModal({ toolName: 'All Tools', actionName: 'Pro Access' })}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold shadow-xs transition"
+              >
+                <Sparkles size={13} />
+                <span>Pro • ₹19</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
@@ -138,6 +155,17 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
 
           {/* Mobile Actions: Search trigger, Theme toggle & Hamburger menu */}
           <div className="flex sm:hidden items-center gap-1.5">
+            {!isPro && (
+              <button
+                type="button"
+                onClick={() => openProModal({ toolName: 'All Tools', actionName: 'Pro Access' })}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[36px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[11px] font-bold shadow-xs"
+              >
+                <Sparkles size={11} />
+                <span>₹19</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setSearchOpen(true)}

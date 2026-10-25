@@ -10,6 +10,11 @@ export const PRODUCTS = {
     currency: 'INR',
     amountsInr: [100, 500, 1000],
   },
+  'pro-monthly': {
+    title: 'OrbitBoard Pro - 1 Month Access',
+    currency: 'INR',
+    amountsInr: [19],
+  },
   'coffee-orbitboard': {
     title: 'Buy me a Coffee',
     currency: 'INR',
