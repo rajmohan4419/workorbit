@@ -696,6 +696,20 @@ export const TOOL_CONTENT = {
       ['Does this calculator decide the GST rate?', 'No. Use the rate applicable to your transaction and seek professional advice where needed.']
     ]
   },
+  'compound-interest-calculator': {
+    intro: 'See how a lump sum grows when interest is earned on both the principal and the interest already added.',
+    keywords: 'compound interest calculator, compound interest calculator India, FD compound interest',
+    how: [
+      'Enter the initial amount you plan to invest.',
+      'Enter the expected annual interest rate.',
+      'Enter the time period in years and choose how often interest is compounded.'
+    ],
+    faq: [
+      ['What is compound interest?', 'Compound interest is interest calculated on the principal plus any interest already earned, so growth accelerates over time.'],
+      ['Does more frequent compounding always help?', 'More frequent compounding increases the effective annual rate, but the gain shrinks as the frequency rises.'],
+      ['Are the results guaranteed?', 'No. The calculator assumes a fixed rate. Actual returns on savings, deposits and investments can vary.']
+    ]
+  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',

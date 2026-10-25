@@ -1,7 +1,7 @@
 import { useSearchParams, Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Calculator, FileText, Image, Code2 } from 'lucide-react';
-import { TOOLS } from '../data/toolCatalog';
+import { LISTED_TOOLS } from '../data/toolCatalog';
 import { logEvent } from '../lib/telemetry';
 
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
@@ -84,23 +84,23 @@ export default function ToolsHome() {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     const tokens = q.split(/\s+/).filter(Boolean);
-    const direct = TOOLS.filter(tool => {
+    const direct = LISTED_TOOLS.filter(tool => {
       const haystack = [tool.name, tool.description, tool.category, tool.slug, tool.slug.replace(/-/g, ' ')].join(' ').toLowerCase();
       return tokens.every(token => haystack.includes(token));
     });
     const intentSlugs = intentMap.filter(group => group.terms.some(term => q.includes(term))).flatMap(group => group.slugs);
-    const merged = [...direct, ...intentSlugs.map(slug => TOOLS.find(t => t.slug === slug))].filter(Boolean);
+    const merged = [...direct, ...intentSlugs.map(slug => LISTED_TOOLS.find(t => t.slug === slug))].filter(Boolean);
     return [...new Map(merged.map(tool => [tool.slug, tool])).values()].slice(0, 8);
   }, [query]);
 
-  const categoryTools = useMemo(() => category ? TOOLS.filter(tool => tool.category === category) : [], [category]);
-  const featuredTools = featuredSlugs.map(slug => TOOLS.find(tool => tool.slug === slug)).filter(Boolean);
+  const categoryTools = useMemo(() => category ? LISTED_TOOLS.filter(tool => tool.category === category) : [], [category]);
+  const featuredTools = featuredSlugs.map(slug => LISTED_TOOLS.find(tool => tool.slug === slug)).filter(Boolean);
   const catalogTools = useMemo(() => {
-    if (category) return TOOLS.filter(tool => tool.category === category);
-    return TOOLS.slice(0, 9);
+    if (category) return LISTED_TOOLS.filter(tool => tool.category === category);
+    return LISTED_TOOLS.slice(0, 9);
   }, [category]);
 
-  const recentTools = recent.map(slug => TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
+  const recentTools = recent.map(slug => LISTED_TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
   const showExplore = !query.trim() && !category;
 
   return (
