@@ -105,6 +105,12 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
                 {cat.label}
               </button>
             ))}
+            <a
+              href="/#support"
+              className="px-3.5 py-2 min-h-[44px] rounded-xl hover:bg-violet-50 dark:hover:bg-violet-900/30 transition text-violet-700 dark:text-violet-400 font-semibold"
+            >
+              Support
+            </a>
           </nav>
 
           {/* Desktop Search Trigger & Controls (Right) */}
@@ -212,6 +218,14 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
                     <span>Full Tool Catalogue</span>
                     <ArrowRight size={16} />
                   </Link>
+                  <a
+                    href="/#support"
+                    onClick={() => setDrawerOpen(false)}
+                    className="flex items-center justify-between px-4 py-3 min-h-[44px] rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50/60 dark:bg-violet-950/40 text-sm font-semibold text-violet-800 dark:text-violet-300"
+                  >
+                    <span>Support & Pro</span>
+                    <ArrowRight size={16} />
+                  </a>
                 </div>
               </div>
             </div>

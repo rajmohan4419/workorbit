@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText } from 'lucide-react';
-import { RazorpayCheckout } from '../RazorpayCheckout';
+import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText, Heart } from 'lucide-react';
+import { RazorpayPaymentButton } from '../RazorpayPaymentButton';
 
 export function PrivacySection() {
   return (
@@ -29,7 +29,7 @@ export function PrivacySection() {
 
 export function SupportCheckoutSection() {
   return (
-    <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
+    <section id="support" className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="max-w-xl">
           <p className="text-xs font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">
@@ -39,17 +39,11 @@ export function SupportCheckoutSection() {
             Upgrade to OrbitBoard Pro
           </h2>
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-            Support fast, privacy-first web utilities. Get instant access to Pro workspace tools, priority serverless processing, and early access features.
+            Support fast, privacy-first web utilities. Help keep OrbitBoard free, independent, and continuously improving.
           </p>
         </div>
-        <div className="shrink-0 w-full lg:w-auto flex justify-center">
-          <RazorpayCheckout
-            productId="support-orbitboard"
-            amount={500}
-            title="OrbitBoard Pro Support"
-            description="Unlock Pro features and support fast web tools"
-            showAmountSelector={true}
-          />
+        <div className="shrink-0 w-full lg:w-auto flex justify-center items-center">
+          <RazorpayPaymentButton buttonId="pl_Ts1A8URfk03elY" />
         </div>
       </div>
     </section>
@@ -90,6 +84,7 @@ export function ToolsHomeFooter() {
   ];
 
   const utilityLinks = [
+    { label: 'Support & Pro', path: '/#support', icon: Heart },
     { label: 'Privacy Policy', path: '#privacy', icon: ShieldCheck },
     { label: 'Terms of Service', path: '#terms', icon: FileText },
     { label: 'Sitemap', path: '/tools', icon: Globe },
