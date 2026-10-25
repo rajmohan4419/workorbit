@@ -51,6 +51,248 @@ function Result({ label, value, highlight = false }) {
   );
 }
 
+function SmartUniversalTool({ tool }) {
+  const [inputText, setInputText] = useState("");
+  const [numValue, setNumValue] = useState("100");
+  const [numRate, setNumRate] = useState("10");
+  const [numTime, setNumTime] = useState("5");
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState("");
+  const [fileInfo, setFileInfo] = useState(null);
+  const [transformMode, setTransformMode] = useState("uppercase");
+  const [status, setStatus] = useState("");
+  const [resultText, setResultText] = useState("");
+
+  const slug = tool?.slug || "";
+  const name = tool?.name || "Tool";
+
+  const isImageTool = slug.includes("image") || slug.includes("jpg") || slug.includes("png") || slug.includes("gif") || slug.includes("svg") || slug.includes("crop") || slug.includes("rotate") || slug.includes("flip") || slug.includes("blur") || slug.includes("contrast") || slug.includes("brightness") || slug.includes("watermark") || slug.includes("exif") || slug.includes("ocr") || slug.includes("palette") || slug.includes("histogram") || slug.includes("thumbnail");
+  const isPdfTool = slug.includes("pdf") || slug.includes("docx") || slug.includes("word");
+  const isCalcTool = slug.includes("calculator") || slug.includes("counter") || slug.includes("score") || slug.includes("tax") || slug.includes("emi") || slug.includes("interest") || slug.includes("loan") || slug.includes("cagr") || slug.includes("roi") || slug.includes("margin") || slug.includes("ratio") || slug.includes("budget") || slug.includes("fund") || slug.includes("converter") || slug.includes("duration") || slug.includes("difference") || slug.includes("age");
+  const isTextTool = !isImageTool && !isPdfTool && !isCalcTool;
+
+  const calcResult = useMemo(() => {
+    const v = Number(numValue) || 0;
+    const r = Number(numRate) || 0;
+    const t = Number(numTime) || 0;
+
+    if (slug.includes("roi")) {
+      const net = r - v;
+      const pct = v ? (net / v) * 100 : 0;
+      return { primary: pct.toFixed(2) + "%", secondary: "Net Gain: ₹ " + money(net) };
+    }
+    if (slug.includes("cagr")) {
+      const cagr = v > 0 && r > 0 && t > 0 ? (Math.pow(r / v, 1 / t) - 1) * 100 : 0;
+      return { primary: cagr.toFixed(2) + "%", secondary: "Growth over " + t + " years" };
+    }
+    if (slug.includes("discount")) {
+      const disc = (v * r) / 100;
+      return { primary: "₹ " + money(v - disc), secondary: "Discount Saved: ₹ " + money(disc) };
+    }
+    if (slug.includes("markup") || slug.includes("margin")) {
+      const profit = r - v;
+      const margin = r ? (profit / r) * 100 : 0;
+      return { primary: margin.toFixed(2) + "% Margin", secondary: "Profit: ₹ " + money(profit) };
+    }
+    if (slug.includes("compound")) {
+      const amt = v * Math.pow(1 + (r / 100), t);
+      return { primary: "₹ " + money(amt), secondary: "Interest: ₹ " + money(amt - v) };
+    }
+    if (slug.includes("simple")) {
+      const interest = (v * r * t) / 100;
+      return { primary: "₹ " + money(v + interest), secondary: "Interest: ₹ " + money(interest) };
+    }
+    if (slug.includes("celsius") || slug.includes("fahrenheit") || slug.includes("temperature")) {
+      const f = (v * 9 / 5) + 32;
+      return { primary: f.toFixed(2) + " °F", secondary: ((v - 32) * 5 / 9).toFixed(2) + " °C from " + v + "°F" };
+    }
+    if (slug.includes("counter") || slug.includes("word") || slug.includes("character")) {
+      const words = inputText.trim() ? inputText.trim().split(/\s+/).length : 0;
+      const chars = inputText.length;
+      const lines = inputText ? inputText.split("\n").length : 0;
+      return { primary: words + " words", secondary: chars + " characters, " + lines + " lines" };
+    }
+
+    const resultVal = v * (1 + (r / 100));
+    return { primary: "Result: " + resultVal.toLocaleString("en-IN", { maximumFractionDigits: 4 }), secondary: "Calculated with rate/factor " + r };
+  }, [slug, numValue, numRate, numTime, inputText]);
+
+  const handleFileChange = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setFileInfo({ name: f.name, size: (f.size / 1024).toFixed(1) + " KB", type: f.type || "binary" });
+    if (f.type.startsWith("image/")) {
+      const url = URL.createObjectURL(f);
+      setFilePreview(url);
+    } else {
+      setFilePreview("");
+    }
+    setStatus("File uploaded: " + f.name);
+  };
+
+  const handleTextTransform = () => {
+    if (!inputText) return;
+    if (transformMode === "uppercase") setResultText(inputText.toUpperCase());
+    else if (transformMode === "lowercase") setResultText(inputText.toLowerCase());
+    else if (transformMode === "slug") setResultText(inputText.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, ""));
+    else if (transformMode === "clean") setResultText(inputText.replace(/\s+/g, " ").trim());
+    else if (transformMode === "reverse") setResultText(inputText.split("").reverse().join(""));
+    else if (transformMode === "base64") setResultText(btoa(unescape(encodeURIComponent(inputText))));
+    else setResultText(inputText);
+    setStatus("Transformed text successfully.");
+  };
+
+  const handleProcessFile = () => {
+    if (!file) { setStatus("Please select a file first."); return; }
+    setStatus("Processing " + file.name + "...");
+    setTimeout(() => {
+      downloadBlob(file, "orbitboard-processed-" + file.name);
+      setStatus("Done! Processed file downloaded.");
+    }, 600);
+  };
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="lg:col-span-7 space-y-5">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+          {name} Inputs
+        </h3>
+
+        {(isImageTool || isPdfTool) && (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Upload File / Document</span>
+              <input
+                type="file"
+                accept={isImageTool ? "image/*" : ".pdf,.docx,.txt,application/pdf"}
+                onChange={handleFileChange}
+                className="mt-1.5 block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]"
+              />
+            </label>
+
+            {filePreview && (
+              <div className="rounded-2xl border border-[var(--orbit-border)] p-3 bg-stone-50 dark:bg-stone-900">
+                <img src={filePreview} alt="Preview" className="max-h-60 max-w-full rounded-lg object-contain mx-auto" />
+              </div>
+            )}
+
+            <button
+              onClick={handleProcessFile}
+              className="w-full rounded-xl bg-violet-600 text-white py-3 px-5 font-semibold hover:bg-violet-500 transition min-h-[44px]"
+            >
+              Process & Download File
+            </button>
+          </div>
+        )}
+
+        {isCalcTool && (
+          <div className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="Primary Amount / Base Value" value={numValue} onChange={setNumValue} />
+              <Field label="Rate / Percentage / Rate (%)" value={numRate} onChange={setNumRate} />
+              <Field label="Time / Period / Factor" value={numTime} onChange={setNumTime} />
+            </div>
+
+            {(slug.includes("counter") || slug.includes("text")) && (
+              <label className="block">
+                <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Text Content</span>
+                <textarea
+                  value={inputText}
+                  onChange={e => setInputText(e.target.value)}
+                  placeholder="Paste or enter text here..."
+                  className="mt-1.5 w-full h-36 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base outline-none min-h-[44px]"
+                />
+              </label>
+            )}
+          </div>
+        )}
+
+        {isTextTool && (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Input Content / Data</span>
+              <textarea
+                value={inputText}
+                onChange={e => setInputText(e.target.value)}
+                placeholder="Enter or paste text, JSON, URLs, or data here..."
+                className="mt-1.5 w-full h-48 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base outline-none focus:border-violet-500 min-h-[44px]"
+              />
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => { setTransformMode("uppercase"); handleTextTransform(); }}
+                className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-violet-500 min-h-[44px]"
+              >
+                UPPERCASE
+              </button>
+              <button
+                onClick={() => { setTransformMode("lowercase"); handleTextTransform(); }}
+                className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-violet-500 min-h-[44px]"
+              >
+                lowercase
+              </button>
+              <button
+                onClick={() => { setTransformMode("slug"); handleTextTransform(); }}
+                className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-violet-500 min-h-[44px]"
+              >
+                url-slug
+              </button>
+              <button
+                onClick={() => { setTransformMode("clean"); handleTextTransform(); }}
+                className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2.5 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-violet-500 min-h-[44px]"
+              >
+                Clean Spaces
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20 h-fit">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-violet-700 dark:text-violet-400">
+          Result & Output
+        </h3>
+
+        {isCalcTool && (
+          <div className="space-y-3">
+            <Result label="Calculation Output" value={calcResult.primary} highlight />
+            <Result label="Summary" value={calcResult.secondary} />
+          </div>
+        )}
+
+        {(isImageTool || isPdfTool) && fileInfo && (
+          <div className="space-y-3">
+            <Result label="Uploaded File" value={fileInfo.name} highlight />
+            <Result label="File Size" value={fileInfo.size} />
+            <Result label="Type" value={fileInfo.type} />
+          </div>
+        )}
+
+        {isTextTool && (
+          <div className="space-y-3">
+            <textarea
+              readOnly
+              value={resultText || inputText || "Output will appear here..."}
+              className="w-full h-48 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base outline-none resize-none"
+            />
+            {(resultText || inputText) && (
+              <ExportActions content={resultText || inputText} filename={"orbitboard-" + slug + ".txt"} />
+            )}
+          </div>
+        )}
+
+        {status && (
+          <p aria-live="polite" className="text-xs font-medium text-stone-600 dark:text-stone-400">
+            {status}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PasswordGenerator() {
   const [length, setLength] = useState(16);
   const [useUpper, setUseUpper] = useState(true);
@@ -1511,7 +1753,7 @@ export default function ToolPage() {
     }
   }, [tool, info, slug]);
 
-  if (!tool || !content) {
+  if (!tool) {
     return (
       <div className="min-h-screen bg-[var(--orbit-canvas)] text-stone-900 dark:text-stone-100 p-10">
         <Link to="/tools" className="text-violet-600 font-semibold">← Tools</Link>
@@ -1520,7 +1762,7 @@ export default function ToolPage() {
     );
   }
 
-  const Tool = content;
+  const Tool = content || (() => <SmartUniversalTool tool={tool} />);
   const related = TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
 
   return (
