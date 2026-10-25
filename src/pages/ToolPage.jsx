@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState, useRef } from 'react';
 import { ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronDown, ChevronRight } from 'lucide-react';
-import { TOOLS } from '../data/tools';
+import { TOOLS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
