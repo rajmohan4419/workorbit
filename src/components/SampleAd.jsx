@@ -1,4 +1,4 @@
-import React from 'react';
+// Remove: import React from 'react';
 
 const OFFERS = {
   finance: {
@@ -6,21 +6,21 @@ const OFFERS = {
     headline: 'Optimize your AY 2026–27 Tax Return',
     subtext: 'File in 3 minutes or get an expert CA consultation.',
     cta: 'File on ClearTax →',
-    link: 'https://cleartax.in/?ref=orbitboard', // Insert affiliate link
+    link: 'https://cleartax.in/?ref=orbitboard',
   },
   career: {
     badge: 'Career Growth',
     headline: 'Benchmarking your compensation?',
     subtext: 'Get an ATS-optimized resume and live compensation data.',
     cta: 'Review Resume →',
-    link: 'https://topmate.io/?ref=orbitboard', // Insert affiliate link
+    link: 'https://topmate.io/?ref=orbitboard',
   },
   default: {
     badge: '100% Free & Local',
     headline: 'Processed locally in your browser',
     subtext: 'No servers, zero data storage. Keep OrbitBoard running fast.',
     cta: 'Buy me a Coffee (₹49) ☕',
-    link: 'https://rzp.io/l/orbitboard-tip', // Razorpay link or UPI modal
+    link: 'https://rzp.io/l/orbitboard-tip',
   }
 };
 
