@@ -61,5 +61,7 @@ describe('rateMetric', () => {
     expect(rateMetric('ltvToCac', 3.2)).toBe('good');
     expect(rateMetric('paybackMonths', 20)).toBe('weak');
     expect(rateMetric('grr', null)).toBe('na');
+    expect(rateMetric('coverage', 3.2)).toBe('good');
+    expect(rateMetric('coverage', 1.5)).toBe('weak');
   });
 });

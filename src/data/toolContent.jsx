@@ -780,6 +780,34 @@ export const TOOL_CONTENT = {
       ['Why does LTV show a dash?', 'Lifetime value depends on churn. If no customers churned, the implied lifetime is infinite, so the calculator does not show a number.']
     ]
   },
+  'sales-pipeline-forecaster': {
+    intro: 'Estimate the revenue your open deals are likely to produce, and how far you are from your target.',
+    keywords: 'sales pipeline calculator, weighted pipeline calculator, pipeline coverage ratio, sales forecast calculator, win rate calculator',
+    how: [
+      'For each stage, enter the number of open deals, the average deal value and your estimated win rate.',
+      'Enter your sales target for the period.',
+      'Review the weighted pipeline, coverage and the gap. Update the win rates as deals move forward.'
+    ],
+    faq: [
+      ['What is a weighted pipeline?', 'A weighted pipeline multiplies each deal by the chance it closes, so early-stage deals count for less than late-stage ones.'],
+      ['What is pipeline coverage?', 'Coverage is total open pipeline divided by target. A common rule of thumb is about 3x, but the right level depends on your win rates and sales cycle.'],
+      ['Where should win rates come from?', 'Use your own history by stage where you have it. Rates from general benchmarks are only a starting point.']
+    ]
+  },
+  'saas-pricing-calculator': {
+    intro: 'Compare how per-seat, flat, tiered and usage-based pricing would bill a typical customer.',
+    keywords: 'SaaS pricing calculator, per seat pricing calculator, tiered pricing calculator, usage based pricing, annual discount calculator SaaS',
+    how: [
+      'Enter the seats and customer count for a typical customer, along with the annual discount you offer.',
+      'Enter the price for each model: per seat, flat plan, the two volume tiers, and usage pricing.',
+      'Compare the monthly price, annual price and MRR for each model, then choose the one that matches how customers use the product.'
+    ],
+    faq: [
+      ['Which pricing model is best for SaaS?', 'There is no single best model. Per-seat pricing suits products used by many people, flat plans suit small teams, and usage pricing suits products where consumption varies.'],
+      ['How does graduated tier pricing work?', 'Seats in the first tier are billed at the first price, and seats above it are billed at the later price. Only the seats in each band pay that band\'s rate.'],
+      ['Does the annual discount change MRR?', 'No. MRR is the monthly figure, so it is calculated before any annual discount. The annual price shows what a customer pays for a year.']
+    ]
+  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',

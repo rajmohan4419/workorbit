@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Field } from '../../components/tools/ToolFields';
 import { money } from '../../lib/toolFormat';
 import { computeSaasRetention, rateMetric } from './saasRetention';
+import { computePipeline } from './salesPipeline';
+import { computeSaasPricing } from './saasPricing';
 
 const RATING_TEXT = {
   good: 'Healthy',
@@ -88,3 +90,118 @@ export function SaasRetention() {
   );
 }
 
+const DEFAULT_STAGES = [
+  { name: 'Lead', deals: '20', avgValue: '5000', winRatePct: '10' },
+  { name: 'Qualified', deals: '10', avgValue: '12000', winRatePct: '25' },
+  { name: 'Proposal', deals: '5', avgValue: '25000', winRatePct: '50' },
+  { name: 'Negotiation', deals: '2', avgValue: '40000', winRatePct: '75' },
+];
+
+export function SalesPipelineForecaster() {
+  const [stages, setStages] = useState(DEFAULT_STAGES);
+  const [quota, setQuota] = useState('200000');
+  const updateStage = (index, key, value) =>
+    setStages(prev => prev.map((s, i) => (i === index ? { ...s, [key]: value } : s)));
+
+  const r = computePipeline({ stages, quota });
+  const fmt1 = (n) => (n === null ? null : Number(n.toFixed(1)).toLocaleString('en-IN'));
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="lg:col-span-7 space-y-5">
+        {stages.map((stage, i) => (
+          <section key={stage.name} className="rounded-2xl border border-[var(--orbit-border)] p-4 space-y-3">
+            <h3 className="text-sm font-bold text-stone-700 dark:text-stone-200">{stage.name}</h3>
+            <div className="grid sm:grid-cols-3 gap-3">
+              <Field label="Open deals" value={stage.deals} onChange={v => updateStage(i, 'deals', v)} />
+              <Field label="Average deal value" value={stage.avgValue} onChange={v => updateStage(i, 'avgValue', v)} />
+              <Field label="Win rate (%)" value={stage.winRatePct} onChange={v => updateStage(i, 'winRatePct', v)} />
+            </div>
+          </section>
+        ))}
+        <Field label="Sales target (quota) for the period" value={quota} onChange={setQuota} />
+      </div>
+
+      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
+        <Rated label="Weighted pipeline" metric="none" rawValue={null} value={money(r.weightedValue)} />
+        <Rated label="Total pipeline" metric="none" rawValue={null} value={money(r.totalValue)} />
+        <Rated label="Pipeline coverage" metric="coverage" rawValue={r.coverage} value={fmt1(r.coverage)} suffix="x" />
+        <Rated label="Expected deals won" metric="none" rawValue={null} value={fmt1(r.expectedDeals)} />
+        <Rated label="Gap to target" metric="none" rawValue={null} value={r.gap === null ? null : money(r.gap)} />
+        <p className="px-1 text-xs leading-5 text-stone-600 dark:text-stone-300">
+          Many sales teams aim for about 3x coverage of their target in open pipeline. Win rates are your own estimates, so treat results as a planning guide.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PricingCard({ title, model, count }) {
+  return (
+    <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-5 py-4 space-y-2">
+      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">{title}</h4>
+      <div className="flex justify-between text-sm text-stone-600 dark:text-stone-300"><span>Monthly per customer</span><span className="font-semibold text-stone-900 dark:text-stone-100">{money(model.monthly)}</span></div>
+      <div className="flex justify-between text-sm text-stone-600 dark:text-stone-300"><span>Annual per customer</span><span className="font-semibold text-stone-900 dark:text-stone-100">{money(model.annual)}</span></div>
+      <div className="flex justify-between text-sm text-stone-600 dark:text-stone-300"><span>MRR for {count} customers</span><span className="font-semibold text-stone-900 dark:text-stone-100">{money(model.mrr)}</span></div>
+    </div>
+  );
+}
+
+export function SaasPricing() {
+  const [v, setV] = useState({
+    seats: '25', customers: '100', perSeatPrice: '800', flatPrice: '15000',
+    tier1Seats: '10', tier1Price: '1000', tier2Price: '600',
+    usageUnits: '150000', includedUnits: '50000', usagePer1000: '20',
+    annualDiscountPct: '10',
+  });
+  const set = (key) => (value) => setV(prev => ({ ...prev, [key]: value }));
+  const r = computeSaasPricing(v);
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="lg:col-span-6 space-y-5">
+        <section className="space-y-4">
+          <h3 className="text-sm font-bold text-stone-700 dark:text-stone-200">Typical customer</h3>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Field label="Seats per customer" value={v.seats} onChange={set('seats')} />
+            <Field label="Customers" value={v.customers} onChange={set('customers')} />
+            <Field label="Annual discount (%)" value={v.annualDiscountPct} onChange={set('annualDiscountPct')} />
+          </div>
+        </section>
+        <section className="space-y-4">
+          <h3 className="text-sm font-bold text-stone-700 dark:text-stone-200">Per seat and flat</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Price per seat per month" value={v.perSeatPrice} onChange={set('perSeatPrice')} />
+            <Field label="Flat plan price per month" value={v.flatPrice} onChange={set('flatPrice')} />
+          </div>
+        </section>
+        <section className="space-y-4">
+          <h3 className="text-sm font-bold text-stone-700 dark:text-stone-200">Volume tiers</h3>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Field label="Seats in tier one" value={v.tier1Seats} onChange={set('tier1Seats')} />
+            <Field label="Tier one price per seat" value={v.tier1Price} onChange={set('tier1Price')} />
+            <Field label="Later seats price" value={v.tier2Price} onChange={set('tier2Price')} />
+          </div>
+        </section>
+        <section className="space-y-4">
+          <h3 className="text-sm font-bold text-stone-700 dark:text-stone-200">Usage</h3>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Field label="Units used per month" value={v.usageUnits} onChange={set('usageUnits')} />
+            <Field label="Included units" value={v.includedUnits} onChange={set('includedUnits')} />
+            <Field label="Price per 1,000 units" value={v.usagePer1000} onChange={set('usagePer1000')} />
+          </div>
+        </section>
+      </div>
+
+      <div className="lg:col-span-6 space-y-3">
+        <PricingCard title="Per seat" model={r.perSeat} count={v.customers} />
+        <PricingCard title="Flat plan" model={r.flat} count={v.customers} />
+        <PricingCard title="Volume tiers" model={r.tiered} count={v.customers} />
+        <PricingCard title="Usage based" model={r.usage} count={v.customers} />
+        <p className="px-1 text-xs leading-5 text-stone-600 dark:text-stone-300">
+          Figures are for one typical customer profile. Compare the models by the revenue each gives you and how they feel to the buyer. Annual prices include the discount you enter.
+        </p>
+      </div>
+    </div>
+  );
+}

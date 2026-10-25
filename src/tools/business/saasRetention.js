@@ -80,6 +80,8 @@ export function rateMetric(metric, value) {
       return value >= 90 ? 'good' : value >= 80 ? 'ok' : 'weak';
     case 'ltvToCac':
       return value >= 3 ? 'good' : value >= 1 ? 'ok' : 'weak';
+    case 'coverage':
+      return value >= 3 ? 'good' : value >= 2 ? 'ok' : 'weak';
     case 'paybackMonths':
       return value <= 12 ? 'good' : value <= 18 ? 'ok' : 'weak';
     default:

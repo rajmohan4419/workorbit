@@ -345,6 +345,8 @@ export const TOOLS = [
   { slug: "notice-period-calculator", name: "Notice Period Calculator", description: "Estimate last working date from notice rules utility directly in your browser.", category: "Everyday", icon: "🧮", status: "planned" },
   { slug: "date-add-subtract-tool", name: "Date Add/Subtract Tool", description: "Add days, weeks or months to a date utility directly in your browser.", category: "Everyday", icon: "🧮", status: "planned" },
   { slug: "saas-retention-calculator", name: "SaaS Retention Calculator", description: "Work out net and gross revenue retention, churn, LTV, CAC and CAC payback from your own numbers.", category: "Business", icon: "📈", status: "live" },
+  { slug: "sales-pipeline-forecaster", name: "Sales Pipeline Forecaster", description: "Weight your open deals by stage and win rate to see expected revenue, coverage and the gap to target.", category: "Business", icon: "📊", status: "live" },
+  { slug: "saas-pricing-calculator", name: "SaaS Pricing Calculator", description: "Compare per-seat, flat, tiered and usage pricing for a typical customer, with annual discounts and MRR.", category: "Business", icon: "🏷️", status: "live" },
 ];
 
 export const LISTED_TOOLS = TOOLS.filter(tool => tool.status === 'live');
