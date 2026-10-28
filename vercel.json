@@ -38,5 +38,18 @@
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.orbitboard.in"
+        }
+      ],
+      "destination": "https://orbitboard.in/:path*",
+      "permanent": true
+    }
   ]
 }
