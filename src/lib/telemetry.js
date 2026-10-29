@@ -15,6 +15,7 @@ function getVisitorId() {
 }
 
 export async function recordVisit(path = window.location.pathname) {
+  if (!supabase) return null;
   const visitorId = getVisitorId();
   if (!visitorId) return null;
 
@@ -32,6 +33,7 @@ export async function recordVisit(path = window.location.pathname) {
 }
 
 export async function logEvent(eventName, metadata = {}, level = 'info') {
+  if (!supabase) return;
   const visitorId = getVisitorId();
   try {
     const { error } = await supabase.rpc('log_app_event', {
