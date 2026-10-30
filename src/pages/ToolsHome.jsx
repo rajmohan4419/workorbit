@@ -1,6 +1,6 @@
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Calculator, FileText, Image, Code2 } from 'lucide-react';
+import { Calculator, FileText, Image, Code2 } from 'lucide-react';
 import { LISTED_TOOLS } from '../data/toolCatalog';
 import { logEvent } from '../lib/telemetry';
 
@@ -8,7 +8,6 @@ import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
 import { CategoryExplorer } from '../components/toolsHome/CategoryExplorer';
 import { RecentToolsSection } from '../components/toolsHome/RecentToolsSection';
-import { ToolCard, MicroCard } from '../components/toolsHome/ToolCard';
 import { PrivacySection, CatalogCalloutSection, SupportCheckoutSection, ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 
 const intentMap = [
@@ -22,8 +21,6 @@ const intentMap = [
   { terms: ['convert', 'converter'], slugs: ['length-converter', 'weight-converter', 'temperature-converter', 'time-converter', 'timezone-converter'] },
   { terms: ['percentage', 'percent', '%'], slugs: ['percentage'] }
 ];
-
-const featuredSlugs = ['ctc-to-inhand', 'emi', 'pdf-workspace', 'jpg-to-png', 'json-formatter', 'percentage', 'gratuity-calculator', 'timezone-converter'];
 
 const categoryLinks = [
   { label: 'Documents', detail: 'PDF and file tools', icon: FileText, query: 'PDF' },
@@ -80,6 +77,14 @@ export default function ToolsHome() {
     logEvent('category.explored', { category: name });
   };
 
+  const handleQueryChange = (val) => {
+    setQuery(val);
+    if (category) {
+      setCategory(null);
+      setSearchParams(val.trim() ? { q: val } : {});
+    }
+  };
+
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -94,12 +99,6 @@ export default function ToolsHome() {
   }, [query]);
 
   const categoryTools = useMemo(() => category ? LISTED_TOOLS.filter(tool => tool.category === category) : [], [category]);
-  const featuredTools = featuredSlugs.map(slug => LISTED_TOOLS.find(tool => tool.slug === slug)).filter(Boolean);
-  const catalogTools = useMemo(() => {
-    if (category) return LISTED_TOOLS.filter(tool => tool.category === category);
-    return LISTED_TOOLS.slice(0, 9);
-  }, [category]);
-
   const recentTools = recent.map(slug => LISTED_TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
   const showExplore = !query.trim() && !category;
 
@@ -112,64 +111,13 @@ export default function ToolsHome() {
         <ToolsHomeHero
           query={query}
           setQuery={setQuery}
+          onQueryChange={handleQueryChange}
           category={category}
           setCategory={chooseCategory}
           searchResults={searchResults}
           addRecent={addRecent}
           logEvent={logEvent}
         />
-
-        {/* Zone 2: Featured / Popular Micro-cards Grid (Compact Carousel/Grid on Mobile) */}
-        {!query.trim() && (
-          <section className="mx-auto max-w-6xl pb-8 pt-4">
-            <div className="mb-4 flex items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">Popular Workflows</p>
-                <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">
-                  Frequently used utilities
-                </h2>
-              </div>
-              <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/50 transition">
-                View All <ArrowRight size={15} />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {featuredTools.map(tool => (
-                <MicroCard key={tool.slug} tool={tool} onUse={addRecent} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Zone 3: Standard Cards Grid Section with Category Header & View All link */}
-        <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
-          <div className="mb-6 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">
-                {category ? `${category} Tools` : 'Catalog Essentials'}
-              </p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">
-                {category ? `Explore ${category} Utilities` : 'Standard Work Tools'}
-              </h2>
-            </div>
-            <Link to="/tools" className="inline-flex items-center gap-1 min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/50 transition">
-              View All <ArrowRight size={15} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {catalogTools.map(tool => (
-              <ToolCard
-                key={tool.slug}
-                tool={tool}
-                onUse={addRecent}
-                favorite={favorites.includes(tool.slug)}
-                onFavorite={toggleFavorite}
-              />
-            ))}
-          </div>
-        </section>
 
         {/* Category Quick Selector Cards */}
         {showExplore && (
@@ -183,7 +131,7 @@ export default function ToolsHome() {
                 <button
                   key={label}
                   type="button"
-                  onClick={() => suggestedCategory ? chooseCategory(suggestedCategory) : setQuery(suggestedQuery)}
+                  onClick={() => suggestedCategory ? chooseCategory(suggestedCategory) : handleQueryChange(suggestedQuery)}
                   className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 text-left transition.5 hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-xs"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300">

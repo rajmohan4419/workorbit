@@ -10,7 +10,7 @@ const categoryChips = [
   { name: 'Everyday', label: 'Everyday' },
 ];
 
-export function ToolsHomeHero({ query, setQuery, category, setCategory, searchResults, addRecent, logEvent }) {
+export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCategory, searchResults, addRecent, logEvent }) {
   const activeCategory = category || 'All';
 
   const handleChipClick = (catName) => {
@@ -19,7 +19,8 @@ export function ToolsHomeHero({ query, setQuery, category, setCategory, searchRe
     } else {
       setCategory(catName);
     }
-    setQuery('');
+    if (onQueryChange) onQueryChange('');
+    else setQuery('');
     if (logEvent) logEvent('category.chip_clicked', { category: catName });
   };
 
@@ -46,8 +47,12 @@ export function ToolsHomeHero({ query, setQuery, category, setCategory, searchRe
             id="tool-search"
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value);
-              setCategory(null);
+              const val = e.target.value;
+              if (onQueryChange) {
+                onQueryChange(val);
+              } else {
+                setQuery(val);
+              }
             }}
             placeholder="Search tools, e.g. PDF, salary, EMI, JSON, image…"
             className="w-full border-0 bg-transparent text-base text-stone-900 dark:text-stone-100 outline-none placeholder:text-stone-400 focus:ring-0 min-h-[44px]"
@@ -55,7 +60,10 @@ export function ToolsHomeHero({ query, setQuery, category, setCategory, searchRe
           {query && (
             <button
               type="button"
-              onClick={() => setQuery('')}
+              onClick={() => {
+                if (onQueryChange) onQueryChange('');
+                else setQuery('');
+              }}
               className="shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition min-h-[44px] flex items-center justify-center"
             >
               Clear

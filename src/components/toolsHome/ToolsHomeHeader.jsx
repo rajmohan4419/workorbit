@@ -8,7 +8,7 @@ import {
 import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
 import { OrbitBoardIcon } from '../brand/OrbitBoardIcon';
-import { QuickAccessModal } from './QuickAccessModal';
+import { QuickAccessSidebar } from './QuickAccessModal';
 
 const categories = [
   { name: 'Finance', label: 'Finance & Money', icon: Coins, desc: 'Taxes, EMI, SIP, interest & currency' },
@@ -551,7 +551,7 @@ export function ToolsHomeHeader({ visitorCount, onSelectCategory, onSearchQuery 
         </div>
       )}
 
-      <QuickAccessModal isOpen={quickAccessOpen} onClose={() => setQuickAccessOpen(false)} />
+      <QuickAccessSidebar isOpen={quickAccessOpen} onClose={() => setQuickAccessOpen(false)} />
     </>
   );
 }

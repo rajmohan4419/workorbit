@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, Star, X, Search, ArrowRight, Sparkles } from 'lucide-react';
+import { Zap, Star, X, Search, ArrowRight, Sparkles, RotateCcw } from 'lucide-react';
 import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
 
@@ -18,9 +18,10 @@ const TOP_FEATURED_SLUGS = [
   'notice-period'
 ];
 
-export function QuickAccessModal({ isOpen, onClose }) {
+export function QuickAccessSidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const searchInputRef = useRef(null);
   const [pinnedSlugs, setPinnedSlugs] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('orbitboard:quickaccess') || 'null');
@@ -36,13 +37,23 @@ export function QuickAccessModal({ isOpen, onClose }) {
     } catch { void 0; }
   }, [pinnedSlugs]);
 
-  // Close on Escape key
+  // Close on Escape key & focus search input on open
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
     };
-    if (isOpen) window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    if (isOpen) {
+      window.addEventListener('keydown', handleKey);
+      document.body.style.overflow = 'hidden';
+      // auto-focus search input with a brief delay for animation
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
   }, [isOpen, onClose]);
 
   const togglePin = (slug) => {
@@ -63,70 +74,91 @@ export function QuickAccessModal({ isOpen, onClose }) {
     return LISTED_TOOLS.filter(t => 
       t.name.toLowerCase().includes(q) || 
       t.description.toLowerCase().includes(q) ||
-      t.category.toLowerCase().includes(q)
-    ).slice(0, 6);
+      t.category.toLowerCase().includes(q) ||
+      t.slug.toLowerCase().includes(q)
+    ).slice(0, 10);
   }, [search]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-20 px-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="fixed inset-0" onClick={onClose} />
+    <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true" aria-label="Quick Access Sidebar">
+      {/* Dimmed backdrop with smooth fade */}
+      <div 
+        className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      <div className="relative w-full max-w-2xl rounded-3xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      {/* Slide-over Drawer / Sidebar */}
+      <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-md sm:max-w-lg flex-col border-l border-[var(--orbit-border)] bg-[var(--orbit-canvas)] dark:bg-stone-900 shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-right">
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-[var(--orbit-border)] flex items-center justify-between gap-3 bg-[var(--orbit-canvas)] dark:bg-stone-950/40">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
-              <Zap size={20} className="fill-amber-500/20" />
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--orbit-border)] bg-white/70 dark:bg-stone-950/60 px-5 py-4 backdrop-blur-sm sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Zap size={22} className="fill-amber-400 text-amber-500" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-black text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                <span>Quick Access</span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
-                  {pinnedSlugs.length} tools
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg">Quick Access</h2>
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-950/80 dark:text-amber-300">
+                  {pinnedSlugs.length} pinned
                 </span>
-              </h3>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Jump directly to high-frequency everyday tools</p>
+              </div>
+              <p className="text-xs text-stone-500 dark:text-stone-400">Your shortcuts to frequently used utilities</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition min-h-[40px] min-w-[40px] flex items-center justify-center"
+            aria-label="Close Quick Access sidebar"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-200"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        {/* Search within Quick Access */}
-        <div className="p-4 border-b border-[var(--orbit-border)] bg-stone-50/50 dark:bg-stone-900/50">
+        {/* In-sidebar Search Bar */}
+        <div className="border-b border-[var(--orbit-border)] bg-stone-50/70 p-4 dark:bg-stone-900/60">
           <div className="relative">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden="true" />
             <input
+              ref={searchInputRef}
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search tools to pin or launch…"
-              className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="Search all 60+ tools to launch or pin…"
+              className="w-full rounded-xl border border-[var(--orbit-border)] bg-white py-2 pl-9 pr-8 text-xs text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/40 dark:bg-stone-800 dark:text-stone-100 sm:text-sm"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-xs text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
-          {/* If user is actively searching */}
+        {/* Scrollable Tool List */}
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
           {search.trim() ? (
+            /* Search Results Mode */
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-2.5">Search Results</p>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-stone-400">
+                Search Results ({filteredTools.length})
+              </p>
               <div className="space-y-2">
                 {filteredTools.map(tool => {
                   const isPinned = pinnedSlugs.includes(tool.slug);
                   return (
-                    <div 
+                    <div
                       key={tool.slug}
-                      className="flex items-center justify-between p-3 rounded-2xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800/40 hover:border-amber-400 transition group"
+                      onMouseEnter={() => preloadToolPage(tool.slug)}
+                      className="group flex items-center justify-between gap-2 rounded-2xl border border-[var(--orbit-border)] bg-white p-3 shadow-2xs transition hover:border-amber-400 dark:bg-stone-800/60"
                     >
                       <button
                         type="button"
@@ -134,29 +166,29 @@ export function QuickAccessModal({ isOpen, onClose }) {
                           onClose();
                           navigate(`/tools/${tool.slug}`);
                         }}
-                        className="flex-1 text-left"
+                        className="flex-1 text-left min-w-0"
                       >
-                        <p className="text-sm font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 transition">
+                        <p className="truncate text-sm font-bold text-stone-900 group-hover:text-amber-600 dark:text-stone-100 dark:group-hover:text-amber-400">
                           {tool.name}
                         </p>
-                        <p className="text-xs text-stone-500 dark:text-stone-400 truncate max-w-sm">
-                          {tool.description}
+                        <p className="truncate text-xs text-stone-500 dark:text-stone-400">
+                          {tool.category} • {tool.description}
                         </p>
                       </button>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => togglePin(tool.slug)}
-                          className={`p-2 rounded-xl text-xs font-semibold transition flex items-center gap-1 ${
-                            isPinned 
-                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400' 
-                              : 'hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-400'
+                          className={`flex min-h-[38px] items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition ${
+                            isPinned
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300'
+                              : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-700/60 dark:text-stone-300 dark:hover:bg-stone-700'
                           }`}
                           title={isPinned ? 'Remove from Quick Access' : 'Pin to Quick Access'}
                         >
-                          <Star size={14} fill={isPinned ? 'currentColor' : 'none'} />
-                          <span className="text-[11px]">{isPinned ? 'Pinned' : 'Pin'}</span>
+                          <Star size={13} fill={isPinned ? 'currentColor' : 'none'} className={isPinned ? 'text-amber-500' : ''} />
+                          <span>{isPinned ? 'Pinned' : 'Pin'}</span>
                         </button>
 
                         <button
@@ -165,90 +197,109 @@ export function QuickAccessModal({ isOpen, onClose }) {
                             onClose();
                             navigate(`/tools/${tool.slug}`);
                           }}
-                          className="p-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white"
+                          aria-label={`Open ${tool.name}`}
+                          className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl bg-amber-500 text-white transition hover:bg-amber-600"
                         >
-                          <ArrowRight size={14} />
+                          <ArrowRight size={15} />
                         </button>
                       </div>
                     </div>
                   );
                 })}
                 {!filteredTools.length && (
-                  <p className="text-xs text-stone-400 py-4 text-center">No matching tools found.</p>
+                  <div className="py-8 text-center text-xs text-stone-500 dark:text-stone-400">
+                    No tools found matching &quot;{search}&quot;.
+                  </div>
                 )}
               </div>
             </div>
           ) : (
+            /* Pinned Tools List */
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                  <Sparkles size={14} />
-                  <span>Top Featured & Pinned Tools</span>
-                </p>
-                <span className="text-[11px] text-stone-400">Click star to customize</span>
+              <div className="mb-3 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                  <Sparkles size={13} /> Pinned Shortcuts
+                </span>
+                <span className="text-[11px] text-stone-400">Click star to unpin</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {featuredTools.map(tool => {
-                  return (
-                    <div
-                      key={tool.slug}
-                      onMouseEnter={() => preloadToolPage(tool.slug)}
-                      className="group flex items-center justify-between p-3.5 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800/60 hover:border-amber-400 dark:hover:border-amber-500 shadow-2xs hover:shadow-xs transition"
+              <div className="space-y-2">
+                {featuredTools.map(tool => (
+                  <div
+                    key={tool.slug}
+                    onMouseEnter={() => preloadToolPage(tool.slug)}
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white p-3 shadow-2xs transition hover:border-amber-400 hover:shadow-xs dark:bg-stone-800/70"
+                  >
+                    <Link
+                      to={`/tools/${tool.slug}`}
+                      onClick={onClose}
+                      className="flex-1 min-w-0"
                     >
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-bold text-stone-900 group-hover:text-amber-600 dark:text-stone-100 dark:group-hover:text-amber-400">
+                          {tool.name}
+                        </span>
+                        <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold text-stone-500 dark:bg-stone-700/60 dark:text-stone-400">
+                          {tool.category}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-stone-500 dark:text-stone-400">
+                        {tool.description}
+                      </p>
+                    </Link>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => togglePin(tool.slug)}
+                        aria-label={`Unpin ${tool.name} from Quick Access`}
+                        className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl text-amber-500 transition hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                        title="Unpin from Quick Access"
+                      >
+                        <Star size={16} fill="currentColor" />
+                      </button>
+
                       <Link
                         to={`/tools/${tool.slug}`}
                         onClick={onClose}
-                        className="flex-1 min-w-0 pr-2"
+                        aria-label={`Launch ${tool.name}`}
+                        className="flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl text-stone-400 transition hover:bg-stone-100 hover:text-stone-900 group-hover:translate-x-0.5 dark:hover:bg-stone-700/60 dark:hover:text-stone-100"
                       >
-                        <p className="text-xs font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">
-                          {tool.name}
-                        </p>
-                        <p className="text-[11px] text-stone-500 dark:text-stone-400 truncate mt-0.5">
-                          {tool.category} • {tool.description}
-                        </p>
+                        <ArrowRight size={16} />
                       </Link>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => togglePin(tool.slug)}
-                          className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition"
-                          title="Unpin from Quick Access"
-                        >
-                          <Star size={15} fill="currentColor" />
-                        </button>
-
-                        <Link
-                          to={`/tools/${tool.slug}`}
-                          onClick={onClose}
-                          className="p-1.5 rounded-lg text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 group-hover:translate-x-0.5 transition-transform"
-                        >
-                          <ArrowRight size={15} />
-                        </Link>
-                      </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
+
+                {!featuredTools.length && (
+                  <div className="rounded-2xl border border-dashed border-stone-300 p-6 text-center text-xs text-stone-500 dark:border-stone-700">
+                    <p className="font-semibold text-stone-700 dark:text-stone-300">No pinned tools</p>
+                    <p className="mt-1">Search above or click the button below to restore the top tools.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-950/40 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
-          <span>Tip: You can pin or unpin any tool to keep your favorites handy</span>
+        <div className="border-t border-[var(--orbit-border)] bg-stone-50 px-5 py-3.5 dark:bg-stone-950/50 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
           <button
             type="button"
             onClick={() => setPinnedSlugs(TOP_FEATURED_SLUGS)}
-            className="hover:underline text-amber-700 dark:text-amber-400 font-semibold"
+            className="inline-flex items-center gap-1.5 font-semibold text-amber-700 hover:underline dark:text-amber-400"
           >
-            Reset to default top tools
+            <RotateCcw size={13} />
+            <span>Reset to defaults</span>
           </button>
+
+          <span className="text-[11px] text-stone-400">Press Esc to close</span>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }
-export default QuickAccessModal;
 
+// Backward compatibility alias
+export const QuickAccessModal = QuickAccessSidebar;
+export default QuickAccessSidebar;
