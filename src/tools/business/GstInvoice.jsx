@@ -287,7 +287,7 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
   // Seller address line
   page.setFont(fontReg);
   page.setFontSize(8);
-  page.drawText(`${seller.address}, ${seller.city} - ${seller.pin}, ${seller.state}`, { x: 30, y, color: gray });
+  draw(`${seller.address}, ${seller.city} - ${seller.pin}, ${seller.state}`, { x: 30, y, color: gray });
   y -= 20;
 
   // Divider
@@ -297,13 +297,13 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
   // Bill To / Invoice Meta row
   page.setFont(fontBold);
   page.setFontSize(9);
-  page.drawText('BILL TO', { x: 30, y, color: indigo });
-  page.drawText('INVOICE DETAILS', { x: 320, y, color: indigo });
+  draw('BILL TO', { x: 30, y, color: indigo });
+  draw('INVOICE DETAILS', { x: 320, y, color: indigo });
   y -= 12;
 
   page.setFont(fontBold);
   page.setFontSize(10);
-  page.drawText(buyer.name || '—', { x: 30, y, color: dark });
+  draw(buyer.name || '-', { x: 30, y, color: dark });
   y -= 13;
 
   page.setFont(fontReg);
@@ -318,39 +318,39 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
 
   const metaLines = [
     ['Due Date', meta.dueDate],
-    ['PO Ref', meta.poReference || '—'],
+    ['PO Ref', meta.poReference || '-'],
     ['Place of Supply', meta.placeOfSupply],
     ['Supply Type', isInterState ? 'Inter-State (IGST)' : 'Intra-State (CGST+SGST)'],
   ];
 
   const startY = y;
   buyerLines.forEach((line, i) => {
-    page.drawText(line, { x: 30, y: startY - i * 11, color: dark });
+    draw(line, { x: 30, y: startY - i * 11, color: dark });
   });
   metaLines.forEach(([k, v], i) => {
     page.setFont(fontBold);
-    page.drawText(`${k}:`, { x: 320, y: startY - i * 11, color: gray });
+    draw(`${k}:`, { x: 320, y: startY - i * 11, color: gray });
     page.setFont(fontReg);
-    page.drawText(String(v), { x: 410, y: startY - i * 11, color: dark });
+    draw(String(v), { x: 410, y: startY - i * 11, color: dark });
   });
 
   y = startY - Math.max(buyerLines.length, metaLines.length) * 11 - 18;
 
   // Items Table Header
   page.drawRectangle({ x: 30, y: y - 2, width: width - 60, height: 16, color: indigo });
-  const cols = { num: 30, desc: 48, hsn: 170, qty: 215, rate: 255, taxable: 305, gst: 365, tax: 415, amount: 510 };
+  const cols = { num: 30, desc: 48, hsn: 170, qty: 215, rate: 255, taxable: 305, gst: 365, tax: 415, amount: 505 };
   page.setFont(fontBold);
   page.setFontSize(7);
   const hdrY = y + 4;
-  page.drawText('#', { x: cols.num, y: hdrY, color: white });
-  page.drawText('Description', { x: cols.desc, y: hdrY, color: white });
-  page.drawText('HSN', { x: cols.hsn, y: hdrY, color: white });
-  page.drawText('Qty', { x: cols.qty, y: hdrY, color: white });
-  page.drawText('Rate(₹)', { x: cols.rate, y: hdrY, color: white });
-  page.drawText('Taxable', { x: cols.taxable, y: hdrY, color: white });
-  page.drawText('GST%', { x: cols.gst, y: hdrY, color: white });
-  page.drawText(isInterState ? 'IGST' : 'CGST+SGST', { x: cols.tax, y: hdrY, color: white });
-  page.drawText('Amount(₹)', { x: cols.amount, y: hdrY, color: white });
+  draw('#', { x: cols.num, y: hdrY, color: white });
+  draw('Description', { x: cols.desc, y: hdrY, color: white });
+  draw('HSN', { x: cols.hsn, y: hdrY, color: white });
+  draw('Qty', { x: cols.qty, y: hdrY, color: white });
+  draw('Rate (Rs)', { x: cols.rate, y: hdrY, color: white });
+  draw('Taxable', { x: cols.taxable, y: hdrY, color: white });
+  draw('GST%', { x: cols.gst, y: hdrY, color: white });
+  draw(isInterState ? 'IGST' : 'CGST+SGST', { x: cols.tax, y: hdrY, color: white });
+  draw('Amount (Rs)', { x: cols.amount, y: hdrY, color: white });
 
   y -= 16;
 
@@ -363,16 +363,16 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
     page.setFont(fontReg);
     page.setFontSize(7);
     const ry = y + 2;
-    page.drawText(String(idx + 1), { x: cols.num, y: ry, color: dark });
-    page.drawText((item.description || '').slice(0, 22), { x: cols.desc, y: ry, color: dark });
-    page.drawText(item.hsn || '', { x: cols.hsn, y: ry, color: dark });
-    page.drawText(`${item.qty} ${item.unit}`, { x: cols.qty, y: ry, color: dark });
-    page.drawText(inr(item.rate), { x: cols.rate, y: ry, color: dark });
-    page.drawText(inr(calc.taxable), { x: cols.taxable, y: ry, color: dark });
-    page.drawText(`${item.gstRate}%`, { x: cols.gst, y: ry, color: dark });
+    draw(String(idx + 1), { x: cols.num, y: ry, color: dark });
+    draw((item.description || '').slice(0, 22), { x: cols.desc, y: ry, color: dark });
+    draw(item.hsn || '', { x: cols.hsn, y: ry, color: dark });
+    draw(`${item.qty} ${item.unit}`, { x: cols.qty, y: ry, color: dark });
+    draw(inr(item.rate), { x: cols.rate, y: ry, color: dark });
+    draw(inr(calc.taxable), { x: cols.taxable, y: ry, color: dark });
+    draw(`${item.gstRate}%`, { x: cols.gst, y: ry, color: dark });
     const taxAmt = isInterState ? calc.igst : (calc.cgst + calc.sgst);
-    page.drawText(inr(taxAmt), { x: cols.tax, y: ry, color: dark });
-    page.drawText(inr(calc.total), { x: cols.amount, y: ry, color: dark });
+    draw(inr(taxAmt), { x: cols.tax, y: ry, color: dark });
+    draw(inr(calc.total), { x: cols.amount, y: ry, color: dark });
 
     y -= 14;
   });
@@ -384,7 +384,7 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
 
   const totalsRows = [
     ['Subtotal', inr(totals.subtotal)],
-    ['Total Discount', `- ₹${inr(totals.totalDiscount)}`],
+    ['Total Discount', `- Rs. ${inr(totals.totalDiscount)}`],
     ['Taxable Amount', inr(totals.taxableAmount)],
     ...(isInterState
       ? [['IGST', inr(totals.igst)]]
@@ -395,8 +395,8 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
   page.setFont(fontReg);
   page.setFontSize(8);
   totalsRows.forEach(([k, v]) => {
-    page.drawText(k, { x: 360, y, color: gray });
-    page.drawText(v, { x: 510, y, color: dark });
+    draw(k, { x: 360, y, color: gray });
+    draw(v, { x: 505, y, color: dark });
     y -= 12;
   });
 
@@ -404,27 +404,27 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
   page.drawRectangle({ x: 330, y: y - 4, width: width - 360, height: 18, color: indigo });
   page.setFont(fontBold);
   page.setFontSize(10);
-  page.drawText('GRAND TOTAL', { x: 340, y: y + 2, color: white });
-  page.drawText(`₹${inr(totals.grandTotal)}`, { x: 490, y: y + 2, color: amber });
+  draw('GRAND TOTAL', { x: 340, y: y + 2, color: white });
+  draw(`Rs. ${inr(totals.grandTotal)}`, { x: 470, y: y + 2, color: amber });
   y -= 24;
 
   // Amount in words
   page.setFont(fontReg);
   page.setFontSize(7.5);
-  page.drawText(`Amount in Words: ${amountToWords(totals.grandTotal)}`, { x: 30, y, color: dark });
+  draw(`Amount in Words: ${amountToWords(totals.grandTotal)}`, { x: 30, y, color: dark });
   y -= 20;
 
   // Notes
   if (notes) {
     page.setFont(fontBold);
     page.setFontSize(8);
-    page.drawText('Notes / Terms:', { x: 30, y, color: indigo });
+    draw('Notes / Terms:', { x: 30, y, color: indigo });
     y -= 12;
     page.setFont(fontReg);
     page.setFontSize(7.5);
     const noteLines = notes.match(/.{1,90}/g) || [];
     noteLines.slice(0, 4).forEach(line => {
-      page.drawText(line, { x: 30, y, color: dark });
+      draw(line, { x: 30, y, color: dark });
       y -= 11;
     });
   }
@@ -435,17 +435,17 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
   y -= 12;
   page.setFont(fontBold);
   page.setFontSize(8);
-  page.drawText('Bank Details', { x: 30, y, color: indigo });
+  draw('Bank Details', { x: 30, y, color: indigo });
   y -= 11;
   page.setFont(fontReg);
   page.setFontSize(7.5);
   [
-    `Bank: ${seller.bankName || '—'}`,
-    `Account No: ${seller.accountNo || '—'}`,
-    `IFSC: ${seller.ifsc || '—'}`,
-    `UPI: ${seller.upiId || '—'}`,
+    `Bank: ${seller.bankName || '-'}`,
+    `Account No: ${seller.accountNo || '-'}`,
+    `IFSC: ${seller.ifsc || '-'}`,
+    `UPI: ${seller.upiId || '-'}`,
   ].forEach(line => {
-    page.drawText(line, { x: 30, y, color: dark });
+    draw(line, { x: 30, y, color: dark });
     y -= 11;
   });
 
@@ -453,15 +453,15 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
   if (signatory) {
     page.setFont(fontBold);
     page.setFontSize(8);
-    page.drawText(`Authorised Signatory: ${signatory}`, { x: width - 220, y: y + 33, color: dark });
+    draw(`Authorised Signatory: ${signatory}`, { x: width - 220, y: y + 33, color: dark });
     page.drawLine({ start: { x: width - 220, y: y + 32 }, end: { x: width - 30, y: y + 32 }, thickness: 0.4, color: gray });
   }
 
   // Footer
   page.setFont(fontReg);
   page.setFontSize(7);
-  page.drawText('This is a computer generated invoice.', { x: 30, y: 20, color: gray });
-  page.drawText('Generated by OrbitBoard', { x: width - 130, y: 20, color: gray });
+  draw('This is a computer generated invoice.', { x: 30, y: 20, color: gray });
+  draw('Generated by OrbitBoard', { x: width - 130, y: 20, color: gray });
 
   const pdfBytes = await pdfDoc.save();
   return new Blob([pdfBytes], { type: 'application/pdf' });
