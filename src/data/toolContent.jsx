@@ -895,21 +895,6 @@ export const TOOL_CONTENT = {
       ['Does this choose the best option for me?', 'No. It makes your priorities explicit. The scores still reflect your judgement, so check them before deciding.']
     ]
   },
-  'gif-maker': {
-    intro: 'Turn a set of photos or screenshots into a looping animated GIF, right in your browser. Nothing is uploaded, so your images stay on your device.',
-    keywords: 'GIF maker, make GIF from images, image to GIF, animated GIF creator, photos to GIF online free',
-    how: [
-      'Choose two to sixty images. They play in the order you selected them.',
-      'Set the frame time in seconds and the square size in pixels. Smaller sizes give smaller files.',
-      'Pick how images fit the frame: fit keeps the whole picture, crop fills the square, and stretch fills it and may distort.',
-      'Create the GIF, check the preview, then download it.'
-    ],
-    faq: [
-      ['Are my images uploaded?', 'No. The images are combined in your browser, and the GIF is made on your device.'],
-      ['Why does my GIF look different from my photos?', 'GIF uses a limited palette of colours, so photos can look grainy. Fit and crop change how each picture sits in the frame.'],
-      ['Why is the GIF big?', 'Larger sizes, more frames and photos with lots of detail all increase the file size. Reduce the size or number of images to make it smaller.']
-    ]
-  },
   'sip': {
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',

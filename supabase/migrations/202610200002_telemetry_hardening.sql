@@ -30,7 +30,8 @@ begin
     and created_at > now() - interval '1 minute';
 
   -- Only log the page view when the path is well-formed and the visitor is under the cap.
-  if recent_events < 60 and p_path is not null and p_path ~ '^/[ -~]{0,499}$' then
+  -- PostgreSQL ARE regex quantifiers are capped at 255 ({0,255}), so length is checked with length()
+  if recent_events < 60 and p_path is not null and length(p_path) <= 500 and p_path ~ '^/[ -~]*$' then
     insert into public.app_logs(level, event_name, path, visitor_id, metadata)
     values ('info', 'visitor.viewed', p_path, p_visitor_id, jsonb_build_object('source', 'orbitboard'));
   end if;
@@ -59,7 +60,7 @@ begin
   if p_event_name is null or p_event_name !~ '^[a-z0-9_.-]{1,120}$' then
     return;
   end if;
-  if p_path is not null and p_path !~ '^/[ -~]{0,499}$' then
+  if p_path is not null and (length(p_path) > 500 or p_path !~ '^/[ -~]*$') then
     return;
   end if;
   if pg_column_size(coalesce(p_metadata, '{}'::jsonb)) > 2048 then
