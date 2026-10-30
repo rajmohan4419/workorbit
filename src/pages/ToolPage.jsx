@@ -12,6 +12,7 @@ import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemptio
 import { SaasRetention, SalesPipelineForecaster, SaasPricing } from '../tools/business/BusinessCalculators';
 import { InvoiceAging, DecisionMatrix } from '../tools/business/BusinessWorkflows';
 import SampleAd from '../components/SampleAd';
+import { isAdEligible, loadAdSense } from '../lib/adsense';
 import AdSenseUnit from '../components/AdSenseUnit';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
@@ -1463,6 +1464,12 @@ export default function ToolPage() {
     'password-generator': PasswordGenerator
   }[slug]), [slug]);
 
+  const adEligible = isAdEligible({ tool, info, hasTool: Boolean(content) });
+
+  useEffect(() => {
+    if (adEligible) loadAdSense();
+  }, [adEligible]);
+
   useEffect(() => {
     if (tool) {
       const pageTitle = info?.title || (tool.name + ' | Free Online Tool | OrbitBoard');
@@ -1509,7 +1516,7 @@ export default function ToolPage() {
             </div>
           </div>
 
-          <SampleAd category={tool?.category} />
+          {adEligible && <SampleAd category={tool?.category} />}
 
           <AdSenseUnit slot="" />
 
