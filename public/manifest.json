@@ -1,0 +1,28 @@
+{
+  "name": "OrbitBoard — Free Online Tools",
+  "short_name": "OrbitBoard",
+  "description": "Free browser-based tools for salary, finance, PDF, images, JSON and everyday work. 100% private, no sign-up.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F7FF",
+  "theme_color": "#4F46E5",
+  "orientation": "any",
+  "lang": "en-IN",
+  "scope": "/",
+  "icons": [
+    { "src": "/favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
+    { "src": "/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
+  ],
+  "categories": ["productivity", "utilities", "finance"],
+  "screenshots": [
+    { "src": "/og-image.png", "sizes": "1200x630", "type": "image/png", "form_factor": "wide" }
+  ],
+  "shortcuts": [
+    { "name": "Salary Calculator", "url": "/tools/ctc-to-inhand", "description": "CTC to In-Hand Salary" },
+    { "name": "PDF Tools", "url": "/tools/pdf-workspace", "description": "PDF Workspace" },
+    { "name": "JSON Formatter", "url": "/tools/json-formatter", "description": "JSON Formatter & Validator" }
+  ]
+}

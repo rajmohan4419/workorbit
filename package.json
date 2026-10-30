@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/literata": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "@google/genai": "^2.28.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@supabase/auth-ui-react": "^0.4.7",

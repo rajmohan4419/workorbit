@@ -14,6 +14,7 @@ import { money, num, downloadBlob } from '../lib/toolFormat';
 import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemption } from '../tools/finance/FinanceCalculators';
 import { SaasRetention, SalesPipelineForecaster, SaasPricing } from '../tools/business/BusinessCalculators';
 import { InvoiceAging, DecisionMatrix } from '../tools/business/BusinessWorkflows';
+import { GstInvoice } from '../tools/business/GstInvoice';
 import { GifMaker } from '../tools/everyday/GifMaker';
 import { ImageToGif, VideoToGif } from '../tools/media/GifTools';
 import { FileUploadWithDrive } from '../components/tools/FileUploadWithDrive';
@@ -22,6 +23,7 @@ import { isAdEligible, loadAdSense } from '../lib/adsense';
 import AdSenseUnit from '../components/AdSenseUnit';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
+import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 
 const GratuityCalculator = lazy(() => import('../tools/career/GratuityCalculator'));
 const IndiaIncomeTaxCalculator = lazy(() => import('../tools/finance/IndiaIncomeTaxCalculator'));
@@ -1723,7 +1725,7 @@ export default function ToolPage() {
     'json-to-xlsx': () => <SpreadsheetFileTool type="json-to-xlsx" />, 'xlsx-to-csv': () => <SpreadsheetFileTool type="xlsx-to-csv" />, 'txt-to-pdf': TextToPdf, 'pdf-to-text': PdfToText, 'diff-checker': DiffChecker,
     'json-to-xml': JsonToXml, 'xml-to-json': XmlToJson, 'markdown-to-html': MarkdownToHtml, 'image-compressor': ImageCompressor, 'image-to-gif': ImageToGif, 'video-to-gif': VideoToGif, 'image-metadata-remover': ImageMetadataRemover, 'pdf-merge': PdfMerge, 'pdf-split': PdfSplit,
     'pdf-extract-pages': PdfExtract, 'pdf-reorder': PdfReorder, 'pdf-workspace': PdfWorkspace, 'pdf-compressor': PdfCompressor, 'pdf-e-sign': PdfESign, 'pdf-to-jpg': () => <PdfToImages format="image/jpeg" />, 'pdf-to-png': () => <PdfToImages format="image/png" />,
-    'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'loan-amortization-calculator': LoanAmortization, 'hra-exemption-calculator-india': HraExemption, 'saas-retention-calculator': SaasRetention, 'sales-pipeline-forecaster': SalesPipelineForecaster, 'saas-pricing-calculator': SaasPricing, 'invoice-aging-report': InvoiceAging, 'weighted-decision-matrix': DecisionMatrix, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
+    'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'loan-amortization-calculator': LoanAmortization, 'hra-exemption-calculator-india': HraExemption, 'saas-retention-calculator': SaasRetention, 'sales-pipeline-forecaster': SalesPipelineForecaster, 'saas-pricing-calculator': SaasPricing, 'invoice-aging-report': InvoiceAging, 'weighted-decision-matrix': DecisionMatrix, 'gst-invoice-generator': GstInvoice, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
     'jwt-decoder': JwtDecoder, 'unix-timestamp': UnixTimestamp, 'uuid-generator': UuidGenerator, 'url-encoder': UrlEncoder,
     'password-generator': PasswordGenerator
   }[slug]), [slug]);
@@ -1766,13 +1768,15 @@ export default function ToolPage() {
   const related = LISTED_TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
 
   return (
-    <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex flex-col justify-between">
-      <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-accent-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
-      <div>
-        <ToolsHomeHeader />
-        <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
+    <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex">
+      <QuickAccessLeftSidebar />
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
+        <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-accent-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
+        <div>
+          <ToolsHomeHeader />
+          <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
 
-        <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
+          <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
           <div id="tool-workspace" ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10">
             <div className="h-1.5 w-full bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-400 opacity-80" />
             <div className="p-5 sm:p-8">
@@ -1861,6 +1865,7 @@ export default function ToolPage() {
       </div>
 
       <ToolsHomeFooter />
+      </div>
     </div>
   );
 }

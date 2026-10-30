@@ -13,7 +13,8 @@ export function formatDownloadFilename(toolSlug, formatOrExt) {
   return `orbitboard-${slug}.${ext}`;
 }
 
-export function downloadBlob(blob, filename, toolSlug) {
+export function directDownloadBlob(blob, filename, toolSlug) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return true;
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -29,5 +30,30 @@ export function downloadBlob(blob, filename, toolSlug) {
   a.download = finalName;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+
+export function downloadBlob(blob, filename, toolSlug, bypassPreview = false) {
+  if (bypassPreview || typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+    return directDownloadBlob(blob, filename, toolSlug);
+  }
+
+  let finalName = filename || 'download';
+  if (toolSlug) {
+    const ext = filename?.includes('.') ? filename.split('.').pop() : 'dat';
+    finalName = `orbitboard-${toolSlug.replace(/^orbitboard-/, '')}.${ext}`;
+  } else if (!finalName.startsWith('orbitboard-')) {
+    finalName = `orbitboard-${finalName}`;
+  }
+
+  const event = new CustomEvent('orbitboard:preview-download', {
+    cancelable: true,
+    detail: { blob, filename: finalName, toolSlug, mimeType: blob?.type }
+  });
+
+  const notPrevented = window.dispatchEvent(event);
+  if (notPrevented) {
+    return directDownloadBlob(blob, filename, toolSlug);
+  }
   return true;
 }

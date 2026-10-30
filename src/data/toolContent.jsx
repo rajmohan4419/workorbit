@@ -1079,5 +1079,36 @@ export const TOOL_CONTENT = {
         </p>
       </div>
     )
+  },
+  'gst-invoice-generator': {
+    title: 'Free GST Invoice Generator Online | Create & Download GST Tax Invoices (PDF)',
+    h1: 'Free GST Invoice Generator with Custom Branding & Instant PDF',
+    metaDescription: 'Create free GST-compliant tax invoices in your browser with custom logo, company address, GSTIN validation, CGST/SGST/IGST breakdown, and instant PDF download. 100% private.',
+    intro: 'Create professional, GST-compliant tax invoices with custom company logo, automatic CGST/SGST/IGST computation, HSN/SAC codes, and instant PDF download directly in your browser.',
+    keywords: 'free GST invoice generator online, GST tax invoice maker India, create GST bill with logo, online invoice generator with GSTIN, download GST invoice PDF free, intra-state CGST SGST invoice maker, inter-state IGST invoice generator, free invoice maker for freelancers and small businesses India, how to make GST invoice online, GST bill format in PDF, client-side GST invoice tool, GST invoice template India 2026',
+    how: [
+      'Enter your business details: Company name, GSTIN, PAN, address, bank details and upload your logo.',
+      'Add client/buyer billing details and select the State for automatic place of supply detection.',
+      'Add itemized lines with descriptions, HSN/SAC codes, quantity, rate, discount and select GST slab rate (0%, 5%, 12%, 18%, 28%).',
+      'The system automatically determines Intra-State (CGST + SGST) or Inter-State (IGST) taxation and computes amount in words in Indian currency.',
+      'Preview your invoice live on-screen and click Download PDF for instant, printable tax invoice.'
+    ],
+    faq: [
+      ['How does the tool know whether to apply CGST/SGST or IGST?', 'If the seller state and buyer state are the same, it is an Intra-State supply and CGST + SGST (half of the total GST rate each) are applied. If the states differ, it is an Inter-State supply and IGST is applied at the full rate.'],
+      ['Can I add my company logo and signature?', 'Yes. Upload your image logo and customize the authorized signatory name. The logo is encoded and printed directly onto your generated PDF invoice.'],
+      ['Are my business and financial records private?', '100% yes. All generation occurs locally in your browser. No invoice data, company records, or customer information is ever sent to or stored on any server.'],
+      ['Is this invoice compliant with Indian GST rules?', 'Yes. It contains all mandatory fields: GSTIN, HSN/SAC code, invoice number, date, place of supply, state code, itemized tax breakup, and amount in words.']
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Complete Guide to Indian GST Invoices</h2>
+        <p>
+          A GST Tax Invoice is a legal document issued by a registered supplier to a buyer under the Goods and Services Tax (GST) regime in India. It serves as primary evidence for claiming Input Tax Credit (ITC).
+        </p>
+        <p>
+          Our <strong>GST Invoice Generator</strong> allows freelancers, consultants, small businesses, and enterprises to quickly create clean, professional, and compliant invoices with zero sign-up required.
+        </p>
+      </div>
+    )
   }
 };

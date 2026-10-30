@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { InstallPrompt } from './components/InstallPrompt';
+import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
@@ -13,6 +15,8 @@ export default function App() {
     <BrowserRouter>
         <Analytics />
         <Telemetry />
+        <InstallPrompt />
+        <GlobalPreviewModal />
         <Routes>
           <Route path="/" element={<ToolsHome />} />
           <Route path="/tools" element={<ToolsCatalogue />} />

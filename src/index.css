@@ -1,44 +1,48 @@
 @import "tailwindcss";
 
-@import "@fontsource/literata/400.css";
-@import "@fontsource/literata/600.css";
-@import "@fontsource/ibm-plex-sans/400.css";
-@import "@fontsource/ibm-plex-sans/500.css";
-@import "@fontsource/ibm-plex-sans/600.css";
+/* ─── Fonts ─────────────────────────────────────────────────────────────── */
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ─── Orbit Indigo-Amber Design System ───────────────────────────────────── */
 @theme {
-  --color-accent-50: #eef6f2;
-  --color-accent-100: #d9ebe2;
-  --color-accent-200: #b4d7c6;
-  --color-accent-300: #8cc2a8;
-  --color-accent-400: #62aa8a;
-  --color-accent-500: #3d8f70;
-  --color-accent-600: #1f6b55;
-  --color-accent-700: #1a5846;
-  --color-accent-800: #17473a;
-  --color-accent-900: #143b31;
-  --color-accent-950: #0b231d;
-}
+  /* Primary accent: Indigo */
+  --color-accent-50:  #EEF2FF;
+  --color-accent-100: #E0E7FF;
+  --color-accent-200: #C7D2FE;
+  --color-accent-300: #A5B4FC;
+  --color-accent-400: #818CF8;
+  --color-accent-500: #6366F1;
+  --color-accent-600: #4F46E5;
+  --color-accent-700: #4338CA;
+  --color-accent-800: #3730A3;
+  --color-accent-900: #312E81;
+  --color-accent-950: #1E1B4B;
 
-@theme {
-  --color-brand-accent: #A78BFA;
-  --color-brand-warm: #FAFAF9;
+  /* Warm amber highlight */
+  --color-amber-50:  #FFFBEB;
+  --color-amber-100: #FEF3C7;
+  --color-amber-200: #FDE68A;
+  --color-amber-300: #FCD34D;
+  --color-amber-400: #FBBF24;
+  --color-amber-500: #F59E0B;
+  --color-amber-600: #D97706;
+  --color-amber-700: #B45309;
+  --color-amber-800: #92400E;
+  --color-amber-900: #78350F;
+  --color-amber-950: #451A03;
 
-  --color-accent-50: #F5F3FF;
-  --color-accent-100: #EDE9FE;
-  --color-accent-200: #DDD6FE;
-  --color-accent-300: #C4B5FD;
-  --color-accent-400: #A78BFA;
-  --color-accent-500: #8B5CF6;
-  --color-accent-600: #7C3AED;
-  --color-accent-700: #6D28D9;
-  --color-accent-800: #5B21B6;
-  --color-accent-900: #4C1D95;
-  --color-accent-950: #2E1065;
-
-  --color-indigo-50: #EEF2FF;
+  /* Extended indigo palette */
+  --color-indigo-50:  #EEF2FF;
   --color-indigo-100: #E0E7FF;
   --color-indigo-200: #C7D2FE;
   --color-indigo-300: #A5B4FC;
@@ -51,59 +55,79 @@
   --color-indigo-950: #1E1B4B;
 }
 
+/* ─── Base reset ─────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-@utility no-scrollbar {
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-/* OrbitBoard warm theme variables & dark mode support */
+/* ─── OrbitBoard design tokens ───────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  --orbit-canvas: #f7f5ef;
-  --orbit-surface: #ffffff;
-  --orbit-surface-soft: #efece3;
-  --orbit-border: #ddd8cb;
-  --orbit-ink: #1c211e;
-  --orbit-ink-soft: #3a423d;
-  --orbit-muted: #5d665f;
-  --orbit-accent: #1f6b55;
-  --orbit-accent-soft: #e3efe9;
+  /* Canvas & surfaces */
+  --orbit-canvas:       #F8F7FF;
+  --orbit-surface:      #FFFFFF;
+  --orbit-surface-soft: #EEEDF8;
+  /* Borders */
+  --orbit-border:       #D4D1F0;
+  /* Text */
+  --orbit-ink:          #0F0E1A;
+  --orbit-ink-soft:     #2D2B3F;
+  --orbit-muted:        #6E6B8A;
+  /* Brand colors */
+  --orbit-accent:       #4F46E5;
+  --orbit-accent-soft:  rgba(79, 70, 229, 0.10);
+  --orbit-amber:        #F59E0B;
+  --orbit-amber-soft:   rgba(245, 158, 11, 0.12);
+  /* Sidebar */
+  --sidebar-width-expanded: 240px;
+  --sidebar-width-collapsed: 60px;
 }
 
 .dark {
   color-scheme: dark;
-  --orbit-canvas: #121513;
-  --orbit-surface: #1a1e1b;
-  --orbit-surface-soft: #222824;
-  --orbit-border: #353d37;
-  --orbit-ink: #ece9df;
-  --orbit-ink-soft: #d3d0c5;
-  --orbit-muted: #a6ada5;
-  --orbit-accent: #7cc7a9;
-  --orbit-accent-soft: rgba(124, 199, 169, 0.14);
+  --orbit-canvas:       #0F0E1A;
+  --orbit-surface:      #1A1926;
+  --orbit-surface-soft: #211F33;
+  --orbit-border:       #2D2B45;
+  --orbit-ink:          #F0EFFE;
+  --orbit-ink-soft:     #C8C4F0;
+  --orbit-muted:        #8B87AF;
+  --orbit-accent:       #818CF8;
+  --orbit-accent-soft:  rgba(129, 140, 248, 0.15);
+  --orbit-amber:        #FBBF24;
+  --orbit-amber-soft:   rgba(251, 191, 36, 0.13);
 }
 
-html {
-  background: var(--orbit-canvas);
-  scroll-behavior: smooth;
-}
-
+/* ─── Typography ─────────────────────────────────────────────────────────── */
 body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'kern', 'liga', 'calt';
   background: var(--orbit-canvas);
   color: var(--orbit-ink);
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+h1 { font-size: clamp(1.75rem, 5vw, 3.5rem); line-height: 1.1; }
+h2 { font-size: clamp(1.25rem, 3vw, 2rem); line-height: 1.2; }
+h3 { line-height: 1.3; }
+
+code, pre, kbd, .mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+}
+
+/* ─── Layout helpers ─────────────────────────────────────────────────────── */
+html {
+  background: var(--orbit-canvas);
+  scroll-behavior: smooth;
 }
 
 .orbit-light {
@@ -111,47 +135,63 @@ body {
   color: var(--orbit-ink);
 }
 
+/* ─── Animations ─────────────────────────────────────────────────────────── */
 .orbit-enter {
-  animation: orbit-rise-in .55s cubic-bezier(.2,.7,.2,1) both;
+  animation: orbit-rise-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .orbit-card-enter {
-  animation: orbit-rise-in .45s cubic-bezier(.2,.7,.2,1) both;
+  animation: orbit-rise-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 @keyframes orbit-rise-in {
   from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes orbit-soft-glow {
-  0%, 100% { box-shadow: 0 0 0 rgba(109,75,209,0); }
-  50% { box-shadow: 0 8px 28px rgba(109,75,209,.09); }
+@keyframes orbit-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+  50%       { box-shadow: 0 8px 28px rgba(79, 70, 229, 0.12); }
 }
 
 .orbit-interactive {
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-
 .orbit-interactive:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 26px rgba(41,37,36,.07);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
+  box-shadow: 0 10px 26px rgba(79, 70, 229, 0.10);
 }
 
 main {
-  animation: orbit-rise-in .45s cubic-bezier(.2,.7,.2,1) both;
+  animation: orbit-rise-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-/* Enforce minimum 16px font-size for mobile inputs to prevent automatic zoom on focus */
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* Thin custom scrollbar for sidebars */
+@utility orbit-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--orbit-border) transparent;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--orbit-border); border-radius: 4px; }
+}
+
+/* ─── Tap targets ────────────────────────────────────────────────────────── */
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Form inputs ────────────────────────────────────────────────────────── */
+/* Prevent iOS zoom on focus (min 16px) */
 input, textarea, select {
   font-size: 16px !important;
 }
@@ -165,62 +205,53 @@ input, textarea, select {
 .orbit-light input, .orbit-light textarea, .orbit-light select {
   color: var(--orbit-ink);
   background-color: var(--orbit-surface);
-  border-color: #cfc8e0;
+  border-color: var(--orbit-border);
 }
 
+/* Focus rings */
 .orbit-light a:focus-visible, .orbit-light button:focus-visible,
 .orbit-light input:focus-visible, .orbit-light select:focus-visible,
 .orbit-light textarea:focus-visible,
 .dark a:focus-visible, .dark button:focus-visible,
 .dark input:focus-visible, .dark select:focus-visible,
 .dark textarea:focus-visible {
-  outline: 3px solid rgba(109,75,209,.38);
+  outline: 2px solid var(--orbit-accent);
   outline-offset: 2px;
 }
 
-/* Enforce 44x44px minimum tap target helper class */
-.tap-target {
-  min-height: 44px;
-  min-width: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Tool workspace: map the older warm/stone utilities onto the calm palette in dark mode */
+/* ─── Orbit Tool workspace overrides (dark mode) ─────────────────────────── */
 .dark .orbit-tool .bg-stone-950,
-.dark .orbit-tool .bg-stone-900 { background-color: var(--orbit-surface); }
+.dark .orbit-tool .bg-stone-900  { background-color: var(--orbit-surface); }
 .dark .orbit-tool .bg-stone-800,
 .dark .orbit-tool .bg-stone-800\/50,
-.dark .orbit-tool .bg-stone-50 { background-color: var(--orbit-surface-soft); }
+.dark .orbit-tool .bg-stone-50   { background-color: var(--orbit-surface-soft); }
 .dark .orbit-tool .bg-accent-950\/50 { background-color: var(--orbit-accent-soft); }
-.dark .orbit-tool .border-accent-700 { border-color: rgba(185, 164, 255, 0.45); }
-.dark .orbit-tool .text-accent-300 { color: #cdbcff; }
+.dark .orbit-tool .border-accent-700 { border-color: rgba(129, 140, 248, 0.45); }
+.dark .orbit-tool .text-accent-300   { color: #A5B4FC; }
 .dark .orbit-tool .text-stone-100,
-.dark .orbit-tool .text-stone-200 { color: var(--orbit-ink); }
+.dark .orbit-tool .text-stone-200    { color: var(--orbit-ink); }
 .dark .orbit-tool .text-stone-300,
-.dark .orbit-tool .text-stone-700 { color: var(--orbit-ink-soft); }
+.dark .orbit-tool .text-stone-700    { color: var(--orbit-ink-soft); }
 .dark .orbit-tool .text-stone-400,
 .dark .orbit-tool .text-stone-500,
-.dark .orbit-tool .text-stone-600 { color: var(--orbit-muted); }
+.dark .orbit-tool .text-stone-600    { color: var(--orbit-muted); }
 
-/* Friendlier focus ring on tool inputs */
+/* Tool input focus */
 .orbit-tool input:focus, .orbit-tool select:focus {
   border-color: var(--orbit-accent);
   box-shadow: 0 0 0 3px var(--orbit-accent-soft);
 }
 
-/* Type: Literata for headings, IBM Plex Sans for interface and body text */
-body { font-family: 'IBM Plex Sans', system-ui, sans-serif; font-feature-settings: 'kern', 'liga'; }
-h1, h2, h3 { font-family: 'Literata', Georgia, 'Times New Roman', serif; letter-spacing: -0.01em; }
-h1 { font-weight: 600; }
+/* ─── Left Sidebar specific ──────────────────────────────────────────────── */
+.sidebar-expanded  { width: var(--sidebar-width-expanded); }
+.sidebar-collapsed { width: var(--sidebar-width-collapsed); }
 
-/* Motion: keep state changes, drop decorative movement for people who ask for less */
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
+    scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
