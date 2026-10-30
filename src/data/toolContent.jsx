@@ -406,6 +406,50 @@ export const TOOL_CONTENT = {
       </div>
     )
   },
+  'image-to-gif': {
+    title: 'Image to GIF Maker - Convert Photos & Pictures to Animated GIF | OrbitBoard',
+    h1: 'Image to GIF Maker | Convert Multiple Images to Animated GIF',
+    metaDescription: 'Free online image to GIF maker. Combine multiple JPG, PNG, or WebP images into an animated GIF directly in your browser with speed and frame controls.',
+    intro: 'Turn multiple photos or graphics into a smooth animated GIF directly in your browser. Adjust frame speed, resolution and loop settings locally with complete privacy.',
+    keywords: 'image to gif, make gif from images, photo to gif maker, animated gif generator, convert png to gif',
+    how: [
+      'Select multiple JPG, PNG, or WebP images from your device or Google Drive.',
+      'Adjust frame speed (delay in ms) and maximum output dimensions.',
+      'Click Generate GIF to render the animation and download your GIF.'
+    ],
+    faq: [
+      ['Are my images uploaded to any server?', 'No. All frame rendering and GIF89a encoding happen entirely inside your web browser using HTML5 Canvas.'],
+      ['Can I use different image formats together?', 'Yes, you can mix JPG, PNG, and WebP images. They are automatically scaled and fitted into the animation canvas.']
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900">Creating Animated GIFs from Images</h2>
+        <p>Animated GIFs are ideal for product walkthroughs, social media teasers, memes, and visual tutorials. By combining sequential screenshots or photos, you can tell a quick visual story without requiring video players.</p>
+      </div>
+    )
+  },
+  'video-to-gif': {
+    title: 'Video to GIF Maker - Convert MP4, WebM & MOV to GIF | OrbitBoard',
+    h1: 'Video to GIF Maker | Convert Video Clips to Animated GIF',
+    metaDescription: 'Free online video to GIF converter. Convert MP4, WebM, and MOV video clips into high quality animated GIFs directly in your browser with start and end time trimming.',
+    intro: 'Convert video clips into lightweight, animated GIFs right in your browser. Trim playback times, adjust frame rate (FPS), and choose your target dimensions.',
+    keywords: 'video to gif, mp4 to gif, convert video to gif, clip to gif maker, webm to gif',
+    how: [
+      'Upload an MP4, WebM, or MOV video file from your computer or Google Drive.',
+      'Choose the start time, end time, and target frame rate (FPS).',
+      'Click Convert Video to GIF and download the optimized GIF animation.'
+    ],
+    faq: [
+      ['Is there a duration limit for video clips?', 'For best browser performance and lightweight GIF file sizes, clips between 1 to 10 seconds are recommended.'],
+      ['Does Video to GIF work on mobile devices?', 'Yes, standard mobile video formats like MP4 and MOV recorded on iPhone or Android work smoothly in modern mobile browsers.']
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900">Optimizing Video to GIF Conversion</h2>
+        <p>GIF animations have a 256-color palette limit per frame. Trimming your video to the key action moments and selecting an optimal frame rate (8 to 12 FPS) produces the crispest result while keeping the file size small enough for quick sharing.</p>
+      </div>
+    )
+  },
   'image-metadata-remover': {
     intro: 'Re-encode an image locally to help strip embedded metadata before sharing it.',
     keywords: 'remove image metadata, exif remover, strip photo metadata',
@@ -834,6 +878,21 @@ export const TOOL_CONTENT = {
       ['How are the weights used?', 'Each score is multiplied by its weight, the results are added up, and the total is divided by the sum of the weights. Only the relative sizes of the weights matter.'],
       ['What if a score is missing?', 'A missing score counts as zero and the tool tells you which option it affects.'],
       ['Does this choose the best option for me?', 'No. It makes your priorities explicit. The scores still reflect your judgement, so check them before deciding.']
+    ]
+  },
+  'gif-maker': {
+    intro: 'Turn a set of photos or screenshots into a looping animated GIF, right in your browser. Nothing is uploaded, so your images stay on your device.',
+    keywords: 'GIF maker, make GIF from images, image to GIF, animated GIF creator, photos to GIF online free',
+    how: [
+      'Choose two to sixty images. They play in the order you selected them.',
+      'Set the frame time in seconds and the square size in pixels. Smaller sizes give smaller files.',
+      'Pick how images fit the frame: fit keeps the whole picture, crop fills the square, and stretch fills it and may distort.',
+      'Create the GIF, check the preview, then download it.'
+    ],
+    faq: [
+      ['Are my images uploaded?', 'No. The images are combined in your browser, and the GIF is made on your device.'],
+      ['Why does my GIF look different from my photos?', 'GIF uses a limited palette of colours, so photos can look grainy. Fit and crop change how each picture sits in the frame.'],
+      ['Why is the GIF big?', 'Larger sizes, more frames and photos with lots of detail all increase the file size. Reduce the size or number of images to make it smaller.']
     ]
   },
   'sip': {

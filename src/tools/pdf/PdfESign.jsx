@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { downloadBlob } from '../../lib/toolFormat';
+import { FileUploadWithDrive } from '../../components/tools/FileUploadWithDrive';
 
 export default function PdfESign() {
   const [file, setFile] = useState(null);
@@ -43,7 +44,7 @@ export default function PdfESign() {
       target.drawText(signature || 'Signature', { x, y, size: fontSize, font, color: rgb(0.15, 0.15, 0.15) });
 
       const output = await pdf.save();
-      downloadBlob(new Blob([output], { type: 'application/pdf' }), (file.name.replace(/\.pdf$/i, '') || 'document') + '-signed.pdf');
+      downloadBlob(new Blob([output], { type: 'application/pdf' }), 'orbitboard-pdf-e-sign.pdf', 'pdf-e-sign');
       setStatus('Done — the signed PDF was downloaded.');
     } catch (error) {
       console.error(error);
@@ -53,10 +54,11 @@ export default function PdfESign() {
 
   return (
     <div className="space-y-5">
-      <label className="block">
-        <span className="text-xs font-medium text-slate-400">PDF file</span>
-        <input type="file" accept="application/pdf,.pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStatus(''); }} className="mt-2 block w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm" />
-      </label>
+      <FileUploadWithDrive 
+        accept="application/pdf,.pdf" 
+        label="Select PDF File to E-Sign"
+        onFileSelect={f => { setFile(f); setStatus(''); }} 
+      />
 
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="block">

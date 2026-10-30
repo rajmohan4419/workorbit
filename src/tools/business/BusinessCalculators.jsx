@@ -104,7 +104,7 @@ export function SaasRetention() {
       ['LTV to CAC (x)', r.ltvToCac === null ? '' : r.ltvToCac.toFixed(2)],
       ['CAC payback (months)', r.paybackMonths === null ? '' : r.paybackMonths.toFixed(2)],
     ];
-    downloadBlob(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }), 'saas-retention-results.csv');
+    downloadBlob(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }), 'orbitboard-saas-metrics.csv', 'saas-metrics');
   };
 
   return (
@@ -222,7 +222,7 @@ export function SalesPipelineForecaster() {
     rows.push(['Total weighted', '', '', '', r.weightedValue.toFixed(2)]);
     rows.push(['Quota', '', '', '', Number(quota) || 0]);
     rows.push(['Gap to target', '', '', '', r.gap === null ? '' : r.gap.toFixed(2)]);
-    downloadBlob(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }), 'sales-pipeline-results.csv');
+    downloadBlob(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }), 'orbitboard-sales-pipeline.csv', 'sales-pipeline');
   };
 
   return (

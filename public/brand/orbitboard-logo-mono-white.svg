@@ -1,0 +1,115 @@
+<svg width="600" height="160" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Cutout mask to cleanly separate the overlapping ring arcs in single-color -->
+    <mask id="mono-white-back-mask">
+      <rect width="160" height="160" fill="#FFFFFF"/>
+      <ellipse cx="80" cy="76" rx="42" ry="49" fill="#000000" transform="rotate(-18 80 76)"/>
+    </mask>
+
+    <clipPath id="mono-white-front-clip">
+      <path d="M 0 65 L 160 100 L 140 160 L 0 160 Z"/>
+    </clipPath>
+
+    <!-- Knockout gap where front ring passes over the O -->
+    <mask id="mono-white-o-mask">
+      <rect width="160" height="160" fill="#FFFFFF"/>
+      <ellipse cx="80" cy="75" rx="68" ry="30" 
+        fill="none" 
+        stroke="#000000" 
+        stroke-width="15" 
+        transform="rotate(-28 80 75)"
+        clip-path="url(#mono-white-front-clip)"
+      />
+    </mask>
+  </defs>
+
+  <!-- ==================== MONOCHROME WHITE SYMBOL ==================== -->
+  <g transform="translate(10, 5)">
+    <!-- Back arc of ring -->
+    <g mask="url(#mono-white-back-mask)">
+      <ellipse cx="80" cy="75" rx="68" ry="30" 
+        fill="none" 
+        stroke="#FFFFFF" 
+        stroke-width="7" 
+        transform="rotate(-28 80 75)"
+      />
+    </g>
+
+    <!-- Central O with optical knockout for front ring -->
+    <g transform="rotate(-18 80 76)" mask="url(#mono-white-o-mask)">
+      <path d="M 80 34
+               C 101 34, 116 52, 116 76
+               C 116 100, 101 118, 80 118
+               C 59 118, 44 100, 44 76
+               C 44 52, 59 34, 80 34 Z
+               M 80 54
+               C 69 54, 62 64, 62 76
+               C 62 88, 69 98, 80 98
+               C 91 98, 98 88, 98 76
+               C 98 64, 91 54, 80 54 Z"
+            fill="#FFFFFF"
+            fill-rule="evenodd"
+      />
+    </g>
+
+    <!-- Front arc of ring passing in front -->
+    <g clip-path="url(#mono-white-front-clip)">
+      <ellipse cx="80" cy="75" rx="68" ry="30" 
+        fill="none" 
+        stroke="#FFFFFF" 
+        stroke-width="7" 
+        transform="rotate(-28 80 75)"
+      />
+    </g>
+
+    <!-- Satellite sphere -->
+    <circle cx="129" cy="42" r="9.5" fill="#FFFFFF"/>
+  </g>
+
+  <!-- ==================== MONOCHROME WHITE TYPOGRAPHY ==================== -->
+  <!-- "OrbitBoard" in solid pure white -->
+  <text x="185" y="94" 
+    font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Montserrat', 'Segoe UI', sans-serif" 
+    font-size="62" 
+    font-weight="900" 
+    letter-spacing="-0.03em" 
+    fill="#FFFFFF">OrbitBoard</text>
+
+  <!-- Tagline: "PLAN • BUILD • DO • TOGETHER" -->
+  <g transform="translate(188, 128)">
+    <text x="0" y="0" 
+      font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" 
+      font-size="12" 
+      font-weight="800" 
+      letter-spacing="0.32em" 
+      fill="#FFFFFF">PLAN</text>
+    
+    <circle cx="68" cy="-4" r="2.5" fill="#FFFFFF"/>
+
+    <text x="82" y="0" 
+      font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" 
+      font-size="12" 
+      font-weight="800" 
+      letter-spacing="0.32em" 
+      fill="#FFFFFF">BUILD</text>
+
+    <circle cx="164" cy="-4" r="2.5" fill="#FFFFFF"/>
+
+    <text x="178" y="0" 
+      font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" 
+      font-size="12" 
+      font-weight="800" 
+      letter-spacing="0.32em" 
+      fill="#FFFFFF">DO</text>
+
+    <circle cx="224" cy="-4" r="2.5" fill="#FFFFFF"/>
+
+    <text x="238" y="0" 
+      font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" 
+      font-size="12" 
+      font-weight="800" 
+      letter-spacing="0.32em" 
+      fill="#FFFFFF">TOGETHER</text>
+  </g>
+</svg>
+

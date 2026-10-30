@@ -1,0 +1,84 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Punchy High-DPI Central O Gradient -->
+    <linearGradient id="o-32-grad" x1="6" y1="6" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0369A1"/>
+    </linearGradient>
+
+    <!-- Punchy Orbital Ring Gradient -->
+    <linearGradient id="ring-32-grad" x1="2" y1="20" x2="28" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00E5FF"/>
+      <stop offset="40%" stop-color="#A855F7"/>
+      <stop offset="75%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+
+    <radialGradient id="sat-32-grad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="40%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </radialGradient>
+
+    <!-- Mask to hide back of ring behind O -->
+    <mask id="ring-32-mask">
+      <rect width="32" height="32" fill="#FFFFFF"/>
+      <ellipse cx="15.5" cy="15.5" rx="8" ry="9.5" fill="#000000" transform="rotate(-18 15.5 15.5)"/>
+    </mask>
+  </defs>
+
+  <!-- Dark Mode Background Squircle for Tab Visibility -->
+  <rect width="32" height="32" rx="7.5" fill="#090D16"/>
+
+  <!-- BACK HALF OF RING -->
+  <g mask="url(#ring-32-mask)">
+    <ellipse cx="15.5" cy="15.5" rx="12.5" ry="5.8" 
+      fill="none" 
+      stroke="url(#ring-32-grad)" 
+      stroke-width="2.6" 
+      stroke-linecap="round"
+      transform="rotate(-28 15.5 15.5)"
+    />
+  </g>
+
+  <!-- CENTRAL "O" SCULPTED GEOMETRY (Optimized for 32px raster grids) -->
+  <g transform="rotate(-18 15.5 15.5)">
+    <!-- Outer rim -->
+    <path d="M 15.5 7.5
+             C 19.8 7.5, 23 11, 23 15.5
+             C 23 20, 19.8 23.5, 15.5 23.5
+             C 11.2 23.5, 8 20, 8 15.5
+             C 8 11, 11.2 7.5, 15.5 7.5 Z
+             M 15.5 11.2
+             C 13.2 11.2, 11.6 13, 11.6 15.5
+             C 11.6 18, 13.2 19.8, 15.5 19.8
+             C 17.8 19.8, 19.4 18, 19.4 15.5
+             C 19.4 13, 17.8 11.2, 15.5 11.2 Z"
+          fill="url(#o-32-grad)"
+          fill-rule="evenodd"
+    />
+    <!-- Specular highlight arc -->
+    <path d="M 11 11 C 12.5 9 14.5 8.2 17 8.5 C 15 9.2 13.5 10.5 12.5 12 Z" fill="#BAE6FD"/>
+  </g>
+
+  <!-- FRONT HALF OF RING (Lower-left arc passing over the O) -->
+  <g>
+    <clipPath id="front-32-clip">
+      <path d="M 0 14 L 32 21 L 26 32 L 0 32 Z"/>
+    </clipPath>
+    <ellipse cx="15.5" cy="15.5" rx="12.5" ry="5.8" 
+      fill="none" 
+      stroke="url(#ring-32-grad)" 
+      stroke-width="2.6" 
+      stroke-linecap="round"
+      transform="rotate(-28 15.5 15.5)"
+      clip-path="url(#front-32-clip)"
+    />
+  </g>
+
+  <!-- SATELLITE MOON AT TOP RIGHT APEX -->
+  <circle cx="24.8" cy="9.2" r="3" fill="url(#sat-32-grad)"/>
+  <circle cx="24.2" cy="8.6" r="1" fill="#FFFFFF" opacity="0.8"/>
+</svg>
+

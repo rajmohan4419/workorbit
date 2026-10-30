@@ -1,6 +1,9 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState, useRef } from 'react';
-import { ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronRight } from 'lucide-react';
+import { 
+  ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronRight, 
+  ChevronDown, Coins, BriefcaseBusiness, Code2, Calculator, TrendingUp 
+} from 'lucide-react';
 import { TOOLS, LISTED_TOOLS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf } from '../engines/pdf';
@@ -11,6 +14,9 @@ import { money, num, downloadBlob } from '../lib/toolFormat';
 import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemption } from '../tools/finance/FinanceCalculators';
 import { SaasRetention, SalesPipelineForecaster, SaasPricing } from '../tools/business/BusinessCalculators';
 import { InvoiceAging, DecisionMatrix } from '../tools/business/BusinessWorkflows';
+import { GifMaker } from '../tools/everyday/GifMaker';
+import { ImageToGif, VideoToGif } from '../tools/media/GifTools';
+import { FileUploadWithDrive } from '../components/tools/FileUploadWithDrive';
 import SampleAd from '../components/SampleAd';
 import { isAdEligible, loadAdSense } from '../lib/adsense';
 import AdSenseUnit from '../components/AdSenseUnit';
@@ -527,7 +533,8 @@ function ImageConverter({ format }) {
       setPreview(canvas.toDataURL('image/' + (isJpg ? 'jpeg' : 'png'), isJpg ? Number(quality) : undefined));
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/' + (isJpg ? 'jpeg' : 'png'), isJpg ? Number(quality) : undefined));
       if (!blob) throw new Error('Could not create output image');
-      downloadBlob(blob, (file.name.replace(/\.[^.]+$/, '') || 'orbitboard-image') + '.' + ext);
+      const toolSlug = isJpg ? 'png-to-jpg' : 'jpg-to-png';
+      downloadBlob(blob, `orbitboard-${toolSlug}.${ext}`, toolSlug);
       setStatus('Done — your converted image is ready.');
     } catch { setStatus('Could not convert this image. Try another file.'); }
     finally { URL.revokeObjectURL(url); }
@@ -536,10 +543,13 @@ function ImageConverter({ format }) {
   return (
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
       <div className="lg:col-span-7 space-y-4">
-        <label className="block">
-          <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Image file</span>
-          <input type="file" accept="image/*" onChange={e => { setFile(e.target.files?.[0] || null); setStatus(''); }} className="mt-1.5 block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-        </label>
+        <FileUploadWithDrive
+          label="Image file"
+          accept="image/*"
+          file={file}
+          onFileSelect={f => { setFile(f); setStatus(''); }}
+          onClear={() => { setFile(null); setStatus(''); }}
+        />
         {isJpg && (
           <label className="block">
             <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">JPG Quality: {Math.round(Number(quality) * 100)}%</span>
@@ -788,14 +798,20 @@ function ImageResizer() {
       const data = canvas.toDataURL(format, Number(quality)); setPreview(data);
       const blob = await new Promise(resolve => canvas.toBlob(resolve, format, Number(quality)));
       const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
-      downloadBlob(blob, (file.name.replace(/\.[^.]+$/, '') || 'orbitboard-image') + '-' + targetWidth + 'x' + targetHeight + '.' + ext);
+      downloadBlob(blob, 'orbitboard-image-resizer.' + ext, 'image-resizer');
       setStatus('Done — resized image downloaded.');
     } catch { setStatus('Could not resize this image.'); } finally { URL.revokeObjectURL(url); }
   };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="image/*" onChange={e => { setFile(e.target.files?.[0] || null); setStatus(''); }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Upload Image"
+        accept="image/*"
+        file={file}
+        onFileSelect={f => { setFile(f); setStatus(''); }}
+        onClear={() => { setFile(null); setStatus(''); }}
+      />
       <div className="grid sm:grid-cols-2 gap-4">
         <Field label="Width (px)" value={width} onChange={setWidth} />
         <Field label="Height (px, optional)" value={height} onChange={setHeight} placeholder="Auto from aspect ratio" />
@@ -817,7 +833,7 @@ function SvgToPng() {
       const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.naturalWidth * Number(scale))); canvas.height = Math.max(1, Math.round(image.naturalHeight * Number(scale)));
       canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
       const data = canvas.toDataURL('image/png'); setPreview(data);
-      const out = await new Promise(resolve => canvas.toBlob(resolve, 'image/png')); downloadBlob(out, 'orbitboard-svg.png'); setStatus('Done — PNG downloaded.'); URL.revokeObjectURL(url);
+      const out = await new Promise(resolve => canvas.toBlob(resolve, 'image/png')); downloadBlob(out, 'orbitboard-svg-to-png.png', 'svg-to-png'); setStatus('Done — PNG downloaded.'); URL.revokeObjectURL(url);
     } catch { setStatus('Invalid SVG or conversion failed.'); }
   };
 
@@ -848,7 +864,7 @@ function CsvToPdf() {
   const convert = () => {
     try {
       const rows = parseCsv(input); const lines = rows.map(r => r.map(v => v.trim()).join(' | '));
-      downloadBlob(createTextPdf(lines), 'orbitboard-csv.pdf'); setStatus('Done — CSV data exported to PDF.');
+      downloadBlob(createTextPdf(lines), 'orbitboard-csv-to-pdf.pdf', 'csv-to-pdf'); setStatus('Done — CSV data exported to PDF.');
     } catch { setStatus('Could not convert CSV.'); }
   };
 
@@ -870,13 +886,19 @@ function XlsxToPdf() {
       const bytes = await file.arrayBuffer();
       const lines = ['XLSX Export', 'File: ' + file.name];
       if (bytes.byteLength === 0) throw new Error('File is empty');
-      downloadBlob(createTextPdf(lines), 'orbitboard-spreadsheet.pdf'); setStatus('Done — PDF generated.');
+      downloadBlob(createTextPdf(lines), 'orbitboard-xlsx-to-pdf.pdf', 'xlsx-to-pdf'); setStatus('Done — PDF generated.');
     } catch (e) { setStatus(e.message || 'Could not convert XLSX.'); }
   };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e => { setFile(e.target.files?.[0] || null); setStatus(''); }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Excel Spreadsheet (.xlsx, .xls)"
+        accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        file={file}
+        onFileSelect={f => { setFile(f); setStatus(''); }}
+        onClear={() => { setFile(null); setStatus(''); }}
+      />
       <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert XLSX to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
@@ -918,7 +940,7 @@ function ImageToPdf() {
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const pdf = createPdfFromJpeg(bytes, image.naturalWidth, image.naturalHeight);
-      downloadBlob(pdf, (file.name.replace(/\.[^.]+$/, '') || 'orbitboard-image') + '.pdf');
+      downloadBlob(pdf, 'orbitboard-image-to-pdf.pdf', 'image-to-pdf');
       setStatus('Done — your PDF is ready.');
     } catch { setStatus('Could not generate PDF.'); }
     finally { URL.revokeObjectURL(url); }
@@ -926,7 +948,13 @@ function ImageToPdf() {
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { setFile(e.target.files?.[0] || null); setStatus(''); }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select Image"
+        accept="image/jpeg,image/png,image/webp"
+        file={file}
+        onFileSelect={f => { setFile(f); setStatus(''); }}
+        onClear={() => { setFile(null); setStatus(''); }}
+      />
       {preview && <img src={preview} alt="PDF preview" className="max-h-72 max-w-full rounded-2xl border border-[var(--orbit-border)] object-contain" />}
       <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
@@ -990,13 +1018,19 @@ function ImageMetadataRemover() {
       const ctx = canvas.getContext('2d'); if (format === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
       ctx.drawImage(image, 0, 0); const blob = await new Promise(resolve => canvas.toBlob(resolve, format, 0.95));
       const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
-      downloadBlob(blob, (file.name.replace(/\.[^.]+$/, '') || 'orbitboard-image') + '-clean.' + ext); setStatus('Done — re-encoded image downloaded.');
+      downloadBlob(blob, 'orbitboard-image-metadata-remover.' + ext, 'image-metadata-remover'); setStatus('Done — re-encoded image downloaded.');
     } catch { setStatus('Could not process this image.') } finally { URL.revokeObjectURL(url); }
   };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="image/*" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select Image"
+        accept="image/*"
+        file={file}
+        onFileSelect={f => { setFile(f); setStatus('') }}
+        onClear={() => { setFile(null); setStatus('') }}
+      />
       <button onClick={clean} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Remove Metadata & Download</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
@@ -1015,7 +1049,7 @@ function ImageCompressor() {
       const ctx = canvas.getContext('2d'); if (format === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); } ctx.drawImage(image, 0, 0);
       const blob = await new Promise(resolve => canvas.toBlob(resolve, format, Number(quality))); setAfter(blob.size);
       const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
-      downloadBlob(blob, (file.name.replace(/\.[^.]+$/, '') || 'orbitboard-image') + '-compressed.' + ext); setStatus('Done — compressed image downloaded.');
+      downloadBlob(blob, 'orbitboard-image-compressor.' + ext, 'image-compressor'); setStatus('Done — compressed image downloaded.');
     } catch { setStatus('Could not compress this image.'); } finally { URL.revokeObjectURL(url); }
   };
   const saved = before && after ? Math.max(0, Math.round((1 - after / before) * 100)) : 0;
@@ -1023,7 +1057,13 @@ function ImageCompressor() {
   return (
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
       <div className="lg:col-span-7 space-y-4">
-        <input type="file" accept="image/*" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+        <FileUploadWithDrive
+          label="Select Image to Compress"
+          accept="image/*"
+          file={file}
+          onFileSelect={f => { setFile(f); setStatus('') }}
+          onClear={() => { setFile(null); setStatus('') }}
+        />
         <button onClick={compress} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold hover:bg-accent-500 min-h-[44px]">Compress & Download</button>
       </div>
       <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
@@ -1053,8 +1093,9 @@ function SpreadsheetFileTool({ type }) {
       }
       const input = isCsv && file ? await file.text() : text;
       const bytes = isJson ? jsonToXlsx(text) : csvToXlsx(input);
-      const filename = isJson ? 'orbitboard-data.xlsx' : (((file?.name || 'orbitboard-data').replace(/\.csv$/i, '') || 'orbitboard-data') + '.xlsx');
-      downloadBlob(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);
+      const finalSlug = isCsv ? 'csv-to-excel' : 'json-to-excel';
+      const filename = `orbitboard-${finalSlug}.xlsx`;
+      downloadBlob(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename, finalSlug);
       setStatus('Done — XLSX downloaded.');
     } catch (e) { setStatus(e.message || 'Could not convert this spreadsheet.'); }
     finally { setBusy(false); }
@@ -1063,10 +1104,24 @@ function SpreadsheetFileTool({ type }) {
   return (
     <div className="space-y-4">
       {type === 'xlsx-to-csv' ? (
-        <input type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e => { setFile(e.target.files?.[0] || null); setText(''); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+        <FileUploadWithDrive
+          label="Excel Spreadsheet (.xlsx, .xls)"
+          accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          file={file}
+          onFileSelect={f => { setFile(f); setText(''); setStatus('') }}
+          onClear={() => { setFile(null); setText(''); setStatus('') }}
+        />
       ) : (
         <>
-          {isCsv && <input type="file" accept=".csv,text/csv" onChange={e => { setFile(e.target.files?.[0] || null); setText(''); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />}
+          {isCsv && (
+            <FileUploadWithDrive
+              label="CSV File"
+              accept=".csv,text/csv"
+              file={file}
+              onFileSelect={f => { setFile(f); setText(''); setStatus('') }}
+              onClear={() => { setFile(null); setText(''); setStatus('') }}
+            />
+          )}
           <textarea value={text} onChange={e => { setText(e.target.value); if (isCsv) setFile(null) }} placeholder={isJson ? 'Paste a JSON array of objects…' : 'Paste CSV data or choose a file…'} className="w-full h-64 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
         </>
       )}
@@ -1105,11 +1160,32 @@ function CsvToJson() {
 
 function TextToPdf() {
   const [file, setFile] = useState(null), [text, setText] = useState(''), [status, setStatus] = useState('');
-  const convert = async () => { if (!file && !text) { setStatus('Choose a text file or paste text first.'); return; } try { const bytes = await createTextPdf(text); downloadBlob(new Blob([bytes], { type: 'application/pdf' }), ((file?.name || 'orbitboard').replace(/\.txt$/i, '') || 'orbitboard') + '.pdf'); setStatus('Done — PDF downloaded.'); } catch { setStatus('Could not create the PDF.'); } };
+  const convert = async () => {
+    if (!file && !text) { setStatus('Choose a text file or paste text first.'); return; }
+    try {
+      const bytes = await createTextPdf(text);
+      downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-text-to-pdf.pdf', 'text-to-pdf');
+      setStatus('Done — PDF downloaded.');
+    } catch {
+      setStatus('Could not create the PDF.');
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept=".txt,text/plain" onChange={async e => { const f = e.target.files?.[0]; if (f) { setFile(f); setText(await f.text()); } }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select Text File (.txt)"
+        accept=".txt,text/plain"
+        file={file}
+        onFileSelect={async f => {
+          if (f) {
+            setFile(f);
+            setText(await f.text());
+            setStatus('');
+          }
+        }}
+        onClear={() => { setFile(null); setText(''); }}
+      />
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Or paste text here…" className="w-full h-64 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
       <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
@@ -1123,7 +1199,13 @@ function PdfToText() {
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setText(''); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select PDF File"
+        accept="application/pdf"
+        file={file}
+        onFileSelect={f => { setFile(f); setText(''); setStatus('') }}
+        onClear={() => { setFile(null); setText(''); setStatus('') }}
+      />
       <button disabled={busy} onClick={extract} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Text'}</button>
       <textarea readOnly value={text} placeholder="Extracted text will appear here…" className="w-full h-72 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base" />
       {text && <ExportActions content={text} filename="orbitboard-extracted.txt" />}
@@ -1206,19 +1288,60 @@ function PdfMerge() {
   const [files, setFiles] = useState([]), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
   const merge = async () => {
     if (files.length < 2) { setStatus('Choose at least two PDFs.'); return; } setBusy(true); setStatus('Merging PDFs locally…');
-    try { const bytes = await mergePdfFiles(files); downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-merged.pdf'); setStatus('Done — merged PDF downloaded.'); }
-    catch { setStatus('Could not merge these PDFs.'); } finally { setBusy(false); }
+    try {
+      const bytes = await mergePdfFiles(files);
+      downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-pdf-merge.pdf', 'pdf-merge');
+      setStatus('Done — merged PDF downloaded.');
+    } catch {
+      setStatus('Could not merge these PDFs.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="application/pdf" multiple onChange={e => { setFiles([...e.target.files]); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Add PDF files to merge"
+        accept="application/pdf"
+        onFileSelect={f => {
+          if (f) {
+            setFiles(prev => [...prev, f]);
+            setStatus('');
+          }
+        }}
+        onClear={() => setFiles([])}
+      />
       {files.length > 0 && (
-        <ol className="space-y-2">
-          {files.map((f, i) => <li key={f.name + i} className="rounded-xl bg-stone-50 dark:bg-stone-800 px-4 py-2.5 text-sm text-stone-800 dark:text-stone-200">{i + 1}. {f.name}</li>)}
-        </ol>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs font-semibold text-stone-600 dark:text-stone-400">
+            <span>{files.length} PDF files queued</span>
+            <button
+              type="button"
+              onClick={() => setFiles([])}
+              className="text-red-500 hover:text-red-600 dark:text-red-400"
+            >
+              Clear all
+            </button>
+          </div>
+          <ol className="space-y-1.5">
+            {files.map((f, i) => (
+              <li key={f.name + i} className="flex items-center justify-between rounded-xl bg-stone-50 dark:bg-stone-800 px-4 py-2.5 text-sm text-stone-800 dark:text-stone-200">
+                <span className="truncate">{i + 1}. {f.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
+                  className="text-stone-400 hover:text-red-500 ml-2"
+                  title="Remove file"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
-      <button disabled={busy} onClick={merge} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Merging…' : 'Merge PDFs'}</button>
+      <button disabled={busy || files.length < 2} onClick={merge} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Merging…' : 'Merge PDFs'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -1232,13 +1355,21 @@ function PdfExtract() {
       const src = await loadPdf(file); const max = src.getPageCount();
       const indexes = pages.split(',').flatMap(part => { const [a, b] = part.trim().split('-').map(Number); if (Number.isFinite(a) && Number.isFinite(b)) { const s = Math.min(a, b), e = Math.max(a, b); return Array.from({ length: e - s + 1 }, (_, i) => s + i - 1); } if (Number.isFinite(a)) return [a - 1]; return []; }).filter(i => i >= 0 && i < max);
       if (!indexes.length) { setStatus('Enter page numbers such as 1,3,5-7.'); return; }
-      const bytes = await extractPdfPages(file, indexes.map(i => i + 1)); downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-extracted-pages.pdf'); setStatus('Done — extracted PDF downloaded.');
+      const bytes = await extractPdfPages(file, indexes.map(i => i + 1));
+      downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-pdf-extract.pdf', 'pdf-extract');
+      setStatus('Done — extracted PDF downloaded.');
     } catch { setStatus('Could not extract pages.'); } finally { setBusy(false); }
   };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select PDF File"
+        accept="application/pdf"
+        file={file}
+        onFileSelect={f => { setFile(f); setStatus('') }}
+        onClear={() => { setFile(null); setStatus('') }}
+      />
       <Field label="Pages to extract" value={pages} onChange={setPages} type="text" placeholder="Example: 1,3,5-7" />
       <button disabled={busy} onClick={extract} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Pages'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
@@ -1248,11 +1379,24 @@ function PdfExtract() {
 
 function PdfSplit() {
   const [file, setFile] = useState(null), [status, setStatus] = useState('');
-  const split = async () => { if (!file) { setStatus('Choose a PDF first.'); return; } try { const bytesList = await splitPdfPages(file); bytesList.forEach((bytes, i) => downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `page-${i + 1}.pdf`)); setStatus('Done — individual pages downloaded.'); } catch { setStatus('Could not split this PDF.'); } };
+  const split = async () => {
+    if (!file) { setStatus('Choose a PDF first.'); return; }
+    try {
+      const bytesList = await splitPdfPages(file);
+      bytesList.forEach((bytes, i) => downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `orbitboard-pdf-split-page-${i + 1}.pdf`, 'pdf-split'));
+      setStatus('Done — individual pages downloaded.');
+    } catch { setStatus('Could not split this PDF.'); }
+  };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select PDF File"
+        accept="application/pdf"
+        file={file}
+        onFileSelect={f => { setFile(f); setStatus('') }}
+        onClear={() => { setFile(null); setStatus('') }}
+      />
       <button onClick={split} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Split into Pages</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
@@ -1268,7 +1412,13 @@ function PdfToImages({ format = 'image/png' }) {
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setPages([]); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select PDF File"
+        accept="application/pdf"
+        file={file}
+        onFileSelect={f => { setFile(f); setPages([]); setStatus('') }}
+        onClear={() => { setFile(null); setPages([]); setStatus('') }}
+      />
       <button disabled={busy} onClick={load} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Rendering…' : 'Render PDF Pages'}</button>
       {pages.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1284,12 +1434,24 @@ function PdfCompressor() {
   const [file, setFile] = useState(null), [busy, setBusy] = useState(false), [status, setStatus] = useState(''), [stats, setStats] = useState(null);
   const compress = async () => {
     if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true); setStatus('Optimizing PDF structure…');
-    try { const bytes = await optimizePdf(file); const blob = new Blob([bytes], { type: 'application/pdf' }); downloadBlob(blob, (file.name.replace(/\.pdf$/i, '') || 'orbitboard') + '-optimized.pdf'); setStats({ before: file.size, after: blob.size }); setStatus('Done — optimized PDF downloaded.'); } catch { setStatus('Could not optimize this PDF.'); } finally { setBusy(false); }
+    try {
+      const bytes = await optimizePdf(file);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      downloadBlob(blob, 'orbitboard-pdf-compressor.pdf', 'pdf-compressor');
+      setStats({ before: file.size, after: blob.size });
+      setStatus('Done — optimized PDF downloaded.');
+    } catch { setStatus('Could not optimize this PDF.'); } finally { setBusy(false); }
   };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStats(null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select PDF to Compress"
+        accept="application/pdf"
+        file={file}
+        onFileSelect={f => { setFile(f); setStats(null); setStatus('') }}
+        onClear={() => { setFile(null); setStats(null); setStatus('') }}
+      />
       <button disabled={busy} onClick={compress} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Optimizing…' : 'Optimize & Download'}</button>
       {stats && (
         <div className="grid sm:grid-cols-2 gap-3">
@@ -1311,10 +1473,14 @@ function PdfWorkspace() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setPages([]); setStatus('') }} className="flex-1 min-w-60 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
-        <button disabled={busy} onClick={renderPdf} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Working…' : 'Open PDF'}</button>
-      </div>
+      <FileUploadWithDrive
+        label="Select PDF File"
+        accept="application/pdf"
+        file={file}
+        onFileSelect={f => { setFile(f); setPages([]); setStatus('') }}
+        onClear={() => { setFile(null); setPages([]); setStatus('') }}
+      />
+      <button disabled={busy} onClick={renderPdf} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Working…' : 'Open PDF'}</button>
       {pages.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {pages.map(p => <div key={p.number} className="rounded-2xl border border-[var(--orbit-border)] p-3"><img src={p.data} alt={'Page ' + p.number} className="w-full rounded-lg bg-white" /><p className="mt-2 text-xs text-stone-600 dark:text-stone-400">Page {p.number}</p></div>)}
@@ -1329,12 +1495,25 @@ function PdfReorder() {
   const [file, setFile] = useState(null), [order, setOrder] = useState(''), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
   const reorder = async () => {
     if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true);
-    try { const src = await loadPdf(file); const nums = order.split(',').map(v => Number(v.trim())).filter(Number.isInteger); if (nums.length !== src.getPageCount()) { setStatus('Enter every page number.'); return; } const bytes = await reorderPdfPages(file, nums); downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-reordered.pdf'); setStatus('Done — reordered PDF downloaded.'); } catch { setStatus('Could not reorder PDF.'); } finally { setBusy(false); }
+    try {
+      const src = await loadPdf(file);
+      const nums = order.split(',').map(v => Number(v.trim())).filter(Number.isInteger);
+      if (nums.length !== src.getPageCount()) { setStatus('Enter every page number.'); return; }
+      const bytes = await reorderPdfPages(file, nums);
+      downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-pdf-workspace.pdf', 'pdf-workspace');
+      setStatus('Done — reordered PDF downloaded.');
+    } catch { setStatus('Could not reorder PDF.'); } finally { setBusy(false); }
   };
 
   return (
     <div className="space-y-4">
-      <input type="file" accept="application/pdf" onChange={e => { setFile(e.target.files?.[0] || null); setStatus('') }} className="block w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base min-h-[44px]" />
+      <FileUploadWithDrive
+        label="Select PDF File"
+        accept="application/pdf"
+        file={file}
+        onFileSelect={f => { setFile(f); setStatus('') }}
+        onClear={() => { setFile(null); setStatus('') }}
+      />
       <Field label="Page order" value={order} onChange={setOrder} type="text" placeholder="Example: 3,1,2,4" />
       <button disabled={busy} onClick={reorder} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Saving…' : 'Reorder & Download'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
@@ -1344,6 +1523,27 @@ function PdfReorder() {
 
 function ToolHeaderStrip({ tool, info, workspaceRef }) {
   const [shared, setShared] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
+
+  const categoryOptions = [
+    { name: 'Finance', label: 'Finance & Money', icon: Coins, count: 11 },
+    { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness, count: 6 },
+    { name: 'Developer', label: 'Developer Tools', icon: Code2, count: 15 },
+    { name: 'Everyday', label: 'Everyday Utilities', icon: Calculator, count: 27 },
+    { name: 'Business', label: 'Business & SaaS', icon: TrendingUp, count: 5 },
+  ];
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target)) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
+
   const [bookmarked, setBookmarked] = useState(() => {
     try {
       const favs = JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]');
@@ -1388,13 +1588,72 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
   return (
     <div className="border-b border-[var(--orbit-border)] bg-[var(--orbit-canvas)] py-6 sm:py-8 transition-colors">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-medium text-stone-500 dark:text-stone-400 mb-3">
-          <Link to="/" className="hover:text-accent-600 transition">Home</Link>
-          <ChevronRight size={13} />
-          <Link to={`/tools?category=${tool.category}`} className="hover:text-accent-600 transition">{tool.category}</Link>
-          <ChevronRight size={13} />
-          <span className="text-stone-900 dark:text-stone-100 font-bold truncate">{tool.name}</span>
-        </nav>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-medium text-stone-500 dark:text-stone-400">
+            <Link to="/" className="hover:text-accent-600 transition">Home</Link>
+            <ChevronRight size={13} />
+            <Link to={`/tools?category=${tool.category}`} className="hover:text-accent-600 transition">{tool.category}</Link>
+            <ChevronRight size={13} />
+            <span className="text-stone-900 dark:text-stone-100 font-bold truncate max-w-[200px] sm:max-w-none">{tool.name}</span>
+          </nav>
+
+          {/* Tools Category Dropdown */}
+          <div className="relative" ref={categoryDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setCategoryDropdownOpen(prev => !prev)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-accent-400 hover:text-accent-700 dark:hover:text-accent-400 transition shadow-2xs"
+              aria-expanded={categoryDropdownOpen}
+              aria-haspopup="true"
+            >
+              <span className="text-stone-400 dark:text-stone-500 font-normal">Category:</span>
+              <span className="font-bold text-stone-900 dark:text-stone-100">{tool.category}</span>
+              <ChevronDown size={13} className={`transition-transform duration-200 text-stone-400 ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {categoryDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-2 shadow-2xl ring-1 ring-black/5 z-40 animate-in fade-in duration-150">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-[var(--orbit-border)] mb-1">
+                  Browse by Category
+                </div>
+                <div className="space-y-0.5">
+                  {categoryOptions.map(cat => {
+                    const isCurrent = cat.name === tool.category;
+                    const Icon = cat.icon;
+                    return (
+                      <Link
+                        key={cat.name}
+                        to={`/tools?category=${cat.name}`}
+                        onClick={() => setCategoryDropdownOpen(false)}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition ${
+                          isCurrent
+                            ? 'bg-accent-50 dark:bg-accent-950/60 text-accent-700 dark:text-accent-300 font-bold'
+                            : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Icon size={15} className={isCurrent ? 'text-accent-600' : 'text-stone-400'} />
+                          <span>{cat.label}</span>
+                        </span>
+                        <span className="text-[10px] text-stone-400">{cat.count} tools</span>
+                      </Link>
+                    );
+                  })}
+                  <div className="pt-1 mt-1 border-t border-[var(--orbit-border)]">
+                    <Link
+                      to="/tools"
+                      onClick={() => setCategoryDropdownOpen(false)}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/40 transition"
+                    >
+                      <span>Browse All 64 Tools</span>
+                      <ArrowRight size={13} />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -1456,12 +1715,13 @@ export default function ToolPage() {
   const workspaceRef = useRef(null);
 
   const content = useMemo(() => ({
+    'gif-maker': GifMaker,
     'salary-hike': SalaryHike, 'ctc-to-inhand': SalaryCalculator, 'offer-comparison': Offer, 'notice-period': Notice, 'experience': Experience, 'gratuity-calculator': GratuityCalculator, 'percentage': Percentage,
     'length-converter': () => <Converter type="length" />, 'weight-converter': () => <Converter type="weight" />, 'temperature-converter': TemperatureConverter, 'time-converter': () => <Converter type="time" />,
     'timezone-converter': GlobalTimeZoneConverter, 'jpg-to-png': () => <ImageConverter format="image/png" />, 'png-to-jpg': () => <ImageConverter format="image/jpeg" />, 'webp-to-jpg': () => <ImageConverter format="image/jpeg" />,
     'image-to-pdf': ImageToPdf, 'xlsx-to-pdf': XlsxToPdf, 'image-resizer': ImageResizer, 'svg-to-png': SvgToPng, 'csv-to-pdf': CsvToPdf, 'csv-to-json': CsvToJson, 'csv-to-xlsx': () => <SpreadsheetFileTool type="csv-to-xlsx" />,
     'json-to-xlsx': () => <SpreadsheetFileTool type="json-to-xlsx" />, 'xlsx-to-csv': () => <SpreadsheetFileTool type="xlsx-to-csv" />, 'txt-to-pdf': TextToPdf, 'pdf-to-text': PdfToText, 'diff-checker': DiffChecker,
-    'json-to-xml': JsonToXml, 'xml-to-json': XmlToJson, 'markdown-to-html': MarkdownToHtml, 'image-compressor': ImageCompressor, 'image-metadata-remover': ImageMetadataRemover, 'pdf-merge': PdfMerge, 'pdf-split': PdfSplit,
+    'json-to-xml': JsonToXml, 'xml-to-json': XmlToJson, 'markdown-to-html': MarkdownToHtml, 'image-compressor': ImageCompressor, 'image-to-gif': ImageToGif, 'video-to-gif': VideoToGif, 'image-metadata-remover': ImageMetadataRemover, 'pdf-merge': PdfMerge, 'pdf-split': PdfSplit,
     'pdf-extract-pages': PdfExtract, 'pdf-reorder': PdfReorder, 'pdf-workspace': PdfWorkspace, 'pdf-compressor': PdfCompressor, 'pdf-e-sign': PdfESign, 'pdf-to-jpg': () => <PdfToImages format="image/jpeg" />, 'pdf-to-png': () => <PdfToImages format="image/png" />,
     'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'loan-amortization-calculator': LoanAmortization, 'hra-exemption-calculator-india': HraExemption, 'saas-retention-calculator': SaasRetention, 'sales-pipeline-forecaster': SalesPipelineForecaster, 'saas-pricing-calculator': SaasPricing, 'invoice-aging-report': InvoiceAging, 'weighted-decision-matrix': DecisionMatrix, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
     'jwt-decoder': JwtDecoder, 'unix-timestamp': UnixTimestamp, 'uuid-generator': UuidGenerator, 'url-encoder': UrlEncoder,
