@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, degrees } from 'pdf-lib';
 
 export async function loadPdf(file) {
   return PDFDocument.load(await file.arrayBuffer());
@@ -69,7 +69,9 @@ export async function createEditedPdf(file, pages) {
   const indexes = pages.map(page => page.number - 1);
   const copied = await output.copyPages(source, indexes);
   copied.forEach((page, index) => {
-    page.setRotation({ angle: pages[index].rotation });
+    const existingAngle = page.getRotation().angle || 0;
+    const additionalAngle = pages[index].rotation || 0;
+    page.setRotation(degrees((existingAngle + additionalAngle) % 360));
     output.addPage(page);
   });
   return output.save();

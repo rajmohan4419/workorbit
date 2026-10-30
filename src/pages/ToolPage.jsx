@@ -1,12 +1,13 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState, useRef } from 'react';
 import { 
-  ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronRight, 
+  ArrowRight, ArrowLeft, Share2, RotateCcw, RotateCw, Trash2, Download,
+  CheckSquare, Square, Maximize2, Star, ChevronRight, 
   ChevronDown, Coins, BriefcaseBusiness, Code2, Calculator, TrendingUp 
 } from 'lucide-react';
 import { TOOLS, LISTED_TOOLS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
-import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf } from '../engines/pdf';
+import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf, createEditedPdf } from '../engines/pdf';
 import { renderPdfPages, extractPdfText } from '../engines/pdfRenderer';
 import { csvToXlsx, jsonToXlsx, xlsxToCsv } from '../engines/spreadsheet';
 import { Field, Result, ComingSoon } from '../components/tools/ToolFields';
@@ -1467,28 +1468,360 @@ function PdfCompressor() {
 }
 
 function PdfWorkspace() {
-  const [file, setFile] = useState(null), [pages, setPages] = useState([]), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
-  const renderPdf = async () => {
-    if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true); setStatus('Rendering PDF pages…');
-    try { const rendered = await renderPdfPages(file, { scale: 0.65, format: 'image/jpeg', quality: 0.78 }); setPages(rendered); setStatus(rendered.length + ' pages ready.'); } catch { setStatus('Could not render PDF.'); } finally { setBusy(false); }
+  const [file, setFile] = useState(null);
+  const [pages, setPages] = useState([]);
+  const [originalPages, setOriginalPages] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState('');
+  const [progress, setProgress] = useState('');
+
+  const loadAndRenderPdf = async (selectedFile) => {
+    if (!selectedFile) return;
+    setFile(selectedFile);
+    setPages([]);
+    setOriginalPages([]);
+    setSelectedIds(new Set());
+    setBusy(true);
+    setStatus('Loading and rendering PDF pages…');
+    setProgress('');
+
+    try {
+      const rendered = await renderPdfPages(selectedFile, {
+        scale: 0.65,
+        format: 'image/jpeg',
+        quality: 0.8,
+        onProgress: (current, total) => {
+          setProgress(`Rendering page ${current} of ${total}…`);
+        }
+      });
+      const mapped = rendered.map((p, index) => ({
+        id: `page-${p.number}-${index}`,
+        number: p.number,
+        rotation: 0,
+        data: p.data
+      }));
+      setPages(mapped);
+      setOriginalPages(mapped);
+      setStatus(`${mapped.length} page${mapped.length > 1 ? 's' : ''} loaded. You can now reorder, rotate, delete, and export.`);
+      setProgress('');
+    } catch (err) {
+      console.error(err);
+      setStatus('Could not read or render PDF file. Please ensure it is a valid PDF.');
+      setProgress('');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleClear = () => {
+    setFile(null);
+    setPages([]);
+    setOriginalPages([]);
+    setSelectedIds(new Set());
+    setStatus('');
+    setProgress('');
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === pages.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(pages.map(p => p.id)));
+    }
+  };
+
+  const rotatePage = (id, delta) => {
+    setPages(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      return { ...p, rotation: (p.rotation + delta + 360) % 360 };
+    }));
+  };
+
+  const rotateAll = (delta = 90) => {
+    setPages(prev => prev.map(p => ({
+      ...p,
+      rotation: (p.rotation + delta + 360) % 360
+    })));
+  };
+
+  const movePage = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= pages.length) return;
+    setPages(prev => {
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[target];
+      copy[target] = temp;
+      return copy;
+    });
+  };
+
+  const deletePage = (id) => {
+    setPages(prev => prev.filter(p => p.id !== id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const deleteSelected = () => {
+    if (selectedIds.size === 0) return;
+    setPages(prev => prev.filter(p => !selectedIds.has(p.id)));
+    setSelectedIds(new Set());
+    setStatus('Selected pages deleted.');
+  };
+
+  const resetPages = () => {
+    setPages(originalPages.map(p => ({ ...p, rotation: 0 })));
+    setSelectedIds(new Set());
+    setStatus('Reset to original PDF page order.');
+  };
+
+  const exportPdf = async (onlySelected = false) => {
+    const pagesToExport = onlySelected
+      ? pages.filter(p => selectedIds.has(p.id))
+      : pages;
+
+    if (pagesToExport.length === 0) {
+      setStatus('At least 1 page must be present to export.');
+      return;
+    }
+
+    setBusy(true);
+    setStatus('Generating your edited PDF…');
+    try {
+      const bytes = await createEditedPdf(file, pagesToExport);
+      const filename = onlySelected
+        ? `orbitboard-extracted-${pagesToExport.length}-pages.pdf`
+        : 'orbitboard-edited-workspace.pdf';
+      downloadBlob(new Blob([bytes], { type: 'application/pdf' }), filename, 'pdf-workspace');
+      setStatus(`Successfully exported ${pagesToExport.length} page${pagesToExport.length > 1 ? 's' : ''}. Download started.`);
+    } catch (err) {
+      console.error(err);
+      setStatus('Could not export PDF. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FileUploadWithDrive
-        label="Select PDF File"
+        label="Select PDF File to Edit"
         accept="application/pdf"
         file={file}
-        onFileSelect={f => { setFile(f); setPages([]); setStatus('') }}
-        onClear={() => { setFile(null); setPages([]); setStatus('') }}
+        onFileSelect={loadAndRenderPdf}
+        onClear={handleClear}
       />
-      <button disabled={busy} onClick={renderPdf} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Working…' : 'Open PDF'}</button>
-      {pages.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {pages.map(p => <div key={p.number} className="rounded-2xl border border-[var(--orbit-border)] p-3"><img src={p.data} alt={'Page ' + p.number} className="w-full rounded-lg bg-white" /><p className="mt-2 text-xs text-stone-600 dark:text-stone-400">Page {p.number}</p></div>)}
+
+      {busy && progress && (
+        <div className="rounded-2xl border border-accent-200 dark:border-accent-800 bg-accent-50/60 dark:bg-accent-950/40 p-4 text-center">
+          <p className="text-sm font-semibold text-accent-700 dark:text-accent-300 animate-pulse">{progress}</p>
         </div>
       )}
-      {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
+
+      {pages.length > 0 && (
+        <div className="space-y-4">
+          {/* Global Workspace Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900/60 shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-bold text-stone-800 dark:text-stone-200">
+                {pages.length} Pages {selectedIds.size > 0 && <span className="text-accent-600 dark:text-accent-400">({selectedIds.size} selected)</span>}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleSelectAll}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-750 transition"
+              >
+                {selectedIds.size === pages.length ? <CheckSquare size={14} className="text-accent-600" /> : <Square size={14} />}
+                <span>{selectedIds.size === pages.length ? 'Deselect All' : 'Select All'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => rotateAll(90)}
+                title="Rotate all pages 90° clockwise"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-750 transition"
+              >
+                <RotateCw size={14} />
+                <span>Rotate All 90°</span>
+              </button>
+
+              {selectedIds.size > 0 && (
+                <button
+                  type="button"
+                  onClick={deleteSelected}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-700 bg-rose-50 dark:bg-rose-950/40 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition"
+                >
+                  <Trash2 size={14} />
+                  <span>Delete Selected ({selectedIds.size})</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={resetPages}
+                title="Reset to original PDF page order"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-750 transition"
+              >
+                <RotateCcw size={14} />
+                <span>Reset</span>
+              </button>
+
+              {selectedIds.size > 0 && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => exportPdf(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition shadow-xs disabled:opacity-50"
+                >
+                  <Download size={14} />
+                  <span>Export Selected ({selectedIds.size})</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                disabled={busy || pages.length === 0}
+                onClick={() => exportPdf(false)}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-white text-xs font-bold transition shadow-xs disabled:opacity-50"
+              >
+                <Download size={14} />
+                <span>Save & Download PDF</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive Page Thumbnails Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
+            {pages.map((p, idx) => {
+              const isSelected = selectedIds.has(p.id);
+              return (
+                <div
+                  key={p.id}
+                  className={`group relative flex flex-col justify-between rounded-2xl border p-2.5 sm:p-3 transition-all duration-200 bg-white dark:bg-stone-900 shadow-2xs ${
+                    isSelected
+                      ? 'border-accent-500 ring-2 ring-accent-400/40 bg-accent-50/20 dark:bg-accent-950/20'
+                      : 'border-[var(--orbit-border)] hover:border-accent-300 dark:hover:border-accent-600'
+                  }`}
+                >
+                  {/* Top Bar: Selection Checkbox, Page Label & Delete Button */}
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleSelect(p.id)}
+                      className="flex items-center gap-1.5 text-xs font-bold text-stone-700 dark:text-stone-300"
+                    >
+                      <span className={`flex items-center justify-center h-5 w-5 rounded-md border transition ${
+                        isSelected
+                          ? 'border-accent-600 bg-accent-600 text-white'
+                          : 'border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800'
+                      }`}>
+                        {isSelected ? '✓' : ''}
+                      </span>
+                      <span>Page {idx + 1}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => deletePage(p.id)}
+                      title={`Delete page ${idx + 1}`}
+                      className="p-1 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+
+                  {/* Thumbnail Image with Rotation */}
+                  <div
+                    onClick={() => toggleSelect(p.id)}
+                    className="cursor-pointer aspect-[1/1.35] w-full overflow-hidden rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-850 flex items-center justify-center p-2 relative"
+                  >
+                    <img
+                      src={p.data}
+                      alt={`Page ${idx + 1}`}
+                      style={{
+                        transform: `rotate(${p.rotation}deg)`,
+                        transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                      className="max-h-full max-w-full object-contain rounded shadow-xs pointer-events-none select-none"
+                    />
+                    {p.rotation !== 0 && (
+                      <span className="absolute bottom-1.5 right-1.5 rounded-md bg-stone-900/80 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-xs">
+                        {p.rotation}°
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Bottom Actions Bar: Move Left, Rotate CCW, Rotate CW, Move Right */}
+                  <div className="flex items-center justify-between gap-1 mt-2.5 pt-2 border-t border-[var(--orbit-border)]">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => movePage(idx, -1)}
+                      title="Move page left"
+                      className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-25 transition"
+                    >
+                      <ArrowLeft size={13} />
+                    </button>
+
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => rotatePage(p.id, -90)}
+                        title="Rotate -90°"
+                        className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
+                      >
+                        <RotateCcw size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => rotatePage(p.id, 90)}
+                        title="Rotate +90°"
+                        className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
+                      >
+                        <RotateCw size={13} />
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={idx === pages.length - 1}
+                      onClick={() => movePage(idx, 1)}
+                      title="Move page right"
+                      className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-25 transition"
+                    >
+                      <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {status && (
+        <div className="p-3.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900">
+          <p aria-live="polite" className="text-xs sm:text-sm font-medium text-stone-700 dark:text-stone-300">
+            {status}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
