@@ -5,6 +5,7 @@ import { LISTED_TOOLS } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
+import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 
 const categories = [
   { name: 'All', label: 'All utilities', icon: Search },
@@ -40,11 +41,13 @@ export default function ToolsCatalogue() {
   if (q) return <Navigate to={`/?q=${encodeURIComponent(q)}`} replace />;
 
   return (
-    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex flex-col justify-between">
-      <div>
-        <ToolsHomeHeader />
+    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex">
+      <QuickAccessLeftSidebar />
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
+        <div>
+          <ToolsHomeHeader />
 
-        <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="orbit-enter max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[.2em] text-accent-700 dark:text-accent-400">OrbitBoard catalogue</p>
             <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">Every tool, when you need it.</h1>
@@ -181,6 +184,7 @@ export default function ToolsCatalogue() {
       </div>
 
       <ToolsHomeFooter />
+      </div>
     </div>
   );
 }

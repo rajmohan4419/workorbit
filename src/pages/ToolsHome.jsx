@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { Calculator, FileText, Image, Code2 } from 'lucide-react';
+import { Calculator, Code2, Coins, BriefcaseBusiness, TrendingUp } from 'lucide-react';
 import { LISTED_TOOLS } from '../data/toolCatalog';
 import { logEvent } from '../lib/telemetry';
 
@@ -23,11 +23,12 @@ const intentMap = [
   { terms: ['percentage', 'percent', '%'], slugs: ['percentage'] }
 ];
 
-const categoryLinks = [
-  { label: 'Documents', detail: 'PDF and file tools', icon: FileText, query: 'PDF' },
-  { label: 'Images', detail: 'Convert and resize', icon: Image, query: 'image' },
-  { label: 'Calculators', detail: 'Money and everyday math', icon: Calculator, category: 'Finance' },
-  { label: 'Developer tools', detail: 'Format and transform data', icon: Code2, category: 'Developer' }
+const categoryCards = [
+  { category: 'Finance', label: 'Finance & Money', detail: 'Taxes, EMI, GST, loans & calculators', icon: Coins },
+  { category: 'Career', label: 'Career & Salary', detail: 'CTC, hikes, notice & offer comparisons', icon: BriefcaseBusiness },
+  { category: 'Developer', label: 'Developer Tools', detail: 'JSON, JWT, Base64, XML & diff checker', icon: Code2 },
+  { category: 'Everyday', label: 'Everyday Utilities', detail: 'PDFs, converters, images & GIF tools', icon: Calculator },
+  { category: 'Business', label: 'Business & SaaS', detail: 'SaaS metrics, aging & decision matrix', icon: TrendingUp },
 ];
 
 export default function ToolsHome() {
@@ -43,6 +44,11 @@ export default function ToolsHome() {
     setPrevUrlQuery(urlQuery);
     setQuery(urlQuery);
   }
+
+  // Sync category state from URL if user navigates or URL changes externally
+  useEffect(() => {
+    setCategory(urlCategory);
+  }, [urlCategory]);
 
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }
@@ -67,6 +73,7 @@ export default function ToolsHome() {
     setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
     logEvent('tool.opened', { tool: slug });
   };
+
   const chooseCategory = (name) => {
     setCategory(name);
     setQuery('');
@@ -86,6 +93,15 @@ export default function ToolsHome() {
     }
   };
 
+  const handleCategoryCardClick = (targetCat) => {
+    // If currently selected, toggle off (back to all)
+    if (category === targetCat) {
+      chooseCategory(null);
+    } else {
+      chooseCategory(targetCat);
+    }
+  };
+
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -101,63 +117,117 @@ export default function ToolsHome() {
 
   const categoryTools = useMemo(() => category ? LISTED_TOOLS.filter(tool => tool.category === category) : [], [category]);
   const recentTools = recent.map(slug => LISTED_TOOLS.find(t => t.slug === slug)).filter(Boolean).slice(0, 4);
-  const showExplore = !query.trim() && !category;
+  const showExploreCards = !query.trim();
 
   return (
     <div className="orbit-light min-h-screen flex bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors">
       <QuickAccessLeftSidebar />
+
       <div className="flex-1 min-w-0 flex flex-col">
         <ToolsHomeHeader visitorCount={visitorCount} onSelectCategory={chooseCategory} />
 
-        <main className="mx-auto w-full max-w-[1440px] px-4 pb-8 sm:px-6">
-        {/* Zone 1: Concise Hero Headline & Floating Search Bar with Category Chips */}
-        <ToolsHomeHero
-          query={query}
-          setQuery={setQuery}
-          onQueryChange={handleQueryChange}
-          category={category}
-          setCategory={chooseCategory}
-          searchResults={searchResults}
-          addRecent={addRecent}
-          logEvent={logEvent}
-        />
+        <main className="mx-auto w-full max-w-[1440px] px-3 pb-8 sm:px-6">
+          {/* Zone 1: Concise Hero Headline & Floating Search Bar with Category Chips */}
+          <ToolsHomeHero
+            query={query}
+            setQuery={setQuery}
+            onQueryChange={handleQueryChange}
+            category={category}
+            setCategory={chooseCategory}
+            searchResults={searchResults}
+            addRecent={addRecent}
+            logEvent={logEvent}
+          />
 
-        {/* Category Quick Selector Cards */}
-        {showExplore && (
-          <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-8">
-            <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Browse by Work Context</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-2xl">What are you working on?</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              {categoryLinks.map(({ label, detail, icon: Icon, query: suggestedQuery, category: suggestedCategory }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => suggestedCategory ? chooseCategory(suggestedCategory) : handleQueryChange(suggestedQuery)}
-                  className="group flex min-h-[88px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 text-left transition.5 hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-xs"
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300">
-                    <Icon size={20} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-stone-900 dark:text-stone-100">{label}</span>
-                    <span className="mt-0.5 block text-xs text-stone-500 dark:text-stone-400">{detail}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+          {/* Category Quick Selector Cards (Persistent & Click-to-Switch/Toggle) */}
+          {showExploreCards && (
+            <section className="mx-auto max-w-6xl border-t border-[var(--orbit-border)] py-6 sm:py-8">
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Browse by Work Context</p>
+                  <h2 className="mt-0.5 text-lg sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+                    What are you working on?
+                  </h2>
+                </div>
+                {category && (
+                  <button
+                    type="button"
+                    onClick={() => chooseCategory(null)}
+                    className="self-start sm:self-auto text-xs font-semibold text-accent-700 dark:text-accent-400 hover:underline"
+                  >
+                    Clear filter (Show All)
+                  </button>
+                )}
+              </div>
 
-        <CategoryExplorer query={query} category={category} setCategory={setCategory} chooseCategory={chooseCategory} categoryTools={categoryTools} addRecent={addRecent} favorites={favorites} toggleFavorite={toggleFavorite} />
-        <RecentToolsSection showExplore={showExplore} recentTools={recentTools} addRecent={addRecent} />
-        <PrivacySection />
-        <SupportCheckoutSection />
-        <CatalogCalloutSection />
-      </main>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {categoryCards.map(({ category: catName, label, detail, icon: Icon }) => {
+                  const isActive = category === catName;
+                  return (
+                    <button
+                      key={catName}
+                      type="button"
+                      onClick={() => handleCategoryCardClick(catName)}
+                      className={`group flex items-start gap-3 rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-150 ${
+                        isActive
+                          ? 'border-accent-500 bg-accent-50/80 dark:bg-accent-950/50 ring-2 ring-accent-400/40 shadow-xs'
+                          : 'border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-2xs'
+                      }`}
+                    >
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
+                        isActive
+                          ? 'bg-accent-600 text-white'
+                          : 'bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300 group-hover:bg-accent-100 dark:group-hover:bg-accent-900'
+                      }`}>
+                        <Icon size={20} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-1">
+                          <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                            isActive ? 'text-accent-800 dark:text-accent-300 font-bold' : 'text-stone-900 dark:text-stone-100'
+                          }`}>
+                            {label}
+                          </span>
+                          {isActive && (
+                            <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-accent-700 dark:text-accent-300 bg-accent-100 dark:bg-accent-900/60 px-1.5 py-0.5 rounded-md">
+                              Active
+                            </span>
+                          )}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] leading-tight text-stone-500 dark:text-stone-400 line-clamp-2">
+                          {detail}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
-      <ToolsHomeFooter />
+          {/* Active Category Tools View */}
+          <CategoryExplorer
+            query={query}
+            category={category}
+            setCategory={setCategory}
+            chooseCategory={chooseCategory}
+            categoryTools={categoryTools}
+            addRecent={addRecent}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+          />
+
+          {/* Recent Tools (shown on general exploration) */}
+          {!category && !query.trim() && (
+            <RecentToolsSection showExplore={true} recentTools={recentTools} addRecent={addRecent} />
+          )}
+
+          <PrivacySection />
+          <SupportCheckoutSection />
+          <CatalogCalloutSection />
+        </main>
+
+        <ToolsHomeFooter />
       </div>
     </div>
   );
