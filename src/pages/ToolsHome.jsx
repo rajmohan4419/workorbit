@@ -6,16 +6,18 @@ import { logEvent } from '../lib/telemetry';
 
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
+import { BusinessWorkspacesHero } from '../components/toolsHome/BusinessWorkspacesHero';
 import { CategoryExplorer } from '../components/toolsHome/CategoryExplorer';
 import { RecentToolsSection } from '../components/toolsHome/RecentToolsSection';
 import { PrivacySection, CatalogCalloutSection, SupportCheckoutSection, ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 
 const intentMap = [
+  { terms: ['reconcile', 'reconciliation', 'brs', 'statement', 'cash book', 'cheque', 'ledger'], slugs: ['bank-reconciliation', 'invoice-aging-report'] },
   { terms: ['salary', 'ctc', 'in hand', 'take home', 'take-home', 'hike', 'increment', 'offer', 'notice', 'experience'], slugs: ['ctc-to-inhand', 'salary-hike', 'offer-comparison', 'notice-period', 'experience'] },
-  { terms: ['emi', 'loan', 'interest', 'gst', 'sip', 'investment', 'invoice', 'bill', 'tax invoice'], slugs: ['gst-invoice-generator', 'emi', 'gst', 'sip'] },
+  { terms: ['emi', 'loan', 'interest', 'gst', 'sip', 'investment', 'invoice', 'bill', 'tax invoice'], slugs: ['gst-invoice-generator', 'bank-reconciliation', 'emi', 'gst', 'sip'] },
   { terms: ['json', 'jwt', 'base64', 'xml', 'markdown', 'timestamp', 'uuid', 'url', 'developer', 'api'], slugs: ['json-formatter', 'jwt-decoder', 'base64', 'json-to-csv', 'json-to-xml', 'xml-to-json', 'markdown-to-html', 'unix-timestamp', 'uuid-generator', 'url-encoder'] },
-  { terms: ['csv', 'xlsx', 'excel', 'spreadsheet'], slugs: ['csv-to-xlsx', 'xlsx-to-csv', 'json-to-xlsx', 'csv-to-pdf', 'csv-to-json'] },
+  { terms: ['csv', 'xlsx', 'excel', 'spreadsheet', 'data processor', 'clean data'], slugs: ['excel-engine', 'csv-to-xlsx', 'xlsx-to-csv', 'json-to-xlsx', 'csv-to-pdf', 'csv-to-json'] },
   { terms: ['pdf', 'document'], slugs: ['pdf-workspace', 'pdf-merge', 'pdf-split', 'pdf-to-text', 'pdf-to-jpg', 'pdf-to-png', 'image-to-pdf', 'txt-to-pdf', 'pdf-compressor'] },
   { terms: ['image', 'jpg', 'jpeg', 'png', 'webp', 'photo', 'picture'], slugs: ['jpg-to-png', 'png-to-jpg', 'webp-to-jpg', 'image-resizer', 'image-compressor', 'image-metadata-remover', 'svg-to-png'] },
   { terms: ['timezone', 'time zone', 'world clock', 'pst', 'est', 'ist', 'utc', 'gmt', 'time difference', 'time-zone', 'clock', 'time'], slugs: ['timezone-converter', 'time-converter', 'unix-timestamp'] },
@@ -28,7 +30,7 @@ const categoryCards = [
   { category: 'Career', label: 'Career & Salary', detail: 'CTC, hikes, notice & offer comparisons', icon: BriefcaseBusiness },
   { category: 'Developer', label: 'Developer Tools', detail: 'JSON, JWT, Base64, XML & diff checker', icon: Code2 },
   { category: 'Everyday', label: 'Everyday Utilities', detail: 'PDFs, converters, images & GIF tools', icon: Calculator },
-  { category: 'Business', label: 'Business & SaaS', detail: 'SaaS metrics, aging & decision matrix', icon: TrendingUp },
+  { category: 'Business', label: 'Business & SaaS', detail: 'Reconciliation, GST, Excel engine & SaaS metrics', icon: TrendingUp },
 ];
 
 export default function ToolsHome() {
@@ -139,6 +141,11 @@ export default function ToolsHome() {
             addRecent={addRecent}
             logEvent={logEvent}
           />
+
+          {/* Task-Based Business & Financial Workspaces */}
+          {showExploreCards && !category && (
+            <BusinessWorkspacesHero />
+          )}
 
           {/* Category Quick Selector Cards (Persistent & Click-to-Switch/Toggle) */}
           {showExploreCards && (

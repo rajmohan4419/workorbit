@@ -11,7 +11,9 @@ import { preloadToolPage } from '../../lib/toolPageLoader';
 import { OrbitBoardIcon } from '../brand/OrbitBoardIcon';
 
 const TOP_FEATURED_SLUGS = [
+  'bank-reconciliation',
   'gst-invoice-generator',
+  'excel-engine',
   'ctc-to-inhand',
   'image-compressor',
   'image-to-gif',

@@ -1110,5 +1110,58 @@ export const TOOL_CONTENT = {
         </p>
       </div>
     )
+  },
+  'bank-reconciliation': {
+    title: 'Bank Reconciliation Tool Online | Match Bank Statements with Accounting Ledger Free',
+    h1: 'Automated Bank Statement & Ledger Reconciliation',
+    metaDescription: 'Reconcile bank statements against accounting ledgers instantly. Auto-maps columns, detects deposits vs withdrawals, matches transactions with date tolerance, and flags unpresented checks.',
+    intro: 'Effortlessly reconcile bank statements against your accounting cash book or ledger. Features automatic column detection, smart matching algorithms, discrepancy breakdowns, and Excel export.',
+    keywords: 'bank reconciliation online, automated bank reconciliation tool, BRS statement matching, cash book bank reconciliation, match excel ledger with bank statement, unpresented cheques calculator, bank statement audit tool India',
+    how: [
+      'Upload your Bank Statement file (XLSX, XLS, or CSV).',
+      'Upload your Accounting Ledger or Cash Book file (XLSX, XLS, or CSV).',
+      'Verify the automatically detected column mappings (Date, Description, Cheque/Reference, Debit/Credit).',
+      'Adjust matching tolerance (e.g. +/- 3 days) if needed.',
+      'Review Matched items, Unpresented Cheques, and Transit Deposits, then export the completed audit report in Excel.'
+    ],
+    faq: [
+      ['How does the matching engine handle date differences?', 'Cheques or electronic payments often clear a few days after being recorded in books. You can configure a date window tolerance (from exact day up to 14 days) to ensure accurate matching.'],
+      ['What are unpresented cheques?', 'These are payments issued and recorded in your books that have not yet been cleared or debited by your bank.'],
+      ['Are my financial records private?', '100% private. All parsing, reconciliation, and report generation happens strictly in your browser. No financial data ever leaves your device.'],
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Why Bank Reconciliation Matters</h2>
+        <p>
+          Bank reconciliation is a fundamental internal control in accounting that verifies the accuracy of cash records by comparing the bank statement balance with the company's ledger balance. It detects timing differences, bank charges, unauthorized withdrawals, and accounting errors.
+        </p>
+      </div>
+    )
+  },
+  'excel-engine': {
+    title: 'Excel & CSV Data Processor Online | Clean, Validate, Map & Export Spreadsheets',
+    h1: 'Universal Excel & CSV Data Processing Engine',
+    metaDescription: 'Upload XLSX/CSV files, map columns, validate data against custom schemas, clean strings and numbers, preview in an interactive table, and export transformed spreadsheets.',
+    intro: 'A powerful, browser-based spreadsheet engine to inspect, clean, validate, and convert XLSX and CSV datasets with zero data sent to external servers.',
+    keywords: 'excel data processor online, csv validator tool, spreadsheet schema validation, clean excel data online, browser xlsx editor, map csv columns online',
+    how: [
+      'Upload an XLSX, XLS, or CSV spreadsheet.',
+      'Inspect auto-detected column types (Text, Number, Date, Email).',
+      'Apply schema validation rules to flag missing values or data mismatches.',
+      'Use quick transformation actions (Trim, Uppercase, Number cleaning) to clean rows.',
+      'Search and preview results live, then export the processed sheet to XLSX or CSV.'
+    ],
+    faq: [
+      ['Does this work with large spreadsheets?', 'Yes. The engine processes tens of thousands of rows client-side in seconds using optimized SheetJS data structures.'],
+      ['Is my data uploaded to any server?', 'Never. OrbitBoard processes all files in-memory in your browser sandbox. Your data remains strictly on your machine.'],
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Modern Spreadsheet Processing</h2>
+        <p>
+          Data cleaning and validation are often tedious when handling customer lists, financial exports, or inventory files. OrbitBoard provides an instant, private workspace to map, validate, and transform tabular data.
+        </p>
+      </div>
+    )
   }
 };

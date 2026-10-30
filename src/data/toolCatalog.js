@@ -339,12 +339,13 @@ export const TOOLS = [
   { slug: "robots-txt-tester", name: "Robots.txt Tester", description: "Check URL paths against rules utility directly in your browser.", category: "Everyday", icon: "🛠️", status: "planned" },
   { slug: "date-add-subtract-tool", name: "Date Add/Subtract Tool", description: "Add days, weeks or months to a date utility directly in your browser.", category: "Everyday", icon: "Σ", status: "planned" },
   { slug: "gst-invoice-generator", name: "GST Invoice Generator", description: "Create professional GST-compliant invoices with CGST/SGST/IGST, company branding and PDF download — 100% free, runs in your browser.", category: "Business", icon: "GST", status: "live" },
+  { slug: "bank-reconciliation", name: "Bank Reconciliation", description: "Match bank statements against accounting ledgers, detect unpresented cheques & transit deposits, and generate audit reports.", category: "Business", icon: "🏦", status: "live" },
+  { slug: "excel-engine", name: "Excel & CSV Data Processor", description: "Upload XLSX/CSV, map columns, validate data schemas, clean strings, and export transformed workbooks.", category: "Business", icon: "📊", status: "live" },
   { slug: "saas-retention-calculator", name: "SaaS Retention Calculator", description: "Work out net and gross revenue retention, churn, LTV, CAC and CAC payback from your own numbers.", category: "Business", icon: "↗", status: "live" },
   { slug: "sales-pipeline-forecaster", name: "Sales Pipeline Forecaster", description: "Weight your open deals by stage and win rate to see expected revenue, coverage and the gap to target.", category: "Business", icon: "≡", status: "live" },
   { slug: "saas-pricing-calculator", name: "SaaS Pricing Calculator", description: "Compare per-seat, flat, tiered and usage pricing for a typical customer, with annual discounts and MRR.", category: "Business", icon: "¤", status: "live" },
   { slug: "invoice-aging-report", name: "Invoice Aging Report", description: "Upload your invoices as a CSV to see what is outstanding, how overdue it is, and which customers owe the most.", category: "Business", icon: "AR", status: "live" },
   { slug: "weighted-decision-matrix", name: "Weighted Decision Matrix", description: "Score vendors or options against weighted criteria, from a CSV or by hand, and see them ranked.", category: "Business", icon: "⚖", status: "live" },
-  { slug: "gif-maker", name: "GIF Maker", description: "Combine several images into an animated GIF in your browser. Choose the frame time, size and how images fit the frame.", category: "Everyday", icon: "GIF", status: "live" },
 ];
 
 // Old or duplicate slugs that now point at the tool that replaced them.
@@ -357,7 +358,10 @@ export const SLUG_REDIRECTS = {
   "robotstxt-tester": "robots-txt-tester",
   "date-addsubtract-tool": "date-add-subtract-tool",
   "gst-calculator-india": "gst",
-  "loan-emi-calculator": "emi"
+  "loan-emi-calculator": "emi",
+  "bank-reconciliation-tool": "bank-reconciliation",
+  "excel-processor": "excel-engine",
+  "excel-data-processor": "excel-engine"
 };
 
 export const LISTED_TOOLS = TOOLS.filter(tool => tool.status === 'live');

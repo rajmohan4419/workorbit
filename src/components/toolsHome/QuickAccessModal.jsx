@@ -6,7 +6,9 @@ import { preloadToolPage } from '../../lib/toolPageLoader';
 
 // Top featured tools permanently pinned for rapid workflow
 const TOP_FEATURED_SLUGS = [
+  'bank-reconciliation',
   'gst-invoice-generator',
+  'excel-engine',
   'ctc-to-inhand',
   'image-compressor',
   'image-to-gif',
@@ -129,7 +131,7 @@ export function QuickAccessSidebar({ isOpen, onClose }) {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search all 60+ tools to launch or pin…"
+              placeholder={`Search all ${LISTED_TOOLS.length} tools to launch or pin…`}
               className="w-full rounded-xl border border-[var(--orbit-border)] bg-white py-2 pl-9 pr-8 text-xs text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/40 dark:bg-stone-800 dark:text-stone-100 sm:text-sm"
             />
             {search && (
