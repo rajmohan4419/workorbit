@@ -90,10 +90,11 @@ export function ToolsHomeFooter() {
   ];
 
   const utilityLinks = [
-    { label: 'Support', path: '/#support', icon: Heart },
-    { label: 'Privacy Policy', path: '#privacy', icon: ShieldCheck },
-    { label: 'Terms of Service', path: '#terms', icon: FileText },
-    { label: 'Sitemap', path: '/tools', icon: Globe },
+    { label: 'About Us', path: '/about', icon: Globe },
+    { label: 'Privacy Policy', path: '/privacy', icon: ShieldCheck },
+    { label: 'Terms of Service', path: '/terms', icon: FileText },
+    { label: 'Contact Us', path: '/contact', icon: Heart },
+    { label: 'Catalogue', path: '/tools', icon: Globe },
     { label: 'GitHub / Extensions', path: 'https://github.com', external: true, icon: ExternalLink },
   ];
 
