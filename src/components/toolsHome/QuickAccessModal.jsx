@@ -6,6 +6,7 @@ import { preloadToolPage } from '../../lib/toolPageLoader';
 
 // Top featured tools permanently pinned for rapid workflow
 const TOP_FEATURED_SLUGS = [
+  'gst-invoice-generator',
   'ctc-to-inhand',
   'image-compressor',
   'image-to-gif',

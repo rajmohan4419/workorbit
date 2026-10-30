@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Download, X, ZoomIn, ZoomOut, Eye, FileText } from 'lucide-react';
+import { directDownloadBlob } from '../../lib/toolFormat';
 
 /**
  * PreviewModal — shows a preview of a blob before the user downloads it.
@@ -27,26 +28,30 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
 
   // Create / revoke the object URL when the modal opens or closes.
   useEffect(() => {
-    if (!blob || !isOpen) {
-      setObjectUrl(null);
-      setTextContent(null);
-      setZoom(1);
-      return;
-    }
+    if (!blob || !isOpen) return;
 
+    let active = true;
     const url = URL.createObjectURL(blob);
-    setObjectUrl(url);
+
+    Promise.resolve().then(() => {
+      if (active) {
+        setObjectUrl(url);
+      }
+    });
 
     if (isText) {
       const reader = new FileReader();
-      reader.onload = (e) => setTextContent(e.target.result ?? '');
+      reader.onload = (e) => {
+        if (active) setTextContent(e.target.result ?? '');
+      };
       reader.readAsText(blob);
     }
 
     return () => {
+      active = false;
       URL.revokeObjectURL(url);
     };
-  }, [blob, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [blob, isOpen, isText]);
 
   // Close on Escape.
   useEffect(() => {
@@ -177,5 +182,41 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
         </div>
       </div>
     </div>
+  );
+}
+
+export function GlobalPreviewModal() {
+  const [data, setData] = useState({ isOpen: false, blob: null, filename: '', mimeType: '' });
+
+  useEffect(() => {
+    const handleEvent = (e) => {
+      e.preventDefault();
+      const { blob, filename, mimeType } = e.detail;
+      setData({ isOpen: true, blob, filename, mimeType });
+    };
+    window.addEventListener('orbitboard:preview-download', handleEvent);
+    return () => window.removeEventListener('orbitboard:preview-download', handleEvent);
+  }, []);
+
+  const handleConfirm = () => {
+    if (data.blob) {
+      directDownloadBlob(data.blob, data.filename, null);
+    }
+    setData(prev => ({ ...prev, isOpen: false }));
+  };
+
+  const handleCancel = () => {
+    setData(prev => ({ ...prev, isOpen: false }));
+  };
+
+  return (
+    <PreviewModal
+      isOpen={data.isOpen}
+      blob={data.blob}
+      filename={data.filename}
+      mimeType={data.mimeType}
+      onConfirm={handleConfirm}
+      onCancel={handleCancel}
+    />
   );
 }

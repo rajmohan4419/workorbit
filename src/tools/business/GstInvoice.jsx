@@ -83,7 +83,9 @@ function defaultSeller() {
   try {
     const saved = JSON.parse(localStorage.getItem(SELLER_KEY) || 'null');
     if (saved) return saved;
-  } catch (_) {}
+  } catch {
+    /* ignore localStorage parse error */
+  }
   return {
     companyName: '', logo: '', address: '', city: '', state: 'Maharashtra',
     pin: '', gstin: '', pan: '', phone: '', email: '',
@@ -579,13 +581,12 @@ export function GstInvoice() {
 
   // Persist seller to localStorage on change
   useEffect(() => {
-    try { localStorage.setItem(SELLER_KEY, JSON.stringify(seller)); } catch (_) {}
+    try {
+      localStorage.setItem(SELLER_KEY, JSON.stringify(seller));
+    } catch {
+      /* ignore storage write error */
+    }
   }, [seller]);
-
-  // Sync placeOfSupply with buyer state
-  useEffect(() => {
-    setMeta(m => ({ ...m, placeOfSupply: buyer.state }));
-  }, [buyer.state]);
 
   const isInterState = useMemo(() => seller.state !== buyer.state, [seller.state, buyer.state]);
 
@@ -616,6 +617,9 @@ export function GstInvoice() {
 
   const setBF = useCallback((key, val) => {
     setBuyer(b => ({ ...b, [key]: val }));
+    if (key === 'state') {
+      setMeta(m => ({ ...m, placeOfSupply: val }));
+    }
     if (key === 'gstin') {
       setBuyerErrors(e => ({ ...e, gstin: val && !GSTIN_REGEX.test(val) ? 'Invalid GSTIN format' : '' }));
     }

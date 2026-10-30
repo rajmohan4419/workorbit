@@ -10,15 +10,12 @@ function isIOS() {
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [ios, setIos] = useState(false);
+  const [ios] = useState(() => typeof navigator !== 'undefined' && isIOS());
 
   useEffect(() => {
     if (localStorage.getItem(DISMISSED_KEY)) return;
 
-    const iosDevice = isIOS();
-    setIos(iosDevice);
-
-    if (iosDevice) {
+    if (ios) {
       // Show iOS-specific guidance after a short delay
       const timer = setTimeout(() => setShowBanner(true), 3000);
       return () => clearTimeout(timer);
@@ -32,7 +29,7 @@ export function InstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  }, [ios]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;

@@ -8,6 +8,7 @@ import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
 
 const TOP_FEATURED_SLUGS = [
+  'gst-invoice-generator',
   'ctc-to-inhand',
   'image-compressor',
   'image-to-gif',
