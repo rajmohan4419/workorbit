@@ -5,6 +5,7 @@ import { TOOLS, SLUG_REDIRECTS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { loadToolPage } from '../lib/toolPageLoader';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
+import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 
 const ToolPage = lazy(loadToolPage);
 
@@ -20,10 +21,12 @@ function ToolShell({ tool, info }) {
   const related = TOOLS.filter(item => item.category === tool.category && item.slug !== tool.slug).slice(0, 3);
 
   return (
-    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800">
-      <ToolsHomeHeader />
+    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 flex">
+      <QuickAccessLeftSidebar />
+      <div className="flex-1 min-w-0 flex flex-col">
+        <ToolsHomeHeader />
 
-      <main>
+        <main>
         <section className="border-b border-[var(--orbit-border)] bg-white">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 sm:py-7">
             <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-6 items-center">
@@ -75,6 +78,7 @@ function ToolShell({ tool, info }) {
           </aside>
         </div>
       </main>
+      </div>
     </div>
   );
 }

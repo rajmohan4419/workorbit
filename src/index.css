@@ -244,6 +244,34 @@ input, textarea, select {
 .sidebar-expanded  { width: var(--sidebar-width-expanded); }
 .sidebar-collapsed { width: var(--sidebar-width-collapsed); }
 
+/* Custom scrollbar for sidebar starred list */
+.orbit-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+.orbit-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.orbit-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.orbit-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.35);
+  border-radius: 9999px;
+}
+.orbit-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.65);
+}
+.dark .orbit-scrollbar {
+  scrollbar-color: rgba(156, 163, 175, 0.25) transparent;
+}
+.dark .orbit-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.25);
+}
+.dark .orbit-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
 /* ─── Reduced motion ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

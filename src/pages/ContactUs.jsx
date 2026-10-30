@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Mail, MessageSquare, Send, CheckCircle } from 'lucide-react';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
+import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 
 export default function ContactUs() {
   const [name, setName] = useState('');
@@ -23,9 +24,11 @@ export default function ContactUs() {
   };
 
   return (
-    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex flex-col justify-between">
-      <div>
-        <ToolsHomeHeader />
+    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex">
+      <QuickAccessLeftSidebar />
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
+        <div>
+          <ToolsHomeHeader />
 
         <div className="border-b border-[var(--orbit-border)] bg-[var(--orbit-canvas)] py-8 sm:py-10">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
@@ -144,6 +147,7 @@ export default function ContactUs() {
       </div>
 
       <ToolsHomeFooter />
+      </div>
     </div>
   );
 }
