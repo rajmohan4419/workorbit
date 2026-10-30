@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins, Search, TrendingUp, Filter } from 'lucide-react';
 import { LISTED_TOOLS } from '../data/toolCatalog';
@@ -18,28 +18,17 @@ const categories = [
 export default function ToolsCatalogue() {
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get('q') || searchParams.get('search');
-  const catParam = searchParams.get('category');
-  
-  const [category, setCategory] = useState(catParam || 'All');
+  const category = searchParams.get('category') || 'All';
   const [query, setQuery] = useState('');
 
-  // Sync category if URL parameter changes
-  useEffect(() => {
-    if (catParam && catParam !== category) {
-      setCategory(catParam);
-    } else if (!catParam && category !== 'All') {
-      // Keep state or sync with URL
-    }
-  }, [catParam]);
-
   const handleCategoryChange = (newCat) => {
-    setCategory(newCat);
+    const next = new URLSearchParams(searchParams);
     if (newCat === 'All') {
-      searchParams.delete('category');
-      setSearchParams(searchParams);
+      next.delete('category');
     } else {
-      setSearchParams({ ...Object.fromEntries(searchParams.entries()), category: newCat });
+      next.set('category', newCat);
     }
+    setSearchParams(next);
   };
 
   const filteredTools = useMemo(() => LISTED_TOOLS.filter(tool => {

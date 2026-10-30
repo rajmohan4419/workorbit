@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Play, Download, Trash2, Plus, Sparkles, Loader2, Video, Film, RefreshCw } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Download, Trash2, Sparkles, Loader2, Video, Film } from 'lucide-react';
 import { encodeGifFromImages, encodeGifFromVideo } from '../../engines/gifEncoder';
 import { downloadBlob } from '../../lib/toolFormat';
 import { FileUploadWithDrive } from '../../components/tools/FileUploadWithDrive';
@@ -79,7 +79,7 @@ export function ImageToGif() {
       setGifBlob(blob);
       setGifUrl(url);
       setStatus(`GIF generated successfully! (${(blob.size / 1024).toFixed(1)} KB)`);
-    } catch (err) {
+    } catch {
       setStatus('Could not generate GIF. Please try smaller images or fewer frames.');
     } finally {
       setBusy(false);
@@ -305,7 +305,7 @@ export function VideoToGif() {
       setGifBlob(blob);
       setGifUrl(url);
       setStatus(`Video converted to GIF! (${(blob.size / 1024).toFixed(1)} KB)`);
-    } catch (err) {
+    } catch {
       setStatus('Error converting video. Ensure your video plays properly in the preview.');
     } finally {
       setBusy(false);
@@ -322,11 +322,21 @@ export function VideoToGif() {
       {/* Upload & Controls (Left) */}
       <div className="lg:col-span-7 space-y-6">
         <FileUploadWithDrive
+          file={file}
           accept="video/mp4,video/webm,video/quicktime,video/mov"
           multiple={false}
           label="Choose Video Clip"
           description="Upload MP4, WebM, or MOV video from computer or Google Drive"
           onFileSelect={handleVideoSelect}
+          onClear={() => {
+            setFile(null);
+            if (videoUrl) URL.revokeObjectURL(videoUrl);
+            setVideoUrl(null);
+            if (gifUrl) URL.revokeObjectURL(gifUrl);
+            setGifUrl(null);
+            setGifBlob(null);
+            setStatus('');
+          }}
         />
 
         {videoUrl && (

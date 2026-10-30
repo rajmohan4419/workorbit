@@ -10,7 +10,7 @@ import { preloadToolPage } from '../../lib/toolPageLoader';
 import { OrbitBoardIcon } from '../brand/OrbitBoardIcon';
 import { QuickAccessModal } from './QuickAccessModal';
 
-export const categories = [
+const categories = [
   { name: 'Finance', label: 'Finance & Money', icon: Coins, desc: 'Taxes, EMI, SIP, interest & currency' },
   { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness, desc: 'CTC, hikes, notice periods & offers' },
   { name: 'Developer', label: 'Developer Tools', icon: Code2, desc: 'JSON, Base64, JWT, tokens & formatting' },

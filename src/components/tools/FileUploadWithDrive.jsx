@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, HardDrive, Link as LinkIcon, Check, AlertCircle, Loader2, X, ExternalLink } from 'lucide-react';
+import { Upload, Link as LinkIcon, Check, AlertCircle, Loader2, X, ExternalLink } from 'lucide-react';
 
 export function FileUploadWithDrive({
   accept = '*/*',

@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Field } from '../../components/tools/ToolFields';
-import { computeFrameLayout, validateGifInputs, FIT_MODES, GIF_LIMITS } from './gifLayout';
+import { validateGifInputs, FIT_MODES, GIF_LIMITS } from './gifLayout';
 import { encodeGifFromImages } from '../../engines/gifEncoder';
 import { downloadBlob } from '../../lib/toolFormat';
 import { FileUploadWithDrive } from '../../components/tools/FileUploadWithDrive';
-
-const BACKGROUND = '#ffffff';
 
 function loadImage(file) {
   return new Promise((resolve, reject) => {

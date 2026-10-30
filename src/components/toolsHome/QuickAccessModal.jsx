@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, Star, X, Search, ArrowRight, Check, Pin, Sparkles } from 'lucide-react';
+import { Zap, Star, X, Search, ArrowRight, Sparkles } from 'lucide-react';
 import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
 
 // Top featured tools permanently pinned for rapid workflow
-export const TOP_FEATURED_SLUGS = [
+const TOP_FEATURED_SLUGS = [
   'ctc-to-inhand',
   'image-compressor',
   'image-to-gif',
