@@ -21,6 +21,7 @@ export const TOOLS = [
   { slug: "image-to-pdf", name: "Image to PDF Converter", description: "Turn JPG, PNG or WebP images into a downloadable PDF in your browser.", category: "Everyday", icon: "PDF", status: "live" },
   { slug: "xlsx-to-pdf", name: "XLSX to PDF Converter", description: "Convert spreadsheet cell data from XLSX into a readable PDF in your browser.", category: "Everyday", icon: "XLS", status: "live" },
   { slug: "image-resizer", name: "Image Resizer", description: "Resize JPG, PNG and WebP images to exact dimensions in your browser.", category: "Everyday", icon: "IMG", status: "live" },
+  { slug: "gif-maker", name: "GIF Maker", description: "Create animated GIFs from images in your browser, reorder frames and control timing and output size.", category: "Everyday", icon: "GIF", status: "live" },
   { slug: "svg-to-png", name: "SVG to PNG Converter", description: "Render SVG markup as a downloadable PNG image.", category: "Everyday", icon: "SVG", status: "live" },
   { slug: "csv-to-pdf", name: "CSV to PDF Converter", description: "Turn CSV rows into a readable PDF locally in your browser.", category: "Everyday", icon: "PDF", status: "live" },
   { slug: "json-to-xml", name: "JSON to XML Converter", description: "Convert JSON objects into readable XML directly in your browser.", category: "Developer", icon: "XML", status: "live" },
