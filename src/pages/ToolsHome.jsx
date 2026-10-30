@@ -9,6 +9,7 @@ import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
 import { CategoryExplorer } from '../components/toolsHome/CategoryExplorer';
 import { RecentToolsSection } from '../components/toolsHome/RecentToolsSection';
 import { PrivacySection, CatalogCalloutSection, SupportCheckoutSection, ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
+import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 
 const intentMap = [
   { terms: ['salary', 'ctc', 'in hand', 'take home', 'take-home', 'hike', 'increment', 'offer', 'notice', 'experience'], slugs: ['ctc-to-inhand', 'salary-hike', 'offer-comparison', 'notice-period', 'experience'] },
@@ -103,10 +104,12 @@ export default function ToolsHome() {
   const showExplore = !query.trim() && !category;
 
   return (
-    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors">
-      <ToolsHomeHeader visitorCount={visitorCount} onSelectCategory={chooseCategory} />
+    <div className="orbit-light min-h-screen flex bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors">
+      <QuickAccessLeftSidebar />
+      <div className="flex-1 min-w-0 flex flex-col">
+        <ToolsHomeHeader visitorCount={visitorCount} onSelectCategory={chooseCategory} />
 
-      <main className="mx-auto w-full max-w-[1440px] px-4 pb-8 sm:px-6">
+        <main className="mx-auto w-full max-w-[1440px] px-4 pb-8 sm:px-6">
         {/* Zone 1: Concise Hero Headline & Floating Search Bar with Category Chips */}
         <ToolsHomeHero
           query={query}
@@ -155,6 +158,7 @@ export default function ToolsHome() {
       </main>
 
       <ToolsHomeFooter />
+      </div>
     </div>
   );
 }
