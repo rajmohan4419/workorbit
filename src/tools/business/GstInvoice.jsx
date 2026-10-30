@@ -228,37 +228,38 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
 
   const indigo = rgb(0.31, 0.275, 0.898);
   const dark = rgb(0.1, 0.1, 0.1);
-  const gray = rgb(0.5, 0.5, 0.5);
+  const gray = rgb(0.45, 0.45, 0.45);
   const white = rgb(1, 1, 1);
   const amber = rgb(0.98, 0.7, 0.1);
 
-
-  const draw = (text, opts) => {
-    page.drawText(sanitizeForPdf(text), opts);
+  const drawLeft = (text, leftX, yPos, font, size, color) => {
+    const s = sanitizeForPdf(String(text ?? ''));
+    if (!s) return;
+    page.drawText(s, { x: leftX, y: yPos, font, size, color });
   };
 
-  let y = height - 30;
+  const drawRight = (text, rightX, yPos, font, size, color) => {
+    const s = sanitizeForPdf(String(text ?? ''));
+    if (!s) return;
+    const textWidth = font.widthOfTextAtSize(s, size);
+    page.drawText(s, { x: rightX - textWidth, y: yPos, font, size, color });
+  };
 
-  // Header band
+  // 1. Header band
   page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: indigo });
 
-  page.setFont(fontBold);
-  page.setFontSize(20);
-  draw(seller.companyName || 'Company Name', { x: 30, y: height - 40, color: white });
+  // Company Name & details (Left)
+  drawLeft(seller.companyName || 'Company Name', 30, height - 38, fontBold, 18, white);
+  drawLeft(`GSTIN: ${seller.gstin || '-'}  |  PAN: ${seller.pan || '-'}`, 30, height - 54, fontReg, 8.5, rgb(0.85, 0.85, 1));
+  const contactParts = [seller.phone, seller.email].filter(Boolean).join('  |  ');
+  if (contactParts) {
+    drawLeft(contactParts, 30, height - 66, fontReg, 8.5, rgb(0.85, 0.85, 1));
+  }
 
-  page.setFont(fontReg);
-  page.setFontSize(9);
-  draw(`GSTIN: ${seller.gstin || '-'}  |  PAN: ${seller.pan || '-'}`, { x: 30, y: height - 56, color: rgb(0.85, 0.85, 1) });
-  draw(`${seller.phone || ''}  ${seller.email || ''}`, { x: 30, y: height - 68, color: rgb(0.85, 0.85, 1) });
-
-  // TAX INVOICE label
-  page.setFont(fontBold);
-  page.setFontSize(13);
-  draw('TAX INVOICE', { x: width - 140, y: height - 45, color: amber });
-  page.setFont(fontReg);
-  page.setFontSize(8);
-  draw(`No: ${meta.invoiceNumber}`, { x: width - 140, y: height - 57, color: white });
-  draw(`Date: ${meta.invoiceDate}`, { x: width - 140, y: height - 67, color: white });
+  // TAX INVOICE label & invoice meta (Right-aligned to width - 30)
+  drawRight('TAX INVOICE', width - 30, height - 38, fontBold, 13, amber);
+  drawRight(`No: ${meta.invoiceNumber}`, width - 30, height - 53, fontReg, 8.5, white);
+  drawRight(`Date: ${meta.invoiceDate}`, width - 30, height - 65, fontReg, 8.5, white);
 
   if (seller.logo && seller.logo.startsWith('data:image/')) {
     try {
@@ -272,7 +273,7 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
       const img = isPng ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
       const scaled = img.scaleToFit(50, 45);
       page.drawImage(img, {
-        x: width - 200,
+        x: width - 210,
         y: height - 68,
         width: scaled.width,
         height: scaled.height,
@@ -282,109 +283,125 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
     }
   }
 
-  y = height - 100;
+  // 2. Seller Address line (below banner, accounts for multi-line textarea)
+  let y = height - 96;
 
-  // Seller address line
-  page.setFont(fontReg);
-  page.setFontSize(8);
-  draw(`${seller.address}, ${seller.city} - ${seller.pin}, ${seller.state}`, { x: 30, y, color: gray });
-  y -= 20;
+  const sellerAddrLines = [];
+  if (seller.address) {
+    seller.address.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => sellerAddrLines.push(l));
+  }
+  const sellerCityStatePin = [
+    seller.city,
+    seller.pin ? `- ${seller.pin}` : '',
+    seller.state
+  ].filter(Boolean).join(' ');
+  if (sellerCityStatePin) sellerAddrLines.push(sellerCityStatePin);
 
-  // Divider
+  sellerAddrLines.forEach(line => {
+    drawLeft(line, 30, y, fontReg, 8, gray);
+    y -= 11;
+  });
+
+  y -= 4;
+  // Clean divider
   page.drawLine({ start: { x: 30, y }, end: { x: width - 30, y }, thickness: 0.5, color: rgb(0.85, 0.85, 0.85) });
   y -= 15;
 
-  // Bill To / Invoice Meta row
-  page.setFont(fontBold);
-  page.setFontSize(9);
-  draw('BILL TO', { x: 30, y, color: indigo });
-  draw('INVOICE DETAILS', { x: 320, y, color: indigo });
-  y -= 12;
+  // 3. Bill To (Left) & Invoice Details (Right)
+  const billToStartY = y;
 
-  page.setFont(fontBold);
-  page.setFontSize(10);
-  draw(buyer.name || '-', { x: 30, y, color: dark });
-  y -= 13;
+  drawLeft('BILL TO', 30, y, fontBold, 9, indigo);
+  let buyerY = y - 13;
 
-  page.setFont(fontReg);
-  page.setFontSize(8);
-  const buyerLines = [
-    buyer.address,
-    `${buyer.city} - ${buyer.pin}`,
-    buyer.state,
-    buyer.gstin ? `GSTIN: ${buyer.gstin}` : '',
-    buyer.phone || '',
-  ].filter(Boolean);
+  drawLeft(buyer.name || '-', 30, buyerY, fontBold, 9.5, dark);
+  buyerY -= 12;
+
+  const buyerAddrLines = [];
+  if (buyer.address && buyer.address !== '-') {
+    buyer.address.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => {
+      if (l !== '-') buyerAddrLines.push(l);
+    });
+  }
+  const buyerCityStatePin = [
+    buyer.city,
+    buyer.pin ? `- ${buyer.pin}` : '',
+    buyer.state
+  ].filter(Boolean).join(' ');
+  if (buyerCityStatePin) buyerAddrLines.push(buyerCityStatePin);
+  if (buyer.gstin) buyerAddrLines.push(`GSTIN: ${buyer.gstin}`);
+  if (buyer.phone) buyerAddrLines.push(`Phone: ${buyer.phone}`);
+
+  buyerAddrLines.forEach(line => {
+    drawLeft(line, 30, buyerY, fontReg, 8, dark);
+    buyerY -= 11;
+  });
+
+  // Invoice Details on the right
+  let metaY = billToStartY;
+  drawLeft('INVOICE DETAILS', 340, metaY, fontBold, 9, indigo);
+  metaY -= 13;
 
   const metaLines = [
-    ['Due Date', meta.dueDate],
+    ['Due Date', meta.dueDate || '-'],
     ['PO Ref', meta.poReference || '-'],
-    ['Place of Supply', meta.placeOfSupply],
+    ['Place of Supply', meta.placeOfSupply || '-'],
     ['Supply Type', isInterState ? 'Inter-State (IGST)' : 'Intra-State (CGST+SGST)'],
   ];
 
-  const startY = y;
-  buyerLines.forEach((line, i) => {
-    draw(line, { x: 30, y: startY - i * 11, color: dark });
-  });
-  metaLines.forEach(([k, v], i) => {
-    page.setFont(fontBold);
-    draw(`${k}:`, { x: 320, y: startY - i * 11, color: gray });
-    page.setFont(fontReg);
-    draw(String(v), { x: 410, y: startY - i * 11, color: dark });
+  metaLines.forEach(([k, v]) => {
+    drawLeft(`${k}:`, 340, metaY, fontBold, 8, gray);
+    drawLeft(String(v), 425, metaY, fontReg, 8, dark);
+    metaY -= 12;
   });
 
-  y = startY - Math.max(buyerLines.length, metaLines.length) * 11 - 18;
+  y = Math.min(buyerY, metaY) - 16;
 
-  // Items Table Header
-  page.drawRectangle({ x: 30, y: y - 2, width: width - 60, height: 16, color: indigo });
-  const cols = { num: 30, desc: 48, hsn: 170, qty: 215, rate: 255, taxable: 305, gst: 365, tax: 415, amount: 505 };
-  page.setFont(fontBold);
-  page.setFontSize(7);
-  const hdrY = y + 4;
-  draw('#', { x: cols.num, y: hdrY, color: white });
-  draw('Description', { x: cols.desc, y: hdrY, color: white });
-  draw('HSN', { x: cols.hsn, y: hdrY, color: white });
-  draw('Qty', { x: cols.qty, y: hdrY, color: white });
-  draw('Rate (Rs)', { x: cols.rate, y: hdrY, color: white });
-  draw('Taxable', { x: cols.taxable, y: hdrY, color: white });
-  draw('GST%', { x: cols.gst, y: hdrY, color: white });
-  draw(isInterState ? 'IGST' : 'CGST+SGST', { x: cols.tax, y: hdrY, color: white });
-  draw('Amount (Rs)', { x: cols.amount, y: hdrY, color: white });
+  // 4. Items Table Header
+  page.drawRectangle({ x: 30, y: y - 3, width: width - 60, height: 16, color: indigo });
+  const hdrY = y + 3;
 
-  y -= 16;
+  // Table columns: # (left), Desc (left), HSN (left), Qty (right), Rate (right), Taxable (right), GST% (right), Tax (right), Amount (right)
+  drawLeft('#', 34, hdrY, fontBold, 7.5, white);
+  drawLeft('Description', 52, hdrY, fontBold, 7.5, white);
+  drawLeft('HSN', 170, hdrY, fontBold, 7.5, white);
+  drawRight('Qty', 245, hdrY, fontBold, 7.5, white);
+  drawRight('Rate (Rs)', 305, hdrY, fontBold, 7.5, white);
+  drawRight('Taxable', 370, hdrY, fontBold, 7.5, white);
+  drawRight('GST%', 410, hdrY, fontBold, 7.5, white);
+  drawRight(isInterState ? 'IGST' : 'CGST+SGST', 480, hdrY, fontBold, 7.5, white);
+  drawRight('Amount (Rs)', 560, hdrY, fontBold, 7.5, white);
+
+  y -= 17;
 
   // Item rows
   items.forEach((item, idx) => {
     const calc = calcItem(item, isInterState);
     const rowColor = idx % 2 === 0 ? rgb(0.98, 0.98, 1) : white;
-    page.drawRectangle({ x: 30, y: y - 4, width: width - 60, height: 14, color: rowColor });
+    page.drawRectangle({ x: 30, y: y - 4, width: width - 60, height: 15, color: rowColor });
 
-    page.setFont(fontReg);
-    page.setFontSize(7);
     const ry = y + 2;
-    draw(String(idx + 1), { x: cols.num, y: ry, color: dark });
-    draw((item.description || '').slice(0, 22), { x: cols.desc, y: ry, color: dark });
-    draw(item.hsn || '', { x: cols.hsn, y: ry, color: dark });
-    draw(`${item.qty} ${item.unit}`, { x: cols.qty, y: ry, color: dark });
-    draw(inr(item.rate), { x: cols.rate, y: ry, color: dark });
-    draw(inr(calc.taxable), { x: cols.taxable, y: ry, color: dark });
-    draw(`${item.gstRate}%`, { x: cols.gst, y: ry, color: dark });
+    drawLeft(String(idx + 1), 34, ry, fontReg, 7, dark);
+    drawLeft((item.description || '').slice(0, 24), 52, ry, fontReg, 7, dark);
+    drawLeft(item.hsn || '-', 170, ry, fontReg, 7, dark);
+    drawRight(`${item.qty} ${item.unit}`, 245, ry, fontReg, 7, dark);
+    drawRight(inr(item.rate), 305, ry, fontReg, 7, dark);
+    drawRight(inr(calc.taxable), 370, ry, fontReg, 7, dark);
+    drawRight(`${item.gstRate}%`, 410, ry, fontReg, 7, dark);
     const taxAmt = isInterState ? calc.igst : (calc.cgst + calc.sgst);
-    draw(inr(taxAmt), { x: cols.tax, y: ry, color: dark });
-    draw(inr(calc.total), { x: cols.amount, y: ry, color: dark });
+    drawRight(inr(taxAmt), 480, ry, fontReg, 7, dark);
+    drawRight(inr(calc.total), 560, ry, fontBold, 7, dark);
 
-    y -= 14;
+    y -= 15;
   });
 
-  // Totals
+  // 5. Totals
   y -= 6;
   page.drawLine({ start: { x: 30, y }, end: { x: width - 30, y }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
-  y -= 4;
+  y -= 14;
 
   const totalsRows = [
     ['Subtotal', inr(totals.subtotal)],
-    ['Total Discount', `- Rs. ${inr(totals.totalDiscount)}`],
+    ...(totals.totalDiscount > 0 ? [['Total Discount', `- Rs. ${inr(totals.totalDiscount)}`]] : []),
     ['Taxable Amount', inr(totals.taxableAmount)],
     ...(isInterState
       ? [['IGST', inr(totals.igst)]]
@@ -392,76 +409,65 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
     ['Round Off', (totals.roundOff >= 0 ? '+' : '') + inr(totals.roundOff)],
   ];
 
-  page.setFont(fontReg);
-  page.setFontSize(8);
   totalsRows.forEach(([k, v]) => {
-    draw(k, { x: 360, y, color: gray });
-    draw(v, { x: 505, y, color: dark });
-    y -= 12;
+    drawLeft(k, 370, y, fontReg, 8, gray);
+    drawRight(v, 560, y, fontBold, 8, dark);
+    y -= 13;
   });
 
-  // Grand Total band
-  page.drawRectangle({ x: 330, y: y - 4, width: width - 360, height: 18, color: indigo });
-  page.setFont(fontBold);
-  page.setFontSize(10);
-  draw('GRAND TOTAL', { x: 340, y: y + 2, color: white });
-  draw(`Rs. ${inr(totals.grandTotal)}`, { x: 470, y: y + 2, color: amber });
-  y -= 24;
+  // Grand Total band - ample breathing space, perfectly right-aligned
+  y -= 5;
+  page.drawRectangle({ x: 350, y: y - 5, width: width - 380, height: 22, color: indigo });
+  drawLeft('GRAND TOTAL', 362, y + 2, fontBold, 9.5, white);
+  drawRight(`Rs. ${inr(totals.grandTotal)}`, 560, y + 2, fontBold, 10, amber);
+  y -= 25;
 
   // Amount in words
-  page.setFont(fontReg);
-  page.setFontSize(7.5);
-  draw(`Amount in Words: ${amountToWords(totals.grandTotal)}`, { x: 30, y, color: dark });
-  y -= 20;
+  drawLeft(`Amount in Words: ${amountToWords(totals.grandTotal)}`, 30, y, fontReg, 7.5, dark);
+  y -= 18;
 
   // Notes
   if (notes) {
-    page.setFont(fontBold);
-    page.setFontSize(8);
-    draw('Notes / Terms:', { x: 30, y, color: indigo });
+    drawLeft('Notes / Terms:', 30, y, fontBold, 8, indigo);
     y -= 12;
-    page.setFont(fontReg);
-    page.setFontSize(7.5);
     const noteLines = notes.match(/.{1,90}/g) || [];
     noteLines.slice(0, 4).forEach(line => {
-      draw(line, { x: 30, y, color: dark });
+      drawLeft(line, 30, y, fontReg, 7.5, dark);
       y -= 11;
     });
+    y -= 6;
   }
 
   // Bank details footer
-  y -= 10;
   page.drawLine({ start: { x: 30, y }, end: { x: width - 30, y }, thickness: 0.5, color: rgb(0.85, 0.85, 0.85) });
-  y -= 12;
-  page.setFont(fontBold);
-  page.setFontSize(8);
-  draw('Bank Details', { x: 30, y, color: indigo });
-  y -= 11;
-  page.setFont(fontReg);
-  page.setFontSize(7.5);
+  y -= 14;
+  const footerSectionStartY = y;
+
+  drawLeft('Bank Details', 30, y, fontBold, 8, indigo);
+  let bankY = y - 12;
   [
     `Bank: ${seller.bankName || '-'}`,
     `Account No: ${seller.accountNo || '-'}`,
     `IFSC: ${seller.ifsc || '-'}`,
     `UPI: ${seller.upiId || '-'}`,
   ].forEach(line => {
-    draw(line, { x: 30, y, color: dark });
-    y -= 11;
+    drawLeft(line, 30, bankY, fontReg, 7.5, dark);
+    bankY -= 11;
   });
 
-  // Signatory
+  // Signatory (with proper signature line above label)
   if (signatory) {
-    page.setFont(fontBold);
-    page.setFontSize(8);
-    draw(`Authorised Signatory: ${signatory}`, { x: width - 220, y: y + 33, color: dark });
-    page.drawLine({ start: { x: width - 220, y: y + 32 }, end: { x: width - 30, y: y + 32 }, thickness: 0.4, color: gray });
+    const sigBoxRight = width - 30; // 565
+    const sigBoxLeft = width - 210; // 385
+    const sigLineY = footerSectionStartY - 24;
+
+    page.drawLine({ start: { x: sigBoxLeft, y: sigLineY }, end: { x: sigBoxRight, y: sigLineY }, thickness: 0.5, color: gray });
+    drawLeft(`Authorised Signatory: ${signatory}`, sigBoxLeft, sigLineY - 12, fontBold, 8, dark);
   }
 
-  // Footer
-  page.setFont(fontReg);
-  page.setFontSize(7);
-  draw('This is a computer generated invoice.', { x: 30, y: 20, color: gray });
-  draw('Generated by OrbitBoard', { x: width - 130, y: 20, color: gray });
+  // Footer note
+  drawLeft('This is a computer generated invoice.', 30, 20, fontReg, 7, gray);
+  drawRight('Generated by OrbitBoard', width - 30, 20, fontReg, 7, gray);
 
   const pdfBytes = await pdfDoc.save();
   return new Blob([pdfBytes], { type: 'application/pdf' });

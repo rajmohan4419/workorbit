@@ -1647,7 +1647,7 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
                       onClick={() => setCategoryDropdownOpen(false)}
                       className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950/40 transition"
                     >
-                      <span>Browse All 64 Tools</span>
+                      <span>Browse All {LISTED_TOOLS.length} Tools</span>
                       <ArrowRight size={13} />
                     </Link>
                   </div>
