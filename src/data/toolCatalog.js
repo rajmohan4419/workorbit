@@ -34,6 +34,8 @@ export const TOOLS = [
   { slug: "pdf-to-text", name: "PDF to Text Converter", description: "Extract selectable text from PDF pages in your browser.", category: "Everyday", icon: "PDF", status: "live" },
   { slug: "diff-checker", name: "Text Diff Checker", description: "Compare two text versions line by line and identify changes locally.", category: "Developer", icon: "DIFF", status: "live" },
   { slug: "image-compressor", name: "Image Compressor", description: "Reduce image file size locally while choosing output quality and format.", category: "Everyday", icon: "IMG", status: "live" },
+  { slug: "image-to-gif", name: "Image to GIF Maker", description: "Convert multiple JPG, PNG or WebP images into an animated GIF directly in your browser.", category: "Everyday", icon: "GIF", status: "live" },
+  { slug: "video-to-gif", name: "Video to GIF Maker", description: "Turn MP4, WebM or MOV video clips into animated GIFs locally in your browser.", category: "Everyday", icon: "GIF", status: "live" },
   { slug: "image-metadata-remover", name: "Image Metadata Remover", description: "Re-encode images locally to help remove embedded metadata.", category: "Everyday", icon: "IMG", status: "live" },
   { slug: "pdf-e-sign", name: "PDF E-Sign", description: "Add a visible typed signature to a PDF locally in your browser.", category: "Everyday", icon: "SIGN", status: "live" },
   { slug: "pdf-merge", name: "Merge PDF", description: "Combine multiple PDF files into one PDF in your browser.", category: "Everyday", icon: "PDF", status: "live" },
@@ -340,6 +342,7 @@ export const TOOLS = [
   { slug: "saas-pricing-calculator", name: "SaaS Pricing Calculator", description: "Compare per-seat, flat, tiered and usage pricing for a typical customer, with annual discounts and MRR.", category: "Business", icon: "¤", status: "live" },
   { slug: "invoice-aging-report", name: "Invoice Aging Report", description: "Upload your invoices as a CSV to see what is outstanding, how overdue it is, and which customers owe the most.", category: "Business", icon: "AR", status: "live" },
   { slug: "weighted-decision-matrix", name: "Weighted Decision Matrix", description: "Score vendors or options against weighted criteria, from a CSV or by hand, and see them ranked.", category: "Business", icon: "⚖", status: "live" },
+  { slug: "gif-maker", name: "GIF Maker", description: "Combine several images into an animated GIF in your browser. Choose the frame time, size and how images fit the frame.", category: "Everyday", icon: "GIF", status: "live" },
 ];
 
 // Old or duplicate slugs that now point at the tool that replaced them.

@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
 import { TOOLS, SLUG_REDIRECTS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { loadToolPage } from '../lib/toolPageLoader';
+import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 
 const ToolPage = lazy(loadToolPage);
 
@@ -20,19 +21,7 @@ function ToolShell({ tool, info }) {
 
   return (
     <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800">
-      <header className="sticky top-0 z-20 border-b border-[var(--orbit-border)] bg-[var(--orbit-canvas)]/95 backdrop-blur">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to="/" aria-label="OrbitBoard home" className="text-lg font-black text-stone-900 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-accent-600 p-0.5">
-              <div className="w-full h-full bg-[var(--orbit-canvas)] rounded-[7px] flex items-center justify-center text-accent-700 text-xs font-black">O</div>
-            </div>
-            ORBIT<span className="text-accent-600">BOARD</span>
-          </Link>
-          <Link to="/tools" className="inline-flex items-center gap-2 text-sm font-semibold text-stone-600 hover:text-accent-700 rounded-lg px-3 py-2">
-            <ArrowLeft size={16}/> All tools
-          </Link>
-        </div>
-      </header>
+      <ToolsHomeHeader />
 
       <main>
         <section className="border-b border-[var(--orbit-border)] bg-white">

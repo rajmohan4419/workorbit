@@ -1,0 +1,160 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient for Squircle -->
+    <radialGradient id="app-bg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#121829"/>
+      <stop offset="100%" stop-color="#070913"/>
+    </radialGradient>
+
+    <!-- Central "O" Body Gradients -->
+    <linearGradient id="o-front-grad" x1="160" y1="120" x2="360" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="30%" stop-color="#0284C7"/>
+      <stop offset="70%" stop-color="#0369A1"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+
+    <linearGradient id="o-inner-rim" x1="210" y1="140" x2="310" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7DD3FC"/>
+      <stop offset="45%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0C4A6E"/>
+    </linearGradient>
+
+    <linearGradient id="o-shadow" x1="256" y1="230" x2="330" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0369A1" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#021E38" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Orbital Ring Glowing Multi-stop Gradient -->
+    <linearGradient id="ring-gradient" x1="90" y1="280" x2="430" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="32%" stop-color="#818CF8"/>
+      <stop offset="55%" stop-color="#C084FC"/>
+      <stop offset="78%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+
+    <!-- Orbit Satellite Moon Gradient -->
+    <radialGradient id="satellite-grad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="35%" stop-color="#FB923C"/>
+      <stop offset="75%" stop-color="#E11D48"/>
+      <stop offset="100%" stop-color="#831843"/>
+    </radialGradient>
+
+    <!-- Glow Filter for Ambient Bloom -->
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="soft-glow" x="-30%" y="-30%" width="160%" height="160%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="16" result="softBlur"/>
+      <feMerge>
+        <feMergeNode in="softBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Mask to clip the back-arc of the orbital ring behind the "O" -->
+    <mask id="back-ring-mask">
+      <!-- Show all -->
+      <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
+      <!-- Hide behind O's body -->
+      <ellipse cx="256" cy="246" rx="98" ry="118" fill="#000000" transform="rotate(-18 256 246)"/>
+    </mask>
+  </defs>
+
+  <!-- App Icon Background Squircle (optional, rounded) -->
+  <rect width="512" height="512" rx="128" fill="url(#app-bg)"/>
+  <rect width="508" height="508" x="2" y="2" rx="126" stroke="#38BDF8" stroke-width="2" stroke-opacity="0.15" fill="none"/>
+
+  <!-- BACK HALF OF ORBITAL RING (passes behind the top of the O) -->
+  <g mask="url(#back-ring-mask)">
+    <ellipse cx="256" cy="242" rx="192" ry="86" 
+      fill="none" 
+      stroke="url(#ring-gradient)" 
+      stroke-width="20" 
+      transform="rotate(-28 256 242)"
+      filter="url(#neon-glow)"
+    />
+  </g>
+
+  <!-- AMBIENT VOLUMETRIC GLOW BEHIND THE CORE -->
+  <ellipse cx="256" cy="240" rx="110" ry="110" fill="#0284C7" opacity="0.25" filter="url(#soft-glow)"/>
+
+  <!-- CENTRAL "O" SCULPTED GEOMETRY (Tilted Ribbon Torus) -->
+  <g transform="rotate(-18 256 246)">
+    <!-- Main Outer Torus Shape -->
+    <path d="M 256 128
+             C 314 128, 356 180, 356 246
+             C 356 312, 314 364, 256 364
+             C 198 364, 156 312, 156 246
+             C 156 180, 198 128, 256 128 Z
+             M 256 182
+             C 224 182, 204 210, 204 246
+             C 204 282, 224 310, 256 310
+             C 288 310, 308 282, 308 246
+             C 308 210, 288 182, 256 182 Z"
+          fill="url(#o-front-grad)"
+          fill-rule="evenodd"
+    />
+
+    <!-- Volumetric Inner Shading Crescent -->
+    <path d="M 256 182
+             C 224 182, 204 210, 204 246
+             C 204 282, 224 310, 256 310
+             C 275 310, 290 298, 298 280
+             C 275 292, 235 285, 222 250
+             C 212 222, 230 195, 256 182 Z"
+          fill="url(#o-shadow)"
+    />
+
+    <!-- Top & Inner Rim Highlight for Sleek Glass/Metal Sheen -->
+    <path d="M 195 160
+             C 220 134, 260 128, 295 138
+             C 275 145, 240 152, 222 178
+             C 208 198, 204 225, 204 246
+             C 198 230, 194 200, 195 160 Z"
+          fill="url(#o-inner-rim)"
+          opacity="0.8"
+    />
+  </g>
+
+  <!-- FRONT HALF OF ORBITAL RING (passes in front of bottom of the O) -->
+  <!-- Clip-path to only render the lower-front arc -->
+  <g>
+    <clipPath id="front-ring-clip">
+      <path d="M 40 220 L 480 320 L 400 480 L 30 420 Z"/>
+    </clipPath>
+    <ellipse cx="256" cy="242" rx="192" ry="86" 
+      fill="none" 
+      stroke="url(#ring-gradient)" 
+      stroke-width="20" 
+      transform="rotate(-28 256 242)"
+      clip-path="url(#front-ring-clip)"
+      filter="url(#neon-glow)"
+    />
+    <!-- Subtle specular core line for enhanced 3D luminosity -->
+    <ellipse cx="256" cy="242" rx="192" ry="86" 
+      fill="none" 
+      stroke="#FFFFFF" 
+      stroke-width="4" 
+      stroke-opacity="0.6"
+      transform="rotate(-28 256 242)"
+      clip-path="url(#front-ring-clip)"
+    />
+  </g>
+
+  <!-- ORBITING SATELLITE SPHERE (TOP-RIGHT APEX) -->
+  <!-- Soft Outer Halo -->
+  <circle cx="396" cy="148" r="32" fill="#FB923C" opacity="0.3" filter="url(#soft-glow)"/>
+  <!-- Planet Body -->
+  <circle cx="396" cy="148" r="24" fill="url(#satellite-grad)" filter="url(#neon-glow)"/>
+  <!-- Specular Crescent on Satellite -->
+  <circle cx="390" cy="142" r="7" fill="#FFFFFF" opacity="0.75"/>
+</svg>
+

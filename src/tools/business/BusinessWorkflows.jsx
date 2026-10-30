@@ -132,7 +132,7 @@ export function InvoiceAging() {
       ...customColumns.map(c => row.extra?.[c] ?? ''),
     ]);
     const blob = new Blob([toCsv([header, ...body])], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, `invoice-aging-${asOf}.csv`);
+    downloadBlob(blob, 'orbitboard-invoice-aging.csv', 'invoice-aging');
   };
 
   const result = useMemo(() => {

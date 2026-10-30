@@ -1,37 +1,116 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg-grad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="100%" stop-color="#1E1B4B"/>
+    <radialGradient id="fav-bg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#121829"/>
+      <stop offset="100%" stop-color="#070913"/>
+    </radialGradient>
+
+    <linearGradient id="fav-o-grad" x1="160" y1="120" x2="360" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="35%" stop-color="#0284C7"/>
+      <stop offset="75%" stop-color="#0369A1"/>
+      <stop offset="100%" stop-color="#075985"/>
     </linearGradient>
-    <linearGradient id="ring-grad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FF5722"/>
-      <stop offset="50%" stop-color="#A855F7"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
+
+    <linearGradient id="fav-rim-grad" x1="210" y1="140" x2="310" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7DD3FC"/>
+      <stop offset="45%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0C4A6E"/>
     </linearGradient>
-    <linearGradient id="orb-grad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#FF7043"/>
-      <stop offset="100%" stop-color="#FF3D00"/>
+
+    <linearGradient id="fav-ring-grad" x1="90" y1="280" x2="430" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="32%" stop-color="#818CF8"/>
+      <stop offset="55%" stop-color="#C084FC"/>
+      <stop offset="78%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#FB923C"/>
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+
+    <radialGradient id="fav-sat-grad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="35%" stop-color="#FB923C"/>
+      <stop offset="75%" stop-color="#E11D48"/>
+      <stop offset="100%" stop-color="#831843"/>
+    </radialGradient>
+
+    <filter id="fav-glow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
+
+    <mask id="fav-back-mask">
+      <rect width="512" height="512" fill="#FFFFFF"/>
+      <ellipse cx="256" cy="246" rx="100" ry="120" fill="#000000" transform="rotate(-18 256 246)"/>
+    </mask>
   </defs>
 
-  <!-- Background Card -->
-  <rect width="512" height="512" rx="128" fill="url(#bg-grad)"/>
-  <rect width="504" height="504" x="4" y="4" rx="124" stroke="url(#ring-grad)" stroke-width="8" stroke-opacity="0.4" fill="none"/>
+  <!-- Background squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#fav-bg)"/>
+  <rect width="508" height="508" x="2" y="2" rx="126" stroke="#38BDF8" stroke-width="2" stroke-opacity="0.18" fill="none"/>
 
-  <!-- Orbital Ring -->
-  <ellipse cx="256" cy="256" rx="180" ry="85" fill="none" stroke="url(#ring-grad)" stroke-width="24" stroke-linecap="round" transform="rotate(-28 256 256)" filter="url(#glow)"/>
+  <!-- Back ring arc -->
+  <g mask="url(#fav-back-mask)">
+    <ellipse cx="256" cy="242" rx="192" ry="86" 
+      fill="none" 
+      stroke="url(#fav-ring-grad)" 
+      stroke-width="24" 
+      transform="rotate(-28 256 242)"
+      filter="url(#fav-glow)"
+    />
+  </g>
 
-  <!-- Central Planet Body -->
-  <circle cx="256" cy="256" r="105" fill="#0F172A"/>
-  <circle cx="256" cy="256" r="95" fill="url(#ring-grad)" opacity="0.15"/>
-  <text x="256" y="318" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="200" font-weight="900" fill="#FFFFFF" text-anchor="middle">O</text>
+  <!-- Central O -->
+  <g transform="rotate(-18 256 246)">
+    <path d="M 256 126
+             C 316 126, 358 178, 358 246
+             C 358 314, 316 366, 256 366
+             C 196 366, 154 314, 154 246
+             C 154 178, 196 126, 256 126 Z
+             M 256 182
+             C 224 182, 204 210, 204 246
+             C 204 282, 224 310, 256 310
+             C 288 310, 308 282, 308 246
+             C 308 210, 288 182, 256 182 Z"
+          fill="url(#fav-o-grad)"
+          fill-rule="evenodd"
+    />
+    <path d="M 195 160
+             C 220 134, 260 128, 295 138
+             C 275 145, 240 152, 222 178
+             C 208 198, 204 225, 204 246
+             C 198 230, 194 200, 195 160 Z"
+          fill="url(#fav-rim-grad)"
+          opacity="0.85"
+    />
+  </g>
 
-  <!-- Satellite Orb -->
-  <circle cx="395" cy="155" r="34" fill="url(#orb-grad)" filter="url(#glow)"/>
-  <circle cx="395" cy="155" r="14" fill="#FFF" opacity="0.8"/>
+  <!-- Front ring arc -->
+  <g>
+    <clipPath id="fav-front-clip">
+      <path d="M 40 220 L 480 320 L 400 480 L 30 420 Z"/>
+    </clipPath>
+    <ellipse cx="256" cy="242" rx="192" ry="86" 
+      fill="none" 
+      stroke="url(#fav-ring-grad)" 
+      stroke-width="24" 
+      transform="rotate(-28 256 242)"
+      clip-path="url(#fav-front-clip)"
+      filter="url(#fav-glow)"
+    />
+    <ellipse cx="256" cy="242" rx="192" ry="86" 
+      fill="none" 
+      stroke="#FFFFFF" 
+      stroke-width="5" 
+      stroke-opacity="0.6"
+      transform="rotate(-28 256 242)"
+      clip-path="url(#fav-front-clip)"
+    />
+  </g>
+
+  <!-- Satellite -->
+  <circle cx="396" cy="148" r="26" fill="url(#fav-sat-grad)" filter="url(#fav-glow)"/>
+  <circle cx="390" cy="142" r="7" fill="#FFFFFF" opacity="0.8"/>
 </svg>

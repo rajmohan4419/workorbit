@@ -68,4 +68,7 @@ globalThis.ORBITBOARD_TOOLS = [
   { slug: "saas-pricing-calculator", name: "SaaS Pricing Calculator", description: "Compare per-seat, flat, tiered and usage pricing for a typical customer, with annual discounts and MRR.", category: "Business", icon: "¤" },
   { slug: "invoice-aging-report", name: "Invoice Aging Report", description: "Upload your invoices as a CSV to see what is outstanding, how overdue it is, and which customers owe the most.", category: "Business", icon: "AR" },
   { slug: "weighted-decision-matrix", name: "Weighted Decision Matrix", description: "Score vendors or options against weighted criteria, from a CSV or by hand, and see them ranked.", category: "Business", icon: "⚖" },
+  { slug: "gif-maker", name: "GIF Maker", description: "Combine several images into an animated GIF in your browser. Choose the frame time, size and how images fit the frame.", category: "Everyday", icon: "GIF" },
+  { slug: "image-to-gif", name: "Image to GIF Maker", description: "Convert multiple PNG, JPG, and WebP images into an animated GIF in your browser with custom frame delays.", category: "Everyday", icon: "IMG" },
+  { slug: "video-to-gif", name: "Video to GIF Maker", description: "Turn MP4, WebM, and MOV video clips into lightweight animated GIFs with customizable frame rates and time trimming.", category: "Everyday", icon: "VID" },
 ];
