@@ -328,6 +328,21 @@ export const TOOL_CONTENT = {
       ['Does it preserve Excel formatting?', 'This lightweight browser converter preserves readable cell values and sheet names, but does not reproduce advanced Excel styling, formulas or charts.']
     ]
   },
+  'gif-maker': {
+    intro: 'Turn a sequence of images into an animated GIF. Reorder frames, set playback speed and choose output dimensions without uploading your files.',
+    keywords: 'GIF maker, create GIF from images, image to GIF, animated GIF creator, online GIF maker',
+    how: [
+      'Add at least two JPG, PNG, WebP or GIF images.',
+      'Reorder the frames and set the duration for each frame.',
+      'Choose the output width and quality, then generate your GIF.',
+      'Preview the animation and download it.'
+    ],
+    faq: [
+      ['Are my images uploaded?', 'No. Image preparation and GIF generation run in your browser. The GIF encoder library is loaded from a public CDN when you generate your first GIF.'],
+      ['Can I change the order of frames?', 'Yes. Drag frames into a new order or use the move-up and move-down controls.'],
+      ['Can I use different image sizes?', 'Yes. Frames are fitted inside a common output canvas while preserving their aspect ratio. Empty space is filled with white.']
+    ]
+  },
   'image-resizer': {
     intro: 'Resize JPG, PNG and WebP images to exact dimensions in your browser.',
     keywords: 'image resizer, resize image online, jpg png webp resize',

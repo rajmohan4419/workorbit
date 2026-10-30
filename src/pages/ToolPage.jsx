@@ -22,6 +22,7 @@ import { isAdEligible, loadAdSense } from '../lib/adsense';
 import AdSenseUnit from '../components/AdSenseUnit';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
+import GifMaker from '../tools/GifMaker';
 
 const GratuityCalculator = lazy(() => import('../tools/career/GratuityCalculator'));
 const IndiaIncomeTaxCalculator = lazy(() => import('../tools/finance/IndiaIncomeTaxCalculator'));
@@ -1725,7 +1726,7 @@ export default function ToolPage() {
     'pdf-extract-pages': PdfExtract, 'pdf-reorder': PdfReorder, 'pdf-workspace': PdfWorkspace, 'pdf-compressor': PdfCompressor, 'pdf-e-sign': PdfESign, 'pdf-to-jpg': () => <PdfToImages format="image/jpeg" />, 'pdf-to-png': () => <PdfToImages format="image/png" />,
     'compound-interest-calculator': CompoundInterest, 'fd-maturity-calculator': FdMaturity, 'rd-maturity-calculator': RdMaturity, 'loan-amortization-calculator': LoanAmortization, 'hra-exemption-calculator-india': HraExemption, 'saas-retention-calculator': SaasRetention, 'sales-pipeline-forecaster': SalesPipelineForecaster, 'saas-pricing-calculator': SaasPricing, 'invoice-aging-report': InvoiceAging, 'weighted-decision-matrix': DecisionMatrix, 'emi': Emi, 'gst': Gst, 'sip': Sip, 'income-tax-india': IndiaIncomeTaxCalculator, 'income-tax-global': GlobalIncomeTaxCalculator, 'json-formatter': JsonFormatter, 'json-to-csv': JsonToCsv, 'base64': Base64Tool,
     'jwt-decoder': JwtDecoder, 'unix-timestamp': UnixTimestamp, 'uuid-generator': UuidGenerator, 'url-encoder': UrlEncoder,
-    'password-generator': PasswordGenerator
+    'password-generator': PasswordGenerator, 'gif-maker': GifMaker
   }[slug]), [slug]);
 
   const adEligible = isAdEligible({ tool, info, hasTool: Boolean(content) });
