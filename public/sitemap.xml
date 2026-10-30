@@ -2,6 +2,10 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://orbitboard.in/</loc><priority>1.0</priority></url>
   <url><loc>https://orbitboard.in/tools</loc></url>
+  <url><loc>https://orbitboard.in/about</loc></url>
+  <url><loc>https://orbitboard.in/privacy</loc></url>
+  <url><loc>https://orbitboard.in/terms</loc></url>
+  <url><loc>https://orbitboard.in/contact</loc></url>
   <url><loc>https://orbitboard.in/tools/ctc-to-inhand</loc><lastmod>2026-10-25</lastmod></url>
   <url><loc>https://orbitboard.in/tools/salary-hike</loc><lastmod>2026-10-25</lastmod></url>
   <url><loc>https://orbitboard.in/tools/offer-comparison</loc><lastmod>2026-10-25</lastmod></url>

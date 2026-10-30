@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { lazy, useEffect, useMemo, useState, useRef } from 'react';
-import { ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronRight } from 'lucide-react';
 import { TOOLS, LISTED_TOOLS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import { mergePdfFiles, extractPdfPages, splitPdfPages, reorderPdfPages, optimizePdf, loadPdf } from '../engines/pdf';
@@ -12,6 +12,7 @@ import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemptio
 import { SaasRetention, SalesPipelineForecaster, SaasPricing } from '../tools/business/BusinessCalculators';
 import { InvoiceAging, DecisionMatrix } from '../tools/business/BusinessWorkflows';
 import SampleAd from '../components/SampleAd';
+import AdSenseUnit from '../components/AdSenseUnit';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 
@@ -1510,55 +1511,51 @@ export default function ToolPage() {
 
           <SampleAd category={tool?.category} />
 
-          {info && (
-            <div className="space-y-4 pt-8 border-t border-[var(--orbit-border)]">
-              <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Tool Guide & Information</h2>
+          <AdSenseUnit slot="" />
 
-              <details className="group rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5">
-                <summary className="flex items-center justify-between cursor-pointer font-bold text-base text-stone-900 dark:text-stone-100 list-none min-h-[44px]">
-                  <span>How to use {tool.name}</span>
-                  <ChevronDown size={18} className="transition group-open:rotate-180 text-stone-400" />
-                </summary>
-                <ol className="mt-4 space-y-3 border-t border-[var(--orbit-border)] pt-4">
-                  {info.how.map((step, i) => (
-                    <li key={step} className="flex gap-3 text-sm leading-6 text-stone-600 dark:text-stone-300">
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-accent-100 dark:bg-accent-900 text-accent-700 dark:text-accent-300 flex items-center justify-center text-xs font-bold">{i + 1}</span>
-                      {step}
-                    </li>
-                  ))}
-                </ol>
-              </details>
+          <div className="space-y-6 pt-8 border-t border-[var(--orbit-border)]">
+            <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Tool Guide & Publisher Information</h2>
 
-              {info.article && (
-                <details className="group rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5">
-                  <summary className="flex items-center justify-between cursor-pointer font-bold text-base text-stone-900 dark:text-stone-100 list-none min-h-[44px]">
-                    <span>About & Documentation</span>
-                    <ChevronDown size={18} className="transition group-open:rotate-180 text-stone-400" />
-                  </summary>
-                  <div className="mt-4 border-t border-[var(--orbit-border)] pt-4 text-sm leading-7 text-stone-700 dark:text-stone-300 space-y-3">
-                    {info.article}
+            <section className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
+              <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100">How to use {tool.name}</h3>
+              <ol className="space-y-3 border-t border-[var(--orbit-border)] pt-4">
+                {(info?.how || [
+                  `Enter your input parameters into the ${tool.name} workspace above.`,
+                  'Review the calculated or transformed results displayed instantly on screen.',
+                  'Copy, export, or download your results securely from your browser.'
+                ]).map((step, i) => (
+                  <li key={step} className="flex gap-3 text-sm leading-6 text-stone-600 dark:text-stone-300">
+                    <span className="shrink-0 w-6 h-6 rounded-full bg-accent-100 dark:bg-accent-900 text-accent-700 dark:text-accent-300 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            {info?.article && (
+              <section className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
+                <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100">About & Detailed Guide</h3>
+                <div className="border-t border-[var(--orbit-border)] pt-4 text-sm leading-7 text-stone-700 dark:text-stone-300 space-y-3">
+                  {info.article}
+                </div>
+              </section>
+            )}
+
+            <section className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
+              <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100">Frequently Asked Questions</h3>
+              <div className="border-t border-[var(--orbit-border)] pt-4 space-y-4">
+                {(info?.faq || [
+                  [`Is ${tool.name} free to use?`, `Yes, ${tool.name} is 100% free with no sign-up or registration required.`],
+                  [`Is my data safe when using ${tool.name}?`, `Yes. All calculations and file transformations occur client-side in your browser. Your data is not stored or shared on external servers.`]
+                ]).map(([q, a]) => (
+                  <div key={q} className="space-y-1">
+                    <p className="font-semibold text-sm text-stone-800 dark:text-stone-200">{q}</p>
+                    <p className="text-sm text-stone-600 dark:text-stone-400 leading-6">{a}</p>
                   </div>
-                </details>
-              )}
-
-              {info.faq?.length > 0 && (
-                <details className="group rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5">
-                  <summary className="flex items-center justify-between cursor-pointer font-bold text-base text-stone-900 dark:text-stone-100 list-none min-h-[44px]">
-                    <span>Frequently Asked Questions</span>
-                    <ChevronDown size={18} className="transition group-open:rotate-180 text-stone-400" />
-                  </summary>
-                  <div className="mt-4 border-t border-[var(--orbit-border)] pt-4 space-y-4">
-                    {info.faq.map(([q, a]) => (
-                      <div key={q} className="space-y-1">
-                        <p className="font-semibold text-sm text-stone-800 dark:text-stone-200">{q}</p>
-                        <p className="text-sm text-stone-600 dark:text-stone-400 leading-6">{a}</p>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </div>
-          )}
+                ))}
+              </div>
+            </section>
+          </div>
 
           <div className="pt-8 border-t border-[var(--orbit-border)]">
             <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400 mb-4">

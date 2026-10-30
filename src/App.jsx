@@ -3,6 +3,10 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
 import ToolPageRoute from './pages/ToolPageRoute';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
 
 export default function App() {
   return (
@@ -13,6 +17,10 @@ export default function App() {
         <Routes>
           <Route path="/" element={<ToolsHome />} />
           <Route path="/tools" element={<ToolsCatalogue />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactUs />} />
           {/* Market Lab is temporarily hidden; keep its implementation for a future re-enable. */}
           <Route path="/market-lab" element={<Navigate to="/" replace />} />
           <Route path="/market-lab/:symbol" element={<Navigate to="/" replace />} />
