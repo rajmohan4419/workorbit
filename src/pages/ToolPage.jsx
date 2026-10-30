@@ -1399,7 +1399,7 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-stone-900 dark:text-stone-100">
-              {info?.h1 || tool.name}
+              {info?.h1 || (tool.slug === 'image-compressor' ? `${tool.name} - online compressor | size compressor | online mb reducer` : tool.name)}
             </h1>
             <p className="mt-1.5 text-sm sm:text-base leading-6 text-stone-600 dark:text-stone-300 max-w-2xl">
               {info?.intro || tool.description}
@@ -1472,7 +1472,7 @@ export default function ToolPage() {
 
   useEffect(() => {
     if (tool) {
-      const pageTitle = info?.title || (tool.name + ' | Free Online Tool | OrbitBoard');
+      const pageTitle = info?.title || (tool.slug === 'image-compressor' ? `${tool.name} - online compressor | size compressor | online mb reducer | Free Online Tool | OrbitBoard` : `${tool.name} | Free Online Tool | OrbitBoard`);
       document.title = pageTitle.includes('OrbitBoard') ? pageTitle : (pageTitle + ' | OrbitBoard');
       const desc = info?.metaDescription || info?.intro || tool.description;
       const setMeta = (name, content) => {
