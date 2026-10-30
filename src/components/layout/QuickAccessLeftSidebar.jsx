@@ -208,7 +208,7 @@ export function QuickAccessLeftSidebar() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search all 57 tools…"
+            placeholder={`Search all ${LISTED_TOOLS.length} tools…`}
             className="w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-850 py-1.5 pl-8 pr-7 text-xs text-stone-900 dark:text-stone-100 outline-none transition placeholder:text-stone-400 focus:border-accent-500 focus:bg-white dark:focus:bg-stone-800 focus:ring-1 focus:ring-accent-400/40"
           />
           {search && (
