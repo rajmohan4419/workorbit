@@ -1659,14 +1659,14 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-stone-900 dark:text-stone-100">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
               {info?.h1 || (tool.slug === 'image-compressor' ? `${tool.name} - online compressor | size compressor | online mb reducer` : tool.name)}
             </h1>
             {/* AdSense block */}
             <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9160921653901381" crossorigin="anonymous"></script>
             <ins className="adsbygoogle" style={{display: 'block'}} data-ad-client="ca-pub-9160921653901381" data-ad-slot="3055679722" data-ad-format="auto" data-full-width-responsive="true"></ins>
             <script>{'(adsbygoogle = window.adsbygoogle || []).push({});'}</script>
-            <p className="mt-1.5 text-sm sm:text-base leading-6 text-stone-600 dark:text-stone-300 max-w-2xl">
+            <p className="mt-1 text-xs sm:text-sm leading-5 text-stone-600 dark:text-stone-300 max-w-2xl">
               {info?.intro || tool.description}
             </p>
           </div>

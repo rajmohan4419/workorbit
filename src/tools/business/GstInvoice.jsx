@@ -6,13 +6,13 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const INDIAN_STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa',
-  'Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala',
-  'Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland',
-  'Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura',
-  'Uttar Pradesh','Uttarakhand','West Bengal','Delhi','Jammu & Kashmir',
-  'Ladakh','Chandigarh','Dadra & Nagar Haveli','Daman & Diu','Lakshadweep',
-  'Puducherry','Andaman & Nicobar Islands',
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+  'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+  'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir',
+  'Ladakh', 'Chandigarh', 'Dadra & Nagar Haveli', 'Daman & Diu', 'Lakshadweep',
+  'Puducherry', 'Andaman & Nicobar Islands',
 ];
 
 const UNITS = ['Nos', 'Kg', 'Hr', 'Ltr', 'Mtr', 'Pcs', 'Set', 'Box', 'Day', 'Month'];
@@ -46,10 +46,10 @@ function nextInvoiceNum() {
 
 // ─── Amount in Words (Indian System) ─────────────────────────────────────────
 
-const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
-  'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen',
-  'Eighteen','Nineteen'];
-const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+  'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen',
+  'Eighteen', 'Nineteen'];
+const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
 function numToWords(n) {
   if (n === 0) return 'Zero';
@@ -64,15 +64,15 @@ function amountToWords(amount) {
   if (n === 0) return 'Zero Rupees Only';
 
   const crore = Math.floor(n / 10000000);
-  const lakh  = Math.floor((n % 10000000) / 100000);
-  const thou  = Math.floor((n % 100000) / 1000);
-  const rem   = n % 1000;
+  const lakh = Math.floor((n % 10000000) / 100000);
+  const thou = Math.floor((n % 100000) / 1000);
+  const rem = n % 1000;
 
   let words = '';
   if (crore) words += numToWords(crore) + ' Crore ';
-  if (lakh)  words += numToWords(lakh)  + ' Lakh ';
-  if (thou)  words += numToWords(thou)  + ' Thousand ';
-  if (rem)   words += numToWords(rem);
+  if (lakh) words += numToWords(lakh) + ' Lakh ';
+  if (thou) words += numToWords(thou) + ' Thousand ';
+  if (rem) words += numToWords(rem);
 
   return words.trim() + ' Rupees Only';
 }
@@ -201,19 +201,41 @@ function SectionCard({ icon: Icon, title, children }) {
 
 // ─── PDF Generation ───────────────────────────────────────────────────────────
 
+
+function sanitizeForPdf(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/₹/g, 'Rs. ')
+    .replace(/[—–]/g, '-')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/•/g, '*')
+    .split('')
+    .map(c => {
+      const code = c.charCodeAt(0);
+      return (code >= 32 && code <= 255) || code === 10 || code === 13 ? c : ' ';
+    })
+    .join('');
+}
+
 async function generatePDF({ seller, buyer, meta, items, totals, notes, signatory, isInterState }) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4
   const { width, height } = page.getSize();
 
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const fontReg  = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontReg = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   const indigo = rgb(0.31, 0.275, 0.898);
-  const dark   = rgb(0.1, 0.1, 0.1);
-  const gray   = rgb(0.5, 0.5, 0.5);
-  const white  = rgb(1, 1, 1);
-  const amber  = rgb(0.98, 0.7, 0.1);
+  const dark = rgb(0.1, 0.1, 0.1);
+  const gray = rgb(0.5, 0.5, 0.5);
+  const white = rgb(1, 1, 1);
+  const amber = rgb(0.98, 0.7, 0.1);
+
+
+  const draw = (text, opts) => {
+    page.drawText(sanitizeForPdf(text), opts);
+  };
 
   let y = height - 30;
 
@@ -222,21 +244,43 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
 
   page.setFont(fontBold);
   page.setFontSize(20);
-  page.drawText(seller.companyName || 'Company Name', { x: 30, y: height - 40, color: white });
+  draw(seller.companyName || 'Company Name', { x: 30, y: height - 40, color: white });
 
   page.setFont(fontReg);
   page.setFontSize(9);
-  page.drawText(`GSTIN: ${seller.gstin || '—'}  |  PAN: ${seller.pan || '—'}`, { x: 30, y: height - 56, color: rgb(0.85, 0.85, 1) });
-  page.drawText(`${seller.phone || ''}  ${seller.email || ''}`, { x: 30, y: height - 68, color: rgb(0.85, 0.85, 1) });
+  draw(`GSTIN: ${seller.gstin || '-'}  |  PAN: ${seller.pan || '-'}`, { x: 30, y: height - 56, color: rgb(0.85, 0.85, 1) });
+  draw(`${seller.phone || ''}  ${seller.email || ''}`, { x: 30, y: height - 68, color: rgb(0.85, 0.85, 1) });
 
   // TAX INVOICE label
   page.setFont(fontBold);
   page.setFontSize(13);
-  page.drawText('TAX INVOICE', { x: width - 140, y: height - 45, color: amber });
+  draw('TAX INVOICE', { x: width - 140, y: height - 45, color: amber });
   page.setFont(fontReg);
   page.setFontSize(8);
-  page.drawText(`No: ${meta.invoiceNumber}`, { x: width - 140, y: height - 57, color: white });
-  page.drawText(`Date: ${meta.invoiceDate}`, { x: width - 140, y: height - 67, color: white });
+  draw(`No: ${meta.invoiceNumber}`, { x: width - 140, y: height - 57, color: white });
+  draw(`Date: ${meta.invoiceDate}`, { x: width - 140, y: height - 67, color: white });
+
+  if (seller.logo && seller.logo.startsWith('data:image/')) {
+    try {
+      const base64Data = seller.logo.split(',')[1];
+      const binaryStr = atob(base64Data);
+      const imgBytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        imgBytes[i] = binaryStr.charCodeAt(i);
+      }
+      const isPng = seller.logo.startsWith('data:image/png');
+      const img = isPng ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
+      const scaled = img.scaleToFit(50, 45);
+      page.drawImage(img, {
+        x: width - 200,
+        y: height - 68,
+        width: scaled.width,
+        height: scaled.height,
+      });
+    } catch {
+      /* ignore invalid logo data */
+    }
+  }
 
   y = height - 100;
 
@@ -298,15 +342,15 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
   page.setFont(fontBold);
   page.setFontSize(7);
   const hdrY = y + 4;
-  page.drawText('#',           { x: cols.num,     y: hdrY, color: white });
-  page.drawText('Description', { x: cols.desc,    y: hdrY, color: white });
-  page.drawText('HSN',         { x: cols.hsn,     y: hdrY, color: white });
-  page.drawText('Qty',         { x: cols.qty,     y: hdrY, color: white });
-  page.drawText('Rate(₹)',     { x: cols.rate,    y: hdrY, color: white });
-  page.drawText('Taxable',     { x: cols.taxable, y: hdrY, color: white });
-  page.drawText('GST%',        { x: cols.gst,     y: hdrY, color: white });
+  page.drawText('#', { x: cols.num, y: hdrY, color: white });
+  page.drawText('Description', { x: cols.desc, y: hdrY, color: white });
+  page.drawText('HSN', { x: cols.hsn, y: hdrY, color: white });
+  page.drawText('Qty', { x: cols.qty, y: hdrY, color: white });
+  page.drawText('Rate(₹)', { x: cols.rate, y: hdrY, color: white });
+  page.drawText('Taxable', { x: cols.taxable, y: hdrY, color: white });
+  page.drawText('GST%', { x: cols.gst, y: hdrY, color: white });
   page.drawText(isInterState ? 'IGST' : 'CGST+SGST', { x: cols.tax, y: hdrY, color: white });
-  page.drawText('Amount(₹)',   { x: cols.amount,  y: hdrY, color: white });
+  page.drawText('Amount(₹)', { x: cols.amount, y: hdrY, color: white });
 
   y -= 16;
 
@@ -319,16 +363,16 @@ async function generatePDF({ seller, buyer, meta, items, totals, notes, signator
     page.setFont(fontReg);
     page.setFontSize(7);
     const ry = y + 2;
-    page.drawText(String(idx + 1),                        { x: cols.num,     y: ry, color: dark });
-    page.drawText((item.description || '').slice(0, 22),  { x: cols.desc,    y: ry, color: dark });
-    page.drawText(item.hsn || '',                         { x: cols.hsn,     y: ry, color: dark });
-    page.drawText(`${item.qty} ${item.unit}`,             { x: cols.qty,     y: ry, color: dark });
-    page.drawText(inr(item.rate),                         { x: cols.rate,    y: ry, color: dark });
-    page.drawText(inr(calc.taxable),                      { x: cols.taxable, y: ry, color: dark });
-    page.drawText(`${item.gstRate}%`,                     { x: cols.gst,     y: ry, color: dark });
+    page.drawText(String(idx + 1), { x: cols.num, y: ry, color: dark });
+    page.drawText((item.description || '').slice(0, 22), { x: cols.desc, y: ry, color: dark });
+    page.drawText(item.hsn || '', { x: cols.hsn, y: ry, color: dark });
+    page.drawText(`${item.qty} ${item.unit}`, { x: cols.qty, y: ry, color: dark });
+    page.drawText(inr(item.rate), { x: cols.rate, y: ry, color: dark });
+    page.drawText(inr(calc.taxable), { x: cols.taxable, y: ry, color: dark });
+    page.drawText(`${item.gstRate}%`, { x: cols.gst, y: ry, color: dark });
     const taxAmt = isInterState ? calc.igst : (calc.cgst + calc.sgst);
-    page.drawText(inr(taxAmt),                            { x: cols.tax,     y: ry, color: dark });
-    page.drawText(inr(calc.total),                        { x: cols.amount,  y: ry, color: dark });
+    page.drawText(inr(taxAmt), { x: cols.tax, y: ry, color: dark });
+    page.drawText(inr(calc.total), { x: cols.amount, y: ry, color: dark });
 
     y -= 14;
   });

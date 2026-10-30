@@ -23,7 +23,7 @@ export default function PrivacyPolicy() {
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
               <ShieldCheck size={16} /> Data Protection & Privacy
             </div>
-            <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-stone-100">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
               Privacy Policy
             </h1>
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">

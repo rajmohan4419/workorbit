@@ -30,11 +30,11 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
         <Sparkles size={14} aria-hidden="true" /> Private • Fast • Client-Side
       </div>
 
-      <h1 className="mt-4 text-3xl font-black tracking-tight text-stone-900 dark:text-stone-100 sm:text-5xl lg:text-6xl">
+      <h1 className="mt-4 text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl lg:text-5xl">
         Free browser-based tools for <span className="text-accent-600 dark:text-accent-400">modern work.</span>
       </h1>
 
-      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-stone-600 dark:text-stone-300 sm:text-base">
+      <p className="mx-auto mt-2.5 max-w-xl text-xs leading-5 text-stone-600 dark:text-stone-300 sm:text-sm">
         Convert files, calculate salaries, format code and get work done in seconds.
       </p>
 

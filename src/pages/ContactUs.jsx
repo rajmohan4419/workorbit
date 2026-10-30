@@ -35,7 +35,7 @@ export default function ContactUs() {
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">
               <Mail size={16} /> Get In Touch
             </div>
-            <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-stone-100">
+            <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
               Contact Us & Support
             </h1>
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">

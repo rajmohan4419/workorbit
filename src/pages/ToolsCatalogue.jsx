@@ -47,8 +47,8 @@ export default function ToolsCatalogue() {
         <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="orbit-enter max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[.2em] text-accent-700 dark:text-accent-400">OrbitBoard catalogue</p>
-            <h1 className="mt-3 text-4xl sm:text-5xl font-black tracking-tight text-stone-900 dark:text-stone-100">Every tool, when you need it.</h1>
-            <p className="mt-4 text-base leading-7 text-stone-600 dark:text-stone-300">A calmer, organised workspace for work, money, everyday tasks and developer workflows.</p>
+            <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">Every tool, when you need it.</h1>
+            <p className="mt-2 text-xs sm:text-sm leading-6 text-stone-600 dark:text-stone-300">A calmer, organised workspace for work, money, everyday tasks and developer workflows.</p>
           </div>
 
           {/* Filter Bar with Category Dropdown & Quick Selector */}
