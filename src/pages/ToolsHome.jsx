@@ -39,16 +39,17 @@ export default function ToolsHome() {
   const [query, setQuery] = useState(urlQuery);
   const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
   const [category, setCategory] = useState(urlCategory);
+  const [prevUrlCategory, setPrevUrlCategory] = useState(urlCategory);
 
   if (urlQuery !== prevUrlQuery) {
     setPrevUrlQuery(urlQuery);
     setQuery(urlQuery);
   }
 
-  // Sync category state from URL if user navigates or URL changes externally
-  useEffect(() => {
+  if (urlCategory !== prevUrlCategory) {
+    setPrevUrlCategory(urlCategory);
     setCategory(urlCategory);
-  }, [urlCategory]);
+  }
 
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('orbitboard:favorites') || '[]'); } catch { return []; }

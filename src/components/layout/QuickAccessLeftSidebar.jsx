@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Zap, Star, Search, X, ChevronLeft, ChevronRight,
+  Star, Search, X, ChevronLeft, ChevronRight,
   LayoutGrid, RotateCcw, Coins, BriefcaseBusiness, Code2, Calculator,
-  TrendingUp, Info, Mail, Heart, ShieldCheck, FileText, Sun, Moon,
-  ChevronDown, ExternalLink
+  TrendingUp, Info, Mail, Heart, ShieldCheck, Sun, Moon,
+  ChevronDown
 } from 'lucide-react';
 import { LISTED_TOOLS } from '../../data/toolCatalog';
 import { preloadToolPage } from '../../lib/toolPageLoader';
@@ -134,9 +134,13 @@ export function QuickAccessLeftSidebar() {
   }, []);
 
   // Close mobile drawer on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname, location.search]);
+  const [prevLocationKey, setPrevLocationKey] = useState(location.key);
+  if (location.key !== prevLocationKey) {
+    setPrevLocationKey(location.key);
+    if (mobileOpen) {
+      setMobileOpen(false);
+    }
+  }
 
   const togglePin = (slug) => {
     setPinnedSlugs(prev =>
