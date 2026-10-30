@@ -102,3 +102,4 @@ describe('Bank Reconciliation Engine (bankReconciliationEngine.js)', () => {
     expect(result.summary.bankDirectDeposits).toBe(3420);
   });
 });
+

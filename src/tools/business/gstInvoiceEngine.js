@@ -52,3 +52,4 @@ export function calcItem(item, isInterState) {
   const total = taxable + cgst + sgst + igst;
   return { gross, discAmt, taxable, cgst, sgst, igst, total };
 }
+
