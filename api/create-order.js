@@ -2,6 +2,7 @@
 import { getCorsHeaders } from './_lib/common.js';
 import { parseOrderRequest } from './_lib/products.js';
 import { getRazorpay, requireAdmin } from './_lib/payments.js';
+import { isPassOrderRequest, createPassOrder } from './_lib/passOrders.js';
 import crypto from 'crypto';
 
 export async function parseRequestBody(req) {
@@ -50,6 +51,16 @@ export default async function handler(req, res) {
   }
 
   const body = await parseRequestBody(req);
+
+  // Pro passes: a signed-in user buys a plan from the catalogue.
+  if (isPassOrderRequest(body)) {
+    const result = await createPassOrder({ req, body, razorpay });
+    res.writeHead(result.status, corsHeaders);
+    res.end(JSON.stringify(result.body));
+    return;
+  }
+
+  // Donations: anonymous, unchanged.
   const parsed = parseOrderRequest(body);
   if (parsed.error) {
     res.writeHead(400, corsHeaders);

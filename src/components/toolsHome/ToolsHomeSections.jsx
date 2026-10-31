@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText, Heart } from 'lucide-react';
+import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText, Heart, Cookie } from 'lucide-react';
 import { RazorpayCheckout } from '../RazorpayCheckout';
+import { openCookiePreferences } from '../../lib/cookieConsent';
 
 export function PrivacySection() {
   return (
@@ -92,6 +93,7 @@ export function ToolsHomeFooter() {
   const utilityLinks = [
     { label: 'About Us', path: '/about', icon: Globe },
     { label: 'Privacy Policy', path: '/privacy', icon: ShieldCheck },
+    { label: 'Cookie Settings', action: openCookiePreferences, icon: Cookie },
     { label: 'Terms of Service', path: '/terms', icon: FileText },
     { label: 'Contact Us', path: '/contact', icon: Heart },
     { label: 'Catalogue', path: '/tools', icon: Globe },
@@ -137,7 +139,15 @@ export function ToolsHomeFooter() {
             <ul className="space-y-2 text-sm">
               {utilityLinks.map(link => (
                 <li key={link.label}>
-                  {link.external ? (
+                  {link.action ? (
+                    <button
+                      type="button"
+                      onClick={link.action}
+                      className="hover:text-accent-700 dark:hover:text-accent-400 transition min-h-[36px] inline-flex items-center gap-1.5 text-left"
+                    >
+                      <link.icon size={15} /> {link.label}
+                    </button>
+                  ) : link.external ? (
                     <a href={link.path} target="_blank" rel="noopener noreferrer" className="hover:text-accent-700 dark:hover:text-accent-400 transition min-h-[36px] inline-flex items-center gap-1.5">
                       <link.icon size={15} /> {link.label}
                     </a>
@@ -209,7 +219,16 @@ export function ToolsHomeFooter() {
             <p className="font-bold text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-3">Utility Links</p>
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
               {utilityLinks.map(link => (
-                link.external ? (
+                link.action ? (
+                  <button
+                    key={link.label}
+                    type="button"
+                    onClick={link.action}
+                    className="flex items-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-200 text-left font-semibold"
+                  >
+                    <link.icon size={15} /> {link.label}
+                  </button>
+                ) : link.external ? (
                   <a key={link.label} href={link.path} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 p-2.5 min-h-[44px] rounded-xl bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-200">
                     <link.icon size={15} /> {link.label}
                   </a>

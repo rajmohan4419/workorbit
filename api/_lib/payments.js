@@ -19,11 +19,15 @@ export function requireAdmin() {
 }
 
 /**
- * Record a captured payment and mark its order as paid. Safe to call more than
- * once for the same payment: the payments table is keyed by Razorpay payment id,
- * and the order update only matches orders that are not yet paid.
+ * Record a captured payment, mark its order as paid, and grant any pass the order bought.
+ * Safe to call more than once for the same payment:
+ *  - the payments table is keyed by Razorpay payment id,
+ *  - the order update only matches orders that are not yet paid,
+ *  - grant_pass is idempotent on the payment id.
+ * The grant runs on every call, not only the first, so a failed grant is retried
+ * by the next webhook delivery.
  *
- * Returns { newlyFulfilled }. Only act on side effects (receipts, entitlements)
+ * Returns { newlyFulfilled }. Only act on one-off side effects (receipts)
  * when newlyFulfilled is true.
  */
 export async function fulfilPayment(admin, { orderId, paymentId, amountPaise, currency, source }) {
@@ -47,6 +51,23 @@ export async function fulfilPayment(admin, { orderId, paymentId, amountPaise, cu
     .neq('status', 'paid')
     .select('razorpay_order_id');
   if (error) throw error;
+
+  const { data: orderRow, error: orderError } = await admin
+    .from('payment_orders')
+    .select('user_id, plan_id')
+    .eq('razorpay_order_id', orderId)
+    .maybeSingle();
+  if (orderError) throw orderError;
+
+  if (orderRow?.user_id && orderRow?.plan_id) {
+    const { error: grantError } = await admin.rpc('grant_pass', {
+      p_user: orderRow.user_id,
+      p_plan_id: orderRow.plan_id,
+      p_payment_id: paymentId,
+      p_source: source,
+    });
+    if (grantError) throw grantError;
+  }
 
   return { newlyFulfilled: Array.isArray(data) && data.length > 0 };
 }

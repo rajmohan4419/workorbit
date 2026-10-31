@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { InstallPrompt } from './components/InstallPrompt';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
 import ToolsCatalogue from './pages/ToolsCatalogue';
@@ -16,6 +17,7 @@ export default function App() {
         <Analytics />
         <Telemetry />
         <InstallPrompt />
+        <CookieConsentBanner />
         <GlobalPreviewModal />
         <Routes>
           <Route path="/" element={<ToolsHome />} />
