@@ -16,6 +16,9 @@ describe('resolveEntitlements', () => {
     const result=resolveEntitlements({plan_code:'business_monthly',status:'active',current_period_end:'2026-10-30T23:59:59.000Z'},now);
     expect(result.planCode).toBe('free'); expect(result.isPaid).toBe(false);
   });
+  it('fails closed when an active subscription has no paid-through date', () => {
+    expect(resolveEntitlements({ plan_code:'pro_monthly', status:'active' }, now).planCode).toBe('free');
+  });
   it('does not grant access for cancelled or failed subscriptions', () => {
     for (const status of ['cancelled','halted','failed','created']) {
       expect(resolveEntitlements({plan_code:'pro_monthly',status},now).planCode).toBe('free');
