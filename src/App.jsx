@@ -26,10 +26,6 @@ export default function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
-          {/* Market Lab is temporarily hidden; keep its implementation for a future re-enable. */}
-          <Route path="/market-lab" element={<Navigate to="/" replace />} />
-          <Route path="/market-lab/:symbol" element={<Navigate to="/" replace />} />
-          <Route path="/market/:symbol" element={<Navigate to="/" replace />} />
           <Route path="/tools/:slug" element={<ToolPageRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
