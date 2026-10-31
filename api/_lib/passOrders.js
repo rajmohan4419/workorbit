@@ -1,4 +1,3 @@
-/* global process */
 import crypto from 'crypto';
 import { requireAdmin } from './payments.js';
 import { getUserFromRequest, getPlan } from './entitlements.js';

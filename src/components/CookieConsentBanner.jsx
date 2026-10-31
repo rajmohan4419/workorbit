@@ -13,16 +13,11 @@ export function CookieConsentBanner() {
   const [currentConsent, setCurrentConsent] = useState(() => getConsentStatus());
 
   useEffect(() => {
-    // If no preference is stored yet, show the banner on first load after a brief moment
-    const stored = getConsentStatus();
-    setCurrentConsent(stored);
-    if (!stored) {
-      const timer = setTimeout(() => setIsOpen(true), 600);
-      return () => clearTimeout(timer);
+    let timer;
+    if (!currentConsent) {
+      timer = setTimeout(() => setIsOpen(true), 600);
     }
-  }, []);
 
-  useEffect(() => {
     const handleOpen = () => setIsOpen(true);
     const handleConsentChanged = (e) => {
       if (e.detail?.status) {
@@ -33,10 +28,11 @@ export function CookieConsentBanner() {
     window.addEventListener(OPEN_COOKIE_MODAL_EVENT, handleOpen);
     window.addEventListener(COOKIE_CONSENT_EVENT, handleConsentChanged);
     return () => {
+      if (timer) clearTimeout(timer);
       window.removeEventListener(OPEN_COOKIE_MODAL_EVENT, handleOpen);
       window.removeEventListener(COOKIE_CONSENT_EVENT, handleConsentChanged);
     };
-  }, []);
+  }, [currentConsent]);
 
   if (!isOpen) return null;
 
