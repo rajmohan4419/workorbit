@@ -32,6 +32,35 @@
     <meta name="twitter:description" content="Free online calculators and developer utilities. No sign-up required." />
     <meta name="twitter:image" content="https://orbitboard.in/og-image.png" />
 
+    <!-- Google Consent Mode v2 Setup -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      try {
+        var _c = localStorage.getItem('orbitboard:cookie-consent');
+        var _g = _c === 'granted';
+        gtag('consent', 'default', {
+          'ad_storage': _g ? 'granted' : 'denied',
+          'analytics_storage': _g ? 'granted' : 'denied',
+          'ad_user_data': _g ? 'granted' : 'denied',
+          'ad_personalization': _g ? 'granted' : 'denied',
+          'functionality_storage': 'granted',
+          'personalization_storage': _g ? 'granted' : 'denied',
+          'security_storage': 'granted'
+        });
+      } catch (e) {
+        gtag('consent', 'default', {
+          'ad_storage': 'denied',
+          'analytics_storage': 'denied',
+          'ad_user_data': 'denied',
+          'ad_personalization': 'denied',
+          'functionality_storage': 'granted',
+          'personalization_storage': 'denied',
+          'security_storage': 'granted'
+        });
+      }
+    </script>
+
     <script type="application/ld+json">
     {
       "@context":"https://schema.org",

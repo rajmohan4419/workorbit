@@ -4,6 +4,7 @@ import { getCorsHeaders } from './_lib/common.js';
 import { parseRequestBody } from './create-order.js';
 import { getRazorpay, requireAdmin, fulfilPayment } from './_lib/payments.js';
 import { checkPaymentAgainstOrder } from './_lib/paymentRules.js';
+import { getUserFromRequest } from './_lib/entitlements.js';
 
 export default async function handler(req, res) {
   const corsHeaders = getCorsHeaders(req.headers?.origin);
@@ -55,15 +56,28 @@ export default async function handler(req, res) {
     const razorpay = getRazorpay();
     if (!razorpay) throw Object.assign(new Error('Razorpay not configured'), { code: 'STORE_UNAVAILABLE' });
 
-    // Step 2: the signature alone is not enough. Check our own order record,
-    // then confirm the order and payment with Razorpay before fulfilling.
+    // Step 2: the signature alone is not enough. Check our own order record.
     const { data: orderRecord, error: orderError } = await admin
       .from('payment_orders')
-      .select('razorpay_order_id, amount_paise, currency, status')
+      .select('razorpay_order_id, amount_paise, currency, status, user_id, plan_id')
       .eq('razorpay_order_id', razorpay_order_id)
       .maybeSingle();
     if (orderError) throw orderError;
 
+    // Step 3: a pass order belongs to the user who created it. Anyone else
+    // holding a valid signed payment must not be able to claim it.
+    // Donations have no user_id and skip this check.
+    if (orderRecord?.user_id) {
+      const caller = await getUserFromRequest(req, admin);
+      if (!caller || caller.id !== orderRecord.user_id) {
+        console.warn('[VERIFY PAYMENT] caller does not own order', razorpay_order_id);
+        res.writeHead(403, corsHeaders);
+        res.end(JSON.stringify({ success: false, error: 'Payment could not be confirmed' }));
+        return;
+      }
+    }
+
+    // Step 4: confirm the order and payment with Razorpay before fulfilling.
     const [razorpayOrder, payment] = await Promise.all([
       razorpay.orders.fetch(razorpay_order_id),
       razorpay.payments.fetch(razorpay_payment_id),
@@ -83,18 +97,14 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Step 3: idempotent fulfilment. Duplicate callbacks are harmless.
-    const { newlyFulfilled } = await fulfilPayment(admin, {
+    // Step 5: idempotent fulfilment. Pass grants happen inside fulfilPayment.
+    await fulfilPayment(admin, {
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
       amountPaise: orderRecord.amount_paise,
       currency: orderRecord.currency,
       source: 'checkout',
     });
-    if (newlyFulfilled) {
-      // Place fulfilment side effects here (receipt email, entitlement) so they
-      // run once per order. Duplicate callbacks skip this block.
-    }
 
     res.writeHead(200, corsHeaders);
     res.end(JSON.stringify({
@@ -102,6 +112,7 @@ export default async function handler(req, res) {
       message: 'Payment verified successfully',
       order_id: razorpay_order_id,
       payment_id: razorpay_payment_id,
+      plan_id: orderRecord.plan_id || null,
     }));
   } catch (err) {
     console.error('[VERIFY PAYMENT ERROR]', err?.message || err);
