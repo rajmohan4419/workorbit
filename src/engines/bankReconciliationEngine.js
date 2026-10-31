@@ -1,6 +1,7 @@
 /**
  * Bank Reconciliation Engine
  * High-precision reconciliation between Bank Statements and Accounting Ledgers.
+ * Follows standard double-entry accounting reconciliation principles.
  */
 
 /**
@@ -8,36 +9,93 @@
  * Normalizes sign convention:
  * - Deposits/Receipts (Money In) -> positive amount
  * - Withdrawals/Payments (Money Out) -> negative amount
+ *
+ * @param {Object} row Raw spreadsheet row object
+ * @param {Object} mapping Column mappings
+ * @param {'bank'|'ledger'} source
+ * @param {number} rowIndex 0-based index of row
+ * @returns {{ transaction: Object|null, error: string|null }}
  */
-export function normalizeTransaction(row, mapping, source = 'bank') {
+export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0) {
+  const rowNum = rowIndex + 1;
   const dateStr = String(row[mapping.date] || '').trim();
-  const dateObj = new Date(dateStr);
-  const validDate = !isNaN(dateObj.getTime()) ? dateObj : new Date();
+
+  if (!dateStr) {
+    return {
+      transaction: null,
+      error: `Row ${rowNum}: Date is missing or empty.`,
+    };
+  }
+
+  const dateObj = parseValidDate(dateStr);
+  if (!dateObj) {
+    return {
+      transaction: null,
+      error: `Row ${rowNum}: Invalid date format "${dateStr}". Expected valid date (YYYY-MM-DD or DD/MM/YYYY).`,
+    };
+  }
 
   const ref = String(row[mapping.reference] || '').trim();
   const desc = String(row[mapping.description] || '').trim();
 
-  let amount = 0;
+  let amount;
+  let hasValidAmount;
 
   // Case 1: Separate Debit & Credit columns
   if (mapping.debit && mapping.credit && (row[mapping.debit] !== undefined || row[mapping.credit] !== undefined)) {
-    const debit = parseAmount(row[mapping.debit]);
-    const credit = parseAmount(row[mapping.credit]);
+    const rawDebit = row[mapping.debit];
+    const rawCredit = row[mapping.credit];
+
+    const hasDebit = rawDebit !== undefined && rawDebit !== null && String(rawDebit).trim() !== '';
+    const hasCredit = rawCredit !== undefined && rawCredit !== null && String(rawCredit).trim() !== '';
+
+    if (!hasDebit && !hasCredit) {
+      return {
+        transaction: null,
+        error: `Row ${rowNum}: Neither debit nor credit amount provided.`,
+      };
+    }
+
+    const debit = parseAmount(rawDebit);
+    const credit = parseAmount(rawCredit);
+
+    if (isNaN(debit) || isNaN(credit)) {
+      return {
+        transaction: null,
+        error: `Row ${rowNum}: Amount contains invalid non-numeric characters.`,
+      };
+    }
 
     if (source === 'bank') {
-      // In a bank statement:
+      // In bank statements:
       // Credit = Deposit (Money In = positive)
       // Debit = Withdrawal (Money Out = negative)
       amount = credit > 0 ? credit : -debit;
     } else {
-      // In a company Cash Book / Ledger:
+      // In cash books / accounting ledgers:
       // Debit = Receipt (Money In = positive)
       // Credit = Payment (Money Out = negative)
       amount = debit > 0 ? debit : -credit;
     }
+    hasValidAmount = true;
   } else if (mapping.amount) {
     // Case 2: Single Amount column with optional Type indicator
-    const rawAmt = parseAmount(row[mapping.amount]);
+    const rawVal = row[mapping.amount];
+    if (rawVal === undefined || rawVal === null || String(rawVal).trim() === '') {
+      return {
+        transaction: null,
+        error: `Row ${rowNum}: Amount is missing or empty.`,
+      };
+    }
+
+    const rawAmt = parseAmount(rawVal);
+    if (isNaN(rawAmt)) {
+      return {
+        transaction: null,
+        error: `Row ${rowNum}: Invalid amount "${rawVal}".`,
+      };
+    }
+
     const type = String(row[mapping.type] || '').toUpperCase().trim();
 
     if (source === 'bank') {
@@ -53,62 +111,166 @@ export function normalizeTransaction(row, mapping, source = 'bank') {
         amount = -Math.abs(rawAmt);
       }
     }
+    hasValidAmount = true;
+  } else {
+    return {
+      transaction: null,
+      error: `Row ${rowNum}: No amount column mapped.`,
+    };
   }
 
+  if (!hasValidAmount || amount === 0) {
+    return {
+      transaction: null,
+      error: `Row ${rowNum}: Transaction amount cannot be zero.`,
+    };
+  }
+
+  const y = dateObj.getUTCFullYear();
+  const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getUTCDate()).padStart(2, '0');
+  const dateFormatted = `${y}-${m}-${d}`;
+
+  const deterministicId = `${source}-row${rowNum}-${hashDeterministic(ref + '|' + dateFormatted + '|' + amount)}`;
+
   return {
-    id: `${source}-${Math.random().toString(36).substring(2, 9)}`,
-    source,
-    raw: row,
-    date: validDate.toISOString().split('T')[0],
-    dateObj: validDate,
-    description: desc,
-    reference: ref,
-    amount: Math.round(amount * 100) / 100, // Two decimals precision
-    absAmount: Math.round(Math.abs(amount) * 100) / 100,
-    isMoneyIn: amount >= 0,
-    reconciled: false,
-    matchedId: null,
-    matchConfidence: 0,
-    matchReason: '',
+    transaction: {
+      id: deterministicId,
+      rowIndex,
+      rowNumber: rowNum,
+      source,
+      raw: row,
+      date: dateFormatted,
+      dateObj,
+      description: desc,
+      reference: ref,
+      amount: Math.round(amount * 100) / 100, // Two decimals precision
+      absAmount: Math.round(Math.abs(amount) * 100) / 100,
+      isMoneyIn: amount >= 0,
+      reconciled: false,
+      matchedId: null,
+      matchConfidence: 0,
+      matchReason: '',
+      isAmbiguous: false,
+      competingCandidateCount: 0,
+    },
+    error: null,
   };
+}
+
+/**
+ * Parses diverse date formats into a valid Date object.
+ * Rejects invalid strings without silent fallbacks.
+ */
+export function parseValidDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string' && typeof dateStr !== 'number' && !(dateStr instanceof Date)) {
+    return null;
+  }
+
+  if (dateStr instanceof Date && !isNaN(dateStr.getTime())) {
+    return dateStr;
+  }
+
+  // Handle Excel serial date numbers (e.g. 45678)
+  if (typeof dateStr === 'number' || (!isNaN(Number(dateStr)) && !String(dateStr).includes('-') && !String(dateStr).includes('/'))) {
+    const serial = Number(dateStr);
+    if (serial > 1000 && serial < 100000) {
+      // Excel epoch starts 1899-12-30 (accounting for 1900 leap year bug)
+      const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+      const parsed = new Date(excelEpoch.getTime() + serial * 86400000);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+  }
+
+  const s = String(dateStr).trim();
+
+  // Try standard ISO (YYYY-MM-DD)
+  const isoMatch = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10) - 1;
+    const day = parseInt(isoMatch[3], 10);
+    const d = new Date(Date.UTC(year, month, day));
+    if (d.getUTCFullYear() === year && d.getUTCMonth() === month && d.getUTCDate() === day) {
+      return d;
+    }
+    return null;
+  }
+
+  // Try DD/MM/YYYY or DD-MM-YYYY
+  const dmyMatch = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10);
+    const month = parseInt(dmyMatch[2], 10) - 1;
+    const year = parseInt(dmyMatch[3], 10);
+    const d = new Date(Date.UTC(year, month, day));
+    if (d.getUTCFullYear() === year && d.getUTCMonth() === month && d.getUTCDate() === day) {
+      return d;
+    }
+  }
+
+  // General Date.parse (fallback for other textual formats)
+  const general = new Date(s);
+  return !isNaN(general.getTime()) ? general : null;
 }
 
 export function parseAmount(val) {
   if (val === null || val === undefined) return 0;
-  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (typeof val === 'number') return isNaN(val) ? NaN : val;
   const cleaned = String(val).replace(/[$€£₹,\s]/g, '').trim();
+  if (cleaned === '') return 0;
   const num = parseFloat(cleaned);
-  return isNaN(num) ? 0 : num;
+  return isNaN(num) ? NaN : num;
+}
+
+function hashDeterministic(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
 }
 
 /**
  * Reconcile normalized bank transactions against normalized ledger transactions.
+ * Uses a scored ranking system and flags ambiguous ties for manual review.
+ *
  * @param {Array} bankTxns
  * @param {Array} ledgerTxns
- * @param {Object} options { dateToleranceDays: number, exactRefOnly: boolean }
+ * @param {Object} options
+ * @param {number} [options.dateToleranceDays=3]
+ * @param {number} [options.closingBankBalance=0]
+ * @param {number} [options.closingLedgerBalance=0]
+ * @param {number} [options.openingBankBalance=0]
+ * @param {number} [options.openingLedgerBalance=0]
  */
 export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
-  const dateToleranceDays = options.dateToleranceDays ?? 5;
+  const dateToleranceDays = options.dateToleranceDays ?? 3;
+  const closingBankBalance = round2(Number(options.closingBankBalance) || 0);
+  const closingLedgerBalance = round2(Number(options.closingLedgerBalance) || 0);
 
   const bank = bankTxns.map(t => ({ ...t, reconciled: false, matchedId: null }));
   const ledger = ledgerTxns.map(t => ({ ...t, reconciled: false, matchedId: null }));
 
   const matches = [];
 
-  // Pass 1: Exact Amount + Exact Reference Match (Strongest match)
+  // Pass 1: Exact Reference + Exact Amount (Highest priority)
   bank.forEach(b => {
     if (b.reconciled || !b.reference) return;
 
-    const candidate = ledger.find(
+    // Find all matching candidates in ledger
+    const candidates = ledger.filter(
       l =>
         !l.reconciled &&
         l.isMoneyIn === b.isMoneyIn &&
-        Math.abs(l.absAmount - b.absAmount) < 0.01 &&
+        Math.abs(l.absAmount - b.absAmount) < 0.005 &&
         l.reference &&
         l.reference.toLowerCase() === b.reference.toLowerCase()
     );
 
-    if (candidate) {
+    if (candidates.length === 1) {
+      const candidate = candidates[0];
       b.reconciled = true;
       b.matchedId = candidate.id;
       b.matchConfidence = 100;
@@ -125,106 +287,138 @@ export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
         ledger: candidate,
         type: 'exact_ref',
         confidence: 100,
+        isAmbiguous: false,
+        difference: 0,
+      });
+    } else if (candidates.length > 1) {
+      // Multiple candidates with same reference and amount: Rank by date
+      candidates.sort((c1, c2) => Math.abs(c1.dateObj - b.dateObj) - Math.abs(c2.dateObj - b.dateObj));
+      const best = candidates[0];
+      const secondBest = candidates[1];
+      const isTie = Math.abs(best.dateObj - b.dateObj) === Math.abs(secondBest.dateObj - b.dateObj);
+
+      b.reconciled = true;
+      b.matchedId = best.id;
+      b.matchConfidence = isTie ? 75 : 90;
+      b.matchReason = isTie
+        ? `Ambiguous: ${candidates.length} identical ledger entries with Ref "${b.reference}"`
+        : 'Exact Reference & Nearest Date';
+      b.isAmbiguous = isTie;
+      b.competingCandidateCount = candidates.length;
+
+      best.reconciled = true;
+      best.matchedId = b.id;
+      best.matchConfidence = b.matchConfidence;
+      best.matchReason = b.matchReason;
+      best.isAmbiguous = isTie;
+
+      matches.push({
+        id: `match-${b.id}-${best.id}`,
+        bank: b,
+        ledger: best,
+        type: 'exact_ref',
+        confidence: b.matchConfidence,
+        isAmbiguous: isTie,
+        candidateCount: candidates.length,
         difference: 0,
       });
     }
   });
 
-  // Pass 2: Exact Amount + Close Date Match (within dateToleranceDays)
+  // Pass 2: Exact Amount + Scored Date & Similarity Ranking
   bank.forEach(b => {
     if (b.reconciled) return;
 
-    let bestCandidate = null;
-    let minDayDiff = Infinity;
+    // Find all un-reconciled ledger items with identical amount & direction
+    const eligible = ledger.filter(
+      l => !l.reconciled && l.isMoneyIn === b.isMoneyIn && Math.abs(l.absAmount - b.absAmount) < 0.005
+    );
 
-    ledger.forEach(l => {
-      if (l.reconciled || l.isMoneyIn !== b.isMoneyIn) return;
-      if (Math.abs(l.absAmount - b.absAmount) >= 0.01) return;
+    if (eligible.length === 0) return;
 
-      const dayDiff = Math.abs(b.dateObj - l.dateObj) / (1000 * 60 * 60 * 24);
-      if (dayDiff <= dateToleranceDays && dayDiff < minDayDiff) {
-        minDayDiff = dayDiff;
-        bestCandidate = l;
+    // Score each eligible candidate
+    const scored = eligible.map(candidate => {
+      const dayDiff = Math.abs(b.dateObj - candidate.dateObj) / (1000 * 60 * 60 * 24);
+      const similarity = calculateTokenSimilarity(b.description, candidate.description);
+
+      // Criteria: Must be within date tolerance OR have high description similarity
+      const isDateValid = dayDiff <= dateToleranceDays;
+      const isDescSimilar = similarity.score >= 0.5;
+
+      let score = 0;
+      if (isDateValid) {
+        // Date score: 100 on same day, down to 60 at tolerance limit
+        score += Math.max(0, 100 - (dayDiff / Math.max(1, dateToleranceDays)) * 40);
       }
+      if (isDescSimilar) {
+        score += similarity.score * 50;
+      }
+
+      return {
+        candidate,
+        dayDiff,
+        similarity,
+        score,
+        isEligible: isDateValid || isDescSimilar,
+      };
+    }).filter(s => s.isEligible);
+
+    if (scored.length === 0) return;
+
+    // Rank candidates by highest score
+    scored.sort((a, bScore) => bScore.score - a.score);
+
+    const winner = scored[0];
+    const runnerUp = scored.length > 1 ? scored[1] : null;
+
+    // Detect ties or ambiguous duplicates
+    const isAmbiguous = runnerUp && Math.abs(winner.score - runnerUp.score) < 5;
+
+    const confidence = isAmbiguous
+      ? 65
+      : winner.dayDiff === 0
+      ? 95
+      : Math.max(70, Math.round(95 - winner.dayDiff * 4));
+
+    b.reconciled = true;
+    b.matchedId = winner.candidate.id;
+    b.matchConfidence = confidence;
+    b.isAmbiguous = isAmbiguous;
+    b.competingCandidateCount = scored.length;
+    b.matchReason = isAmbiguous
+      ? `Ambiguous Match: ${scored.length} similar transactions (Day diff: ${Math.round(winner.dayDiff)})`
+      : winner.dayDiff === 0
+      ? 'Exact Amount & Same Day'
+      : `Exact Amount (Within ${Math.round(winner.dayDiff)} days)`;
+
+    winner.candidate.reconciled = true;
+    winner.candidate.matchedId = b.id;
+    winner.candidate.matchConfidence = confidence;
+    winner.candidate.isAmbiguous = isAmbiguous;
+    winner.candidate.matchReason = b.matchReason;
+
+    matches.push({
+      id: `match-${b.id}-${winner.candidate.id}`,
+      bank: b,
+      ledger: winner.candidate,
+      type: winner.similarity.score >= 0.5 ? 'fuzzy_desc' : 'date_amount',
+      confidence,
+      isAmbiguous,
+      candidateCount: scored.length,
+      difference: 0,
     });
-
-    if (bestCandidate) {
-      const confidence = minDayDiff === 0 ? 95 : Math.max(70, 95 - Math.round(minDayDiff * 4));
-      b.reconciled = true;
-      b.matchedId = bestCandidate.id;
-      b.matchConfidence = confidence;
-      b.matchReason = `Exact Amount (${minDayDiff === 0 ? 'Same day' : `Within ${Math.round(minDayDiff)} days`})`;
-
-      bestCandidate.reconciled = true;
-      bestCandidate.matchedId = b.id;
-      bestCandidate.matchConfidence = confidence;
-      bestCandidate.matchReason = b.matchReason;
-
-      matches.push({
-        id: `match-${b.id}-${bestCandidate.id}`,
-        bank: b,
-        ledger: bestCandidate,
-        type: 'date_amount',
-        confidence,
-        difference: 0,
-      });
-    }
   });
 
-  // Pass 3: Fuzzy Description Match if amounts are identical
-  bank.forEach(b => {
-    if (b.reconciled) return;
-
-    const bWords = cleanWords(b.description);
-    if (bWords.length === 0) return;
-
-    let bestCandidate = null;
-    let maxOverlap = 0;
-
-    ledger.forEach(l => {
-      if (l.reconciled || l.isMoneyIn !== b.isMoneyIn) return;
-      if (Math.abs(l.absAmount - b.absAmount) >= 0.01) return;
-
-      const lWords = cleanWords(l.description);
-      const overlap = bWords.filter(w => lWords.includes(w)).length;
-      if (overlap > maxOverlap && overlap >= 1) {
-        maxOverlap = overlap;
-        bestCandidate = l;
-      }
-    });
-
-    if (bestCandidate && maxOverlap >= 1) {
-      b.reconciled = true;
-      b.matchedId = bestCandidate.id;
-      b.matchConfidence = 80;
-      b.matchReason = `Amount & Keyword Match (${maxOverlap} shared words)`;
-
-      bestCandidate.reconciled = true;
-      bestCandidate.matchedId = b.id;
-      bestCandidate.matchConfidence = 80;
-      bestCandidate.matchReason = b.matchReason;
-
-      matches.push({
-        id: `match-${b.id}-${bestCandidate.id}`,
-        bank: b,
-        ledger: bestCandidate,
-        type: 'fuzzy_desc',
-        confidence: 80,
-        difference: 0,
-      });
-    }
-  });
-
-  // Calculate reconciliation financial figures
+  // Financial Figures & Standard Accounting Bank Reconciliation Statement
   const bankMatched = bank.filter(t => t.reconciled);
   const bankUnmatched = bank.filter(t => !t.reconciled);
   const ledgerMatched = ledger.filter(t => t.reconciled);
   const ledgerUnmatched = ledger.filter(t => !t.reconciled);
 
-  const bankTotal = round2(bank.reduce((sum, t) => sum + t.amount, 0));
-  const ledgerTotal = round2(ledger.reduce((sum, t) => sum + t.amount, 0));
+  const bankTotalTxnAmt = round2(bank.reduce((sum, t) => sum + t.amount, 0));
+  const ledgerTotalTxnAmt = round2(ledger.reduce((sum, t) => sum + t.amount, 0));
 
-  // Items in bank not in ledger:
+  // Bank entries not recorded in Books
   const bankChargesOrDebits = round2(
     bankUnmatched.filter(t => !t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
   );
@@ -232,7 +426,7 @@ export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
     bankUnmatched.filter(t => t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
   );
 
-  // Items in ledger not in bank:
+  // Book entries not cleared by Bank
   const unpresentedChecks = round2(
     ledgerUnmatched.filter(t => !t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
   );
@@ -240,10 +434,23 @@ export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
     ledgerUnmatched.filter(t => t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
   );
 
-  const netVariance = round2(bankTotal - ledgerTotal);
+  // Formal Bank Reconciliation Statement:
+  // 1. Adjusted Bank Balance = Closing Bank Balance + Deposits in Transit - Outstanding Cheques
+  const adjustedBankBalance = round2(closingBankBalance + uncreditedDeposits - unpresentedChecks);
+
+  // 2. Adjusted Book Balance = Closing Book Balance + Direct Bank Deposits - Direct Bank Charges
+  const adjustedBookBalance = round2(closingLedgerBalance + bankDirectDeposits - bankChargesOrDebits);
+
+  // True reconciliation difference (Adjusted Bank Balance vs Adjusted Book Balance)
+  const reconciliationDifference = round2(adjustedBankBalance - adjustedBookBalance);
+  const isStatementReconciled = Math.abs(reconciliationDifference) < 0.01;
+
+  const netTxnVariance = round2(bankTotalTxnAmt - ledgerTotalTxnAmt);
   const matchRate = (bank.length + ledger.length) > 0
     ? Math.round(((bankMatched.length + ledgerMatched.length) / (bank.length + ledger.length)) * 100)
     : 0;
+
+  const ambiguousCount = matches.filter(m => m.isAmbiguous).length;
 
   return {
     matches,
@@ -257,25 +464,71 @@ export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
       matchedPairsCount: matches.length,
       bankUnmatchedCount: bankUnmatched.length,
       ledgerUnmatchedCount: ledgerUnmatched.length,
+      ambiguousMatchesCount: ambiguousCount,
       matchRatePercent: matchRate,
-      bankTotal,
-      ledgerTotal,
-      bankChargesOrDebits,
-      bankDirectDeposits,
+      // Input Balances
+      closingBankBalance,
+      closingLedgerBalance,
+      // Timing & Book adjustments
       unpresentedChecks,
       uncreditedDeposits,
-      netVariance,
-      isBalanced: Math.abs(netVariance) < 0.01,
+      bankChargesOrDebits,
+      bankDirectDeposits,
+      // Reconciled Balances
+      adjustedBankBalance,
+      adjustedBookBalance,
+      reconciliationDifference,
+      isStatementReconciled,
+      // Diagnostic sums
+      bankTotalTxnAmt,
+      ledgerTotalTxnAmt,
+      netTxnVariance,
     },
   };
 }
 
-function cleanWords(str) {
+/**
+ * Calculates Token Jaccard & overlap similarity between two narrations.
+ * Ignores trivial stop words and requires at least 2 significant token matches.
+ */
+export function calculateTokenSimilarity(strA, strB) {
+  const wordsA = extractSignificantWords(strA);
+  const wordsB = extractSignificantWords(strB);
+
+  if (wordsA.length === 0 || wordsB.length === 0) {
+    return { score: 0, sharedWords: [] };
+  }
+
+  const setB = new Set(wordsB);
+  const shared = wordsA.filter(w => setB.has(w));
+  const uniqueShared = [...new Set(shared)];
+
+  const unionSize = new Set([...wordsA, ...wordsB]).size;
+  const jaccard = unionSize > 0 ? uniqueShared.length / unionSize : 0;
+
+  // We require at least 2 significant words
+  const isSignificant = uniqueShared.length >= 2;
+
+  return {
+    score: isSignificant ? jaccard : 0,
+    sharedWords: uniqueShared,
+    tokenCountA: wordsA.length,
+    tokenCountB: wordsB.length,
+  };
+}
+
+function extractSignificantWords(str) {
+  const STOP_WORDS = new Set([
+    'the', 'and', 'for', 'pvt', 'ltd', 'inc', 'corp', 'txn', 'transfer', 'payment',
+    'neft', 'rtgs', 'imps', 'upi', 'to', 'from', 'a', 'an', 'in', 'on', 'of', 'by',
+    'bill', 'inv', 'ref', 'chq', 'cheque', 'dr', 'cr', 'via', 'ac', 'account'
+  ]);
+
   return String(str || '')
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
-    .filter(w => w.length > 2 && !['the', 'and', 'for', 'pvt', 'ltd', 'inc', 'corp', 'txn', 'transfer', 'payment'].includes(w));
+    .filter(w => w.length > 2 && !STOP_WORDS.has(w));
 }
 
 function round2(num) {
@@ -284,8 +537,11 @@ function round2(num) {
 
 /**
  * Built-in Sample Datasets for 1-click Demo
+ * With balanced Closing Balances ($270,790 Adjusted Balance).
  */
 export const SAMPLE_RECONCILIATION_DATA = {
+  closingBankBalance: 244990,
+  closingLedgerBalance: 268550,
   bankRows: [
     { Date: '2025-03-01', Description: 'Customer Wire ACME Corp', Reference: 'TXN-8821', Deposit: 125000, Withdrawal: '', Balance: 325000 },
     { Date: '2025-03-03', Description: 'AWS Cloud Hosting Services', Reference: 'INV-4011', Deposit: '', Withdrawal: 14250, Balance: 310750 },
@@ -305,4 +561,3 @@ export const SAMPLE_RECONCILIATION_DATA = {
     { Date: '2025-03-28', Description: 'Zenith Labs Deposit in transit', Reference: 'DEP-909', Receipt: 32000, Payment: '', Balance: 68550 },
   ],
 };
-

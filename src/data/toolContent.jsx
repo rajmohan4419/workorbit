@@ -1096,8 +1096,8 @@ export const TOOL_CONTENT = {
     faq: [
       ['How does the tool know whether to apply CGST/SGST or IGST?', 'If the seller state and buyer state are the same, it is an Intra-State supply and CGST + SGST (half of the total GST rate each) are applied. If the states differ, it is an Inter-State supply and IGST is applied at the full rate.'],
       ['Can I add my company logo and signature?', 'Yes. Upload your image logo and customize the authorized signatory name. The logo is encoded and printed directly onto your generated PDF invoice.'],
-      ['Are my business and financial records private?', '100% yes. All generation occurs locally in your browser. No invoice data, company records, or customer information is ever sent to or stored on any server.'],
-      ['Is this invoice compliant with Indian GST rules?', 'Yes. It contains all mandatory fields: GSTIN, HSN/SAC code, invoice number, date, place of supply, state code, itemized tax breakup, and amount in words.']
+      ['Are my business and financial records private?', 'Yes. All invoice generation and PDF rendering executes client-side in your browser. No invoice data or customer details are transmitted to external servers.'],
+      ['Is this invoice compliant with Indian GST rules?', 'Yes. It contains all mandatory fields: GSTIN, HSN/SAC code, invoice number, date, place of supply, state code, itemized tax breakup, and amount in words with paise precision.']
     ],
     article: (
       <div className="space-y-4">
@@ -1127,7 +1127,8 @@ export const TOOL_CONTENT = {
     faq: [
       ['How does the matching engine handle date differences?', 'Cheques or electronic payments often clear a few days after being recorded in books. You can configure a date window tolerance (from exact day up to 14 days) to ensure accurate matching.'],
       ['What are unpresented cheques?', 'These are payments issued and recorded in your books that have not yet been cleared or debited by your bank.'],
-      ['Are my financial records private?', '100% private. All parsing, reconciliation, and report generation happens strictly in your browser. No financial data ever leaves your device.'],
+      ['How does candidate matching work?', 'Transactions are matched using exact reference numbers where available, followed by date window tolerance and multi-token narration similarity. When multiple candidates match with identical parameters, the tool flags them as ambiguous ties so you can manually review and verify them.'],
+      ['Are my financial records private?', 'All parsing, reconciliation, and statement generation executes client-side directly in your browser. No financial records or spreadsheet rows are uploaded to or stored on OrbitBoard servers.'],
     ],
     article: (
       <div className="space-y-4">
@@ -1152,8 +1153,8 @@ export const TOOL_CONTENT = {
       'Search and preview results live, then export the processed sheet to XLSX or CSV.'
     ],
     faq: [
-      ['Does this work with large spreadsheets?', 'Yes. The engine processes tens of thousands of rows client-side in seconds using optimized SheetJS data structures.'],
-      ['Is my data uploaded to any server?', 'Never. OrbitBoard processes all files in-memory in your browser sandbox. Your data remains strictly on your machine.'],
+      ['Does this work with large spreadsheets?', 'Yes. The engine processes worksheets up to 25 MB and 50,000 rows client-side in seconds using optimized SheetJS data structures.'],
+      ['Is my data uploaded to any server?', 'No. OrbitBoard processes all files in-memory in your browser sandbox. Your data remains on your local device.'],
     ],
     article: (
       <div className="space-y-4">

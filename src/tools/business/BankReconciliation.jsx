@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  Upload, CheckCircle2, AlertTriangle, Download, Sparkles
+  Upload, CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check
 } from 'lucide-react';
 import { parseSpreadsheet, exportSpreadsheet, downloadSpreadsheetBlob } from '../../engines/excelEngine';
 import {
@@ -34,8 +34,11 @@ export default function BankReconciliation() {
     amount: '',
   });
 
+  const [closingBankBalance, setClosingBankBalance] = useState('244990');
+  const [closingLedgerBalance, setClosingLedgerBalance] = useState('268550');
+
   const [dateToleranceDays, setDateToleranceDays] = useState(3);
-  const [activeTab, setActiveTab] = useState('matched'); // 'matched' | 'bank_unmatched' | 'ledger_unmatched' | 'all'
+  const [activeTab, setActiveTab] = useState('matched'); // 'statement' | 'matched' | 'ambiguous' | 'bank_unmatched' | 'ledger_unmatched'
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState(null);
 
@@ -105,38 +108,78 @@ export default function BankReconciliation() {
     setBankData(SAMPLE_RECONCILIATION_DATA.bankRows);
     setBankHeaders(['Date', 'Description', 'Reference', 'Deposit', 'Withdrawal', 'Balance']);
     setBankMapping({ date: 'Date', description: 'Description', reference: 'Reference', credit: 'Deposit', debit: 'Withdrawal', amount: '' });
+    setClosingBankBalance(String(SAMPLE_RECONCILIATION_DATA.closingBankBalance));
 
     setLedgerFile('Q1_Cash_Book_Ledger.xlsx');
     setLedgerData(SAMPLE_RECONCILIATION_DATA.ledgerRows);
     setLedgerHeaders(['Date', 'Description', 'Reference', 'Receipt', 'Payment', 'Balance']);
     setLedgerMapping({ date: 'Date', description: 'Description', reference: 'Reference', debit: 'Receipt', credit: 'Payment', amount: '' });
+    setClosingLedgerBalance(String(SAMPLE_RECONCILIATION_DATA.closingLedgerBalance));
   };
 
-  // Perform reconciliation
-  const reconciliation = useMemo(() => {
+  // Perform reconciliation & calculate row errors
+  const { reconciliation, rowErrors } = useMemo(() => {
     if (!bankData || !ledgerData || bankData.length === 0 || ledgerData.length === 0) {
-      return null;
+      return { reconciliation: null, rowErrors: { bank: [], ledger: [] } };
     }
 
     try {
-      const normalizedBank = bankData.map(r => normalizeTransaction(r, bankMapping, 'bank'));
-      const normalizedLedger = ledgerData.map(r => normalizeTransaction(r, ledgerMapping, 'ledger'));
-
-      return reconcileTransactions(normalizedBank, normalizedLedger, {
-        dateToleranceDays: Number(dateToleranceDays) || 3,
+      const bankNormalized = [];
+      const bankErrList = [];
+      bankData.forEach((r, i) => {
+        const { transaction, error: err } = normalizeTransaction(r, bankMapping, 'bank', i);
+        if (err) bankErrList.push(err);
+        if (transaction) bankNormalized.push(transaction);
       });
+
+      const ledgerNormalized = [];
+      const ledgerErrList = [];
+      ledgerData.forEach((r, i) => {
+        const { transaction, error: err } = normalizeTransaction(r, ledgerMapping, 'ledger', i);
+        if (err) ledgerErrList.push(err);
+        if (transaction) ledgerNormalized.push(transaction);
+      });
+
+      const rec = reconcileTransactions(bankNormalized, ledgerNormalized, {
+        dateToleranceDays: Number(dateToleranceDays) || 3,
+        closingBankBalance: parseFloat(closingBankBalance) || 0,
+        closingLedgerBalance: parseFloat(closingLedgerBalance) || 0,
+      });
+
+      return {
+        reconciliation: rec,
+        rowErrors: { bank: bankErrList, ledger: ledgerErrList },
+      };
     } catch {
-      return null;
+      return { reconciliation: null, rowErrors: { bank: [], ledger: [] } };
     }
-  }, [bankData, ledgerData, bankMapping, ledgerMapping, dateToleranceDays]);
+  }, [bankData, ledgerData, bankMapping, ledgerMapping, dateToleranceDays, closingBankBalance, closingLedgerBalance]);
 
   const handleExportReport = () => {
     if (!reconciliation) return;
+
+    const statementSheet = [
+      { 'Bank Reconciliation Statement': 'Bank Side Adjustments', 'Amount (₹)': '' },
+      { 'Bank Reconciliation Statement': 'Closing Balance as per Bank Statement', 'Amount (₹)': reconciliation.summary.closingBankBalance },
+      { 'Bank Reconciliation Statement': '(+) Deposits in Transit (Uncleared Receipts)', 'Amount (₹)': reconciliation.summary.uncreditedDeposits },
+      { 'Bank Reconciliation Statement': '(-) Unpresented Cheques (Issued but uncleared)', 'Amount (₹)': -reconciliation.summary.unpresentedChecks },
+      { 'Bank Reconciliation Statement': '(=) Adjusted Bank Balance', 'Amount (₹)': reconciliation.summary.adjustedBankBalance },
+      { 'Bank Reconciliation Statement': '', 'Amount (₹)': '' },
+      { 'Bank Reconciliation Statement': 'Book / Ledger Side Adjustments', 'Amount (₹)': '' },
+      { 'Bank Reconciliation Statement': 'Closing Balance as per Cash Book / Ledger', 'Amount (₹)': reconciliation.summary.closingLedgerBalance },
+      { 'Bank Reconciliation Statement': '(+) Direct Bank Deposits & Interest Received', 'Amount (₹)': reconciliation.summary.bankDirectDeposits },
+      { 'Bank Reconciliation Statement': '(-) Direct Bank Charges & Auto Debits', 'Amount (₹)': -reconciliation.summary.bankChargesOrDebits },
+      { 'Bank Reconciliation Statement': '(=) Adjusted Book Balance', 'Amount (₹)': reconciliation.summary.adjustedBookBalance },
+      { 'Bank Reconciliation Statement': '', 'Amount (₹)': '' },
+      { 'Bank Reconciliation Statement': 'Reconciliation Difference (Should be 0.00)', 'Amount (₹)': reconciliation.summary.reconciliationDifference },
+      { 'Bank Reconciliation Statement': 'Status', 'Amount (₹)': reconciliation.summary.isStatementReconciled ? 'RECONCILED (AGREED)' : 'VARIANCE DETECTED' },
+    ];
 
     const matchedSheet = reconciliation.matches.map(m => ({
       'Match ID': m.id,
       'Match Confidence': `${m.confidence}%`,
       'Match Type': m.type,
+      'Ambiguous Tie?': m.isAmbiguous ? 'YES - Manual Review Recommended' : 'No',
       'Match Reason': m.bank.matchReason,
       'Bank Date': m.bank.date,
       'Bank Description': m.bank.description,
@@ -153,7 +196,7 @@ export default function BankReconciliation() {
       'Description': t.description,
       'Reference': t.reference,
       'Amount': t.amount,
-      'Classification': t.isMoneyIn ? 'Direct Bank Deposit (Customer / Interest)' : 'Direct Bank Debit / Charges',
+      'Classification': t.isMoneyIn ? 'Direct Bank Deposit (Customer Wire / Interest)' : 'Direct Bank Debit (Service Charges / Tax)',
     }));
 
     const ledgerUnmatchedSheet = reconciliation.ledgerUnmatched.map(t => ({
@@ -164,21 +207,9 @@ export default function BankReconciliation() {
       'Classification': t.isMoneyIn ? 'Deposit in Transit / Uncredited' : 'Outstanding / Unpresented Cheque',
     }));
 
-    const summarySheet = [
-      { 'Reconciliation Metric': 'Total Bank Transactions', 'Value': reconciliation.summary.bankTotalTxns },
-      { 'Reconciliation Metric': 'Total Ledger Transactions', 'Value': reconciliation.summary.ledgerTotalTxns },
-      { 'Reconciliation Metric': 'Matched Pairs Count', 'Value': reconciliation.summary.matchedPairsCount },
-      { 'Reconciliation Metric': 'Match Rate', 'Value': `${reconciliation.summary.matchRatePercent}%` },
-      { 'Reconciliation Metric': 'Net Bank Variance', 'Value': reconciliation.summary.netVariance },
-      { 'Reconciliation Metric': 'Unpresented Cheques (Outstanding in Books)', 'Value': reconciliation.summary.unpresentedChecks },
-      { 'Reconciliation Metric': 'Deposits in Transit (Uncredited)', 'Value': reconciliation.summary.uncreditedDeposits },
-      { 'Reconciliation Metric': 'Direct Bank Charges / Debits', 'Value': reconciliation.summary.bankChargesOrDebits },
-      { 'Reconciliation Metric': 'Direct Bank Deposits / Credits', 'Value': reconciliation.summary.bankDirectDeposits },
-    ];
-
     const blob = exportSpreadsheet({
       sheets: [
-        { name: 'Summary & KPIs', data: summarySheet },
+        { name: 'Reconciliation Statement', data: statementSheet },
         { name: 'Matched Items', data: matchedSheet },
         { name: 'Bank Unreconciled', data: bankUnmatchedSheet },
         { name: 'Ledger Unreconciled', data: ledgerUnmatchedSheet },
@@ -191,16 +222,20 @@ export default function BankReconciliation() {
 
   const filteredMatches = useMemo(() => {
     if (!reconciliation) return [];
-    if (!searchTerm) return reconciliation.matches;
+    let list = reconciliation.matches;
+    if (activeTab === 'ambiguous') {
+      list = list.filter(m => m.isAmbiguous);
+    }
+    if (!searchTerm) return list;
     const term = searchTerm.toLowerCase();
-    return reconciliation.matches.filter(m =>
+    return list.filter(m =>
       m.bank.description.toLowerCase().includes(term) ||
       m.bank.reference.toLowerCase().includes(term) ||
       m.ledger.description.toLowerCase().includes(term) ||
       m.ledger.reference.toLowerCase().includes(term) ||
       String(m.bank.amount).includes(term)
     );
-  }, [reconciliation, searchTerm]);
+  }, [reconciliation, searchTerm, activeTab]);
 
   return (
     <div className="space-y-6">
@@ -216,7 +251,7 @@ export default function BankReconciliation() {
               Automated Bank Statement & Ledger Reconciliation
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1 max-w-2xl">
-              Upload your bank statement and bookkeeper ledger in Excel (XLSX) or CSV. The engine automatically maps columns, detects deposits vs withdrawals, matches transactions with date tolerance, and flags unpresented checks and transit deposits.
+              Reconcile bank statements and bookkeeping cash books with accounting rigor. Generates a formal Bank Reconciliation Statement, detects timing differences (deposits in transit, unpresented cheques), and flags ambiguous ties for audit review.
             </p>
           </div>
           <button
@@ -234,6 +269,24 @@ export default function BankReconciliation() {
         <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-xs sm:text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
           <AlertTriangle size={16} className="shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {/* Row-level errors warning banner if malformed dates/amounts exist */}
+      {(rowErrors.bank.length > 0 || rowErrors.ledger.length > 0) && (
+        <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-800 dark:text-amber-200 space-y-2">
+          <div className="flex items-center gap-2 font-bold">
+            <AlertTriangle size={14} className="shrink-0 text-amber-600" />
+            <span>Row Validation Warnings ({rowErrors.bank.length + rowErrors.ledger.length} row(s) excluded due to invalid dates or amounts)</span>
+          </div>
+          <div className="max-h-28 overflow-y-auto space-y-1 pl-5 list-disc font-mono text-[11px]">
+            {rowErrors.bank.map((err, i) => (
+              <div key={`bank-err-${i}`}>Bank: {err}</div>
+            ))}
+            {rowErrors.ledger.map((err, i) => (
+              <div key={`ledger-err-${i}`}>Ledger: {err}</div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -267,7 +320,7 @@ export default function BankReconciliation() {
           </label>
 
           {bankHeaders.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-[var(--orbit-border)]">
+            <div className="space-y-3 pt-2 border-t border-[var(--orbit-border)]">
               <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Detected Column Mapping</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
@@ -315,6 +368,19 @@ export default function BankReconciliation() {
                   </select>
                 </div>
               </div>
+
+              <div>
+                <label className="text-[10px] text-stone-500 font-bold uppercase tracking-wider block mb-1">
+                  Closing Bank Statement Balance (₹)
+                </label>
+                <input
+                  type="number"
+                  value={closingBankBalance}
+                  onChange={e => setClosingBankBalance(e.target.value)}
+                  placeholder="e.g. 244990"
+                  className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs font-mono font-semibold text-stone-900 dark:text-stone-100"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -347,7 +413,7 @@ export default function BankReconciliation() {
           </label>
 
           {ledgerHeaders.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-[var(--orbit-border)]">
+            <div className="space-y-3 pt-2 border-t border-[var(--orbit-border)]">
               <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Detected Column Mapping</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
@@ -395,6 +461,19 @@ export default function BankReconciliation() {
                   </select>
                 </div>
               </div>
+
+              <div>
+                <label className="text-[10px] text-stone-500 font-bold uppercase tracking-wider block mb-1">
+                  Closing Ledger / Cash Book Balance (₹)
+                </label>
+                <input
+                  type="number"
+                  value={closingLedgerBalance}
+                  onChange={e => setClosingLedgerBalance(e.target.value)}
+                  placeholder="e.g. 268550"
+                  className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs font-mono font-semibold text-stone-900 dark:text-stone-100"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -427,7 +506,7 @@ export default function BankReconciliation() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs transition"
           >
             <Download size={13} />
-            Export Reconciliation (XLSX)
+            Export Reconciliation Statement (XLSX)
           </button>
         </div>
       )}
@@ -435,6 +514,91 @@ export default function BankReconciliation() {
       {/* Reconciliation Dashboard & Results */}
       {reconciliation && (
         <div className="space-y-6">
+          {/* Formal Bank Reconciliation Statement Card */}
+          <div className={`rounded-2xl border p-5 shadow-sm transition ${
+            reconciliation.summary.isStatementReconciled
+              ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/20'
+              : 'border-amber-300 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--orbit-border)]">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Statutory Accounting Report</span>
+                <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                  Bank Reconciliation Statement
+                  {reconciliation.summary.isStatementReconciled ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300">
+                      <Check size={13} /> Reconciled & Agreed
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300">
+                      <AlertTriangle size={13} /> Variance Detected: ₹{Math.abs(reconciliation.summary.reconciliationDifference).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <div className="text-right">
+                <span className="text-xs text-stone-500 block">Statement Difference</span>
+                <span className={`text-lg font-mono font-black ${
+                  reconciliation.summary.isStatementReconciled ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                }`}>
+                  ₹{reconciliation.summary.reconciliationDifference.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              {/* Left Column: Bank Side Adjustments */}
+              <div className="space-y-2 text-xs">
+                <h4 className="font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wide text-[11px]">
+                  Bank Balance Adjustments
+                </h4>
+                <div className="flex justify-between py-1 border-b border-stone-200 dark:border-stone-800">
+                  <span className="text-stone-600 dark:text-stone-400">Closing Balance per Bank Statement</span>
+                  <span className="font-mono font-semibold">₹{reconciliation.summary.closingBankBalance.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-stone-200 dark:border-stone-800 text-emerald-700 dark:text-emerald-400">
+                  <span>(+) Deposits in Transit (Uncleared Receipts)</span>
+                  <span className="font-mono font-semibold">+₹{reconciliation.summary.uncreditedDeposits.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-stone-200 dark:border-stone-800 text-rose-700 dark:text-rose-400">
+                  <span>(-) Unpresented Cheques (Issued to Vendors)</span>
+                  <span className="font-mono font-semibold">-₹{reconciliation.summary.unpresentedChecks.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between py-2 font-bold text-stone-900 dark:text-stone-100 text-sm bg-stone-100/60 dark:bg-stone-800/60 px-2 rounded-lg mt-2">
+                  <span>(=) Adjusted Bank Balance</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                    ₹{reconciliation.summary.adjustedBankBalance.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column: Book / Ledger Side Adjustments */}
+              <div className="space-y-2 text-xs">
+                <h4 className="font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wide text-[11px]">
+                  Book / Ledger Balance Adjustments
+                </h4>
+                <div className="flex justify-between py-1 border-b border-stone-200 dark:border-stone-800">
+                  <span className="text-stone-600 dark:text-stone-400">Closing Balance per Cash Book</span>
+                  <span className="font-mono font-semibold">₹{reconciliation.summary.closingLedgerBalance.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-stone-200 dark:border-stone-800 text-emerald-700 dark:text-emerald-400">
+                  <span>(+) Direct Bank Deposits & Interest</span>
+                  <span className="font-mono font-semibold">+₹{reconciliation.summary.bankDirectDeposits.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-stone-200 dark:border-stone-800 text-rose-700 dark:text-rose-400">
+                  <span>(-) Direct Bank Charges & Taxes</span>
+                  <span className="font-mono font-semibold">-₹{reconciliation.summary.bankChargesOrDebits.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between py-2 font-bold text-stone-900 dark:text-stone-100 text-sm bg-stone-100/60 dark:bg-stone-800/60 px-2 rounded-lg mt-2">
+                  <span>(=) Adjusted Book Balance</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                    ₹{reconciliation.summary.adjustedBookBalance.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* KPI Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-3.5 shadow-xs">
@@ -476,7 +640,7 @@ export default function BankReconciliation() {
 
           {/* Tab Navigation */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-[var(--orbit-border)] pb-2">
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <button
                 type="button"
                 onClick={() => setActiveTab('matched')}
@@ -488,6 +652,22 @@ export default function BankReconciliation() {
               >
                 Matched ({reconciliation.matches.length})
               </button>
+
+              {reconciliation.summary.ambiguousMatchesCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ambiguous')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                    activeTab === 'ambiguous'
+                      ? 'bg-amber-600 text-white'
+                      : 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100'
+                  }`}
+                >
+                  <AlertTriangle size={12} />
+                  Ambiguous Ties ({reconciliation.summary.ambiguousMatchesCount})
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setActiveTab('bank_unmatched')}
@@ -521,8 +701,8 @@ export default function BankReconciliation() {
             />
           </div>
 
-          {/* Tab 1: Matched Transactions Table */}
-          {activeTab === 'matched' && (
+          {/* Tab 1: Matched / Ambiguous Transactions Table */}
+          {(activeTab === 'matched' || activeTab === 'ambiguous') && (
             <div className="overflow-x-auto rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 shadow-xs">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
@@ -531,21 +711,27 @@ export default function BankReconciliation() {
                     <th className="py-2.5 px-3">Bank Details</th>
                     <th className="py-2.5 px-3">Ledger Details</th>
                     <th className="py-2.5 px-3 text-right">Amount (₹)</th>
-                    <th className="py-2.5 px-3">Confidence & Reason</th>
+                    <th className="py-2.5 px-3">Confidence & Audit Reason</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--orbit-border)]">
                   {filteredMatches.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-6 text-center text-stone-400">No matched transactions found.</td>
+                      <td colSpan={5} className="py-6 text-center text-stone-400">No matching transactions found.</td>
                     </tr>
                   ) : (
                     filteredMatches.map(m => (
                       <tr key={m.id} className="hover:bg-stone-50/50 dark:hover:bg-stone-850/50">
                         <td className="py-2.5 px-3 align-top">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
-                            <CheckCircle2 size={12} /> Matched
-                          </span>
+                          {m.isAmbiguous ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full">
+                              <HelpCircle size={12} /> Ambiguous Tie
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
+                              <CheckCircle2 size={12} /> Matched
+                            </span>
+                          )}
                         </td>
                         <td className="py-2.5 px-3 align-top">
                           <div className="font-semibold text-stone-900 dark:text-stone-100">{m.bank.description}</div>
@@ -560,7 +746,7 @@ export default function BankReconciliation() {
                         </td>
                         <td className="py-2.5 px-3 align-top">
                           <span className="text-[11px] font-medium text-stone-700 dark:text-stone-300 block">
-                            {m.confidence}% match
+                            {m.confidence}% match {m.isAmbiguous && '(Candidate Tie)'}
                           </span>
                           <span className="text-[10px] text-stone-400">{m.bank.matchReason}</span>
                         </td>

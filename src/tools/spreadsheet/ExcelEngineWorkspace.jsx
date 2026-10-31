@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck
+  Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle
 } from 'lucide-react';
 import {
   parseSpreadsheet,
@@ -8,11 +8,17 @@ import {
   validateRows,
   exportSpreadsheet,
   downloadSpreadsheetBlob,
+  exportValidationErrorReport,
 } from '../../engines/excelEngine';
 
 export default function ExcelEngineWorkspace() {
+  const [fileObj, setFileObj] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [sheetNames, setSheetNames] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState('');
   const [headers, setHeaders] = useState([]);
+  const [duplicateHeaders, setDuplicateHeaders] = useState([]);
+  const [emptyHeaders, setEmptyHeaders] = useState([]);
   const [rows, setRows] = useState([]);
   const [colTypes, setColTypes] = useState({});
   const [error, setError] = useState(null);
@@ -26,16 +32,15 @@ export default function ExcelEngineWorkspace() {
   const [validationSchema, setValidationSchema] = useState({});
   const [validationResults, setValidationResults] = useState(null);
 
-  const handleFileUpload = async (e) => {
-    const uploadedFile = e.target.files?.[0];
-    if (!uploadedFile) return;
-
+  const processWorkbookSheet = async (fileOrBuffer, sheetTarget) => {
     try {
       setError(null);
-      setFileName(uploadedFile.name);
-
-      const parsed = await parseSpreadsheet(uploadedFile);
+      const parsed = await parseSpreadsheet(fileOrBuffer, { sheetName: sheetTarget });
+      setSheetNames(parsed.sheetNames);
+      setSelectedSheet(parsed.selectedSheet);
       setHeaders(parsed.headers);
+      setDuplicateHeaders(parsed.duplicateHeaders);
+      setEmptyHeaders(parsed.emptyHeaders);
       setRows(parsed.rows);
 
       const detectedTypes = detectColumnTypes(parsed.rows, parsed.headers);
@@ -53,14 +58,34 @@ export default function ExcelEngineWorkspace() {
       setValidationResults(null);
       setPage(1);
     } catch (err) {
-      setError(`Failed to read spreadsheet: ${err.message}`);
+      setError(`Failed to process spreadsheet: ${err.message}`);
     }
+  };
+
+  const handleFileUpload = async (e) => {
+    const uploadedFile = e.target.files?.[0];
+    if (!uploadedFile) return;
+
+    setFileObj(uploadedFile);
+    setFileName(uploadedFile.name);
+    await processWorkbookSheet(uploadedFile, null);
+  };
+
+  const handleSheetChange = async (newSheet) => {
+    if (!fileObj || newSheet === selectedSheet) return;
+    await processWorkbookSheet(fileObj, newSheet);
   };
 
   const handleValidate = () => {
     if (!rows.length) return;
     const res = validateRows(rows, validationSchema);
     setValidationResults(res);
+  };
+
+  const handleDownloadErrorReport = (format = 'xlsx') => {
+    if (!validationResults || validationResults.isValid || !validationResults.errors.length) return;
+    const blob = exportValidationErrorReport(validationResults.errors, format);
+    downloadSpreadsheetBlob(blob, `${fileName.replace(/\.[^/.]+$/, '')}_validation_errors.${format}`);
   };
 
   const handleTransform = (transformType, column) => {
@@ -89,8 +114,9 @@ export default function ExcelEngineWorkspace() {
   const handleExport = (format) => {
     if (!rows.length) return;
     const blob = exportSpreadsheet({
-      sheets: [{ name: 'Processed Data', data: rows }],
+      sheets: [{ name: selectedSheet || 'Processed Data', data: rows }],
       format,
+      sanitizeFormulaInjection: true,
     });
     const baseName = fileName.replace(/\.[^/.]+$/, '') || 'processed_spreadsheet';
     downloadSpreadsheetBlob(blob, `${baseName}_exported.${format}`);
@@ -116,8 +142,13 @@ export default function ExcelEngineWorkspace() {
       { 'Order ID': '', 'Customer Email': 'alex@cloud.co', 'Amount': 22500, 'Status': 'Paid', 'Date': '2025-03-05' },
       { 'Order ID': 'ORD-105', 'Customer Email': 'vikram@domain.com', 'Amount': -100, 'Status': 'Refunded', 'Date': '2025-03-07' },
     ];
+    setFileObj(null);
     setFileName('Ecommerce_Orders_Demo.xlsx');
+    setSheetNames(['Orders', 'Returns']);
+    setSelectedSheet('Orders');
     setHeaders(demoHeaders);
+    setDuplicateHeaders([]);
+    setEmptyHeaders([]);
     setRows(demoRows);
     const types = detectColumnTypes(demoRows, demoHeaders);
     setColTypes(types);
@@ -141,7 +172,7 @@ export default function ExcelEngineWorkspace() {
             Excel & CSV Processing Engine
           </h2>
           <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1">
-            Universal XLSX/CSV spreadsheet engine with schema validation, column mapping, data cleaning, and export.
+            Production-grade spreadsheet processor: multi-worksheet selection, duplicate/empty header detection, schema validation, formula injection protection, and error report exports.
           </p>
         </div>
         <button
@@ -154,8 +185,8 @@ export default function ExcelEngineWorkspace() {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-700 flex items-center gap-2">
-          <AlertCircle size={16} />
+        <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+          <AlertCircle size={16} className="shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -169,7 +200,7 @@ export default function ExcelEngineWorkspace() {
             Upload XLSX, XLS, or CSV Spreadsheet
           </span>
           <span className="text-xs text-stone-400 mt-1">
-            Processes 100% locally in your browser without uploading to external servers
+            Max 25 MB / 50,000 rows. Cleaned and processed 100% locally in your browser.
           </span>
         </label>
       )}
@@ -179,10 +210,26 @@ export default function ExcelEngineWorkspace() {
         <div className="space-y-6">
           {/* Controls strip */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-stone-700 dark:text-stone-200">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xs font-bold text-stone-800 dark:text-stone-100">
                 {fileName} ({rows.length} rows, {headers.length} columns)
               </span>
+
+              {/* Sheet selector if multiple sheets exist */}
+              {sheetNames.length > 1 && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-stone-400 font-medium">Worksheet:</span>
+                  <select
+                    value={selectedSheet}
+                    onChange={e => handleSheetChange(e.target.value)}
+                    className="rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-2.5 py-1 font-semibold text-stone-800 dark:text-stone-200 text-xs"
+                  >
+                    {sheetNames.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -206,11 +253,28 @@ export default function ExcelEngineWorkspace() {
                 type="button"
                 onClick={() => handleExport('csv')}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-medium text-xs transition"
+                title="Protected against CSV formula injection"
               >
                 Export CSV
               </button>
             </div>
           </div>
+
+          {/* Header Quality Badges (Duplicates & Missing Headers) */}
+          {(duplicateHeaders.length > 0 || emptyHeaders.length > 0) && (
+            <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-3.5 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+              <div className="flex items-center gap-2 font-bold">
+                <AlertTriangle size={14} className="text-amber-600" />
+                <span>Header Structure Warnings Detected:</span>
+              </div>
+              {duplicateHeaders.length > 0 && (
+                <div>• Duplicate column names disambiguated: {duplicateHeaders.join(', ')}</div>
+              )}
+              {emptyHeaders.length > 0 && (
+                <div>• Missing header labels filled as placeholder: Column(s) {emptyHeaders.join(', ')}</div>
+              )}
+            </div>
+          )}
 
           {/* Validation Report Banner */}
           {validationResults && (
@@ -219,16 +283,28 @@ export default function ExcelEngineWorkspace() {
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
                 : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
             }`}>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <span className="font-bold flex items-center gap-1.5">
                   {validationResults.isValid ? <Check size={16} /> : <AlertCircle size={16} />}
                   {validationResults.isValid
                     ? `All ${validationResults.totalCount} rows passed schema validation.`
                     : `Found ${validationResults.errorCount} validation issues across ${validationResults.totalCount} rows.`}
                 </span>
-                <span className="text-[11px]">
-                  {validationResults.validCount} valid / {validationResults.errorCount} invalid
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px]">
+                    {validationResults.validCount} valid / {validationResults.errorCount} invalid
+                  </span>
+                  {!validationResults.isValid && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadErrorReport('xlsx')}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-bold hover:bg-amber-300 transition"
+                    >
+                      <Download size={12} />
+                      Download Error Report (XLSX)
+                    </button>
+                  )}
+                </div>
               </div>
               {!validationResults.isValid && validationResults.errors.length > 0 && (
                 <div className="mt-2.5 max-h-32 overflow-y-auto space-y-1">
