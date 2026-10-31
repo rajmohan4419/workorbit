@@ -65,7 +65,8 @@ begin
     end if;
   end if;
   insert into public.usage_counters (user_id,feature_key,period_start,units_used)
-    values (p_user_id,p_feature_key,p_period_start,p_units)
+    select p_user_id,p_feature_key,p_period_start,p_units
+    where p_limit = -1 or p_units <= p_limit
     on conflict (user_id,feature_key,period_start) do update set
       units_used=public.usage_counters.units_used + excluded.units_used,updated_at=now()
     where p_limit = -1 or public.usage_counters.units_used + excluded.units_used <= p_limit
