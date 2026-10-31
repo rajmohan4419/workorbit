@@ -41,6 +41,10 @@ alter table public.usage_events enable row level security;
 revoke all on public.user_subscriptions from anon,authenticated;
 revoke all on public.usage_counters from anon,authenticated;
 revoke all on public.usage_events from anon,authenticated;
+-- RLS policies below constrain these read grants to the authenticated owner.
+grant select on public.user_subscriptions to authenticated;
+grant select on public.usage_counters to authenticated;
+grant select on public.usage_events to authenticated;
 create policy "Users can read their own subscriptions" on public.user_subscriptions for select to authenticated using (auth.uid() = user_id);
 create policy "Users can read their own usage counters" on public.usage_counters for select to authenticated using (auth.uid() = user_id);
 create policy "Users can read their own usage events" on public.usage_events for select to authenticated using (auth.uid() = user_id);
