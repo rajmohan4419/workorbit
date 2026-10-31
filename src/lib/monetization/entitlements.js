@@ -1,7 +1,7 @@
 import { getPlan, PLAN_CATALOG } from './planCatalog.js';
-const ACTIVE_STATUSES = new Set(['active', 'authenticated', 'trialing']);
+const ACTIVE_STATUSES = new Set(['active']);
 function isWithinPaidPeriod(subscription, now) {
-  if (!subscription?.current_period_end) return true;
+  if (!subscription?.current_period_end) return false;
   const end = new Date(subscription.current_period_end).getTime();
   return Number.isFinite(end) && end > now.getTime();
 }
