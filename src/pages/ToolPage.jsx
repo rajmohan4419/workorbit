@@ -52,13 +52,21 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef(null);
 
-  const categoryOptions = [
-    { name: 'Finance', label: 'Finance & Money', icon: Coins, count: 11 },
-    { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness, count: 6 },
-    { name: 'Developer', label: 'Developer Tools', icon: Code2, count: 15 },
-    { name: 'Everyday', label: 'Everyday Utilities', icon: Calculator, count: 27 },
-    { name: 'Business', label: 'Business & SaaS', icon: TrendingUp, count: 7 },
-  ];
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    LISTED_TOOLS.forEach(t => {
+      counts[t.category] = (counts[t.category] || 0) + 1;
+    });
+    return counts;
+  }, []);
+
+  const categoryOptions = useMemo(() => [
+    { name: 'Business', label: 'Business & SaaS', icon: TrendingUp, count: categoryCounts['Business'] || 0 },
+    { name: 'Finance', label: 'Finance & Money', icon: Coins, count: categoryCounts['Finance'] || 0 },
+    { name: 'Developer', label: 'Developer Tools', icon: Code2, count: categoryCounts['Developer'] || 0 },
+    { name: 'Everyday', label: 'Everyday Utilities', icon: Calculator, count: categoryCounts['Everyday'] || 0 },
+    { name: 'Career', label: 'Career & Salary', icon: BriefcaseBusiness, count: categoryCounts['Career'] || 0 },
+  ], [categoryCounts]);
 
   useEffect(() => {
     const handleOutside = (e) => {

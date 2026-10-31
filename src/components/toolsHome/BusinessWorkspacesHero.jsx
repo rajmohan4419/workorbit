@@ -3,12 +3,11 @@ import {
   Sparkles, ArrowRight, Building2, FileText, FileSpreadsheet,
   Clock, TrendingUp, Target, ShieldCheck
 } from 'lucide-react';
+import { LISTED_TOOLS } from '../../data/toolCatalog';
 
-const BUSINESS_WORKFLOWS = [
+const FEATURED_WORKFLOW_CONFIG = [
   {
     slug: 'bank-reconciliation',
-    title: 'Bank Statement Reconciliation',
-    task: 'Match bank statements against accounting cash books. Detect unpresented cheques, transit deposits & bank charges.',
     badge: 'Flagship Workflow',
     badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300',
     icon: Building2,
@@ -17,8 +16,6 @@ const BUSINESS_WORKFLOWS = [
   },
   {
     slug: 'gst-invoice-generator',
-    title: 'GST Tax Invoice Generator',
-    task: 'Create professional GST-compliant B2B/B2C invoices with CGST/SGST/IGST breakdown, logo branding & instant PDF.',
     badge: 'Tax Compliant',
     badgeColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300',
     icon: FileText,
@@ -27,8 +24,6 @@ const BUSINESS_WORKFLOWS = [
   },
   {
     slug: 'excel-engine',
-    title: 'Excel & CSV Data Processor',
-    task: 'Upload spreadsheets, auto-detect data types, map columns, validate against schemas, clean values & export.',
     badge: 'Excel Engine',
     badgeColor: 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300',
     icon: FileSpreadsheet,
@@ -37,8 +32,6 @@ const BUSINESS_WORKFLOWS = [
   },
   {
     slug: 'invoice-aging-report',
-    title: 'Accounts Receivable & Aging',
-    task: 'Upload open invoices CSV to track overdue cash collections across 0-30, 31-60, 61-90, 90+ day aging buckets.',
     badge: 'Collections',
     badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300',
     icon: Clock,
@@ -47,8 +40,6 @@ const BUSINESS_WORKFLOWS = [
   },
   {
     slug: 'saas-retention-calculator',
-    title: 'SaaS Retention & Unit Economics',
-    task: 'Calculate Net Revenue Retention (NRR), Gross Retention (GRR), logo churn, LTV, and CAC payback period.',
     badge: 'SaaS Metrics',
     badgeColor: 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300',
     icon: TrendingUp,
@@ -57,8 +48,6 @@ const BUSINESS_WORKFLOWS = [
   },
   {
     slug: 'sales-pipeline-forecaster',
-    title: 'Sales Pipeline Forecaster',
-    task: 'Weight deals across sales stages by win rate probability to forecast expected quarterly closed revenue.',
     badge: 'Revenue Ops',
     badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300',
     icon: Target,
@@ -66,6 +55,17 @@ const BUSINESS_WORKFLOWS = [
     metrics: 'Weighted forecast • Target gap',
   },
 ];
+
+// Derive workflows dynamically from central catalog to guarantee links, names & descriptions never drift
+const BUSINESS_WORKFLOWS = FEATURED_WORKFLOW_CONFIG.map(cfg => {
+  const tool = LISTED_TOOLS.find(t => t.slug === cfg.slug);
+  return {
+    ...cfg,
+    title: tool?.name || cfg.slug,
+    task: tool?.description || '',
+    href: `/tools/${cfg.slug}`,
+  };
+});
 
 export function BusinessWorkspacesHero() {
   return (
@@ -98,33 +98,34 @@ export function BusinessWorkspacesHero() {
           return (
             <Link
               key={item.slug}
-              to={`/tools/${item.slug}`}
-              className="group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-accent-400 hover:shadow-md transition-all duration-200"
+              to={item.href}
+              className="group relative flex flex-col justify-between rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-xs hover:border-accent-400 hover:shadow-md transition-all duration-200"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className={`p-2 rounded-xl ${item.iconColor} transition-transform group-hover:scale-105`}>
-                    <Icon size={18} />
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.badgeColor}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.iconColor} transition-transform group-hover:scale-105`}>
+                    <Icon size={20} />
+                  </div>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
                     {item.badge}
                   </span>
                 </div>
 
-                <h3 className="font-bold text-sm sm:text-base text-stone-900 dark:text-stone-100 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors">
+                <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors">
                   {item.title}
                 </h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
+                <p className="mt-1.5 text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-3">
                   {item.task}
                 </p>
               </div>
 
               <div className="mt-4 pt-3 border-t border-[var(--orbit-border)] flex items-center justify-between text-xs">
-                <span className="text-[11px] text-stone-400 font-medium">
+                <span className="text-[11px] font-medium text-stone-400 dark:text-stone-500">
                   {item.metrics}
                 </span>
-                <span className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 group-hover:translate-x-1 transition-transform">
-                  Launch <ArrowRight size={13} />
+                <span className="inline-flex items-center gap-1 font-bold text-accent-600 dark:text-accent-400 group-hover:translate-x-0.5 transition-transform">
+                  Launch
+                  <ArrowRight size={13} />
                 </span>
               </div>
             </Link>
@@ -135,3 +136,4 @@ export function BusinessWorkspacesHero() {
   );
 }
 
+export default BusinessWorkspacesHero;

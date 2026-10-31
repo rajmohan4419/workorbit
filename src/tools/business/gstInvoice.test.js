@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcItem, amountToWords, numToWords } from './gstInvoiceEngine';
+import { calcItem, calcInvoiceTotals, amountToWords, numToWords } from './gstInvoiceEngine';
 
 describe('GST Invoice Calculations (gstInvoice.test.js)', () => {
   it('correctly calculates intra-state supply with CGST and SGST split equally', () => {
@@ -56,6 +56,36 @@ describe('GST Invoice Calculations (gstInvoice.test.js)', () => {
     expect(res.total).toBe(475);
   });
 
+  it('caps discounts greater than 100% at 100%', () => {
+    const item = {
+      qty: 1,
+      rate: 1000,
+      discount: 150, // >100% discount
+      gstRate: 18,
+    };
+
+    const res = calcItem(item, false);
+    expect(res.gross).toBe(1000);
+    expect(res.discAmt).toBe(1000); // 100% capped
+    expect(res.taxable).toBe(0);
+    expect(res.total).toBe(0);
+  });
+
+  it('accurately maintains paise-level precision across multi-line invoices', () => {
+    // Floating point challenge: 33.33 * 3 = 99.99
+    const items = [
+      { qty: 1, rate: 33.33, discount: 0, gstRate: 18 },
+      { qty: 1, rate: 33.33, discount: 0, gstRate: 18 },
+      { qty: 1, rate: 33.34, discount: 0, gstRate: 18 },
+    ];
+
+    const totals = calcInvoiceTotals(items, false);
+    expect(totals.grossTotal).toBe(100);
+    expect(totals.taxableTotal).toBe(100);
+    expect(totals.totalTax).toBe(18); // 9 CGST + 9 SGST
+    expect(totals.grandTotal).toBe(118);
+  });
+
   it('accurately converts numbers to Indian English words', () => {
     expect(numToWords(0)).toBe('Zero');
     expect(numToWords(15)).toBe('Fifteen');
@@ -63,10 +93,21 @@ describe('GST Invoice Calculations (gstInvoice.test.js)', () => {
     expect(numToWords(750)).toBe('Seven Hundred Fifty');
   });
 
-  it('formats amounts in words with Crores, Lakhs, Thousands and Rupees', () => {
+  it('formats amounts in words with Crores, Lakhs, Thousands, Rupees, and Decimal Paise', () => {
     expect(amountToWords(0)).toBe('Zero Rupees Only');
     expect(amountToWords(5400)).toBe('Five Thousand Four Hundred Rupees Only');
     expect(amountToWords(125000)).toBe('One Lakh Twenty Five Thousand Rupees Only');
     expect(amountToWords(25000000)).toBe('Two Crore Fifty Lakh Rupees Only');
+
+    // Decimal Paise
+    expect(amountToWords(1500.50)).toBe('One Thousand Five Hundred Rupees and Fifty Paise Only');
+    expect(amountToWords(0.75)).toBe('Seventy Five Paise Only');
+
+    // Negative amounts (refunds / credit notes)
+    expect(amountToWords(-2500)).toBe('Minus Two Thousand Five Hundred Rupees Only');
+    expect(amountToWords(-450.25)).toBe('Minus Four Hundred Fifty Rupees and Twenty Five Paise Only');
+
+    // Large amounts exceeding 100 Crores
+    expect(amountToWords(1500000000)).toBe('One Hundred Fifty Crore Rupees Only');
   });
 });
