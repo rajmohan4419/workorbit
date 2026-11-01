@@ -2,7 +2,10 @@ import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { Calculator, Code2, Coins, BriefcaseBusiness, TrendingUp } from 'lucide-react';
 import { LISTED_TOOLS } from '../data/toolCatalog';
-import { logEvent } from '../lib/telemetry';
+
+const trackEvent = (name, payload) => {
+  import('../lib/telemetry').then(({ logEvent }) => logEvent(name, payload)).catch(() => {});
+};
 
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
@@ -74,7 +77,7 @@ export default function ToolsHome() {
   const toggleFavorite = (slug) => setFavorites(prev => prev.includes(slug) ? prev.filter(x => x !== slug) : [slug, ...prev]);
   const addRecent = (slug) => {
     setRecent(prev => [slug, ...prev.filter(x => x !== slug)].slice(0, 6));
-    logEvent('tool.opened', { tool: slug });
+    trackEvent('tool.opened', { tool: slug });
   };
 
   const chooseCategory = (name) => {
@@ -85,7 +88,7 @@ export default function ToolsHome() {
     } else {
       setSearchParams({});
     }
-    logEvent('category.explored', { category: name });
+    trackEvent('category.explored', { category: name });
   };
 
   const handleQueryChange = (val) => {
@@ -139,7 +142,7 @@ export default function ToolsHome() {
             setCategory={chooseCategory}
             searchResults={searchResults}
             addRecent={addRecent}
-            logEvent={logEvent}
+            logEvent={trackEvent}
           />
 
           {/* Task-Based Business & Financial Workspaces */}

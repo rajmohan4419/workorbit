@@ -1,0 +1,163 @@
+{
+  "$context": "https://agenticresourcediscovery.org/v0.91/context.jsonld",
+  "schemaVersion": "0.9.1",
+  "identifier": "urn:air:orbitboard.in:catalog",
+  "displayName": "OrbitBoard — Free Online Tools & Utilities",
+  "description": "Free, browser-based online calculators and developer utilities for salary, finance, taxes, JSON, JWT, PDFs, and everyday productivity. Privacy-first architecture with client-side execution.",
+  "publisher": {
+    "name": "OrbitBoard",
+    "url": "https://orbitboard.in",
+    "contact": "https://orbitboard.in/contact"
+  },
+  "resources": [
+    {
+      "identifier": "urn:air:orbitboard.in:tools:finance",
+      "displayName": "Finance & Tax Calculators",
+      "type": "application/json",
+      "url": "https://orbitboard.in/tools",
+      "description": "Suite of Indian finance, taxation, and investment calculators including EMI, GST, TDS, PF/ESI, and SIP.",
+      "capabilities": [
+        "EmiCalculator",
+        "GstCalculator",
+        "TdsCalculator",
+        "PfEsiCalculator",
+        "SipCalculator",
+        "CompoundInterestCalculator",
+        "FdCalculator",
+        "RdCalculator"
+      ],
+      "tags": [
+        "finance",
+        "emi",
+        "gst",
+        "tds",
+        "pf",
+        "esi",
+        "tax",
+        "investments"
+      ],
+      "representativeQueries": [
+        "Calculate home loan EMI for 50 Lakh over 20 years",
+        "Generate GST invoice with CGST and SGST",
+        "Calculate TDS under section 194J or 194C",
+        "Calculate EPF and ESI employee employer contributions with statutory ceiling"
+      ]
+    },
+    {
+      "identifier": "urn:air:orbitboard.in:tools:career",
+      "displayName": "Career & Salary Calculators",
+      "type": "application/json",
+      "url": "https://orbitboard.in/tools",
+      "description": "Salary take-home, payslip generator, gratuity, and job offer evaluation tools for Indian employment structures.",
+      "capabilities": [
+        "CtcToInHandCalculator",
+        "PayslipGenerator",
+        "SalarySheetGenerator",
+        "GratuityCalculator",
+        "SalaryHikeCalculator"
+      ],
+      "tags": [
+        "career",
+        "salary",
+        "ctc",
+        "take-home",
+        "payslip",
+        "gratuity",
+        "hike"
+      ],
+      "representativeQueries": [
+        "Calculate in-hand monthly salary from 12 LPA CTC under new tax regime",
+        "Generate itemized payslip with basic, HRA, PF, ESI, professional tax and TDS",
+        "Calculate gratuity payout for 5 years of service"
+      ]
+    },
+    {
+      "identifier": "urn:air:orbitboard.in:tools:developer",
+      "displayName": "Developer Utilities",
+      "type": "application/json",
+      "url": "https://orbitboard.in/tools",
+      "description": "Browser-native developer tools for data conversion, formatting, encoding, and tokens without sending data to servers.",
+      "capabilities": [
+        "JsonFormatter",
+        "JwtDecoder",
+        "Base64Tool",
+        "UnixTimestampConverter",
+        "UuidGenerator",
+        "DiffChecker",
+        "JsonToCsvConverter",
+        "XmlToJsonConverter"
+      ],
+      "tags": [
+        "developer",
+        "json",
+        "jwt",
+        "base64",
+        "timestamp",
+        "uuid",
+        "diff",
+        "encoding"
+      ],
+      "representativeQueries": [
+        "Format and validate JSON payload",
+        "Decode JWT token claims, algorithm, and expiry timestamp",
+        "Convert Unix timestamp to human-readable date in IST and UTC"
+      ]
+    },
+    {
+      "identifier": "urn:air:orbitboard.in:tools:business",
+      "displayName": "Business & Spreadsheet Workspaces",
+      "type": "application/json",
+      "url": "https://orbitboard.in/tools",
+      "description": "Business workflows including GSTR-2B vs purchase register reconciliation, bank reconciliation, and multi-file Excel data processing.",
+      "capabilities": [
+        "GstrReconciliation",
+        "BankReconciliation",
+        "ExcelEngineWorkspace",
+        "InvoiceAgingReport"
+      ],
+      "tags": [
+        "business",
+        "reconciliation",
+        "gstr-2b",
+        "excel",
+        "sheets",
+        "accounting"
+      ],
+      "representativeQueries": [
+        "Reconcile purchase register against GSTR-2B statement matching GSTIN and taxable amount",
+        "Compare bank statement against cash book ledger",
+        "Batch transform and clean multiple spreadsheet files in browser"
+      ]
+    },
+    {
+      "identifier": "urn:air:orbitboard.in:tools:pdf",
+      "displayName": "PDF & Document Utilities",
+      "type": "application/json",
+      "url": "https://orbitboard.in/tools",
+      "description": "Private, client-side PDF manipulation tools including merge, split, extract, compression, and image conversion.",
+      "capabilities": [
+        "PdfMerge",
+        "PdfSplit",
+        "PdfCompressor",
+        "PdfToImages",
+        "ImageToPdf",
+        "PdfESign"
+      ],
+      "tags": [
+        "pdf",
+        "documents",
+        "merge",
+        "split",
+        "compress",
+        "converter",
+        "sign"
+      ],
+      "representativeQueries": [
+        "Merge multiple PDF documents client-side without upload",
+        "Compress PDF file size securely in browser",
+        "Convert PDF pages to high-resolution JPG images"
+      ]
+    }
+  ]
+}
+

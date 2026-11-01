@@ -13,9 +13,9 @@ function Shell({ title, subtitle, children }) {
   </main>;
 }
 function useSession() {
-  const [session, setSession] = useState(undefined);
+  const [session, setSession] = useState(() => (supabase ? undefined : null));
   useEffect(() => {
-    if (!supabase) { setSession(null); return; }
+    if (!supabase) return;
     let alive = true;
     supabase.auth.getSession().then(({ data }) => { if (alive) setSession(data.session); });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
