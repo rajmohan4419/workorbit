@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Check,
   Sparkles,
@@ -64,7 +63,7 @@ export default function Pricing() {
       if (!session || !session.access_token) {
         setStatusMessage({
           type: 'info',
-          text: 'Please sign in or create an account to activate a Pro or Business subscription.',
+          text: 'Account registration is temporarily unavailable while we prepare the Business Portal launch.',
         });
         setLoadingPlan(null);
         return;
@@ -300,7 +299,6 @@ export default function Pricing() {
             )}
           </section>
 
-          <div className="mx-auto mb-6 max-w-lg text-center text-sm text-stone-600">Need an account? <Link to="/business/signup?next=/pricing" className="font-semibold text-indigo-600 underline">Create one</Link> or <Link to="/business/login?next=/pricing" className="font-semibold text-indigo-600 underline">sign in</Link>.</div>
 
           {/* Pricing Cards Grid */}
           <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
