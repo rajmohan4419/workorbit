@@ -68,13 +68,13 @@ export function BusinessDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
-    if (!session) return;
+    if (!session) { setBusinesses([]); setLoading(true); return; }
     let active = true;
     supabase.from('business_profiles').select('id,name,business_type,gstin,created_at').order('created_at', { ascending: false })
       .then(({ data, error: err }) => { if (!active) return; setBusinesses(data || []); setError(err?.message || ''); setLoading(false); });
     return () => { active = false; };
   }, [session]);
-  if (session === undefined) return <Shell title="Loading…" />;
+  if (session === undefined) return <Shell title="Loading…" subtitle="Checking your session." />;
   if (!session) return <Navigate to="/business/login" replace />;
   return <Shell title="Your businesses" subtitle={session.user.email}>
     <Link to="/business/onboarding" className="mb-5 inline-block rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white">+ Add business</Link>
