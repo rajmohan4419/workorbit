@@ -3,9 +3,11 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
 import { TOOLS, SLUG_REDIRECTS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
+import toolVariants from '../data/toolVariants.json';
 import { loadToolPage } from '../lib/toolPageLoader';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
+import NotFound from './NotFound';
 
 const ToolPage = lazy(loadToolPage);
 
@@ -85,20 +87,38 @@ function ToolShell({ tool, info }) {
 
 export default function ToolPageRoute() {
   const { slug } = useParams();
-  const tool = TOOLS.find(item => item.slug === slug);
-  const info = TOOL_CONTENT[slug];
+  const variant = toolVariants.find(v => v.slug === slug);
+  const baseTool = variant ? TOOLS.find(item => item.slug === variant.baseToolSlug) : null;
+  const tool = variant
+    ? {
+        ...baseTool,
+        slug: variant.slug,
+        name: variant.name,
+        description: variant.description,
+        category: variant.category || baseTool?.category || 'Finance',
+        status: 'live',
+        isVariant: true,
+      }
+    : TOOLS.find(item => item.slug === slug);
+
+  const baseInfo = variant ? TOOL_CONTENT[variant.baseToolSlug] : null;
+  const info = variant
+    ? {
+        ...baseInfo,
+        title: variant.name,
+        metaDescription: variant.description,
+        intro: variant.intro,
+        h1: variant.name,
+        faq: variant.faq,
+      }
+    : TOOL_CONTENT[slug];
 
   if (!tool && SLUG_REDIRECTS[slug]) {
     return <Navigate to={`/tools/${SLUG_REDIRECTS[slug]}`} replace />;
   }
 
   if (!tool) {
-    return (
-      <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-900 p-10">
-        <Link to="/tools" className="text-accent-700 font-semibold">← Tools</Link>
-        <h1 className="text-2xl font-bold mt-8">Tool not found</h1>
-      </div>
-    );
+    return <NotFound />;
   }
 
   return (

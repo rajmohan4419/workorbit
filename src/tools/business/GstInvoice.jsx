@@ -1,8 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Building2, FileText } from 'lucide-react';
+import { Plus, Trash2, Download, Building2, FileText, Save, X, CheckCircle2 } from 'lucide-react';
 import { downloadBlob } from '../../lib/toolFormat';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { amountToWords, calcItem } from './gstInvoiceEngine';
+import { usePlan } from '../../lib/monetization/usePlan';
+import { PlanGate } from '../../components/monetization/PlanGate';
+import { trackExportClicked, trackInvoiceCreated } from '../../lib/analytics';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -574,6 +577,9 @@ export function GstInvoice() {
   const [buyerErrors, setBuyerErrors] = useState({});
   const [generating, setGenerating] = useState(false);
   const itemIdRef = useRef(2);
+  const { hasFeature } = usePlan();
+  const [gateFeature, setGateFeature] = useState(null);
+  const [saveMessage, setSaveMessage] = useState(null);
 
   // Persist seller to localStorage on change
   useEffect(() => {
@@ -645,16 +651,38 @@ export function GstInvoice() {
   }, []);
 
   const handleDownloadPDF = useCallback(async () => {
+    if (!hasFeature('advanced_exports')) {
+      setGateFeature('advanced_exports');
+      return;
+    }
     setGenerating(true);
     try {
       const blob = await generatePDF({ seller, buyer, meta, items, totals, notes, signatory, isInterState });
       downloadBlob(blob, 'orbitboard-gst-invoice.pdf');
+      trackExportClicked('pdf');
+      trackInvoiceCreated(meta.invoiceNumber);
     } catch (err) {
       console.error('PDF generation error:', err);
     } finally {
       setGenerating(false);
     }
-  }, [seller, buyer, meta, items, totals, notes, signatory, isInterState]);
+  }, [hasFeature, seller, buyer, meta, items, totals, notes, signatory, isInterState]);
+
+  const handleSaveWorkspace = useCallback(() => {
+    if (!hasFeature('saved_workspaces')) {
+      setGateFeature('saved_workspaces');
+      return;
+    }
+    try {
+      const workspace = { seller, buyer, meta, items, notes, signatory };
+      localStorage.setItem('orbitboard:saved-workspace-invoice', JSON.stringify(workspace));
+      trackInvoiceCreated(meta.invoiceNumber);
+      setSaveMessage('Invoice workspace saved to your account!');
+      setTimeout(() => setSaveMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to save workspace:', err);
+    }
+  }, [hasFeature, seller, buyer, meta, items, notes, signatory]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
@@ -669,13 +697,20 @@ export function GstInvoice() {
             <p className="text-xs text-gray-500">Indian GST compliant professional invoices</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowPreview(v => !v)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-sm font-medium hover:bg-indigo-100 transition-colors"
           >
             <FileText size={15} />
             {showPreview ? 'Hide' : 'Show'} Preview
+          </button>
+          <button
+            onClick={handleSaveWorkspace}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
+          >
+            <Save size={15} />
+            Save Workspace
           </button>
           <button
             onClick={handleDownloadPDF}
@@ -687,6 +722,13 @@ export function GstInvoice() {
           </button>
         </div>
       </div>
+
+      {saveMessage && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>{saveMessage}</span>
+        </div>
+      )}
 
       {/* ── Seller Details ── */}
       <SectionCard icon={Building2} title="Your Company / Seller Details">
@@ -936,6 +978,13 @@ export function GstInvoice() {
           {showPreview ? 'Hide Preview' : 'Show Live Preview'}
         </button>
         <button
+          onClick={handleSaveWorkspace}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
+        >
+          <Save size={15} />
+          Save Workspace
+        </button>
+        <button
           onClick={handleDownloadPDF}
           disabled={generating}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60"
@@ -959,6 +1008,23 @@ export function GstInvoice() {
             signatory={signatory}
             isInterState={isInterState}
           />
+        </div>
+      )}
+
+      {/* ── Upgrade Prompt Modal ── */}
+      {gateFeature && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg">
+            <button
+              type="button"
+              onClick={() => setGateFeature(null)}
+              className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition"
+              aria-label="Close upgrade prompt"
+            >
+              <X size={16} />
+            </button>
+            <PlanGate feature={gateFeature} />
+          </div>
         </div>
       )}
     </div>

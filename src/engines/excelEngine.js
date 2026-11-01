@@ -499,3 +499,37 @@ export function downloadSpreadsheetBlob(blob, filename) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Bulk / Batch Processing helper for multiple spreadsheet files or multi-sheet workbooks.
+ * Requires bulk_processing entitlement when invoked in user workflows.
+ */
+export async function processSpreadsheetBatch(files, options = {}) {
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error('At least one file is required for batch processing.');
+  }
+  const results = [];
+  const allRows = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const name = file?.name || `file_${i + 1}.xlsx`;
+    const parsed = await parseSpreadsheet(file, options);
+    let validation = null;
+    if (options.schema) {
+      validation = validateRows(parsed.rows, options.schema);
+    }
+    results.push({
+      filename: name,
+      rowCount: parsed.rowCount,
+      errors: validation?.errors || [],
+      sheetNames: parsed.sheetNames,
+    });
+    allRows.push(...parsed.rows);
+  }
+  return {
+    totalFiles: files.length,
+    totalRows: allRows.length,
+    results,
+    allRows,
+  };
+}

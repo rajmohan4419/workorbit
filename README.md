@@ -22,12 +22,27 @@ OrbitBoard is a utility-first platform providing free calculators, converters, P
 
 ## Local development
 
+### Prerequisites
+- Node.js (version 20+ recommended)
+- npm (version 10+)
+
+### Setup & Run
 ```bash
-npm install
+# Clean install matching package-lock.json
+npm ci
+
+# Start local development server (http://localhost:5173)
 npm run dev
 ```
 
-Open http://localhost:5173.
+### Verification & Testing
+```bash
+# Run unit and integration test suite
+npm test
+
+# Run ESLint checks
+npm run lint
+```
 
 ## Production build
 

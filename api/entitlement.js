@@ -36,11 +36,14 @@ export default async function handler(req, res) {
 
   try {
     const entitlement = await getActiveEntitlement(admin, user.id);
+    const planCode = entitlement?.plan_code || entitlement?.plan_id || null;
     res.writeHead(200, headers);
     res.end(JSON.stringify({
-      plan: entitlement?.plan_id || null,
+      plan: planCode,
+      plan_code: planCode,
       expires_at: entitlement?.current_period_end || null,
       cancel_at_period_end: entitlement?.cancel_at_period_end || false,
+      status: entitlement?.status || null,
     }));
   } catch (err) {
     console.error('[ENTITLEMENT ERROR]', err?.message || err);

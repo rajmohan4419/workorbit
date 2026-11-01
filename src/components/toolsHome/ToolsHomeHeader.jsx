@@ -45,6 +45,13 @@ export function ToolsHomeHeader({ visitorCount }) {
 
           {/* Announcements & Status Bar (Center & Right) */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link
+              to="/pricing"
+              className="px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold text-stone-700 dark:text-stone-200 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-stone-100 dark:hover:bg-stone-800 border border-transparent hover:border-[var(--orbit-border)] transition shrink-0"
+            >
+              Pricing
+            </Link>
+
             {/* Primary Announcement Pill */}
             <div className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-accent-200/80 dark:border-accent-800/80 bg-accent-50/70 dark:bg-accent-950/40 px-2.5 sm:px-3.5 py-1 text-[11px] sm:text-xs font-semibold text-accent-800 dark:text-accent-300 shadow-2xs truncate">
               <Sparkles size={13} className="shrink-0 text-accent-600 dark:text-accent-400" />

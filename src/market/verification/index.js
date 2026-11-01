@@ -1,7 +1,0 @@
-export {
-  VERIFICATION_STATUS,
-  VERIFICATION_DECISION,
-  DEFAULT_VERIFICATION_RULES,
-  assessVerification
-} from './verificationRules.js';
-export { verifyNewsEvidence, verificationSummary } from './verifier.js';

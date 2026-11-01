@@ -48,7 +48,63 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Only payment.captured changes state here. Other events are acknowledged.
+  // Handle subscription lifecycle events
+  if (event.event === 'subscription.activated' || event.event === 'subscription.charged') {
+    const subEntity = event?.payload?.subscription?.entity;
+    const subId = subEntity?.id;
+    if (subId) {
+      try {
+        const admin = requireAdmin();
+        const currentEnd = subEntity.current_end
+          ? new Date(subEntity.current_end * 1000).toISOString()
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        const currentStart = subEntity.current_start
+          ? new Date(subEntity.current_start * 1000).toISOString()
+          : new Date().toISOString();
+
+        await admin.from('user_subscriptions').update({
+          status: 'active',
+          current_period_start: currentStart,
+          current_period_end: currentEnd,
+          updated_at: new Date().toISOString(),
+        }).eq('razorpay_subscription_id', subId);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ received: true, accepted: true, subscription: subId }));
+        return;
+      } catch (err) {
+        console.error('[RAZORPAY WEBHOOK SUBSCRIPTION ERROR]', err?.message || err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Subscription update failed' }));
+        return;
+      }
+    }
+  }
+
+  if (event.event === 'subscription.cancelled' || event.event === 'subscription.halted') {
+    const subEntity = event?.payload?.subscription?.entity;
+    const subId = subEntity?.id;
+    if (subId) {
+      try {
+        const admin = requireAdmin();
+        await admin.from('user_subscriptions').update({
+          status: event.event === 'subscription.cancelled' ? 'cancelled' : 'halted',
+          updated_at: new Date().toISOString(),
+        }).eq('razorpay_subscription_id', subId);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ received: true, accepted: true, subscription: subId }));
+        return;
+      } catch (err) {
+        console.error('[RAZORPAY WEBHOOK SUBSCRIPTION ERROR]', err?.message || err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Subscription update failed' }));
+        return;
+      }
+    }
+  }
+
+  // Only payment.captured changes state for one-time payments. Other events are acknowledged.
   if (event.event !== 'payment.captured') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ received: true, ignored: event.event }));
