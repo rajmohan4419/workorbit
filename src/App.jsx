@@ -5,7 +5,6 @@ import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
 import { loadGoogleAnalytics } from './lib/analytics';
-
 const ToolsCatalogue = lazy(() => import('./pages/ToolsCatalogue'));
 const ToolPageRoute = lazy(() => import('./pages/ToolPageRoute'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
@@ -14,6 +13,9 @@ const AboutUs = lazy(() => import('./pages/AboutUs'));
 const ContactUs = lazy(() => import('./pages/ContactUs'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const BusinessAuth = lazy(() => import('./pages/BusinessPortal').then((m) => ({ default: m.BusinessAuth })));
+const BusinessOnboarding = lazy(() => import('./pages/BusinessPortal').then((m) => ({ default: m.BusinessOnboarding })));
+const BusinessDashboard = lazy(() => import('./pages/BusinessPortal').then((m) => ({ default: m.BusinessDashboard })));
 
 export default function App() {
   return (
@@ -28,6 +30,10 @@ export default function App() {
             <Route path="/" element={<ToolsHome />} />
             <Route path="/tools" element={<ToolsCatalogue />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/business/signup" element={<BusinessAuth mode="signup" />} />
+            <Route path="/business/login" element={<BusinessAuth mode="login" />} />
+            <Route path="/business/onboarding" element={<BusinessOnboarding />} />
+            <Route path="/business/dashboard" element={<BusinessDashboard />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/about" element={<AboutUs />} />
