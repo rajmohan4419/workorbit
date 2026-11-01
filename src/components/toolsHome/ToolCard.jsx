@@ -10,12 +10,12 @@ export function ResultRow({ tool, onUse, compact = false, favorite = false, onFa
         <ToolVisual tool={tool} compact />
         <div className="min-w-0">
           <div className="font-semibold text-sm text-stone-900 dark:text-stone-100 group-hover:text-accent-700 dark:group-hover:text-accent-400 truncate">{tool.name}</div>
-          {!compact && <div className="mt-0.5 text-xs text-stone-500 dark:text-stone-400 truncate">{tool.description}</div>}
+          {!compact && <div className="mt-0.5 text-xs text-stone-600 dark:text-stone-300 truncate">{tool.description}</div>}
         </div>
-        <ArrowRight size={15} className="shrink-0 text-stone-400 group-hover:text-accent-700 dark:group-hover:text-accent-400" />
+        <ArrowRight size={15} className="shrink-0 text-stone-500 dark:text-stone-400 group-hover:text-accent-700 dark:group-hover:text-accent-400" />
       </Link>
       {onFavorite && (
-        <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 min-h-[44px] min-w-[44px] text-stone-400 hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-accent-500 flex items-center justify-center">
+        <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={() => onFavorite(tool.slug)} className="rounded-lg p-2 min-h-[44px] min-w-[44px] text-stone-500 dark:text-stone-400 hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-accent-500 flex items-center justify-center">
           <Star size={16} fill={favorite ? 'currentColor' : 'none'} />
         </button>
       )}
@@ -70,7 +70,7 @@ export function ToolCard({ tool, favorite, onFavorite, onUse }) {
               <h2 className="mt-1 text-lg font-bold text-stone-900 dark:text-stone-100 group-hover:text-accent-700 dark:group-hover:text-accent-400">{tool.name}</h2>
             </div>
             {onFavorite && (
-              <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e => { e.preventDefault(); e.stopPropagation(); onFavorite(tool.slug); }} className="rounded-lg p-2 min-h-[44px] min-w-[44px] text-stone-400 hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-accent-500 flex items-center justify-center">
+              <button type="button" aria-label={favorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`} aria-pressed={favorite} onClick={e => { e.preventDefault(); e.stopPropagation(); onFavorite(tool.slug); }} className="rounded-lg p-2 min-h-[44px] min-w-[44px] text-stone-500 dark:text-stone-400 hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-accent-500 flex items-center justify-center">
                 <Star size={17} fill={favorite ? 'currentColor' : 'none'} />
               </button>
             )}

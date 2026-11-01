@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" as="image" href="/images/orbitboard-hero.svg" type="image/svg+xml" fetchpriority="high" />
+
+    <!-- Preconnect to critical third-party origins (max 4 per Lighthouse guidance) -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
+    <link rel="preconnect" href="https://checkout.razorpay.com" />
+
+    <!-- Agentic Resource Discovery (ARD) -->
+    <link rel="ard" href="/.well-known/ard.json" type="application/json" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#4F46E5" media="(prefers-color-scheme: light)" />

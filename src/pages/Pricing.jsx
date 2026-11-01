@@ -319,7 +319,7 @@ export default function Pricing() {
                     )}
 
                     <h3 className="text-xl font-bold text-stone-900 dark:text-stone-100">{tier.name}</h3>
-                    <p className="mt-2 text-xs text-stone-500 dark:text-stone-400 leading-relaxed min-h-[36px]">
+                    <p className="mt-2 text-xs text-stone-600 dark:text-stone-300 leading-relaxed min-h-[36px]">
                       {tier.description}
                     </p>
 
@@ -327,7 +327,7 @@ export default function Pricing() {
                       <span className="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-stone-100">
                         {tier.priceDisplay}
                       </span>
-                      <span className="text-xs text-stone-500 dark:text-stone-400 font-medium">
+                      <span className="text-xs text-stone-600 dark:text-stone-300 font-medium">
                         {tier.periodDisplay}
                       </span>
                       {tier.savingsPill && (
@@ -338,8 +338,8 @@ export default function Pricing() {
                     </div>
 
                     <div className="mt-8 space-y-3">
-                      <p className="text-xs font-bold uppercase tracking-wider text-stone-400">Included Features</p>
-                      <ul className="space-y-2.5 text-xs text-stone-600 dark:text-stone-300">
+                      <p className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">Included Features</p>
+                      <ul className="space-y-2.5 text-xs text-stone-700 dark:text-stone-200">
                         {tier.features.map((feat) => (
                           <li key={feat} className="flex items-start gap-2">
                             <Check size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -350,11 +350,11 @@ export default function Pricing() {
 
                       {tier.limitations.length > 0 && (
                         <div className="pt-4 border-t border-[var(--orbit-border)] space-y-2">
-                          <p className="text-xs font-bold uppercase tracking-wider text-stone-400">Not Included</p>
-                          <ul className="space-y-1.5 text-xs text-stone-400">
+                          <p className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">Not Included</p>
+                          <ul className="space-y-1.5 text-xs text-stone-600 dark:text-stone-400">
                             {tier.limitations.map((lim) => (
-                              <li key={lim} className="flex items-start gap-2 opacity-75">
-                                <span className="text-stone-300 dark:text-stone-600">•</span>
+                              <li key={lim} className="flex items-start gap-2">
+                                <span className="text-stone-400 dark:text-stone-500">•</span>
                                 <span>{lim}</span>
                               </li>
                             ))}

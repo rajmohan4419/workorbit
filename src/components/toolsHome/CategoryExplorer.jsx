@@ -27,7 +27,7 @@ export function CategoryExplorer({ query, category, chooseCategory, setCategory,
         >
           <ChevronLeft size={15} /> Back to all categories
         </button>
-        <span className="shrink-0 text-xs font-medium text-stone-500 dark:text-stone-400">
+        <span className="shrink-0 text-xs font-semibold text-stone-700 dark:text-stone-300">
           {categoryTools.length} tools in {meta.label}
         </span>
       </div>

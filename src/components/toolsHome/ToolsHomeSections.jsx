@@ -167,7 +167,7 @@ export function ToolsHomeFooter() {
             <Link to="/" className="text-lg font-black tracking-tight text-stone-900 dark:text-stone-100">
               ORBIT<span className="text-accent-600 dark:text-accent-400">BOARD</span>
             </Link>
-            <p className="mt-2 text-xs leading-5 text-stone-500 dark:text-stone-400">
+            <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
               Free, fast, and privacy-first web utilities designed for daily work, career decisions, and developer efficiency.
             </p>
             <div className="mt-4">
@@ -186,7 +186,7 @@ export function ToolsHomeFooter() {
           <details className="group rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4">
             <summary className="flex items-center justify-between cursor-pointer font-bold text-sm text-stone-900 dark:text-stone-100 list-none min-h-[44px]">
               <span>Popular Utilities</span>
-              <ChevronDown size={18} className="transition group-open:rotate-180 text-stone-400" />
+              <ChevronDown size={18} className="transition group-open:rotate-180 text-stone-600 dark:text-stone-300" />
             </summary>
             <ul className="mt-3 space-y-2 text-sm border-t border-[var(--orbit-border)] pt-3">
               {popularLinks.map(link => (
@@ -202,7 +202,7 @@ export function ToolsHomeFooter() {
           <details className="group rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4">
             <summary className="flex items-center justify-between cursor-pointer font-bold text-sm text-stone-900 dark:text-stone-100 list-none min-h-[44px]">
               <span>Categories</span>
-              <ChevronDown size={18} className="transition group-open:rotate-180 text-stone-400" />
+              <ChevronDown size={18} className="transition group-open:rotate-180 text-stone-600 dark:text-stone-300" />
             </summary>
             <ul className="mt-3 space-y-2 text-sm border-t border-[var(--orbit-border)] pt-3">
               {categoryLinks.map(link => (
@@ -217,7 +217,7 @@ export function ToolsHomeFooter() {
 
           {/* Reachable Utility Links on Mobile */}
           <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4">
-            <p className="font-bold text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-3">Utility Links</p>
+            <p className="font-bold text-xs uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-3">Utility Links</p>
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
               {utilityLinks.map(link => (
                 link.action ? (
@@ -244,7 +244,7 @@ export function ToolsHomeFooter() {
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="pt-6 border-t border-[var(--orbit-border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400">
+        <div className="pt-6 border-t border-[var(--orbit-border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-600 dark:text-stone-300">
           <span>© {new Date().getFullYear()} OrbitBoard • Practical browser tools for modern work.</span>
           <span>Designed with speed and privacy in mind.</span>
         </div>

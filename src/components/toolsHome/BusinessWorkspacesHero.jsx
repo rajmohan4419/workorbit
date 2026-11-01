@@ -85,7 +85,7 @@ export function BusinessWorkspacesHero() {
           </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300">
           <ShieldCheck size={14} className="text-emerald-500" />
           <span>Zero server upload • 100% private</span>
         </div>
@@ -114,13 +114,13 @@ export function BusinessWorkspacesHero() {
                 <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors">
                   {item.title}
                 </h3>
-                <p className="mt-1.5 text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-3">
+                <p className="mt-1.5 text-xs text-stone-600 dark:text-stone-300 leading-relaxed line-clamp-3">
                   {item.task}
                 </p>
               </div>
 
               <div className="mt-4 pt-3 border-t border-[var(--orbit-border)] flex items-center justify-between text-xs">
-                <span className="text-[11px] font-medium text-stone-400 dark:text-stone-500">
+                <span className="text-[11px] font-medium text-stone-600 dark:text-stone-300">
                   {item.metrics}
                 </span>
                 <span className="inline-flex items-center gap-1 font-bold text-accent-600 dark:text-accent-400 group-hover:translate-x-0.5 transition-transform">

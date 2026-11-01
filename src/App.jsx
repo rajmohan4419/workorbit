@@ -1,18 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { InstallPrompt } from './components/InstallPrompt';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
-import ToolsCatalogue from './pages/ToolsCatalogue';
-import ToolPageRoute from './pages/ToolPageRoute';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
 import { loadGoogleAnalytics } from './lib/analytics';
-import Pricing from './pages/Pricing';
-import NotFound from './pages/NotFound';
+
+const ToolsCatalogue = lazy(() => import('./pages/ToolsCatalogue'));
+const ToolPageRoute = lazy(() => import('./pages/ToolPageRoute'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
   return (
@@ -22,17 +23,19 @@ export default function App() {
         <InstallPrompt />
         <CookieConsentBanner />
         <GlobalPreviewModal />
-        <Routes>
-          <Route path="/" element={<ToolsHome />} />
-          <Route path="/tools" element={<ToolsCatalogue />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route path="/tools/:slug" element={<ToolPageRoute />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<div className="min-h-screen bg-[var(--orbit-canvas)]" />}>
+          <Routes>
+            <Route path="/" element={<ToolsHome />} />
+            <Route path="/tools" element={<ToolsCatalogue />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/tools/:slug" element={<ToolPageRoute />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
     </BrowserRouter>
   );
 }
