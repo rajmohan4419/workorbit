@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/prerender-tools.mjs",
+    "generate:variants": "node --experimental-strip-types scripts/generate-tool-variants.ts",
+    "build": "node --experimental-strip-types scripts/generate-tool-variants.ts && vite build && node scripts/prerender-tools.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"

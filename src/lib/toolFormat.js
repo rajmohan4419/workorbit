@@ -4,6 +4,41 @@ export const money = n => new Intl.NumberFormat('en-IN', { maximumFractionDigits
 export const num = v => Math.max(0, Number(v) || 0);
 
 /**
+ * Standard comma-separated Indian currency format: e.g. "₹ 1,50,000"
+ */
+export const formatINR = (n, decimals = 0) => {
+  const numVal = Number(n);
+  if (isNaN(numVal)) return '₹ 0';
+  const isNeg = numVal < 0;
+  const absVal = Math.abs(numVal);
+  const formatted = absVal.toLocaleString('en-IN', {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
+  });
+  return `${isNeg ? '- ' : ''}₹ ${formatted}`;
+};
+
+/**
+ * Compact Indian denomination for large numbers: e.g. "10 Lakh", "1.5 Crore"
+ */
+export function formatIndianDenomination(numVal) {
+  const val = Number(numVal || 0);
+  if (isNaN(val)) return '0';
+  const isNeg = val < 0;
+  const absVal = Math.abs(val);
+
+  let formatted;
+  if (absVal >= 10000000) {
+    formatted = `${parseFloat((absVal / 10000000).toFixed(2))} Crore`;
+  } else if (absVal >= 100000) {
+    formatted = `${parseFloat((absVal / 100000).toFixed(2))} Lakh`;
+  } else {
+    formatted = absVal.toLocaleString('en-IN');
+  }
+  return isNeg ? `-${formatted}` : formatted;
+}
+
+/**
  * Ensures all downloads strictly conform to the pattern:
  * orbitboard-<toolslug>.<format>
  */

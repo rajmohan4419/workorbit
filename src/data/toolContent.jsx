@@ -1164,5 +1164,150 @@ export const TOOL_CONTENT = {
         </p>
       </div>
     )
+  },
+  'payslip-generator': {
+    title: 'Payslip Generator Online | Download Free Salary Slip PDF & Excel',
+    h1: 'Payslip Generator India',
+    metaDescription: 'Generate professional employee salary payslips with accurate Basic, HRA, PF, ESI, Professional Tax, and TDS calculations. Free instant PDF and Excel download.',
+    intro: 'Generate professional monthly employee salary payslips with accurate statutory breakdowns and download as PDF and Excel.',
+    keywords: 'payslip generator India, salary slip download PDF, salary voucher maker, payslip calculator Excel, employee pay slip online',
+    how: [
+      'Enter employer metadata (Company Name, Address, Pay Period).',
+      'Fill in employee information (Name, ID, Designation, PAN, UAN, Bank Account).',
+      'Specify annual CTC or monthly gross pay, Basic %, and attendance paid days.',
+      'Configure statutory options (Cap EPF, Person with Disability, Tax Regime).',
+      'Review the live payslip voucher and export to PDF or Excel with 1-click.'
+    ],
+    faq: [
+      ['How is Basic salary calculated from CTC?', 'Basic salary is typically structured as 40% to 50% of monthly gross or CTC, complying with statutory norms.'],
+      ['Is employee EPF capped at ₹1,800?', 'Yes. Under the EPF Act, mandatory employee EPF is capped at 12% of the ₹15,000 statutory wage ceiling (₹1,800/month) unless an employer opts for uncapped contributions.'],
+      ['When does ESI deduction apply on a payslip?', 'ESI applies to employees whose monthly gross salary is ₹21,000 or below (₹25,000 for employees with disabilities). The employee share is 0.75% and employer share is 3.25%.'],
+      ['Can I export the payslip to both PDF and Excel?', 'Yes. OrbitBoard generates formatted corporate PDF salary vouchers using pdf-lib and structured spreadsheets via SheetJS XLSX.'],
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Indian Payroll Structure & Statutory Compliance</h2>
+        <p>
+          Creating an accurate monthly salary slip requires balancing earnings components (Basic Pay, HRA, Special Allowance) with mandatory statutory withholdings under Indian labor laws.
+        </p>
+        <p>
+          Key statutory deductions include Employees Provident Fund (EPF) under the EPFO guidelines, Employees State Insurance (ESI) under the ESIC Act, Professional Tax (PT) according to state-specific slabs (such as Karnataka’s ₹200/month above ₹25,000 gross), and Tax Deducted at Source (TDS) under Section 192 of the Income Tax Act.
+        </p>
+      </div>
+    )
+  },
+  'gstr-2b-reconciliation': {
+    title: 'GSTR-2B vs Purchase Register Reconciliation Online | Free ITC Matching Tool',
+    h1: 'GSTR-2B vs Purchase Register Reconciliation Tool',
+    metaDescription: 'Reconcile your GST portal GSTR-2B against your internal purchase register. Match invoices on GSTIN, invoice number, and taxable value to pinpoint eligible, at-risk, and unclaimed ITC.',
+    intro: 'Reconcile GST portal GSTR-2B filing data against your internal purchase register to claim 100% eligible Input Tax Credit and prevent tax notices.',
+    keywords: 'GSTR 2B reconciliation tool, purchase register reconciliation Excel, GST ITC matching India, GSTR 2B vs books, GST ITC audit tool',
+    how: [
+      'Upload your GSTR-2B filing (CSV or XLSX) downloaded from the GST Portal.',
+      'Upload your internal Purchase Register (CSV or XLSX) exported from Tally, Zoho, or SAP.',
+      'Select match tolerance (default ₹1.00 for rounding differences).',
+      'Review audit KPI cards: Matched ITC, Value Mismatches, At-Risk ITC (Books only), and Unclaimed ITC (2B only).',
+      'Export the complete multi-sheet reconciliation audit report to Excel.'
+    ],
+    faq: [
+      ['Why is GSTR-2B reconciliation mandatory under GST?', 'Under Rule 36(4) and Section 16(2)(aa) of the CGST Act, a taxpayer can only claim Input Tax Credit if the supplier has filed GSTR-1 and the invoice appears in the recipient’s auto-drafted GSTR-2B statement.'],
+      ['What is the difference between "In Books Only" and "In 2B Only"?', '"In Books Only" means your purchase register recorded an invoice, but the vendor has not uploaded it to the GST portal (ITC at risk). "In 2B Only" means the vendor reported an invoice that your accounting team has not yet recorded (unclaimed ITC).'],
+      ['How does the tool handle invoice numbering differences?', 'The reconciliation engine normalizes invoice numbers by stripping slashes, hyphens, spaces, and leading zeros to eliminate common formatting discrepancies.'],
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Automating GST ITC Reconciliation</h2>
+        <p>
+          Input Tax Credit (ITC) matching is one of the highest-friction compliance requirements for Indian businesses. Manual comparison in Excel between GSTR-2B and purchase registers often leads to missed claims or ineligible claims resulting in GST notices under Section 73/74.
+        </p>
+        <p>
+          OrbitBoard performs high-speed client-side reconciliation using a multi-pass matching pipeline, ensuring your business claims every rupee of valid ITC while flagging vendor compliance defaults before filing GSTR-3B.
+        </p>
+      </div>
+    )
+  },
+  'tds-calculator-india': {
+    title: 'TDS Calculator India (FY 2025-26 & FY 2026-27) | Section 192, 194C, 194J, 194I',
+    h1: 'TDS Calculator India',
+    metaDescription: 'Calculate Tax Deducted at Source (TDS) under Sections 192, 194A, 194C, 194H, 194I, 194J with Section 206AA penal rate checks. Updated for FY 2025-26 and FY 2026-27.',
+    intro: 'Calculate Tax Deducted at Source (TDS) across key commercial and professional sections with statutory thresholds and Section 206AA PAN verification.',
+    keywords: 'TDS calculator India, TDS rates FY 2025-26, Section 194C TDS, Section 194J TDS, Section 194I rent TDS, Section 206AA TDS rate',
+    how: [
+      'Select the applicable TDS section (e.g. 194C for contractors, 194J for professionals, 194I for rent).',
+      'Enter the gross transaction or invoice amount in Rupees.',
+      'Specify deductee parameters such as entity type (Individual vs Company) or asset type.',
+      'Verify whether a valid PAN is provided to avoid Section 206AA higher withholding.',
+      'Review the computed TDS amount, net payable amount, challan code, and statutory due dates.'
+    ],
+    faq: [
+      ['What happens if a payee does not provide a valid PAN?', 'Under Section 206AA of the Income Tax Act, if the deductee fails to furnish a valid PAN, TDS must be deducted at a higher flat rate of 20% (or the applicable rate, whichever is higher).'],
+      ['What are the TDS threshold limits for Section 194C and 194J?', 'Section 194C has a single bill threshold of ₹30,000 (aggregate ₹1,00,000 per FY). Section 194J has an annual threshold of ₹30,000 for professional and technical services.'],
+      ['What is the due date for depositing TDS with the government?', 'TDS deducted in any month must be deposited by the 7th of the following month using Challan ITNS 281 (except for deductions in March, which can be deposited up to 30th April).'],
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Understanding Withholding Tax (TDS) in India</h2>
+        <p>
+          Tax Deducted at Source (TDS) is a mechanism introduced by the Indian Income Tax Department to collect tax directly at the source of income. Any person or business making specified payments (such as salary, contractor charges, rent, or professional fees) is required to deduct a statutory percentage before disbursing payment to the payee.
+        </p>
+      </div>
+    )
+  },
+  'pf-and-esi-calculator': {
+    title: 'PF and ESI Calculator Online | Calculate EPF, EPS, EDLI & ESI Contributions',
+    h1: 'PF and ESI Statutory Calculator',
+    metaDescription: 'Calculate EPF, EPS, EDLI, and ESI employee deductions and employer contributions with statutory wage ceilings. Table-driven configuration for Indian payroll compliance.',
+    intro: 'Compute employee deductions and employer statutory overheads for EPF, EPS, EDLI, and ESI under statutory wage ceilings.',
+    keywords: 'PF and ESI calculator India, EPF employer contribution calculator, EPS 1250 cap, ESI 21000 wage ceiling, statutory payroll calculator',
+    how: [
+      'Enter monthly Basic Salary + Dearness Allowance (EPF eligible wage).',
+      'Enter total monthly Gross Salary to assess ESI applicability.',
+      'Choose whether to cap EPF at the statutory wage limit of ₹15,000/month.',
+      'Select whether the employee is covered under disability provisions (₹25,000 ESI ceiling).',
+      'Review the complete employee deduction and employer contribution breakdown.'
+    ],
+    faq: [
+      ['How is employer EPF divided between EPF and EPS?', 'Out of the employer’s 12% contribution, 8.33% is directed to the Employees Pension Scheme (EPS) capped at ₹1,250/month on the ₹15,000 wage ceiling. The remaining 3.67% goes into the EPF fund.'],
+      ['What is EDLI in PF calculation?', 'The Employees’ Deposit Linked Insurance (EDLI) scheme provides life insurance coverage to EPF members. Employers contribute 0.5% of basic wages, capped at ₹75/month.'],
+      ['Is ESI mandatory for all private sector employees?', 'ESI is mandatory only for establishments covered under the ESI Act for employees whose gross monthly wage is ₹21,000 or below (₹25,000 for employees with physical disabilities).'],
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Statutory Social Security Framework in India</h2>
+        <p>
+          The Employees Provident Fund Organization (EPFO) and Employees State Insurance Corporation (ESIC) form the twin pillars of social security for formal sector workers in India.
+        </p>
+        <p>
+          Accurately determining contributions requires adhering to statutory wage ceilings: EPF wages capped at ₹15,000/month yield a maximum employee contribution of ₹1,800/month and an employer EPS pension contribution of ₹1,250/month.
+        </p>
+      </div>
+    )
+  },
+  'salary-sheet-excel': {
+    title: 'Salary Sheet (Excel) Generator | Monthly Team Payroll Register with XLSX Export',
+    h1: 'Monthly Salary Sheet (Excel) Generator',
+    metaDescription: 'Generate monthly team payroll salary registers with attendance day proration, EPF, ESI, PT, and TDS calculations. Export structured XLSX spreadsheets instantly.',
+    intro: 'Generate complete monthly payroll salary sheets for your team with attendance day proration, statutory deductions, and instant XLSX spreadsheet export.',
+    keywords: 'salary sheet excel generator, team payroll sheet template, monthly salary register India, payroll attendance proration, bulk salary sheet XLSX',
+    how: [
+      'Set company name, pay period (e.g. October 2026), and total calendar days in the month.',
+      'Add or modify team members with base gross salary and actual attendance/paid days.',
+      'Toggle statutory options per employee (EPF participation, TDS withholding).',
+      'Review automatic proration of gross earnings and computed EPF, ESI, PT deductions.',
+      'Click "Export XLSX" to download a clean, multi-column payroll spreadsheet formatted for Excel.'
+    ],
+    faq: [
+      ['How does attendance proration work in the salary sheet?', 'Proration factor equals Paid Days divided by Month Days. Each employee’s gross salary, basic wage, and allowances are multiplied by this ratio to compute exact earned compensation.'],
+      ['Can I add or remove employees dynamically?', 'Yes. You can add new employee rows, customize their wage and attendance inputs, or delete rows in real time.'],
+      ['Does the Excel export include summary total rows?', 'Yes. The downloaded XLSX file includes company metadata headers, employee line items, and a bold aggregate footer row for total gross, deductions, and net disbursed payout.'],
+    ],
+    article: (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Managing Team Payroll & Salary Registers</h2>
+        <p>
+          Every organization in India is required to maintain a monthly salary register under the Payment of Wages Act and state labor welfare rules. A standardized salary sheet records employee attendance, earned wages, statutory deductions, and net take-home disbursals.
+        </p>
+      </div>
+    )
   }
 };

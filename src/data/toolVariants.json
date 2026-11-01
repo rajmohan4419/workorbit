@@ -1,0 +1,1090 @@
+[
+  {
+    "slug": "emi-calculator-10-lakh-10-years",
+    "baseToolSlug": "emi",
+    "name": "₹10 Lakh Loan EMI Calculator (10 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹10 Lakh at 8.5% for 10 years. Monthly EMI is ₹12,399, total interest ₹4,87,880.",
+    "params": {
+      "principal": 1000000,
+      "tenureYears": 10,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹10 Lakh at an interest rate of 8.5% per annum over a tenure of 10 years (120 months), your monthly EMI is ₹12,399. Over the entire loan term, you will pay a total interest of ₹4,87,880, bringing the cumulative repayment to ₹14,87,880.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹10 Lakh loan for 10 years at 8.5%?",
+        "The monthly EMI for a principal of ₹10 Lakh at 8.5% annual interest rate over a 10-year term is ₹12,399 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹10 Lakh loan over 10 years?",
+        "Over 10 years (120 monthly installments), the total interest payable is ₹4,87,880, which represents 48.8% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹10 Lakh over 10 years?",
+        "The total repayment amount is ₹14,87,880, which includes the original principal of ₹10 Lakh plus total interest of ₹4,87,880."
+      ],
+      [
+        "Can I prepay or foreclose this ₹10 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 12399,
+      "totalInterest": 487880,
+      "totalRepayment": 1487880,
+      "tenureMonths": 120
+    }
+  },
+  {
+    "slug": "emi-calculator-10-lakh-15-years",
+    "baseToolSlug": "emi",
+    "name": "₹10 Lakh Loan EMI Calculator (15 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹10 Lakh at 8.5% for 15 years. Monthly EMI is ₹9,847, total interest ₹7,72,460.",
+    "params": {
+      "principal": 1000000,
+      "tenureYears": 15,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹10 Lakh at an interest rate of 8.5% per annum over a tenure of 15 years (180 months), your monthly EMI is ₹9,847. Over the entire loan term, you will pay a total interest of ₹7,72,460, bringing the cumulative repayment to ₹17,72,460.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹10 Lakh loan for 15 years at 8.5%?",
+        "The monthly EMI for a principal of ₹10 Lakh at 8.5% annual interest rate over a 15-year term is ₹9,847 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹10 Lakh loan over 15 years?",
+        "Over 15 years (180 monthly installments), the total interest payable is ₹7,72,460, which represents 77.2% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹10 Lakh over 15 years?",
+        "The total repayment amount is ₹17,72,460, which includes the original principal of ₹10 Lakh plus total interest of ₹7,72,460."
+      ],
+      [
+        "Can I prepay or foreclose this ₹10 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 9847,
+      "totalInterest": 772460,
+      "totalRepayment": 1772460,
+      "tenureMonths": 180
+    }
+  },
+  {
+    "slug": "emi-calculator-10-lakh-20-years",
+    "baseToolSlug": "emi",
+    "name": "₹10 Lakh Loan EMI Calculator (20 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹10 Lakh at 8.5% for 20 years. Monthly EMI is ₹8,678, total interest ₹10,82,720.",
+    "params": {
+      "principal": 1000000,
+      "tenureYears": 20,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹10 Lakh at an interest rate of 8.5% per annum over a tenure of 20 years (240 months), your monthly EMI is ₹8,678. Over the entire loan term, you will pay a total interest of ₹10,82,720, bringing the cumulative repayment to ₹20,82,720.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹10 Lakh loan for 20 years at 8.5%?",
+        "The monthly EMI for a principal of ₹10 Lakh at 8.5% annual interest rate over a 20-year term is ₹8,678 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹10 Lakh loan over 20 years?",
+        "Over 20 years (240 monthly installments), the total interest payable is ₹10,82,720, which represents 108.3% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹10 Lakh over 20 years?",
+        "The total repayment amount is ₹20,82,720, which includes the original principal of ₹10 Lakh plus total interest of ₹10,82,720."
+      ],
+      [
+        "Can I prepay or foreclose this ₹10 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 8678,
+      "totalInterest": 1082720,
+      "totalRepayment": 2082720,
+      "tenureMonths": 240
+    }
+  },
+  {
+    "slug": "emi-calculator-10-lakh-25-years",
+    "baseToolSlug": "emi",
+    "name": "₹10 Lakh Loan EMI Calculator (25 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹10 Lakh at 8.5% for 25 years. Monthly EMI is ₹8,052, total interest ₹14,15,600.",
+    "params": {
+      "principal": 1000000,
+      "tenureYears": 25,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹10 Lakh at an interest rate of 8.5% per annum over a tenure of 25 years (300 months), your monthly EMI is ₹8,052. Over the entire loan term, you will pay a total interest of ₹14,15,600, bringing the cumulative repayment to ₹24,15,600.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹10 Lakh loan for 25 years at 8.5%?",
+        "The monthly EMI for a principal of ₹10 Lakh at 8.5% annual interest rate over a 25-year term is ₹8,052 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹10 Lakh loan over 25 years?",
+        "Over 25 years (300 monthly installments), the total interest payable is ₹14,15,600, which represents 141.6% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹10 Lakh over 25 years?",
+        "The total repayment amount is ₹24,15,600, which includes the original principal of ₹10 Lakh plus total interest of ₹14,15,600."
+      ],
+      [
+        "Can I prepay or foreclose this ₹10 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 8052,
+      "totalInterest": 1415600,
+      "totalRepayment": 2415600,
+      "tenureMonths": 300
+    }
+  },
+  {
+    "slug": "emi-calculator-25-lakh-10-years",
+    "baseToolSlug": "emi",
+    "name": "₹25 Lakh Loan EMI Calculator (10 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹25 Lakh at 8.5% for 10 years. Monthly EMI is ₹30,996, total interest ₹12,19,520.",
+    "params": {
+      "principal": 2500000,
+      "tenureYears": 10,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹25 Lakh at an interest rate of 8.5% per annum over a tenure of 10 years (120 months), your monthly EMI is ₹30,996. Over the entire loan term, you will pay a total interest of ₹12,19,520, bringing the cumulative repayment to ₹37,19,520.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹25 Lakh loan for 10 years at 8.5%?",
+        "The monthly EMI for a principal of ₹25 Lakh at 8.5% annual interest rate over a 10-year term is ₹30,996 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹25 Lakh loan over 10 years?",
+        "Over 10 years (120 monthly installments), the total interest payable is ₹12,19,520, which represents 48.8% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹25 Lakh over 10 years?",
+        "The total repayment amount is ₹37,19,520, which includes the original principal of ₹25 Lakh plus total interest of ₹12,19,520."
+      ],
+      [
+        "Can I prepay or foreclose this ₹25 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 30996,
+      "totalInterest": 1219520,
+      "totalRepayment": 3719520,
+      "tenureMonths": 120
+    }
+  },
+  {
+    "slug": "emi-calculator-25-lakh-15-years",
+    "baseToolSlug": "emi",
+    "name": "₹25 Lakh Loan EMI Calculator (15 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹25 Lakh at 8.5% for 15 years. Monthly EMI is ₹24,618, total interest ₹19,31,240.",
+    "params": {
+      "principal": 2500000,
+      "tenureYears": 15,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹25 Lakh at an interest rate of 8.5% per annum over a tenure of 15 years (180 months), your monthly EMI is ₹24,618. Over the entire loan term, you will pay a total interest of ₹19,31,240, bringing the cumulative repayment to ₹44,31,240.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹25 Lakh loan for 15 years at 8.5%?",
+        "The monthly EMI for a principal of ₹25 Lakh at 8.5% annual interest rate over a 15-year term is ₹24,618 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹25 Lakh loan over 15 years?",
+        "Over 15 years (180 monthly installments), the total interest payable is ₹19,31,240, which represents 77.2% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹25 Lakh over 15 years?",
+        "The total repayment amount is ₹44,31,240, which includes the original principal of ₹25 Lakh plus total interest of ₹19,31,240."
+      ],
+      [
+        "Can I prepay or foreclose this ₹25 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 24618,
+      "totalInterest": 1931240,
+      "totalRepayment": 4431240,
+      "tenureMonths": 180
+    }
+  },
+  {
+    "slug": "emi-calculator-25-lakh-20-years",
+    "baseToolSlug": "emi",
+    "name": "₹25 Lakh Loan EMI Calculator (20 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹25 Lakh at 8.5% for 20 years. Monthly EMI is ₹21,696, total interest ₹27,07,040.",
+    "params": {
+      "principal": 2500000,
+      "tenureYears": 20,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹25 Lakh at an interest rate of 8.5% per annum over a tenure of 20 years (240 months), your monthly EMI is ₹21,696. Over the entire loan term, you will pay a total interest of ₹27,07,040, bringing the cumulative repayment to ₹52,07,040.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹25 Lakh loan for 20 years at 8.5%?",
+        "The monthly EMI for a principal of ₹25 Lakh at 8.5% annual interest rate over a 20-year term is ₹21,696 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹25 Lakh loan over 20 years?",
+        "Over 20 years (240 monthly installments), the total interest payable is ₹27,07,040, which represents 108.3% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹25 Lakh over 20 years?",
+        "The total repayment amount is ₹52,07,040, which includes the original principal of ₹25 Lakh plus total interest of ₹27,07,040."
+      ],
+      [
+        "Can I prepay or foreclose this ₹25 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 21696,
+      "totalInterest": 2707040,
+      "totalRepayment": 5207040,
+      "tenureMonths": 240
+    }
+  },
+  {
+    "slug": "emi-calculator-25-lakh-25-years",
+    "baseToolSlug": "emi",
+    "name": "₹25 Lakh Loan EMI Calculator (25 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹25 Lakh at 8.5% for 25 years. Monthly EMI is ₹20,131, total interest ₹35,39,300.",
+    "params": {
+      "principal": 2500000,
+      "tenureYears": 25,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹25 Lakh at an interest rate of 8.5% per annum over a tenure of 25 years (300 months), your monthly EMI is ₹20,131. Over the entire loan term, you will pay a total interest of ₹35,39,300, bringing the cumulative repayment to ₹60,39,300.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹25 Lakh loan for 25 years at 8.5%?",
+        "The monthly EMI for a principal of ₹25 Lakh at 8.5% annual interest rate over a 25-year term is ₹20,131 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹25 Lakh loan over 25 years?",
+        "Over 25 years (300 monthly installments), the total interest payable is ₹35,39,300, which represents 141.6% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹25 Lakh over 25 years?",
+        "The total repayment amount is ₹60,39,300, which includes the original principal of ₹25 Lakh plus total interest of ₹35,39,300."
+      ],
+      [
+        "Can I prepay or foreclose this ₹25 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 20131,
+      "totalInterest": 3539300,
+      "totalRepayment": 6039300,
+      "tenureMonths": 300
+    }
+  },
+  {
+    "slug": "emi-calculator-50-lakh-10-years",
+    "baseToolSlug": "emi",
+    "name": "₹50 Lakh Loan EMI Calculator (10 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹50 Lakh at 8.5% for 10 years. Monthly EMI is ₹61,993, total interest ₹24,39,160.",
+    "params": {
+      "principal": 5000000,
+      "tenureYears": 10,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹50 Lakh at an interest rate of 8.5% per annum over a tenure of 10 years (120 months), your monthly EMI is ₹61,993. Over the entire loan term, you will pay a total interest of ₹24,39,160, bringing the cumulative repayment to ₹74,39,160.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹50 Lakh loan for 10 years at 8.5%?",
+        "The monthly EMI for a principal of ₹50 Lakh at 8.5% annual interest rate over a 10-year term is ₹61,993 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹50 Lakh loan over 10 years?",
+        "Over 10 years (120 monthly installments), the total interest payable is ₹24,39,160, which represents 48.8% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹50 Lakh over 10 years?",
+        "The total repayment amount is ₹74,39,160, which includes the original principal of ₹50 Lakh plus total interest of ₹24,39,160."
+      ],
+      [
+        "Can I prepay or foreclose this ₹50 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 61993,
+      "totalInterest": 2439160,
+      "totalRepayment": 7439160,
+      "tenureMonths": 120
+    }
+  },
+  {
+    "slug": "emi-calculator-50-lakh-15-years",
+    "baseToolSlug": "emi",
+    "name": "₹50 Lakh Loan EMI Calculator (15 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹50 Lakh at 8.5% for 15 years. Monthly EMI is ₹49,237, total interest ₹38,62,660.",
+    "params": {
+      "principal": 5000000,
+      "tenureYears": 15,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹50 Lakh at an interest rate of 8.5% per annum over a tenure of 15 years (180 months), your monthly EMI is ₹49,237. Over the entire loan term, you will pay a total interest of ₹38,62,660, bringing the cumulative repayment to ₹88,62,660.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹50 Lakh loan for 15 years at 8.5%?",
+        "The monthly EMI for a principal of ₹50 Lakh at 8.5% annual interest rate over a 15-year term is ₹49,237 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹50 Lakh loan over 15 years?",
+        "Over 15 years (180 monthly installments), the total interest payable is ₹38,62,660, which represents 77.3% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹50 Lakh over 15 years?",
+        "The total repayment amount is ₹88,62,660, which includes the original principal of ₹50 Lakh plus total interest of ₹38,62,660."
+      ],
+      [
+        "Can I prepay or foreclose this ₹50 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 49237,
+      "totalInterest": 3862660,
+      "totalRepayment": 8862660,
+      "tenureMonths": 180
+    }
+  },
+  {
+    "slug": "emi-calculator-50-lakh-20-years",
+    "baseToolSlug": "emi",
+    "name": "₹50 Lakh Loan EMI Calculator (20 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹50 Lakh at 8.5% for 20 years. Monthly EMI is ₹43,391, total interest ₹54,13,840.",
+    "params": {
+      "principal": 5000000,
+      "tenureYears": 20,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹50 Lakh at an interest rate of 8.5% per annum over a tenure of 20 years (240 months), your monthly EMI is ₹43,391. Over the entire loan term, you will pay a total interest of ₹54,13,840, bringing the cumulative repayment to ₹1,04,13,840.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹50 Lakh loan for 20 years at 8.5%?",
+        "The monthly EMI for a principal of ₹50 Lakh at 8.5% annual interest rate over a 20-year term is ₹43,391 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹50 Lakh loan over 20 years?",
+        "Over 20 years (240 monthly installments), the total interest payable is ₹54,13,840, which represents 108.3% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹50 Lakh over 20 years?",
+        "The total repayment amount is ₹1,04,13,840, which includes the original principal of ₹50 Lakh plus total interest of ₹54,13,840."
+      ],
+      [
+        "Can I prepay or foreclose this ₹50 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 43391,
+      "totalInterest": 5413840,
+      "totalRepayment": 10413840,
+      "tenureMonths": 240
+    }
+  },
+  {
+    "slug": "emi-calculator-50-lakh-25-years",
+    "baseToolSlug": "emi",
+    "name": "₹50 Lakh Loan EMI Calculator (25 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹50 Lakh at 8.5% for 25 years. Monthly EMI is ₹40,261, total interest ₹70,78,300.",
+    "params": {
+      "principal": 5000000,
+      "tenureYears": 25,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹50 Lakh at an interest rate of 8.5% per annum over a tenure of 25 years (300 months), your monthly EMI is ₹40,261. Over the entire loan term, you will pay a total interest of ₹70,78,300, bringing the cumulative repayment to ₹1,20,78,300.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹50 Lakh loan for 25 years at 8.5%?",
+        "The monthly EMI for a principal of ₹50 Lakh at 8.5% annual interest rate over a 25-year term is ₹40,261 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹50 Lakh loan over 25 years?",
+        "Over 25 years (300 monthly installments), the total interest payable is ₹70,78,300, which represents 141.6% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹50 Lakh over 25 years?",
+        "The total repayment amount is ₹1,20,78,300, which includes the original principal of ₹50 Lakh plus total interest of ₹70,78,300."
+      ],
+      [
+        "Can I prepay or foreclose this ₹50 Lakh home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 40261,
+      "totalInterest": 7078300,
+      "totalRepayment": 12078300,
+      "tenureMonths": 300
+    }
+  },
+  {
+    "slug": "emi-calculator-1-crore-10-years",
+    "baseToolSlug": "emi",
+    "name": "₹1 Crore Loan EMI Calculator (10 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹1 Crore at 8.5% for 10 years. Monthly EMI is ₹1,23,986, total interest ₹48,78,320.",
+    "params": {
+      "principal": 10000000,
+      "tenureYears": 10,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹1 Crore at an interest rate of 8.5% per annum over a tenure of 10 years (120 months), your monthly EMI is ₹1,23,986. Over the entire loan term, you will pay a total interest of ₹48,78,320, bringing the cumulative repayment to ₹1,48,78,320.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹1 Crore loan for 10 years at 8.5%?",
+        "The monthly EMI for a principal of ₹1 Crore at 8.5% annual interest rate over a 10-year term is ₹1,23,986 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹1 Crore loan over 10 years?",
+        "Over 10 years (120 monthly installments), the total interest payable is ₹48,78,320, which represents 48.8% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹1 Crore over 10 years?",
+        "The total repayment amount is ₹1,48,78,320, which includes the original principal of ₹1 Crore plus total interest of ₹48,78,320."
+      ],
+      [
+        "Can I prepay or foreclose this ₹1 Crore home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 123986,
+      "totalInterest": 4878320,
+      "totalRepayment": 14878320,
+      "tenureMonths": 120
+    }
+  },
+  {
+    "slug": "emi-calculator-1-crore-15-years",
+    "baseToolSlug": "emi",
+    "name": "₹1 Crore Loan EMI Calculator (15 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹1 Crore at 8.5% for 15 years. Monthly EMI is ₹98,474, total interest ₹77,25,320.",
+    "params": {
+      "principal": 10000000,
+      "tenureYears": 15,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹1 Crore at an interest rate of 8.5% per annum over a tenure of 15 years (180 months), your monthly EMI is ₹98,474. Over the entire loan term, you will pay a total interest of ₹77,25,320, bringing the cumulative repayment to ₹1,77,25,320.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹1 Crore loan for 15 years at 8.5%?",
+        "The monthly EMI for a principal of ₹1 Crore at 8.5% annual interest rate over a 15-year term is ₹98,474 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹1 Crore loan over 15 years?",
+        "Over 15 years (180 monthly installments), the total interest payable is ₹77,25,320, which represents 77.3% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹1 Crore over 15 years?",
+        "The total repayment amount is ₹1,77,25,320, which includes the original principal of ₹1 Crore plus total interest of ₹77,25,320."
+      ],
+      [
+        "Can I prepay or foreclose this ₹1 Crore home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 98474,
+      "totalInterest": 7725320,
+      "totalRepayment": 17725320,
+      "tenureMonths": 180
+    }
+  },
+  {
+    "slug": "emi-calculator-1-crore-20-years",
+    "baseToolSlug": "emi",
+    "name": "₹1 Crore Loan EMI Calculator (20 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹1 Crore at 8.5% for 20 years. Monthly EMI is ₹86,782, total interest ₹1,08,27,680.",
+    "params": {
+      "principal": 10000000,
+      "tenureYears": 20,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹1 Crore at an interest rate of 8.5% per annum over a tenure of 20 years (240 months), your monthly EMI is ₹86,782. Over the entire loan term, you will pay a total interest of ₹1,08,27,680, bringing the cumulative repayment to ₹2,08,27,680.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹1 Crore loan for 20 years at 8.5%?",
+        "The monthly EMI for a principal of ₹1 Crore at 8.5% annual interest rate over a 20-year term is ₹86,782 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹1 Crore loan over 20 years?",
+        "Over 20 years (240 monthly installments), the total interest payable is ₹1,08,27,680, which represents 108.3% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹1 Crore over 20 years?",
+        "The total repayment amount is ₹2,08,27,680, which includes the original principal of ₹1 Crore plus total interest of ₹1,08,27,680."
+      ],
+      [
+        "Can I prepay or foreclose this ₹1 Crore home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 86782,
+      "totalInterest": 10827680,
+      "totalRepayment": 20827680,
+      "tenureMonths": 240
+    }
+  },
+  {
+    "slug": "emi-calculator-1-crore-25-years",
+    "baseToolSlug": "emi",
+    "name": "₹1 Crore Loan EMI Calculator (25 Years)",
+    "category": "Finance",
+    "description": "Calculate exact monthly EMI for ₹1 Crore at 8.5% for 25 years. Monthly EMI is ₹80,523, total interest ₹1,41,56,900.",
+    "params": {
+      "principal": 10000000,
+      "tenureYears": 25,
+      "interestRate": 8.5
+    },
+    "intro": "For a loan principal of ₹1 Crore at an interest rate of 8.5% per annum over a tenure of 25 years (300 months), your monthly EMI is ₹80,523. Over the entire loan term, you will pay a total interest of ₹1,41,56,900, bringing the cumulative repayment to ₹2,41,56,900.",
+    "faq": [
+      [
+        "What is the monthly EMI for a ₹1 Crore loan for 25 years at 8.5%?",
+        "The monthly EMI for a principal of ₹1 Crore at 8.5% annual interest rate over a 25-year term is ₹80,523 per month."
+      ],
+      [
+        "How much total interest will I pay on a ₹1 Crore loan over 25 years?",
+        "Over 25 years (300 monthly installments), the total interest payable is ₹1,41,56,900, which represents 141.6% of your principal."
+      ],
+      [
+        "What is the total repayment amount for ₹1 Crore over 25 years?",
+        "The total repayment amount is ₹2,41,56,900, which includes the original principal of ₹1 Crore plus total interest of ₹1,41,56,900."
+      ],
+      [
+        "Can I prepay or foreclose this ₹1 Crore home loan early?",
+        "Yes. Under RBI guidelines, floating-rate home loans sanctioned to individual borrowers have 0 foreclosure or prepayment penalties. Prepaying even ₹5,000–₹10,000 extra per year significantly reduces total interest."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/emi",
+    "computed": {
+      "monthlyEmi": 80523,
+      "totalInterest": 14156900,
+      "totalRepayment": 24156900,
+      "tenureMonths": 300
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-6-lpa-new-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹6 LPA Salary In-Hand Calculator (New Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹6 LPA CTC under the New Tax Regime. Estimated in-hand pay: ₹46,192/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 600000,
+      "regime": "new",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹6 LPA under the New Tax Regime, your estimated monthly take-home salary is ₹46,192. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹75,000, and annual income tax of ₹0.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹6 LPA CTC under New Tax Regime?",
+        "Under New Tax Regime, an annual CTC of ₹6 LPA yields an estimated in-hand take-home salary of approximately ₹46,192 per month (₹5,54,300 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹6 LPA under New Tax Regime?",
+        "Under the New Tax Regime, your total income tax liability is ₹0 thanks to tax rebate provisions on taxable income up to eligible rebate thresholds."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹6 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is New Tax Regime better for ₹6 LPA CTC?",
+        "For ₹6 LPA CTC, the New Tax Regime is generally advantageous for salaried professionals who do not have extensive chapter VI-A deductions (HRA, 80C, 80D), offering lower tax slab rates and a ₹75,000 standard deduction."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 600000,
+      "annualTakeHome": 554300,
+      "monthlyTakeHome": 46192,
+      "incomeTax": 0,
+      "employeePf": 21600,
+      "standardDeduction": 75000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-6-lpa-old-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹6 LPA Salary In-Hand Calculator (Old Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹6 LPA CTC under the Old Tax Regime. Estimated in-hand pay: ₹44,616/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 600000,
+      "regime": "old",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹6 LPA under the Old Tax Regime, your estimated monthly take-home salary is ₹44,616. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹50,000, and annual income tax of ₹18,907.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹6 LPA CTC under Old Tax Regime?",
+        "Under Old Tax Regime, an annual CTC of ₹6 LPA yields an estimated in-hand take-home salary of approximately ₹44,616 per month (₹5,35,393 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹6 LPA under Old Tax Regime?",
+        "Under the Old Tax Regime, your calculated annual income tax liability is approximately ₹18,907 (including 4% health and education cess) after the standard deduction of ₹50,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹6 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is Old Tax Regime better for ₹6 LPA CTC?",
+        "The Old Tax Regime may be beneficial for ₹6 LPA CTC only if you can claim significant tax exemptions like Section 80C (₹1.5 Lakh), Section 80D health insurance, home loan interest (Section 24b), and substantial House Rent Allowance (HRA)."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 600000,
+      "annualTakeHome": 535393,
+      "monthlyTakeHome": 44616,
+      "incomeTax": 18907,
+      "employeePf": 21600,
+      "standardDeduction": 50000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-8-lpa-new-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹8 LPA Salary In-Hand Calculator (New Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹8 LPA CTC under the New Tax Regime. Estimated in-hand pay: ₹62,858/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 800000,
+      "regime": "new",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹8 LPA under the New Tax Regime, your estimated monthly take-home salary is ₹62,858. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹75,000, and annual income tax of ₹0.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹8 LPA CTC under New Tax Regime?",
+        "Under New Tax Regime, an annual CTC of ₹8 LPA yields an estimated in-hand take-home salary of approximately ₹62,858 per month (₹7,54,300 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹8 LPA under New Tax Regime?",
+        "Under the New Tax Regime, your total income tax liability is ₹0 thanks to tax rebate provisions on taxable income up to eligible rebate thresholds."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹8 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is New Tax Regime better for ₹8 LPA CTC?",
+        "For ₹8 LPA CTC, the New Tax Regime is generally advantageous for salaried professionals who do not have extensive chapter VI-A deductions (HRA, 80C, 80D), offering lower tax slab rates and a ₹75,000 standard deduction."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 800000,
+      "annualTakeHome": 754300,
+      "monthlyTakeHome": 62858,
+      "incomeTax": 0,
+      "employeePf": 21600,
+      "standardDeduction": 75000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-8-lpa-old-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹8 LPA Salary In-Hand Calculator (Old Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹8 LPA CTC under the Old Tax Regime. Estimated in-hand pay: ₹57,816/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 800000,
+      "regime": "old",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹8 LPA under the Old Tax Regime, your estimated monthly take-home salary is ₹57,816. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹50,000, and annual income tax of ₹60,507.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹8 LPA CTC under Old Tax Regime?",
+        "Under Old Tax Regime, an annual CTC of ₹8 LPA yields an estimated in-hand take-home salary of approximately ₹57,816 per month (₹6,93,793 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹8 LPA under Old Tax Regime?",
+        "Under the Old Tax Regime, your calculated annual income tax liability is approximately ₹60,507 (including 4% health and education cess) after the standard deduction of ₹50,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹8 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is Old Tax Regime better for ₹8 LPA CTC?",
+        "The Old Tax Regime may be beneficial for ₹8 LPA CTC only if you can claim significant tax exemptions like Section 80C (₹1.5 Lakh), Section 80D health insurance, home loan interest (Section 24b), and substantial House Rent Allowance (HRA)."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 800000,
+      "annualTakeHome": 693793,
+      "monthlyTakeHome": 57816,
+      "incomeTax": 60507,
+      "employeePf": 21600,
+      "standardDeduction": 50000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-10-lpa-new-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹10 LPA Salary In-Hand Calculator (New Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹10 LPA CTC under the New Tax Regime. Estimated in-hand pay: ₹79,525/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 1000000,
+      "regime": "new",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹10 LPA under the New Tax Regime, your estimated monthly take-home salary is ₹79,525. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹75,000, and annual income tax of ₹0.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹10 LPA CTC under New Tax Regime?",
+        "Under New Tax Regime, an annual CTC of ₹10 LPA yields an estimated in-hand take-home salary of approximately ₹79,525 per month (₹9,54,300 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹10 LPA under New Tax Regime?",
+        "Under the New Tax Regime, your total income tax liability is ₹0 thanks to tax rebate provisions on taxable income up to eligible rebate thresholds."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹10 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is New Tax Regime better for ₹10 LPA CTC?",
+        "For ₹10 LPA CTC, the New Tax Regime is generally advantageous for salaried professionals who do not have extensive chapter VI-A deductions (HRA, 80C, 80D), offering lower tax slab rates and a ₹75,000 standard deduction."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 1000000,
+      "annualTakeHome": 954300,
+      "monthlyTakeHome": 79525,
+      "incomeTax": 0,
+      "employeePf": 21600,
+      "standardDeduction": 75000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-10-lpa-old-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹10 LPA Salary In-Hand Calculator (Old Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹10 LPA CTC under the Old Tax Regime. Estimated in-hand pay: ₹71,016/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 1000000,
+      "regime": "old",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹10 LPA under the Old Tax Regime, your estimated monthly take-home salary is ₹71,016. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹50,000, and annual income tax of ₹1,02,107.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹10 LPA CTC under Old Tax Regime?",
+        "Under Old Tax Regime, an annual CTC of ₹10 LPA yields an estimated in-hand take-home salary of approximately ₹71,016 per month (₹8,52,193 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹10 LPA under Old Tax Regime?",
+        "Under the Old Tax Regime, your calculated annual income tax liability is approximately ₹1,02,107 (including 4% health and education cess) after the standard deduction of ₹50,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹10 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is Old Tax Regime better for ₹10 LPA CTC?",
+        "The Old Tax Regime may be beneficial for ₹10 LPA CTC only if you can claim significant tax exemptions like Section 80C (₹1.5 Lakh), Section 80D health insurance, home loan interest (Section 24b), and substantial House Rent Allowance (HRA)."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 1000000,
+      "annualTakeHome": 852193,
+      "monthlyTakeHome": 71016,
+      "incomeTax": 102107,
+      "employeePf": 21600,
+      "standardDeduction": 50000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-12-lpa-new-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹12 LPA Salary In-Hand Calculator (New Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹12 LPA CTC under the New Tax Regime. Estimated in-hand pay: ₹96,192/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 1200000,
+      "regime": "new",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹12 LPA under the New Tax Regime, your estimated monthly take-home salary is ₹96,192. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹75,000, and annual income tax of ₹0.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹12 LPA CTC under New Tax Regime?",
+        "Under New Tax Regime, an annual CTC of ₹12 LPA yields an estimated in-hand take-home salary of approximately ₹96,192 per month (₹11,54,300 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹12 LPA under New Tax Regime?",
+        "Under the New Tax Regime, your total income tax liability is ₹0 thanks to tax rebate provisions on taxable income up to eligible rebate thresholds."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹12 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is New Tax Regime better for ₹12 LPA CTC?",
+        "For ₹12 LPA CTC, the New Tax Regime is generally advantageous for salaried professionals who do not have extensive chapter VI-A deductions (HRA, 80C, 80D), offering lower tax slab rates and a ₹75,000 standard deduction."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 1200000,
+      "annualTakeHome": 1154300,
+      "monthlyTakeHome": 96192,
+      "incomeTax": 0,
+      "employeePf": 21600,
+      "standardDeduction": 75000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-12-lpa-old-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹12 LPA Salary In-Hand Calculator (Old Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹12 LPA CTC under the Old Tax Regime. Estimated in-hand pay: ₹83,103/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 1200000,
+      "regime": "old",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹12 LPA under the Old Tax Regime, your estimated monthly take-home salary is ₹83,103. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹50,000, and annual income tax of ₹1,57,061.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹12 LPA CTC under Old Tax Regime?",
+        "Under Old Tax Regime, an annual CTC of ₹12 LPA yields an estimated in-hand take-home salary of approximately ₹83,103 per month (₹9,97,239 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹12 LPA under Old Tax Regime?",
+        "Under the Old Tax Regime, your calculated annual income tax liability is approximately ₹1,57,061 (including 4% health and education cess) after the standard deduction of ₹50,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹12 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is Old Tax Regime better for ₹12 LPA CTC?",
+        "The Old Tax Regime may be beneficial for ₹12 LPA CTC only if you can claim significant tax exemptions like Section 80C (₹1.5 Lakh), Section 80D health insurance, home loan interest (Section 24b), and substantial House Rent Allowance (HRA)."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 1200000,
+      "annualTakeHome": 997239,
+      "monthlyTakeHome": 83103,
+      "incomeTax": 157061,
+      "employeePf": 21600,
+      "standardDeduction": 50000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-15-lpa-new-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹15 LPA Salary In-Hand Calculator (New Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹15 LPA CTC under the New Tax Regime. Estimated in-hand pay: ₹1,13,347/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 1500000,
+      "regime": "new",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹15 LPA under the New Tax Regime, your estimated monthly take-home salary is ₹1,13,347. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹75,000, and annual income tax of ₹94,130.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹15 LPA CTC under New Tax Regime?",
+        "Under New Tax Regime, an annual CTC of ₹15 LPA yields an estimated in-hand take-home salary of approximately ₹1,13,347 per month (₹13,60,170 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹15 LPA under New Tax Regime?",
+        "Under the New Tax Regime, your calculated annual income tax liability is approximately ₹94,130 (including 4% health and education cess) after the standard deduction of ₹75,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹15 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is New Tax Regime better for ₹15 LPA CTC?",
+        "For ₹15 LPA CTC, the New Tax Regime is generally advantageous for salaried professionals who do not have extensive chapter VI-A deductions (HRA, 80C, 80D), offering lower tax slab rates and a ₹75,000 standard deduction."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 1500000,
+      "annualTakeHome": 1360170,
+      "monthlyTakeHome": 113347,
+      "incomeTax": 94130,
+      "employeePf": 21600,
+      "standardDeduction": 75000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-15-lpa-old-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹15 LPA Salary In-Hand Calculator (Old Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹15 LPA CTC under the Old Tax Regime. Estimated in-hand pay: ₹1,00,303/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 1500000,
+      "regime": "old",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹15 LPA under the Old Tax Regime, your estimated monthly take-home salary is ₹1,00,303. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹50,000, and annual income tax of ₹2,50,661.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹15 LPA CTC under Old Tax Regime?",
+        "Under Old Tax Regime, an annual CTC of ₹15 LPA yields an estimated in-hand take-home salary of approximately ₹1,00,303 per month (₹12,03,639 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹15 LPA under Old Tax Regime?",
+        "Under the Old Tax Regime, your calculated annual income tax liability is approximately ₹2,50,661 (including 4% health and education cess) after the standard deduction of ₹50,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹15 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is Old Tax Regime better for ₹15 LPA CTC?",
+        "The Old Tax Regime may be beneficial for ₹15 LPA CTC only if you can claim significant tax exemptions like Section 80C (₹1.5 Lakh), Section 80D health insurance, home loan interest (Section 24b), and substantial House Rent Allowance (HRA)."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 1500000,
+      "annualTakeHome": 1203639,
+      "monthlyTakeHome": 100303,
+      "incomeTax": 250661,
+      "employeePf": 21600,
+      "standardDeduction": 50000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-20-lpa-new-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹20 LPA Salary In-Hand Calculator (New Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹20 LPA CTC under the New Tax Regime. Estimated in-hand pay: ₹1,47,199/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 2000000,
+      "regime": "new",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹20 LPA under the New Tax Regime, your estimated monthly take-home salary is ₹1,47,199. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹75,000, and annual income tax of ₹1,87,907.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹20 LPA CTC under New Tax Regime?",
+        "Under New Tax Regime, an annual CTC of ₹20 LPA yields an estimated in-hand take-home salary of approximately ₹1,47,199 per month (₹17,66,393 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹20 LPA under New Tax Regime?",
+        "Under the New Tax Regime, your calculated annual income tax liability is approximately ₹1,87,907 (including 4% health and education cess) after the standard deduction of ₹75,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹20 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is New Tax Regime better for ₹20 LPA CTC?",
+        "For ₹20 LPA CTC, the New Tax Regime is generally advantageous for salaried professionals who do not have extensive chapter VI-A deductions (HRA, 80C, 80D), offering lower tax slab rates and a ₹75,000 standard deduction."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 2000000,
+      "annualTakeHome": 1766393,
+      "monthlyTakeHome": 147199,
+      "incomeTax": 187907,
+      "employeePf": 21600,
+      "standardDeduction": 75000
+    }
+  },
+  {
+    "slug": "ctc-to-in-hand-20-lpa-old-regime",
+    "baseToolSlug": "ctc-to-inhand",
+    "name": "₹20 LPA Salary In-Hand Calculator (Old Tax Regime)",
+    "category": "Career",
+    "description": "Detailed monthly in-hand take-home salary breakdown for ₹20 LPA CTC under the Old Tax Regime. Estimated in-hand pay: ₹1,28,970/month after taxes and PF.",
+    "params": {
+      "ctcAnnual": 2000000,
+      "regime": "old",
+      "basicPct": 40
+    },
+    "intro": "For an annual CTC package of ₹20 LPA under the Old Tax Regime, your estimated monthly take-home salary is ₹1,28,970. This breakdown accounts for employee EPF contribution of ₹21,600/year, statutory standard deduction of ₹50,000, and annual income tax of ₹4,06,661.",
+    "faq": [
+      [
+        "What is the monthly in-hand salary for ₹20 LPA CTC under Old Tax Regime?",
+        "Under Old Tax Regime, an annual CTC of ₹20 LPA yields an estimated in-hand take-home salary of approximately ₹1,28,970 per month (₹15,47,639 annually)."
+      ],
+      [
+        "How much income tax is deducted for ₹20 LPA under Old Tax Regime?",
+        "Under the Old Tax Regime, your calculated annual income tax liability is approximately ₹4,06,661 (including 4% health and education cess) after the standard deduction of ₹50,000."
+      ],
+      [
+        "How much EPF is deducted monthly from a ₹20 LPA salary package?",
+        "Assuming standard statutory PF capping on Basic pay (capped at ₹15,000 monthly basic wage), the monthly employee PF deduction is ₹1,800, totaling ₹21,600 annually."
+      ],
+      [
+        "Is Old Tax Regime better for ₹20 LPA CTC?",
+        "The Old Tax Regime may be beneficial for ₹20 LPA CTC only if you can claim significant tax exemptions like Section 80C (₹1.5 Lakh), Section 80D health insurance, home loan interest (Section 24b), and substantial House Rent Allowance (HRA)."
+      ]
+    ],
+    "canonicalUrl": "https://orbitboard.in/tools/ctc-to-inhand",
+    "computed": {
+      "annualCtc": 2000000,
+      "annualTakeHome": 1547639,
+      "monthlyTakeHome": 128970,
+      "incomeTax": 406661,
+      "employeePf": 21600,
+      "standardDeduction": 50000
+    }
+  }
+]

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { InstallPrompt } from './components/InstallPrompt';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
@@ -10,6 +10,9 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
+import { loadGoogleAnalytics } from './lib/analytics';
+import Pricing from './pages/Pricing';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -22,12 +25,13 @@ export default function App() {
         <Routes>
           <Route path="/" element={<ToolsHome />} />
           <Route path="/tools" element={<ToolsCatalogue />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/tools/:slug" element={<ToolPageRoute />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
     </BrowserRouter>
   );
@@ -41,8 +45,7 @@ function Analytics() {
     const load = async () => {
       if (cancelled) return;
       try {
-        const { loadGoogleAnalytics } = await import('./lib/analytics');
-        if (!cancelled) await loadGoogleAnalytics();
+        await loadGoogleAnalytics();
       } catch (error) {
         console.warn('[OrbitBoard analytics] deferred load failed', error);
       }

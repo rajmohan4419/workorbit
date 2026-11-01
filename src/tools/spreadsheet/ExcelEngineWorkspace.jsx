@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle
+  Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle, Layers, X
 } from 'lucide-react';
 import {
   parseSpreadsheet,
@@ -9,7 +9,11 @@ import {
   exportSpreadsheet,
   downloadSpreadsheetBlob,
   exportValidationErrorReport,
+  processSpreadsheetBatch,
 } from '../../engines/excelEngine';
+import { usePlan } from '../../lib/monetization/usePlan';
+import { PlanGate } from '../../components/monetization/PlanGate';
+import { trackExportClicked } from '../../lib/analytics';
 
 export default function ExcelEngineWorkspace() {
   const [fileObj, setFileObj] = useState(null);
@@ -22,6 +26,9 @@ export default function ExcelEngineWorkspace() {
   const [rows, setRows] = useState([]);
   const [colTypes, setColTypes] = useState({});
   const [error, setError] = useState(null);
+  const { hasFeature } = usePlan();
+  const [showBulkGate, setShowBulkGate] = useState(false);
+  const [bulkSummary, setBulkSummary] = useState(null);
 
   // Search & Pagination
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,9 +70,29 @@ export default function ExcelEngineWorkspace() {
   };
 
   const handleFileUpload = async (e) => {
-    const uploadedFile = e.target.files?.[0];
-    if (!uploadedFile) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
+    if (files.length > 1) {
+      if (!hasFeature('bulk_processing')) {
+        setShowBulkGate(true);
+        e.target.value = '';
+        return;
+      }
+      try {
+        setError(null);
+        const batchRes = await processSpreadsheetBatch(files);
+        setBulkSummary(batchRes);
+        setFileObj(files[0]);
+        setFileName(`Batch: ${files.length} workbooks (${batchRes.totalRows} total rows)`);
+        await processWorkbookSheet(files[0], null);
+      } catch (err) {
+        setError(`Batch processing failed: ${err.message}`);
+      }
+      return;
+    }
+
+    const uploadedFile = files[0];
     setFileObj(uploadedFile);
     setFileName(uploadedFile.name);
     await processWorkbookSheet(uploadedFile, null);
@@ -86,6 +113,7 @@ export default function ExcelEngineWorkspace() {
     if (!validationResults || validationResults.isValid || !validationResults.errors.length) return;
     const blob = exportValidationErrorReport(validationResults.errors, format);
     downloadSpreadsheetBlob(blob, `${fileName.replace(/\.[^/.]+$/, '')}_validation_errors.${format}`);
+    trackExportClicked(format);
   };
 
   const handleTransform = (transformType, column) => {
@@ -120,6 +148,7 @@ export default function ExcelEngineWorkspace() {
     });
     const baseName = fileName.replace(/\.[^/.]+$/, '') || 'processed_spreadsheet';
     downloadSpreadsheetBlob(blob, `${baseName}_exported.${format}`);
+    trackExportClicked(format);
   };
 
   const filteredRows = useMemo(() => {
@@ -175,14 +204,51 @@ export default function ExcelEngineWorkspace() {
             Production-grade spreadsheet processor: multi-worksheet selection, duplicate/empty header detection, schema validation, formula injection protection, and error report exports.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={loadDemoData}
-          className="px-3.5 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:bg-stone-50 shadow-xs transition"
-        >
-          Load Demo Sheet
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            id="bulk-file-input"
+            type="file"
+            multiple
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              if (!hasFeature('bulk_processing')) {
+                setShowBulkGate(true);
+              } else {
+                document.getElementById('bulk-file-input')?.click();
+              }
+            }}
+            className="px-3.5 py-1.5 rounded-xl border border-violet-300 dark:border-violet-700 bg-violet-50 dark:bg-violet-950/40 text-xs font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 transition flex items-center gap-1.5 shadow-2xs"
+          >
+            <Layers size={14} />
+            <span>Batch Process (Bulk)</span>
+          </button>
+          <button
+            type="button"
+            onClick={loadDemoData}
+            className="px-3.5 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:bg-stone-50 shadow-xs transition"
+          >
+            Load Demo Sheet
+          </button>
+        </div>
       </div>
+
+      {bulkSummary && (
+        <div className="p-3.5 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 text-xs text-violet-800 dark:text-violet-300 flex items-center justify-between">
+          <span>Batch processed {bulkSummary.totalFiles} workbooks ({bulkSummary.totalRows} combined rows)</span>
+          <button
+            type="button"
+            onClick={() => setBulkSummary(null)}
+            className="text-violet-600 dark:text-violet-400 hover:underline text-xs"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-4 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
@@ -194,7 +260,7 @@ export default function ExcelEngineWorkspace() {
       {/* Upload Dropzone */}
       {!rows.length && (
         <label className="border-2 border-dashed border-[var(--orbit-border)] hover:border-emerald-500 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer bg-stone-50/40 dark:bg-stone-900/40 transition">
-          <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="hidden" />
+          <input type="file" multiple accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="hidden" />
           <Upload size={32} className="text-emerald-500 mb-2" />
           <span className="text-sm font-bold text-stone-800 dark:text-stone-200">
             Upload XLSX, XLS, or CSV Spreadsheet
@@ -423,6 +489,22 @@ export default function ExcelEngineWorkspace() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* ── Upgrade Prompt Modal ── */}
+      {showBulkGate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg">
+            <button
+              type="button"
+              onClick={() => setShowBulkGate(false)}
+              className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition"
+              aria-label="Close upgrade prompt"
+            >
+              <X size={16} />
+            </button>
+            <PlanGate feature="bulk_processing" />
           </div>
         </div>
       )}

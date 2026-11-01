@@ -6,7 +6,10 @@ import {
 } from 'lucide-react';
 import { TOOLS, LISTED_TOOLS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
-import { ComingSoon } from '../components/tools/ToolFields';
+import toolVariants from '../data/toolVariants.json';
+import { ComingSoon, Field, Result } from '../components/tools/ToolFields';
+import { money, num } from '../lib/toolFormat';
+import NotFound from './NotFound';
 import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemption } from '../tools/finance/FinanceCalculators';
 import { SaasRetention, SalesPipelineForecaster, SaasPricing } from '../tools/business/BusinessCalculators';
 import { InvoiceAging, DecisionMatrix } from '../tools/business/BusinessWorkflows';
@@ -19,6 +22,7 @@ import AdSenseUnit from '../components/AdSenseUnit';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
+import { trackToolUsed } from '../lib/analytics';
 
 // Extracted Modular Tool Packages
 import { SalaryCalculator, SalaryHike, Offer, Notice, Experience } from '../tools/career/CareerTools';
@@ -40,6 +44,12 @@ import {
 } from '../tools/pdf/PdfTools';
 import BankReconciliation from '../tools/business/BankReconciliation';
 import ExcelEngineWorkspace from '../tools/spreadsheet/ExcelEngineWorkspace';
+
+import { PayslipGenerator } from '../tools/finance/PayslipGenerator';
+import { GstrReconciliation } from '../tools/finance/GstrReconciliation';
+import { TdsCalculator } from '../tools/finance/TdsCalculator';
+import { PfEsiCalculator } from '../tools/finance/PfEsiCalculator';
+import { SalarySheet } from '../tools/finance/SalarySheet';
 
 const GratuityCalculator = lazy(() => import('../tools/career/GratuityCalculator'));
 const IndiaIncomeTaxCalculator = lazy(() => import('../tools/finance/IndiaIncomeTaxCalculator'));
@@ -242,10 +252,253 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
   );
 }
 
+function VariantEmi({ params }) {
+  const [principal, setPrincipal] = useState(String(params?.principal ?? '1000000'));
+  const [rate, setRate] = useState(String(params?.interestRate ?? '8.5'));
+  const [years, setYears] = useState(String(params?.tenureYears ?? '20'));
+  const p = num(principal), r = num(rate) / 1200, n = Math.max(1, Math.round(num(years) * 12));
+  const emi = r ? (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : p / n;
+  const total = emi * n;
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="lg:col-span-7 space-y-4">
+        <Field label="Loan amount (₹)" value={principal} onChange={setPrincipal} />
+        <Field label="Annual interest rate (%)" value={rate} onChange={setRate} />
+        <Field label="Tenure (years)" value={years} onChange={setYears} />
+      </div>
+      <div className="lg:col-span-5 lg:sticky lg:top-20 h-fit space-y-3">
+        <Result label="Monthly EMI" value={`₹ ${money(emi)}`} highlight />
+        <Result label="Total interest" value={`₹ ${money(total - p)}`} />
+        <Result label="Total repayment" value={`₹ ${money(total)}`} />
+      </div>
+    </div>
+  );
+}
+
+function calculateNewTax(taxable) {
+  const slabs = [
+    [400000, 0],
+    [400000, 0.05],
+    [400000, 0.10],
+    [400000, 0.15],
+    [400000, 0.20],
+    [400000, 0.25],
+    [Infinity, 0.30],
+  ];
+  let remaining = taxable, tax = 0;
+  for (const [limit, rate] of slabs) {
+    const amount = Math.min(remaining, limit);
+    if (amount <= 0) break;
+    tax += amount * rate;
+    remaining -= amount;
+  }
+  if (taxable <= 1200000) tax = Math.max(0, tax - 60000);
+  return tax * 1.04;
+}
+
+function calculateOldTax(taxable) {
+  const slabs = [
+    [250000, 0],
+    [250000, 0.05],
+    [500000, 0.20],
+    [Infinity, 0.30],
+  ];
+  let remaining = taxable, tax = 0;
+  for (const [limit, rate] of slabs) {
+    const amount = Math.min(remaining, limit);
+    if (amount <= 0) break;
+    tax += amount * rate;
+    remaining -= amount;
+  }
+  if (taxable <= 500000) tax = Math.max(0, tax - 12500);
+  return tax * 1.04;
+}
+
+function VariantSalaryCalculator({ params }) {
+  const [ctc, setCtc] = useState(String(params?.ctcAnnual ?? '1200000'));
+  const [basicPct, setBasicPct] = useState(String(params?.basicPct ?? '40'));
+  const [variable, setVariable] = useState('0');
+  const [gratuity, setGratuity] = useState('0');
+  const [pfCap, setPfCap] = useState(true);
+  const [regime, setRegime] = useState(params?.regime ?? 'new');
+  const [state, setState] = useState('Karnataka');
+
+  const result = useMemo(() => {
+    const annualCtc = num(ctc), basic = (annualCtc * num(basicPct)) / 100;
+    const monthlyBasic = basic / 12;
+    const employeePf = pfCap ? Math.min(monthlyBasic, 15000) * 0.12 * 12 : basic * 0.12;
+    const employerPf = employeePf;
+    const annualGratuity = num(gratuity);
+    const annualVariable = num(variable);
+    const grossCash = Math.max(0, annualCtc - employerPf - annualGratuity);
+    const fixedGross = Math.max(0, grossCash - annualVariable);
+    const standardDeduction = regime === 'new' ? 75000 : 50000;
+    const taxable = Math.max(0, fixedGross - standardDeduction);
+    const incomeTax = regime === 'new' ? calculateNewTax(taxable) : calculateOldTax(taxable);
+    const pt = state === 'Karnataka' && fixedGross / 12 >= 25000 ? 2500 : 0;
+    const annualTakeHome = Math.max(0, fixedGross - employeePf - incomeTax - pt);
+    return {
+      annualCtc,
+      basic,
+      employeePf,
+      employerPf,
+      annualGratuity,
+      annualVariable,
+      fixedGross,
+      taxable,
+      incomeTax,
+      pt,
+      annualTakeHome,
+      monthlyTakeHome: annualTakeHome / 12,
+    };
+  }, [ctc, basicPct, variable, gratuity, pfCap, regime, state]);
+
+  return (
+    <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
+      <div className="lg:col-span-7 space-y-5">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+          Salary &amp; Deduction Inputs
+        </h3>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Annual CTC (₹)" value={ctc} onChange={setCtc} />
+          <Field label="Basic salary as % of CTC" value={basicPct} onChange={setBasicPct} />
+          <Field label="Annual variable pay included (₹)" value={variable} onChange={setVariable} />
+          <Field label="Annual gratuity included (₹)" value={gratuity} onChange={setGratuity} />
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <label className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 px-4 py-3 flex items-center justify-between min-h-[44px] cursor-pointer">
+            <span>
+              <span className="block text-xs font-semibold text-stone-800 dark:text-stone-200">
+                EPF calculation
+              </span>
+              <span className="block text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
+                Cap employee PF at ₹1,800/month
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={pfCap}
+              onChange={(e) => setPfCap(e.target.checked)}
+              className="w-5 h-5 rounded text-accent-600"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+              Tax regime
+            </span>
+            <select
+              value={regime}
+              onChange={(e) => setRegime(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500 min-h-[44px]"
+            >
+              <option value="new">New regime (default)</option>
+              <option value="old">Old regime</option>
+            </select>
+          </label>
+        </div>
+        <label className="block">
+          <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+            Professional tax state
+          </span>
+          <select
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500 min-h-[44px]"
+          >
+            <option>Karnataka</option>
+            <option value="none">Other / calculate separately</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20 h-fit">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400">
+          Take-Home Summary
+        </h3>
+        <div className="space-y-3">
+          <Result
+            label="Estimated monthly take-home"
+            value={`₹ ${money(result.monthlyTakeHome)}`}
+            highlight
+          />
+          <Result
+            label="Estimated annual take-home"
+            value={`₹ ${money(result.annualTakeHome)}`}
+            highlight
+          />
+          <Result label="Annual income tax + cess" value={`₹ ${money(result.incomeTax)}`} />
+          <Result label="Employee EPF" value={`₹ ${money(result.employeePf)}`} />
+          <Result label="Employer EPF included in CTC" value={`₹ ${money(result.employerPf)}`} />
+          <Result label="Professional tax" value={`₹ ${money(result.pt)}`} />
+        </div>
+        <div className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 text-xs text-stone-600 dark:text-stone-400 space-y-2">
+          <div className="flex justify-between">
+            <span>Gross cash salary before deductions</span>
+            <span className="font-semibold text-stone-900 dark:text-stone-100">
+              ₹ {money(result.fixedGross)}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span>Standard deduction</span>
+            <span className="font-semibold text-stone-900 dark:text-stone-100">
+              ₹ {money(regime === 'new' ? 75000 : 50000)}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span>Taxable salary used</span>
+            <span className="font-semibold text-stone-900 dark:text-stone-100">
+              ₹ {money(result.taxable)}
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Estimate only. Actual payslips can differ based on PF structure, tax declarations, and employer policy.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function ToolPage() {
   const { slug } = useParams();
-  const tool = TOOLS.find(t => t.slug === slug);
-  const info = TOOL_CONTENT[slug];
+  const variant = useMemo(() => toolVariants.find((v) => v.slug === slug), [slug]);
+  const baseTool = useMemo(
+    () => (variant ? TOOLS.find((t) => t.slug === variant.baseToolSlug) : null),
+    [variant]
+  );
+  const tool = useMemo(() => {
+    if (variant) {
+      return {
+        ...baseTool,
+        slug: variant.slug,
+        name: variant.name,
+        description: variant.description,
+        category: variant.category || baseTool?.category || 'Finance',
+        status: 'live',
+        isVariant: true,
+        canonicalUrl: variant.canonicalUrl,
+      };
+    }
+    return TOOLS.find((t) => t.slug === slug);
+  }, [variant, baseTool, slug]);
+
+  const info = useMemo(() => {
+    if (variant) {
+      const baseInfo = TOOL_CONTENT[variant.baseToolSlug] || {};
+      return {
+        ...baseInfo,
+        title: variant.name,
+        metaDescription: variant.description,
+        intro: variant.intro,
+        h1: variant.name,
+        faq: variant.faq,
+        canonicalUrl: variant.canonicalUrl,
+      };
+    }
+    return TOOL_CONTENT[slug];
+  }, [variant, slug]);
+
   const workspaceRef = useRef(null);
 
   const content = useMemo(() => ({
@@ -318,10 +571,16 @@ export default function ToolPage() {
     'unix-timestamp': UnixTimestamp,
     'uuid-generator': UuidGenerator,
     'url-encoder': UrlEncoder,
-    'password-generator': PasswordGenerator
+    'password-generator': PasswordGenerator,
+    'payslip-generator': PayslipGenerator,
+    'gstr-2b-reconciliation': GstrReconciliation,
+    'tds-calculator-india': TdsCalculator,
+    'pf-and-esi-calculator': PfEsiCalculator,
+    'salary-sheet-excel': SalarySheet,
   }[slug]), [slug]);
 
-  const adEligible = isAdEligible({ tool, info, hasTool: Boolean(content) });
+  const Tool = content;
+  const adEligible = isAdEligible({ tool, info, hasTool: Boolean(variant || Tool) });
 
   useEffect(() => {
     if (adEligible) loadAdSense();
@@ -329,33 +588,28 @@ export default function ToolPage() {
 
   useEffect(() => {
     if (tool) {
+      trackToolUsed(tool.slug);
       const pageTitle = info?.title || (tool.slug === 'image-compressor' ? `${tool.name} - online compressor | size compressor | online mb reducer | Free Online Tool | OrbitBoard` : `${tool.name} | Free Online Tool | OrbitBoard`);
       document.title = pageTitle.includes('OrbitBoard') ? pageTitle : (pageTitle + ' | OrbitBoard');
       const desc = info?.metaDescription || info?.intro || tool.description;
-      const setMeta = (name, content) => {
+      const setMeta = (name, val) => {
         let m = document.querySelector('meta[name="' + name + '"]');
         if (!m) { m = document.createElement('meta'); m.name = name; document.head.appendChild(m); }
-        m.content = content;
+        m.content = val;
       };
       setMeta('description', desc);
       setMeta('robots', tool.status === 'live' ? 'index, follow' : 'noindex, follow');
       let canonical = document.querySelector('link[rel="canonical"]');
       if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
-      canonical.href = 'https://orbitboard.in/tools/' + slug;
+      canonical.href = variant?.canonicalUrl || ('https://orbitboard.in/tools/' + slug);
       window.scrollTo(0, 0);
     }
-  }, [tool, info, slug]);
+  }, [tool, info, slug, variant]);
 
   if (!tool) {
-    return (
-      <div className="min-h-screen bg-[var(--orbit-canvas)] text-stone-900 dark:text-stone-100 p-10">
-        <Link to="/tools" className="text-accent-600 font-semibold">← Tools</Link>
-        <h1 className="text-2xl font-bold mt-8">Tool not found</h1>
-      </div>
-    );
+    return <NotFound />;
   }
 
-  const Tool = content;
   const related = LISTED_TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
 
   return (
@@ -368,10 +622,22 @@ export default function ToolPage() {
           <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
 
           <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
-          <div id="tool-workspace" ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10">
+          <div id="tool-workspace" key={slug} ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10">
             <div className="h-1.5 w-full bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-400 opacity-80" />
             <div className="p-5 sm:p-8">
-              {Tool ? <Tool /> : <ComingSoon tool={tool} />}
+              {variant ? (
+                variant.baseToolSlug === 'emi' ? (
+                  <VariantEmi params={variant.params} />
+                ) : variant.baseToolSlug === 'ctc-to-inhand' ? (
+                  <VariantSalaryCalculator params={variant.params} />
+                ) : (
+                  <ComingSoon tool={tool} />
+                )
+              ) : Tool ? (
+                <Tool />
+              ) : (
+                <ComingSoon tool={tool} />
+              )}
             </div>
           </div>
 

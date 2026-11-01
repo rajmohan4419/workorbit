@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText, Heart, Cookie } from 'lucide-react';
+import { ArrowRight, LockKeyhole, ChevronDown, ExternalLink, Globe, ShieldCheck, FileText, Heart, Cookie, CreditCard } from 'lucide-react';
 import { RazorpayCheckout } from '../RazorpayCheckout';
 import { openCookiePreferences } from '../../lib/cookieConsent';
 
@@ -91,6 +91,7 @@ export function ToolsHomeFooter() {
   ];
 
   const utilityLinks = [
+    { label: 'Pricing', path: '/pricing', icon: CreditCard },
     { label: 'About Us', path: '/about', icon: Globe },
     { label: 'Privacy Policy', path: '/privacy', icon: ShieldCheck },
     { label: 'Cookie Settings', action: openCookiePreferences, icon: Cookie },
