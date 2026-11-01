@@ -19,13 +19,13 @@ create table public.business_members (
 create index business_members_user_idx on public.business_members(user_id);
 alter table public.business_profiles enable row level security;
 alter table public.business_members enable row level security;
-revoke all on public.business_profiles, public.business_members from anon;
+revoke all on public.business_profiles, public.business_members from public, anon, authenticated;
 grant select on public.business_profiles, public.business_members to authenticated;
 -- Security-definer lookup avoids recursive membership RLS.
 create function public.is_business_member(p_business_id uuid)
 returns boolean language sql stable security definer set search_path = ''
 as $$ select exists(select 1 from public.business_members m where m.business_id=p_business_id and m.user_id=(select auth.uid())); $$;
-revoke all on function public.is_business_member(uuid) from public,anon;
+revoke all on function public.is_business_member(uuid) from public,anon,authenticated;
 grant execute on function public.is_business_member(uuid) to authenticated;
 create policy business_profile_read on public.business_profiles for select to authenticated
 using (public.is_business_member(id));
@@ -45,5 +45,8 @@ begin
  insert into public.business_members(business_id,user_id,role) values(v_id,v_user,'owner');
  return v_id;
 end; $$;
-revoke all on function public.create_business_profile(text,text,text,text,text,text) from public,anon;
+revoke all on function public.create_business_profile(text,text,text,text,text,text) from public,anon,authenticated;
 grant execute on function public.create_business_profile(text,text,text,text,text,text) to authenticated;
+
+-- Only trusted server roles may write membership directly; clients use the validated RPC.
+revoke all on public.business_profiles, public.business_members from anon;
