@@ -41,7 +41,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
       {/* Prominent Floating Search Input */}
       <div className="relative mx-auto mt-6 sm:mt-8 max-w-2xl">
         <div className="flex min-h-[56px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2 shadow-md transition-all focus-within:border-accent-500 focus-within:ring-2 focus-within:ring-accent-200 dark:focus-within:ring-accent-900/50">
-          <Search size={22} className="shrink-0 text-stone-400" aria-hidden="true" />
+          <Search size={22} className="shrink-0 text-stone-500 dark:text-stone-400" aria-hidden="true" />
           <label htmlFor="tool-search" className="sr-only">Search online tools</label>
           <input
             id="tool-search"
@@ -55,7 +55,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
               }
             }}
             placeholder="Search tools, e.g. PDF, salary, EMI, JSON, image…"
-            className="w-full border-0 bg-transparent text-base text-stone-900 dark:text-stone-100 outline-none placeholder:text-stone-400 focus:ring-0 min-h-[44px]"
+            className="w-full border-0 bg-transparent text-base text-stone-900 dark:text-stone-100 outline-none placeholder:text-stone-500 dark:placeholder:text-stone-400 focus:ring-0 min-h-[44px]"
           />
           {query && (
             <button
@@ -64,7 +64,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
                 if (onQueryChange) onQueryChange('');
                 else setQuery('');
               }}
-              className="shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition min-h-[44px] flex items-center justify-center"
+              className="shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition min-h-[44px] flex items-center justify-center"
             >
               Clear
             </button>
@@ -74,14 +74,14 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
         {/* Live Search Results Dropdown */}
         {query && (
           <div className="absolute z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-2 text-left shadow-2xl">
-            <div className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wider text-stone-400">
+            <div className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
               {searchResults.length ? 'Matching tools' : 'No direct match yet'}
             </div>
             {searchResults.map((tool) => (
               <ResultRow key={tool.slug} tool={tool} onUse={addRecent} />
             ))}
             {!searchResults.length && (
-              <div className="px-3 py-5 text-sm text-stone-500">Try salary, EMI, PDF, Excel, JSON or image.</div>
+              <div className="px-3 py-5 text-sm text-stone-600 dark:text-stone-300">Try salary, EMI, PDF, Excel, JSON or image.</div>
             )}
           </div>
         )}

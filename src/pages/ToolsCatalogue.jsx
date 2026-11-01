@@ -78,18 +78,18 @@ export default function ToolsCatalogue() {
               <label className="flex flex-col gap-2 text-sm font-semibold text-stone-700 dark:text-stone-200">
                 <span>Find a utility</span>
                 <span className="flex h-12 items-center gap-2 rounded-xl border border-[var(--orbit-border)] bg-[var(--orbit-canvas)] dark:bg-stone-800 px-3 focus-within:ring-2 focus-within:ring-accent-400">
-                  <Search size={17} className="text-stone-400" />
+                  <Search size={17} className="text-stone-500 dark:text-stone-400" />
                   <input 
                     value={query} 
                     onChange={e => setQuery(e.target.value)} 
                     placeholder="Search by name or purpose…" 
-                    className="min-w-0 flex-1 bg-transparent text-stone-800 dark:text-stone-100 outline-none placeholder:text-stone-400" 
+                    className="min-w-0 flex-1 bg-transparent text-stone-800 dark:text-stone-100 outline-none placeholder:text-stone-500 dark:placeholder:text-stone-400" 
                   />
                   {query && (
                     <button 
                       type="button" 
                       onClick={() => setQuery('')}
-                      className="text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                      className="text-xs font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100"
                     >
                       Clear
                     </button>
@@ -120,13 +120,13 @@ export default function ToolsCatalogue() {
               })}
             </div>
 
-            <p className="mt-3 text-xs text-stone-500 dark:text-stone-400">{filteredTools.length} utilities shown</p>
+            <p className="mt-3 text-xs font-medium text-stone-600 dark:text-stone-300">{filteredTools.length} utilities shown</p>
           </section>
 
           <section className="orbit-enter mt-6 overflow-hidden rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[620px] border-collapse text-left">
-                <thead className="bg-stone-50 dark:bg-stone-800/60 text-xs uppercase tracking-wider text-stone-600 dark:text-stone-400 border-b border-[var(--orbit-border)]">
+                <thead className="bg-stone-50 dark:bg-stone-800/60 text-xs uppercase tracking-wider text-stone-700 dark:text-stone-300 border-b border-[var(--orbit-border)]">
                   <tr>
                     <th className="px-5 py-4 font-bold">Utility</th>
                     <th className="px-5 py-4 font-bold">Category</th>
