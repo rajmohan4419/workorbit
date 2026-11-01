@@ -13,6 +13,7 @@ import ContactUs from './pages/ContactUs';
 import { loadGoogleAnalytics } from './lib/analytics';
 import Pricing from './pages/Pricing';
 import NotFound from './pages/NotFound';
+import { BusinessAuth, BusinessOnboarding, BusinessDashboard } from './pages/BusinessPortal';
 
 export default function App() {
   return (
@@ -26,6 +27,10 @@ export default function App() {
           <Route path="/" element={<ToolsHome />} />
           <Route path="/tools" element={<ToolsCatalogue />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/business/signup" element={<BusinessAuth mode="signup" />} />
+          <Route path="/business/login" element={<BusinessAuth mode="login" />} />
+          <Route path="/business/onboarding" element={<BusinessOnboarding />} />
+          <Route path="/business/dashboard" element={<BusinessDashboard />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/about" element={<AboutUs />} />
