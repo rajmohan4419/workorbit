@@ -88,13 +88,13 @@ export function QuickAccessSidebar({ isOpen, onClose }) {
     <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true" aria-label="Quick Access Sidebar">
       {/* Dimmed backdrop with smooth fade */}
       <div 
-        className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+        className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Slide-over Drawer / Sidebar */}
-      <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-md sm:max-w-lg flex-col border-l border-[var(--orbit-border)] bg-[var(--orbit-canvas)] dark:bg-stone-900 shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-right">
+      <aside className="fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-md sm:max-w-lg flex-col border-l border-[var(--orbit-border)] bg-[var(--orbit-canvas)] dark:bg-stone-900 shadow-2xl transition-all duration-300 ease-[var(--ease-out-expo)] animate-in slide-in-from-right">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-[var(--orbit-border)] bg-white/70 dark:bg-stone-950/60 px-5 py-4 backdrop-blur-sm sm:px-6">
           <div className="flex items-center gap-3">

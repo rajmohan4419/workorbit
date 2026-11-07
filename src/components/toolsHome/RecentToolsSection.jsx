@@ -13,7 +13,11 @@ export function RecentToolsSection({ showExplore, recentTools, addRecent }) {
         <span className="text-xs text-slate-700">{recentTools.length} recent</span>
       </div>
       <div className="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {recentTools.map(tool => <ResultRow key={tool.slug} tool={tool} onUse={addRecent} compact />)}
+        {recentTools.map((tool, idx) => (
+          <div key={tool.slug} style={{ '--stagger-index': idx }} className="anim-fade-up">
+            <ResultRow tool={tool} onUse={addRecent} compact />
+          </div>
+        ))}
       </div>
     </div>
   );

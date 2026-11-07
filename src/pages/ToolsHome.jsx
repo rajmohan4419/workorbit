@@ -46,6 +46,14 @@ export default function ToolsHome() {
   const [category, setCategory] = useState(urlCategory);
   const [prevUrlCategory, setPrevUrlCategory] = useState(urlCategory);
 
+  useEffect(() => {
+    if (category) {
+      window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: category.toLowerCase() }));
+    } else {
+      window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: null }));
+    }
+  }, [category]);
+
   if (urlQuery !== prevUrlQuery) {
     setPrevUrlQuery(urlQuery);
     setQuery(urlQuery);
@@ -179,6 +187,8 @@ export default function ToolsHome() {
                       key={catName}
                       type="button"
                       onClick={() => handleCategoryCardClick(catName)}
+                      onMouseEnter={() => window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: catName.toLowerCase() }))}
+                      onMouseLeave={() => window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: category ? category.toLowerCase() : null }))}
                       className={`group flex items-start gap-3 rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-150 ${
                         isActive
                           ? 'border-accent-500 bg-accent-50/80 dark:bg-accent-950/50 ring-2 ring-accent-400/40 shadow-xs'

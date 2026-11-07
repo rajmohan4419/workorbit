@@ -21,7 +21,7 @@ export default function NotFound() {
       <div>
         <ToolsHomeHeader />
         <main className="max-w-3xl mx-auto px-4 py-16 sm:py-24 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 mb-6 font-mono text-2xl font-black">
+          <div className="animate-orbit-float inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 mb-6 font-mono text-2xl font-black shadow-xs ring-4 ring-amber-500/10">
             404
           </div>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-stone-900 mb-4">
@@ -33,7 +33,7 @@ export default function NotFound() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               to="/tools"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm transition-all duration-150 active:scale-95 hover:-translate-y-0.5 shadow-sm hover:shadow-md"
             >
               <Calculator size={18} />
               Browse Free Tools
@@ -41,7 +41,7 @@ export default function NotFound() {
             </Link>
             <Link
               to="/"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--orbit-border)] bg-white hover:bg-stone-50 text-stone-800 font-semibold text-sm transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--orbit-border)] bg-white hover:bg-stone-50 text-stone-800 font-semibold text-sm transition-all duration-150 active:scale-95 hover:-translate-y-0.5 shadow-sm hover:shadow-md"
             >
               <Home size={18} />
               Homepage

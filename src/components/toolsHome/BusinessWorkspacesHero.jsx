@@ -68,12 +68,20 @@ const BUSINESS_WORKFLOWS = FEATURED_WORKFLOW_CONFIG.map(cfg => {
 });
 
 export function BusinessWorkspacesHero() {
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+  };
+
   return (
     <section className="mx-auto max-w-6xl py-6 sm:py-8 border-t border-[var(--orbit-border)]">
       {/* Header with high-value positioning */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5 anim-fade-up" style={{ '--stagger-index': 0 }}>
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-950/70 dark:text-accent-300 mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-950/70 dark:text-accent-300 mb-2 anim-zero-g">
             <Sparkles size={12} className="text-amber-500" />
             Task-Based Business Discovery
           </div>
@@ -93,20 +101,22 @@ export function BusinessWorkspacesHero() {
 
       {/* Task Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-        {BUSINESS_WORKFLOWS.map((item) => {
+        {BUSINESS_WORKFLOWS.map((item, index) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.slug}
               to={item.href}
-              className="group relative flex flex-col justify-between rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-xs hover:border-accent-400 hover:shadow-md transition-all duration-200"
+              onMouseMove={handleMouseMove}
+              style={{ '--stagger-index': index + 1 }}
+              className="card-spotlight anim-fade-up group relative flex flex-col justify-between rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-xs hover:border-accent-400 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1.5 active:scale-[0.98]"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.iconColor} transition-transform group-hover:scale-105`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.iconColor} transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5`}>
                     <Icon size={20} />
                   </div>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${item.badgeColor} transition-transform group-hover:scale-105`}>
                     {item.badge}
                   </span>
                 </div>
@@ -123,7 +133,7 @@ export function BusinessWorkspacesHero() {
                 <span className="text-[11px] font-medium text-stone-600 dark:text-stone-300">
                   {item.metrics}
                 </span>
-                <span className="inline-flex items-center gap-1 font-bold text-accent-600 dark:text-accent-400 group-hover:translate-x-0.5 transition-transform">
+                <span className="inline-flex items-center gap-1 font-bold text-accent-600 dark:text-accent-400 group-hover:translate-x-1 transition-transform duration-200">
                   Launch
                   <ArrowRight size={13} />
                 </span>

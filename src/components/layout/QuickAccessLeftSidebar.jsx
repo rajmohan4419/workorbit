@@ -300,7 +300,7 @@ export function QuickAccessLeftSidebar() {
             <div
               key={tool.slug}
               onMouseEnter={() => preloadToolPage(tool.slug)}
-              className={`group flex items-center gap-2 px-2 py-1.5 rounded-xl transition-colors cursor-default ${
+              className={`group flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all duration-200 cursor-default hover:translate-x-1 ${
                 isActive
                   ? 'bg-accent-50 dark:bg-accent-950/50 text-accent-700 dark:text-accent-300 ring-1 ring-accent-400/30'
                   : 'hover:bg-stone-100 dark:hover:bg-stone-800'
@@ -517,12 +517,12 @@ export function QuickAccessLeftSidebar() {
         <div className="fixed inset-0 z-50 flex sm:hidden" role="dialog" aria-modal="true" aria-label="Mobile Navigation Sidebar">
           {/* Dimmed backdrop */}
           <div
-            className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-300"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
           {/* Drawer panel */}
-          <aside className="relative w-72 max-w-[85vw] h-full bg-[var(--orbit-surface)] border-r border-[var(--orbit-border)] shadow-2xl z-50 animate-in slide-in-from-left duration-200">
+          <aside className="relative w-72 max-w-[85vw] h-full bg-[var(--orbit-surface)] border-r border-[var(--orbit-border)] shadow-2xl z-50 animate-in slide-in-from-left duration-300 ease-[var(--ease-out-expo)]">
             {renderExpandedContent(true)}
           </aside>
         </div>
