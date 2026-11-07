@@ -9,7 +9,7 @@ export function OrbitBoardLogo({
   return (
     <div className={`inline-flex items-center gap-3 ${className}`}>
       {/* Brand Icon */}
-      <div className="shrink-0">
+      <div className="shrink-0 brand-icon-orbit cursor-pointer">
         {variant === 'auto' ? (
           <>
             <OrbitBoardIcon size={iconSize} variant="color" className="block dark:hidden" />

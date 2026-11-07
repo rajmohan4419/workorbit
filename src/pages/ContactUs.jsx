@@ -50,7 +50,7 @@ export default function ContactUs() {
         <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
           <div className="grid md:grid-cols-12 gap-8">
             <div className="md:col-span-5 space-y-6">
-              <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
+              <div className="orbit-card-hover rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
                 <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                   <MessageSquare size={18} className="text-accent-600" />
                   Direct Email Support
@@ -58,7 +58,7 @@ export default function ContactUs() {
                 <p className="text-sm text-stone-600 dark:text-stone-300 leading-6">
                   For fastest response regarding general support, privacy inquiries, or reporting bugs:
                 </p>
-                <div className="p-3 rounded-xl bg-stone-50 dark:bg-stone-800 font-mono text-xs text-accent-700 dark:text-accent-400 font-semibold border border-[var(--orbit-border)]">
+                <div className="p-3 rounded-xl bg-stone-50 dark:bg-stone-800 font-mono text-xs text-accent-700 dark:text-accent-400 font-semibold border border-[var(--orbit-border)] hover:border-accent-400 transition-colors">
                   <a href="mailto:support@orbitboard.in" className="hover:underline">support@orbitboard.in</a>
                 </div>
                 <p className="text-xs text-stone-500 dark:text-stone-400">
@@ -66,7 +66,7 @@ export default function ContactUs() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-3">
+              <div className="orbit-card-hover rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-3">
                 <h3 className="font-bold text-sm text-stone-900 dark:text-stone-100">Tool Request & Feedback</h3>
                 <p className="text-xs text-stone-600 dark:text-stone-400 leading-5">
                   Is there a calculator or utility you'd like us to add? Send us your requirements and we'll prioritize it in our next release cycle.
@@ -134,7 +134,7 @@ export default function ContactUs() {
                     </div>
                     <button
                       type="submit"
-                      className="w-full rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-semibold py-3 px-5 text-sm transition inline-flex items-center justify-center gap-2 min-h-[44px]"
+                      className="w-full rounded-xl bg-accent-600 hover:bg-accent-500 text-white font-semibold py-3 px-5 text-sm transition-all duration-150 active:scale-[0.98] shadow-xs hover:shadow-md inline-flex items-center justify-center gap-2 min-h-[44px]"
                     >
                       <Send size={16} /> Send Message
                     </button>

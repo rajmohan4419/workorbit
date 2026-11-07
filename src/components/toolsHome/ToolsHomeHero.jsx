@@ -25,22 +25,36 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
   };
 
   return (
-    <section className="orbit-enter mx-auto max-w-4xl px-2 py-8 sm:py-12 text-center">
-      <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-950/60 px-3.5 py-1.5 text-xs font-semibold text-accent-800 dark:text-accent-300">
-        <Sparkles size={14} aria-hidden="true" /> Private • Fast • Client-Side
+    <section className="mx-auto max-w-4xl px-2 py-8 sm:py-12 text-center">
+      <div 
+        style={{ '--stagger-index': 0 }}
+        className="anim-fade-up inline-block"
+      >
+        <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-950/60 px-3.5 py-1.5 text-xs font-semibold text-accent-800 dark:text-accent-300 shadow-xs hover:border-accent-400 dark:hover:border-accent-600 transition-all duration-300 hover:scale-105 select-none anim-zero-g">
+          <Sparkles size={14} aria-hidden="true" className="text-accent-600 dark:text-accent-400" /> Private • Fast • Client-Side
+        </div>
       </div>
 
-      <h1 className="mt-4 text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl lg:text-5xl">
-        Free browser-based tools for <span className="text-accent-600 dark:text-accent-400">modern work.</span>
+      <h1 
+        style={{ '--stagger-index': 1 }}
+        className="anim-fade-up mt-4 text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl lg:text-5xl"
+      >
+        Free browser-based tools for <span className="text-accent-600 dark:text-accent-400 bg-gradient-to-r from-accent-600 to-indigo-500 bg-clip-text text-transparent">modern work.</span>
       </h1>
 
-      <p className="mx-auto mt-2.5 max-w-xl text-xs leading-5 text-stone-600 dark:text-stone-300 sm:text-sm">
+      <p 
+        style={{ '--stagger-index': 2 }}
+        className="anim-fade-up mx-auto mt-2.5 max-w-xl text-xs leading-5 text-stone-600 dark:text-stone-300 sm:text-sm"
+      >
         Convert files, calculate salaries, format code and get work done in seconds.
       </p>
 
       {/* Prominent Floating Search Input */}
-      <div className="relative mx-auto mt-6 sm:mt-8 max-w-2xl">
-        <div className="flex min-h-[56px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2 shadow-md transition-all focus-within:border-accent-500 focus-within:ring-2 focus-within:ring-accent-200 dark:focus-within:ring-accent-900/50">
+      <div 
+        style={{ '--stagger-index': 3 }}
+        className="anim-fade-up relative mx-auto mt-6 sm:mt-8 max-w-2xl"
+      >
+        <div className="flex min-h-[56px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2 shadow-md transition-all duration-300 focus-within:border-accent-500 focus-within:ring-4 focus-within:ring-accent-500/15 focus-within:shadow-xl focus-within:shadow-indigo-500/10 focus-within:scale-[1.01]">
           <Search size={22} className="shrink-0 text-stone-500 dark:text-stone-400" aria-hidden="true" />
           <label htmlFor="tool-search" className="sr-only">Search online tools</label>
           <input
@@ -64,7 +78,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
                 if (onQueryChange) onQueryChange('');
                 else setQuery('');
               }}
-              className="shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition min-h-[44px] flex items-center justify-center"
+              className="shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all duration-150 active:scale-95 min-h-[44px] flex items-center justify-center hover:scale-[1.03] active:scale-[0.97]"
             >
               Clear
             </button>
@@ -73,7 +87,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
 
         {/* Live Search Results Dropdown */}
         {query && (
-          <div className="absolute z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-2 text-left shadow-2xl">
+          <div className="orbit-scale-enter absolute z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-2 text-left shadow-2xl">
             <div className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
               {searchResults.length ? 'Matching tools' : 'No direct match yet'}
             </div>
@@ -87,7 +101,10 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
         )}
 
         {/* Category Chips right beneath search bar */}
-        <div className="mt-4 flex items-center justify-center">
+        <div 
+          style={{ '--stagger-index': 4 }}
+          className="anim-fade-up mt-4 flex items-center justify-center"
+        >
           <div className="overflow-x-auto no-scrollbar scroll-smooth flex gap-2 max-w-full py-1 px-1">
             {categoryChips.map((chip) => {
               const isActive = activeCategory === chip.name;
@@ -96,9 +113,17 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
                   key={chip.name}
                   type="button"
                   onClick={() => handleChipClick(chip.name)}
-                  className={`min-h-[44px] min-w-[44px] shrink-0 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition flex items-center justify-center border ${
+                  onMouseEnter={() => {
+                    if (chip.name !== 'All') {
+                      window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: chip.name.toLowerCase() }));
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: category ? category.toLowerCase() : null }));
+                  }}
+                  className={`min-h-[44px] min-w-[44px] shrink-0 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center border ${
                     isActive
-                      ? 'bg-accent-600 text-white border-accent-600 shadow-sm'
+                      ? 'bg-accent-600 text-white border-accent-600 shadow-md shadow-indigo-500/20'
                       : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 border-[var(--orbit-border)] hover:border-accent-400 hover:bg-accent-50 dark:hover:bg-stone-800'
                   }`}
                 >

@@ -55,14 +55,14 @@ function ToolShell({ tool, info }) {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 grid lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
           <section className="rounded-3xl border border-[var(--orbit-border)] bg-white p-5 sm:p-8 shadow-sm">
             <div className="mb-5 flex flex-wrap gap-2">
-              <div className="h-9 w-24 rounded-xl bg-stone-200 animate-pulse" />
-              <div className="h-9 w-20 rounded-xl bg-stone-200 animate-pulse" />
+              <div className="h-9 w-24 rounded-xl skeleton-shimmer" />
+              <div className="h-9 w-20 rounded-xl skeleton-shimmer" />
             </div>
             <div className="space-y-4">
-              <div className="h-8 w-40 rounded-lg bg-stone-200 animate-pulse" />
-              <div className="h-12 w-full rounded-xl bg-stone-100 animate-pulse" />
-              <div className="h-12 w-full rounded-xl bg-stone-100 animate-pulse" />
-              <div className="h-10 w-28 rounded-xl bg-accent-100 animate-pulse" />
+              <div className="h-8 w-40 rounded-lg skeleton-shimmer" />
+              <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+              <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+              <div className="h-10 w-28 rounded-xl skeleton-shimmer" />
             </div>
           </section>
 

@@ -16,6 +16,7 @@ export function ImportPanel({ title, templateName, templateRows, onParsed }) {
   const [showDriveInput, setShowDriveInput] = useState(false);
   const [driveUrl, setDriveUrl] = useState('');
   const [loadingDrive, setLoadingDrive] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const processText = (text, filename = 'CSV') => {
     try {
@@ -26,6 +27,29 @@ export function ImportPanel({ title, templateName, templateRows, onParsed }) {
       }
       onParsed(parsed);
       setStatus({ type: 'ok', text: `Loaded ${parsed.records.length} row(s) from ${filename}.` });
+    } catch {
+      setStatus({ type: 'error', text: 'Could not read that file. Check that it is a plain CSV.' });
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!/\.csv$/i.test(file.name)) {
+      setStatus({ type: 'error', text: 'Please upload a .csv file. In Excel or Sheets, use File → Download → Comma-separated values.' });
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      setStatus({ type: 'error', text: 'That file is larger than 2 MB. Split it into smaller files.' });
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      processText(text, file.name);
     } catch {
       setStatus({ type: 'error', text: 'Could not read that file. Check that it is a plain CSV.' });
     }
@@ -90,7 +114,19 @@ export function ImportPanel({ title, templateName, templateRows, onParsed }) {
   };
 
   return (
-    <div className="rounded-2xl border border-dashed border-[var(--orbit-border)] p-4 space-y-3">
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={handleDrop}
+      className={`rounded-2xl border-2 border-dashed p-4 space-y-3 transition-all duration-200 ${
+        isDragging
+          ? 'dropzone-active border-accent-500 bg-accent-50/40 dark:bg-accent-950/40'
+          : 'border-[var(--orbit-border)]'
+      }`}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{title}</p>

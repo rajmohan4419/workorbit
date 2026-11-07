@@ -170,6 +170,8 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
                         key={cat.name}
                         to={`/tools?category=${cat.name}`}
                         onClick={() => setCategoryDropdownOpen(false)}
+                        onMouseEnter={() => window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: cat.name.toLowerCase() }))}
+                        onMouseLeave={() => window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: tool.category.toLowerCase() }))}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition ${
                           isCurrent
                             ? 'bg-accent-50 dark:bg-accent-950/60 text-accent-700 dark:text-accent-300 font-bold'
@@ -624,8 +626,8 @@ export default function ToolPage() {
           <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
 
           <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
-          <div id="tool-workspace" key={slug} ref={workspaceRef} className="relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10">
-            <div className="h-1.5 w-full bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-400 opacity-80" />
+          <div id="tool-workspace" key={slug} ref={workspaceRef} className="orbit-card-enter relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10 transition-shadow duration-300 hover:shadow-lg">
+            <div className="h-1.5 w-full bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-400 opacity-85 animate-orbit-beam" />
             <div className="p-5 sm:p-8">
               {variant ? (
                 variant.baseToolSlug === 'emi' ? (
@@ -700,7 +702,7 @@ export default function ToolPage() {
                 <Link
                   key={r.slug}
                   to={`/tools/${r.slug}`}
-                  className="group flex flex-col justify-between p-4 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-accent-400.5 hover:shadow-md transition-all duration-200 min-h-[104px]"
+                  className="group flex flex-col justify-between p-4 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-accent-400 dark:hover:border-accent-500 hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-200 min-h-[104px] active:scale-[0.98]"
                 >
                   <div className="flex items-start gap-3">
                     {r.icon && (
