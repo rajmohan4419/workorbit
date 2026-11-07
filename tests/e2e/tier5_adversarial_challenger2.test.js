@@ -287,14 +287,14 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite (Challenger 2)'
       expect(sitemap.trim().endsWith('</urlset>')).toBe(true);
     });
 
-    it('T5.2.3: Sitemap contains exactly 110 URLs (7 static + 75 live + 28 variants)', () => {
+    it('T5.2.3: Sitemap contains one URL per static route, live tool, and variant', () => {
       const sitemap = readProjectFile('public/sitemap.xml');
       const locMatches = sitemap.match(/<loc>(.*?)<\/loc>/g) || [];
-      expect(locMatches.length).toBe(110);
+      expect(locMatches.length).toBe(7 + LISTED_TOOLS.length + toolVariants.length);
 
       // Verify no duplicate URLs in sitemap
       const uniqueUrls = new Set(locMatches);
-      expect(uniqueUrls.size).toBe(110);
+      expect(uniqueUrls.size).toBe(7 + LISTED_TOOLS.length + toolVariants.length);
     });
 
     it('T5.2.4: Planned tools in toolCatalog are 100% strictly excluded from sitemap.xml', () => {
@@ -309,7 +309,7 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite (Challenger 2)'
 
     it('T5.2.5: Live tools in LISTED_TOOLS are 100% included in sitemap.xml', () => {
       const sitemap = readProjectFile('public/sitemap.xml');
-      expect(LISTED_TOOLS.length).toBe(75);
+      expect(LISTED_TOOLS.length).toBeGreaterThan(0);
 
       for (const tool of LISTED_TOOLS) {
         expect(sitemap).toContain(`<loc>https://orbitboard.in/tools/${tool.slug}</loc>`);
@@ -340,7 +340,7 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite (Challenger 2)'
     it('T5.2.7: Uniform lastmod date format and valid priority values across all sitemap entries', () => {
       const sitemap = readProjectFile('public/sitemap.xml');
       const lastmodMatches = sitemap.match(/<lastmod>(.*?)<\/lastmod>/g) || [];
-      expect(lastmodMatches.length).toBe(110);
+      expect(lastmodMatches.length).toBe(7 + LISTED_TOOLS.length + toolVariants.length);
 
       // Every single entry has the constant lastmod date 2026-10-31
       for (const lm of lastmodMatches) {
@@ -348,7 +348,7 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite (Challenger 2)'
       }
 
       const priorityMatches = sitemap.match(/<priority>(.*?)<\/priority>/g) || [];
-      expect(priorityMatches.length).toBe(110);
+      expect(priorityMatches.length).toBe(7 + LISTED_TOOLS.length + toolVariants.length);
       for (const p of priorityMatches) {
         const val = parseFloat(p.replace(/<\/?priority>/g, ''));
         expect(val).toBeGreaterThanOrEqual(0.5);

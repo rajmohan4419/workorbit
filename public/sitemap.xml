@@ -187,6 +187,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://orbitboard.in/tools/html-viewer</loc>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://orbitboard.in/tools/csv-to-json</loc>
     <lastmod>2026-10-31</lastmod>
     <changefreq>weekly</changefreq>
