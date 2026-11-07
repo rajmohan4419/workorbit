@@ -587,6 +587,21 @@ export const TOOL_CONTENT = {
       ['Are XML attributes preserved?', 'This lightweight converter focuses on element structure rather than a complete XML schema mapping.']
     ]
   },
+  'html-viewer': {
+    title: 'HTML Viewer Online | Live HTML & CSS Preview',
+    intro: 'Paste or edit HTML and see the rendered result as you type. Use the preview to check headings, tables, inline CSS, or a small layout before adding it to a page. Your markup stays in your browser.',
+    keywords: 'HTML viewer online, live HTML preview, HTML CSS preview',
+    how: [
+      'Paste HTML into the source editor or select Load example.',
+      'Check the live preview and edit the HTML or inline CSS to update it.',
+      'Select Clear to start with an empty editor.'
+    ],
+    faq: [
+      ['Can I preview CSS?', 'Yes. Add CSS in a style element or use inline style attributes. External stylesheets and remote assets are blocked.'],
+      ['Does the viewer run JavaScript?', 'JavaScript, form submissions, and link navigation are disabled in the sandboxed preview.'],
+      ['Is my HTML uploaded?', 'OrbitBoard renders your markup locally in your browser.']
+    ]
+  },
   'markdown-to-html': {
     intro: 'Convert basic Markdown headings, emphasis, code and lists into HTML locally.',
     keywords: 'Markdown to HTML converter, Markdown HTML',

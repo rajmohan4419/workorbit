@@ -32,6 +32,7 @@ import {
   UnixTimestamp, UuidGenerator, UrlEncoder, DiffChecker, JsonToXml,
   XmlToJson, MarkdownToHtml
 } from '../tools/developer/DeveloperTools';
+import { HtmlViewer } from '../tools/developer/HtmlViewer';
 import {
   Converter, TemperatureConverter, ImageConverter, Percentage,
   ImageResizer, SvgToPng, ImageMetadataRemover, ImageCompressor,
@@ -533,6 +534,7 @@ export default function ToolPage() {
     'json-to-xml': JsonToXml,
     'xml-to-json': XmlToJson,
     'markdown-to-html': MarkdownToHtml,
+    'html-viewer': HtmlViewer,
     'image-compressor': ImageCompressor,
     'image-to-gif': ImageToGif,
     'video-to-gif': VideoToGif,

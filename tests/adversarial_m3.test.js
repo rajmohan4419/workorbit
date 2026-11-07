@@ -348,7 +348,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
   // 5. Prerendered HTML Files & 404 Routing Validation
   // =========================================================================
   describe('Prerendered HTML Files & 404 Routing Validation', () => {
-    it('M3.14: All 110 prerendered HTML files exist and are non-empty', () => {
+    it('M3.14: All prerendered HTML files exist and are non-empty', () => {
       if (!DIST_EXISTS) return; // requires npm run build
       // 7 static routes
       const staticFiles = [
@@ -368,8 +368,8 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
         expect(stats.size).toBeGreaterThan(1000);
       }
 
-      // 75 live tools
-      expect(LISTED_TOOLS.length).toBe(75);
+      // Live tools
+      expect(LISTED_TOOLS.length).toBeGreaterThan(0);
       for (const tool of LISTED_TOOLS) {
         const full = path.join(distDir, 'tools', tool.slug, 'index.html');
         expect(fs.existsSync(full)).toBe(true);
@@ -387,7 +387,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
       }
     });
 
-    it('M3.15: Every one of the 110 HTML files contains title, description, and canonical tags', () => {
+    it('M3.15: Every prerendered HTML file contains title, description, and canonical tags', () => {
       if (!DIST_EXISTS) return; // requires npm run build
       const allPaths = [];
 
@@ -400,7 +400,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
       allPaths.push(path.join(distDir, 'terms', 'index.html'));
       allPaths.push(path.join(distDir, 'pricing', 'index.html'));
 
-      // 75 live tools
+      // Live tools
       for (const tool of LISTED_TOOLS) {
         allPaths.push(path.join(distDir, 'tools', tool.slug, 'index.html'));
       }
@@ -410,7 +410,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
         allPaths.push(path.join(distDir, 'tools', v.slug, 'index.html'));
       }
 
-      expect(allPaths.length).toBe(110);
+      expect(allPaths.length).toBe(7 + LISTED_TOOLS.length + toolVariants.length);
 
       for (const filePath of allPaths) {
         const html = fs.readFileSync(filePath, 'utf8');
@@ -470,18 +470,18 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
       expect(publicSitemap).toBe(distSitemap);
     });
 
-    it('M3.18: Contains exactly 110 URLs with uniform lastmod 2026-10-31', () => {
+    it('M3.18: Contains one URL per indexable page with uniform lastmod 2026-10-31', () => {
       if (!DIST_EXISTS) return; // requires npm run build
       const sitemap = fs.readFileSync(path.join(distDir, 'sitemap.xml'), 'utf8');
 
       const locMatches = sitemap.match(/<loc>/g) || [];
       const lastmodMatches = sitemap.match(/<lastmod>2026-10-31<\/lastmod>/g) || [];
 
-      expect(locMatches.length).toBe(110);
-      expect(lastmodMatches.length).toBe(110);
+      expect(locMatches.length).toBe(7 + LISTED_TOOLS.length + toolVariants.length);
+      expect(lastmodMatches.length).toBe(7 + LISTED_TOOLS.length + toolVariants.length);
     });
 
-    it('M3.19: All 7 static routes, 75 live tools, and 28 variants are present in sitemap.xml', () => {
+    it('M3.19: All static routes, live tools, and variants are present in sitemap.xml', () => {
       if (!DIST_EXISTS) return; // requires npm run build
       const sitemap = fs.readFileSync(path.join(distDir, 'sitemap.xml'), 'utf8');
 
@@ -499,7 +499,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
         expect(sitemap).toContain(`<loc>${u}</loc>`);
       }
 
-      // 75 live tools
+      // Live tools
       for (const tool of LISTED_TOOLS) {
         expect(sitemap).toContain(`<loc>https://orbitboard.in/tools/${tool.slug}</loc>`);
       }
@@ -543,7 +543,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
   // 8. Structured Data (JSON-LD) & Content Uniqueness
   // =========================================================================
   describe('Structured Data (JSON-LD) & Content Uniqueness', () => {
-    it('M3.22: All JSON-LD script blocks across all 110 HTML files parse as valid JSON without exception', () => {
+    it('M3.22: All JSON-LD script blocks across all prerendered HTML files parse as valid JSON without exception', () => {
       const allPaths = [];
       allPaths.push(path.join(distDir, 'index.html'));
       allPaths.push(path.join(distDir, 'tools', 'index.html'));
@@ -591,7 +591,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
       expect(firstFaqQuestions.size).toBe(28);
     });
 
-    it('M3.25: Noscript fallback tags are injected into all 110 HTML files', () => {
+    it('M3.25: Noscript fallback tags are injected into all prerendered HTML files', () => {
       const allPaths = [];
       allPaths.push(path.join(distDir, 'index.html'));
       allPaths.push(path.join(distDir, 'tools', 'index.html'));

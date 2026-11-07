@@ -27,6 +27,7 @@ export const TOOLS = [
   { slug: "json-to-xml", name: "JSON to XML Converter", description: "Convert JSON objects into readable XML directly in your browser.", category: "Developer", icon: "XML", status: "live" },
   { slug: "xml-to-json", name: "XML to JSON Converter", description: "Convert XML documents into JSON directly in your browser.", category: "Developer", icon: "XML", status: "live" },
   { slug: "markdown-to-html", name: "Markdown to HTML Converter", description: "Convert basic Markdown into HTML locally in your browser.", category: "Developer", icon: "MD", status: "live" },
+  { slug: "html-viewer", name: "HTML Viewer", description: "Preview HTML markup and inline CSS as you type, directly in your browser.", category: "Developer", icon: "HTML", status: "live" },
   { slug: "csv-to-json", name: "CSV to JSON Converter", description: "Convert simple CSV data into a JSON array directly in your browser.", category: "Everyday", icon: "CSV", status: "live" },
   { slug: "csv-to-xlsx", name: "CSV to XLSX Converter", description: "Convert CSV data into an Excel-compatible XLSX workbook directly in your browser.", category: "Everyday", icon: "XLS", status: "live" },
   { slug: "json-to-xlsx", name: "JSON to XLSX Converter", description: "Convert a JSON array into an Excel-compatible XLSX workbook locally.", category: "Developer", icon: "XLS", status: "live" },
