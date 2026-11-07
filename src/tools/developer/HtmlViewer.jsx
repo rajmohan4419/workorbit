@@ -1,29 +1,5 @@
 import { useState } from 'react';
-
-const example = `<style>
-  body { font: 16px system-ui; padding: 2rem; }
-  h1 { color: #6d28d9; }
-</style>
-<h1>Hello, OrbitBoard!</h1>
-<p>Edit the HTML to see your changes in the preview.</p>`;
-
-function previewDocument(html) {
-  // Parse in an inert template before removing elements that could trigger navigation or network hints.
-  const template = document.createElement('template');
-  template.innerHTML = html;
-
-  for (const element of template.content.querySelectorAll('base, link, meta, noscript, template, animate, set')) {
-    element.remove();
-  }
-  for (const link of template.content.querySelectorAll('a, area')) {
-    link.removeAttribute('href');
-    link.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
-  }
-
-  return `<!doctype html><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-${template.innerHTML}`;
-}
+import { previewDocument, DEFAULT_HTML_EXAMPLE } from '../../lib/htmlPreview';
 
 export function HtmlViewer() {
   const [html, setHtml] = useState('');
@@ -37,10 +13,19 @@ export function HtmlViewer() {
   return (
     <div className="min-w-0 space-y-4">
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={() => updateHtml(example)} className="min-h-[44px] rounded-xl bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-500">
+        <button
+          type="button"
+          onClick={() => updateHtml(DEFAULT_HTML_EXAMPLE)}
+          className="min-h-[44px] rounded-xl bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-500"
+        >
           Load example
         </button>
-        <button type="button" onClick={() => updateHtml('')} disabled={!html} className="min-h-[44px] rounded-xl border border-[var(--orbit-border)] px-4 py-2 text-sm font-semibold hover:border-accent-500 disabled:opacity-50">
+        <button
+          type="button"
+          onClick={() => updateHtml('')}
+          disabled={!html}
+          className="min-h-[44px] rounded-xl border border-[var(--orbit-border)] px-4 py-2 text-sm font-semibold hover:border-accent-500 disabled:opacity-50"
+        >
           Clear
         </button>
       </div>
@@ -52,7 +37,7 @@ export function HtmlViewer() {
           <span className="block text-sm font-semibold">HTML source</span>
           <textarea
             value={html}
-            onChange={event => updateHtml(event.target.value)}
+            onChange={(event) => updateHtml(event.target.value)}
             aria-describedby="html-viewer-help"
             placeholder="<h1>Hello, world!</h1>"
             spellCheck={false}

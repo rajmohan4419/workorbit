@@ -68,7 +68,13 @@ export function BusinessDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
-    if (!session) { setBusinesses([]); setLoading(true); return; }
+    if (!session) {
+      Promise.resolve().then(() => {
+        setBusinesses([]);
+        setLoading(true);
+      });
+      return;
+    }
     let active = true;
     supabase.from('business_profiles').select('id,name,business_type,gstin,created_at').order('created_at', { ascending: false })
       .then(({ data, error: err }) => { if (!active) return; setBusinesses(data || []); setError(err?.message || ''); setLoading(false); });

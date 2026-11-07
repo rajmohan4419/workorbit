@@ -1,7 +1,7 @@
 const visualKind = (slug) => {
   if (['ctc-to-inhand', 'salary-hike', 'offer-comparison', 'notice-period', 'experience'].includes(slug)) return 'career';
   if (['emi', 'gst', 'sip'].includes(slug)) return 'finance';
-  if (['json-formatter', 'json-to-csv', 'json-to-xml', 'xml-to-json', 'markdown-to-html', 'base64', 'jwt-decoder', 'unix-timestamp', 'uuid-generator', 'url-encoder', 'diff-checker'].includes(slug)) return 'code';
+  if (['json-formatter', 'json-to-csv', 'json-to-xml', 'xml-to-json', 'markdown-to-html', 'html-viewer', 'base64', 'jwt-decoder', 'unix-timestamp', 'uuid-generator', 'url-encoder', 'diff-checker'].includes(slug)) return 'code';
   if (slug.includes('xlsx') || slug.includes('csv')) return 'sheet';
   if (slug.includes('pdf') || slug === 'txt-to-pdf') return 'pdf';
   if (slug.includes('image') || ['jpg-to-png', 'png-to-jpg', 'webp-to-jpg', 'svg-to-png'].includes(slug)) return 'image';
