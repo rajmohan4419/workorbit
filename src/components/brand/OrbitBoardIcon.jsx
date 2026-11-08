@@ -16,22 +16,22 @@ export function OrbitBoardIcon({ size = 32, className = '', variant = 'color' })
       >
         <defs>
           <linearGradient id={`o-32-${variant}`} x1="6" y1="6" x2="26" y2="26" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#38BDF8"/>
-            <stop offset="50%" stop-color="#0284C7"/>
-            <stop offset="100%" stop-color="#0369A1"/>
+            <stop offset="0%" stopColor="#38BDF8"/>
+            <stop offset="50%" stopColor="#0284C7"/>
+            <stop offset="100%" stopColor="#0369A1"/>
           </linearGradient>
 
           <linearGradient id={`ring-32-${variant}`} x1="2" y1="20" x2="28" y2="8" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#00E5FF"/>
-            <stop offset="40%" stop-color="#A855F7"/>
-            <stop offset="75%" stop-color="#F43F5E"/>
-            <stop offset="100%" stop-color="#FB923C"/>
+            <stop offset="0%" stopColor="#00E5FF"/>
+            <stop offset="40%" stopColor="#A855F7"/>
+            <stop offset="75%" stopColor="#F43F5E"/>
+            <stop offset="100%" stopColor="#FB923C"/>
           </linearGradient>
 
           <radialGradient id={`sat-32-${variant}`} cx="35%" cy="35%" r="65%">
-            <stop offset="0%" stop-color="#FEF08A"/>
-            <stop offset="40%" stop-color="#FB923C"/>
-            <stop offset="100%" stop-color="#E11D48"/>
+            <stop offset="0%" stopColor="#FEF08A"/>
+            <stop offset="40%" stopColor="#FB923C"/>
+            <stop offset="100%" stopColor="#E11D48"/>
           </radialGradient>
 
           <mask id={`mask-32-${variant}`}>
@@ -49,8 +49,8 @@ export function OrbitBoardIcon({ size = 32, className = '', variant = 'color' })
           <ellipse cx="15.5" cy="15.5" rx="12.5" ry="5.8" 
             fill="none" 
             stroke={isMono ? monoColor : `url(#ring-32-${variant})`} 
-            stroke-width="2.6" 
-            stroke-linecap="round"
+            strokeWidth="2.6" 
+            strokeLinecap="round"
             transform="rotate(-28 15.5 15.5)"
           />
         </g>
@@ -78,8 +78,8 @@ export function OrbitBoardIcon({ size = 32, className = '', variant = 'color' })
           <ellipse cx="15.5" cy="15.5" rx="12.5" ry="5.8" 
             fill="none" 
             stroke={isMono ? monoColor : `url(#ring-32-${variant})`} 
-            stroke-width="2.6" 
-            stroke-linecap="round"
+            strokeWidth="2.6" 
+            strokeLinecap="round"
             transform="rotate(-28 15.5 15.5)"
           />
         </g>
@@ -104,31 +104,31 @@ export function OrbitBoardIcon({ size = 32, className = '', variant = 'color' })
     >
       <defs>
         <linearGradient id={`o-full-${variant}`} x1="45" y1="25" x2="115" y2="125" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#38BDF8"/>
-          <stop offset="35%" stop-color="#0284C7"/>
-          <stop offset="75%" stop-color="#0369A1"/>
-          <stop offset="100%" stop-color="#075985"/>
+          <stop offset="0%" stopColor="#38BDF8"/>
+          <stop offset="35%" stopColor="#0284C7"/>
+          <stop offset="75%" stopColor="#0369A1"/>
+          <stop offset="100%" stopColor="#075985"/>
         </linearGradient>
 
         <linearGradient id={`rim-full-${variant}`} x1="60" y1="35" x2="100" y2="110" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#7DD3FC"/>
-          <stop offset="50%" stop-color="#0284C7"/>
-          <stop offset="100%" stop-color="#0C4A6E"/>
+          <stop offset="0%" stopColor="#7DD3FC"/>
+          <stop offset="50%" stopColor="#0284C7"/>
+          <stop offset="100%" stopColor="#0C4A6E"/>
         </linearGradient>
 
         <linearGradient id={`ring-full-${variant}`} x1="20" y1="95" x2="140" y2="50" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#38BDF8"/>
-          <stop offset="35%" stop-color="#818CF8"/>
-          <stop offset="60%" stop-color="#C084FC"/>
-          <stop offset="85%" stop-color="#F43F5E"/>
-          <stop offset="100%" stop-color="#FB923C"/>
+          <stop offset="0%" stopColor="#38BDF8"/>
+          <stop offset="35%" stopColor="#818CF8"/>
+          <stop offset="60%" stopColor="#C084FC"/>
+          <stop offset="85%" stopColor="#F43F5E"/>
+          <stop offset="100%" stopColor="#FB923C"/>
         </linearGradient>
 
         <radialGradient id={`sat-full-${variant}`} cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#FDE047"/>
-          <stop offset="35%" stop-color="#FB923C"/>
-          <stop offset="75%" stop-color="#E11D48"/>
-          <stop offset="100%" stop-color="#831843"/>
+          <stop offset="0%" stopColor="#FDE047"/>
+          <stop offset="35%" stopColor="#FB923C"/>
+          <stop offset="75%" stopColor="#E11D48"/>
+          <stop offset="100%" stopColor="#831843"/>
         </radialGradient>
 
         <mask id={`back-mask-${variant}`}>
@@ -146,7 +146,7 @@ export function OrbitBoardIcon({ size = 32, className = '', variant = 'color' })
         <ellipse cx="80" cy="75" rx="68" ry="30" 
           fill="none" 
           stroke={isMono ? monoColor : `url(#ring-full-${variant})`} 
-          stroke-width="7" 
+          strokeWidth="7" 
           transform="rotate(-28 80 75)"
         />
       </g>
@@ -183,15 +183,15 @@ export function OrbitBoardIcon({ size = 32, className = '', variant = 'color' })
         <ellipse cx="80" cy="75" rx="68" ry="30" 
           fill="none" 
           stroke={isMono ? monoColor : `url(#ring-full-${variant})`} 
-          stroke-width="7" 
+          strokeWidth="7" 
           transform="rotate(-28 80 75)"
         />
         {!isMono && (
           <ellipse cx="80" cy="75" rx="68" ry="30" 
             fill="none" 
             stroke="#FFFFFF" 
-            stroke-width="1.8" 
-            stroke-opacity="0.7"
+            strokeWidth="1.8" 
+            strokeOpacity="0.7"
             transform="rotate(-28 80 75)"
           />
         )}

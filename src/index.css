@@ -412,6 +412,7 @@ code, pre, kbd, .mono {
     transparent 70%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
@@ -548,18 +549,27 @@ main {
 }
 
 /* ─── Scrollbar ──────────────────────────────────────────────────────────── */
-@utility no-scrollbar {
+.no-scrollbar {
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Thin custom scrollbar for sidebars */
-@utility orbit-scrollbar {
+.orbit-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--orbit-border) transparent;
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: var(--orbit-border); border-radius: 4px; }
+}
+.orbit-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.orbit-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.orbit-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--orbit-border);
+  border-radius: 4px;
 }
 
 /* ─── Tap targets ────────────────────────────────────────────────────────── */
