@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins, Search, TrendingUp, Filter } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins, Search, TrendingUp, Filter, X } from 'lucide-react';
 import { LISTED_TOOLS } from '../data/toolCatalog';
 import { preloadToolPage } from '../lib/toolPageLoader';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
@@ -26,8 +26,10 @@ export default function ToolsCatalogue() {
     const next = new URLSearchParams(searchParams);
     if (newCat === 'All') {
       next.delete('category');
+      window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: null }));
     } else {
       next.set('category', newCat);
+      window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: newCat.toLowerCase() }));
     }
     setSearchParams(next);
   };
@@ -57,15 +59,16 @@ export default function ToolsCatalogue() {
           {/* Filter Bar with Category Dropdown & Quick Selector */}
           <section className="orbit-card-enter mt-8 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 sm:p-5 shadow-sm">
             <div className="grid gap-3 md:grid-cols-[minmax(240px,.8fr)_minmax(0,1.2fr)]">
-              <label className="flex flex-col gap-2 text-sm font-semibold text-stone-700 dark:text-stone-200">
-                <span className="flex items-center gap-1.5">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="catalog-category" className="flex items-center gap-1.5 text-sm font-semibold text-stone-700 dark:text-stone-200">
                   <Filter size={15} className="text-accent-600 dark:text-accent-400" />
-                  <span>Category Dropdown</span>
-                </span>
+                  <span>Category</span>
+                </label>
                 <select 
+                  id="catalog-category"
                   value={category} 
                   onChange={e => handleCategoryChange(e.target.value)} 
-                  className="h-12 rounded-xl border border-[var(--orbit-border)] bg-[var(--orbit-canvas)] dark:bg-stone-800 px-3 text-stone-800 dark:text-stone-100 outline-none focus:ring-2 focus:ring-accent-400 font-medium cursor-pointer"
+                  className="h-12 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 px-3.5 text-sm font-medium text-stone-800 dark:text-stone-100 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-400/30 cursor-pointer transition-colors"
                 >
                   {categories.map(item => (
                     <option key={item.name} value={item.name} className="dark:bg-stone-900">
@@ -73,29 +76,38 @@ export default function ToolsCatalogue() {
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
 
-              <label className="flex flex-col gap-2 text-sm font-semibold text-stone-700 dark:text-stone-200">
-                <span>Find a utility</span>
-                <span className="flex h-12 items-center gap-2 rounded-xl border border-[var(--orbit-border)] bg-[var(--orbit-canvas)] dark:bg-stone-800 px-3 focus-within:ring-2 focus-within:ring-accent-400">
-                  <Search size={17} className="text-stone-500 dark:text-stone-400" />
+              <div className="flex flex-col gap-2">
+                <label htmlFor="catalog-search" className="text-sm font-semibold text-stone-700 dark:text-stone-200">
+                  Find a utility
+                </label>
+                <div className="relative">
+                  <Search 
+                    size={18} 
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500" 
+                    aria-hidden="true" 
+                  />
                   <input 
+                    id="catalog-search"
+                    type="text"
                     value={query} 
                     onChange={e => setQuery(e.target.value)} 
                     placeholder="Search by name or purpose…" 
-                    className="min-w-0 flex-1 bg-transparent text-stone-800 dark:text-stone-100 outline-none placeholder:text-stone-500 dark:placeholder:text-stone-400" 
+                    className="h-12 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 pl-10 pr-10 text-sm font-medium text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-400/30 transition-all" 
                   />
                   {query && (
                     <button 
                       type="button" 
                       onClick={() => setQuery('')}
-                      className="text-xs font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100"
+                      aria-label="Clear search"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition"
                     >
-                      Clear
+                      <X size={16} />
                     </button>
                   )}
-                </span>
-              </label>
+                </div>
+              </div>
             </div>
 
             {/* Quick Category Chips */}
@@ -107,7 +119,7 @@ export default function ToolsCatalogue() {
                     key={name}
                     type="button"
                     onClick={() => handleCategoryChange(name)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition min-h-[36px] ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 active:scale-95 min-h-[36px] ${
                       isActive 
                         ? 'bg-accent-600 text-white shadow-xs' 
                         : 'border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:border-accent-400'
@@ -138,7 +150,7 @@ export default function ToolsCatalogue() {
                   {filteredTools.map((tool, index) => (
                     <tr 
                       key={tool.slug} 
-                      className="orbit-interactive border-t border-[var(--orbit-border)] hover:bg-stone-50/70 dark:hover:bg-stone-800/40 transition" 
+                      className="group border-t border-[var(--orbit-border)] hover:bg-accent-50/30 dark:hover:bg-accent-950/20 transition-colors duration-150" 
                       style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}
                     >
                       <td className="px-5 py-4">
@@ -146,13 +158,13 @@ export default function ToolsCatalogue() {
                           to={`/tools/${tool.slug}`} 
                           onMouseEnter={() => preloadToolPage(tool.slug)} 
                           onFocus={() => preloadToolPage(tool.slug)} 
-                          className="font-bold text-stone-900 dark:text-stone-100 hover:text-accent-700 dark:hover:text-accent-400"
+                          className="font-bold text-stone-900 dark:text-stone-100 hover:text-accent-700 dark:hover:text-accent-400 transition-colors"
                         >
                           {tool.name}
                         </Link>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="inline-flex rounded-full bg-accent-50 dark:bg-accent-950/60 border border-accent-200 dark:border-accent-800 px-2.5 py-1 text-xs font-semibold text-accent-700 dark:text-accent-300">
+                        <span className="inline-flex rounded-full bg-accent-50 dark:bg-accent-950/60 border border-accent-200 dark:border-accent-800 px-2.5 py-1 text-xs font-semibold text-accent-700 dark:text-accent-300 transition-colors">
                           {tool.category}
                         </span>
                       </td>
@@ -162,7 +174,7 @@ export default function ToolsCatalogue() {
                           aria-label={`Open ${tool.name}`} 
                           to={`/tools/${tool.slug}`} 
                           onMouseEnter={() => preloadToolPage(tool.slug)} 
-                          className="inline-flex rounded-lg p-2 text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 transition"
+                          className="inline-flex rounded-lg p-2 text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 group-hover:translate-x-1 transition-all duration-200"
                         >
                           <ArrowRight size={17} />
                         </Link>

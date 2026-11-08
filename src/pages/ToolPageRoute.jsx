@@ -1,17 +1,19 @@
 import { lazy, Suspense } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins } from 'lucide-react';
-import { TOOLS, SLUG_REDIRECTS } from '../data/toolCatalog';
+import { ArrowRight, BriefcaseBusiness, Calculator, Code2, Coins, TrendingUp } from 'lucide-react';
+import { TOOLS, LISTED_TOOLS, SLUG_REDIRECTS } from '../data/toolCatalog';
 import { TOOL_CONTENT } from '../data/toolContent';
 import toolVariants from '../data/toolVariants.json';
 import { loadToolPage } from '../lib/toolPageLoader';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
+import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 import NotFound from './NotFound';
 
 const ToolPage = lazy(loadToolPage);
 
 const categoryIcons = {
+  Business: TrendingUp,
   Career: BriefcaseBusiness,
   Finance: Coins,
   Developer: Code2,
@@ -20,66 +22,74 @@ const categoryIcons = {
 
 function ToolShell({ tool, info }) {
   const CategoryIcon = categoryIcons[tool.category] || Calculator;
-  const related = TOOLS.filter(item => item.category === tool.category && item.slug !== tool.slug).slice(0, 3);
+  const related = LISTED_TOOLS.filter(item => item.category === tool.category && item.slug !== tool.slug).slice(0, 4);
 
   return (
-    <div className="orbit-light min-h-screen bg-[var(--orbit-canvas)] text-stone-800 flex">
+    <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex">
       <QuickAccessLeftSidebar />
-      <div className="flex-1 min-w-0 flex flex-col">
-        <ToolsHomeHeader />
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
+        <div>
+          <ToolsHomeHeader />
 
-        <main>
-        <section className="border-b border-[var(--orbit-border)] bg-white">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 sm:py-7">
-            <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-6 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 bg-accent-50 px-3 py-1.5 text-xs font-semibold text-accent-700">
-                  <CategoryIcon size={14}/>{tool.category} tool
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 mt-3">{info?.h1 || tool.name}</h1>
-                <p className="mt-3 text-sm sm:text-base leading-7 text-stone-600">{info?.intro || tool.description}</p>
-              </div>
-              <div className="relative overflow-hidden rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-canvas)] min-h-44 sm:min-h-52">
-                <img src={tool.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
-                <div className="relative h-full min-h-44 sm:min-h-52 p-5 flex items-end">
+          <main>
+            <section className="border-b border-[var(--orbit-border)] bg-white dark:bg-stone-900 transition-colors">
+              <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-5 sm:py-7">
+                <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-6 items-center">
                   <div>
-                    <p className="text-xs uppercase tracking-[.2em] text-accent-700 font-bold">OrbitBoard</p>
-                    <p className="mt-2 text-xl font-bold text-stone-900">Get the answer. Keep moving.</p>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-950/60 px-3 py-1.5 text-xs font-semibold text-accent-700 dark:text-accent-300">
+                      <CategoryIcon size={14} />{tool.category} tool
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-stone-900 dark:text-stone-100 mt-3">{info?.h1 || tool.name}</h1>
+                    <p className="mt-3 text-sm sm:text-base leading-7 text-stone-600 dark:text-stone-300">{info?.intro || tool.description}</p>
+                  </div>
+                  <div className="relative overflow-hidden rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-canvas)] min-h-44 sm:min-h-52">
+                    {tool.image ? (
+                      <img src={tool.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent-500/10 via-transparent to-indigo-500/10" />
+                    )}
+                    <div className="relative h-full min-h-44 sm:min-h-52 p-5 flex items-end">
+                      <div>
+                        <p className="text-xs uppercase tracking-[.2em] text-accent-700 dark:text-accent-400 font-bold">OrbitBoard</p>
+                        <p className="mt-2 text-xl font-bold text-stone-900 dark:text-stone-100">Get the answer. Keep moving.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 grid lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
-          <section className="rounded-3xl border border-[var(--orbit-border)] bg-white p-5 sm:p-8 shadow-sm">
-            <div className="mb-5 flex flex-wrap gap-2">
-              <div className="h-9 w-24 rounded-xl bg-stone-200 animate-pulse" />
-              <div className="h-9 w-20 rounded-xl bg-stone-200 animate-pulse" />
-            </div>
-            <div className="space-y-4">
-              <div className="h-8 w-40 rounded-lg bg-stone-200 animate-pulse" />
-              <div className="h-12 w-full rounded-xl bg-stone-100 animate-pulse" />
-              <div className="h-12 w-full rounded-xl bg-stone-100 animate-pulse" />
-              <div className="h-10 w-28 rounded-xl bg-accent-100 animate-pulse" />
-            </div>
-          </section>
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 grid lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
+              <section className="rounded-3xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 sm:p-8 shadow-sm transition-colors">
+                <div className="mb-5 flex flex-wrap gap-2">
+                  <div className="h-9 w-24 rounded-xl skeleton-shimmer" />
+                  <div className="h-9 w-20 rounded-xl skeleton-shimmer" />
+                </div>
+                <div className="space-y-4">
+                  <div className="h-8 w-40 rounded-lg skeleton-shimmer" />
+                  <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+                  <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+                  <div className="h-10 w-28 rounded-xl skeleton-shimmer" />
+                </div>
+              </section>
 
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 rounded-2xl border border-[var(--orbit-border)] bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-accent-700">More {tool.category} tools</p>
-              <div className="mt-4 space-y-2">
-                {related.map(item => (
-                  <Link key={item.slug} to={`/tools/${item.slug}`} className="flex items-center justify-between rounded-xl px-3 py-3 text-sm text-stone-700 hover:bg-stone-100 hover:text-stone-900">
-                    {item.name}<ArrowRight size={15}/>
-                  </Link>
-                ))}
-              </div>
+              <aside className="hidden lg:block">
+                <div className="sticky top-24 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-sm transition-colors">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-accent-700 dark:text-accent-400">More {tool.category} tools</p>
+                  <div className="mt-4 space-y-2">
+                    {related.map(item => (
+                      <Link key={item.slug} to={`/tools/${item.slug}`} className="flex items-center justify-between rounded-xl px-3 py-3 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors">
+                        {item.name}<ArrowRight size={15} />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </aside>
             </div>
-          </aside>
+          </main>
         </div>
-      </main>
+
+        <ToolsHomeFooter />
       </div>
     </div>
   );

@@ -59,7 +59,7 @@ export function PlanGate({
     <div
       role="region"
       aria-label="Feature Upgrade Required"
-      className="rounded-2xl border border-violet-200 dark:border-violet-800/60 bg-gradient-to-b from-violet-50/70 via-white to-stone-50 dark:from-violet-950/40 dark:via-stone-900 dark:to-stone-900 p-6 sm:p-8 text-center max-w-lg mx-auto shadow-sm transition"
+      className="anim-fade-up rounded-2xl border border-violet-200 dark:border-violet-800/60 bg-gradient-to-b from-violet-50/70 via-white to-stone-50 dark:from-violet-950/40 dark:via-stone-900 dark:to-stone-900 p-6 sm:p-8 text-center max-w-lg mx-auto shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 card-spotlight"
     >
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-md mb-4">
         <Lock size={22} />

@@ -252,14 +252,14 @@ export default function Pricing() {
             </p>
 
             {/* Monthly / Annual Toggle */}
-            <div className="mt-8 inline-flex items-center p-1 rounded-2xl bg-stone-200/70 dark:bg-stone-800/80 border border-[var(--orbit-border)]">
+            <div className="mt-8 inline-flex items-center p-1 rounded-2xl bg-stone-200/70 dark:bg-stone-800/80 border border-[var(--orbit-border)] shadow-xs">
               <button
                 type="button"
                 onClick={() => setBillingInterval('monthly')}
-                className={`px-5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition ${
+                className={`px-5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 active:scale-95 ${
                   billingInterval === 'monthly'
-                    ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-xs'
-                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
+                    ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-sm'
+                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
                 }`}
               >
                 Monthly Billing
@@ -267,14 +267,14 @@ export default function Pricing() {
               <button
                 type="button"
                 onClick={() => setBillingInterval('annual')}
-                className={`px-5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition flex items-center gap-1.5 ${
+                className={`px-5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
                   billingInterval === 'annual'
-                    ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-xs'
-                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
+                    ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-sm'
+                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
                 }`}
               >
                 <span>Annual Billing</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold transition-transform hover:scale-105">
                   Save up to 33%
                 </span>
               </button>
@@ -306,10 +306,10 @@ export default function Pricing() {
               {tiers.map((tier) => (
                 <div
                   key={tier.key}
-                  className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all ${
+                  className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 ${
                     tier.highlighted
-                      ? 'border-2 border-violet-600 dark:border-violet-500 bg-white dark:bg-stone-900 shadow-xl relative scale-100 sm:scale-105 z-10'
-                      : 'border border-[var(--orbit-border)] bg-stone-50/70 dark:bg-stone-900/60 shadow-xs'
+                      ? 'border-2 border-violet-600 dark:border-violet-500 bg-white dark:bg-stone-900 shadow-xl relative scale-100 sm:scale-105 z-10 ring-2 ring-violet-500/20 hover:shadow-2xl hover:shadow-indigo-500/15 card-spotlight shimmer-border'
+                      : 'border border-[var(--orbit-border)] bg-stone-50/70 dark:bg-stone-900/60 shadow-xs hover:border-accent-300 dark:hover:border-accent-700 hover:shadow-lg hover:shadow-stone-900/5'
                   }`}
                 >
                   <div>
@@ -370,7 +370,7 @@ export default function Pricing() {
                       type="button"
                       disabled={tier.buttonDisabled || loadingPlan === `${tier.key}_${billingInterval}`}
                       onClick={() => handleSubscribe(tier.key)}
-                      className={`w-full py-3 px-4 rounded-2xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-xs ${
+                      className={`w-full py-3 px-4 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2 shadow-xs hover:shadow-md ${
                         tier.highlighted
                           ? 'bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50'
                           : 'border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50'

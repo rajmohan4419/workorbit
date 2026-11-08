@@ -81,10 +81,10 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
       aria-modal="true"
       aria-label={`Preview ${filename}`}
       onClick={(e) => { if (e.target === overlayRef.current) onCancel?.(); }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200"
     >
       {/* Modal card */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-[var(--orbit-surface,#fff)] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[var(--orbit-border,#e5e7eb)]">
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-[var(--orbit-surface,#fff)] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[var(--orbit-border,#e5e7eb)] modal-elastic-enter will-change-transform">
 
         {/* ── Header ── */}
         <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--orbit-border,#e5e7eb)] shrink-0">

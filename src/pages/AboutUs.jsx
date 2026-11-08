@@ -46,24 +46,24 @@ export default function AboutUs() {
           </section>
 
           <section className="grid sm:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-accent-100 dark:bg-accent-950 text-accent-700 dark:text-accent-300 flex items-center justify-center font-bold">
+            <div className="group orbit-card-hover rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-accent-100 dark:bg-accent-950 text-accent-700 dark:text-accent-300 flex items-center justify-center font-bold group-hover:scale-110 transition-transform duration-200">
                 <Zap size={20} />
               </div>
               <h3 className="font-bold text-stone-900 dark:text-stone-100">Zero Latency</h3>
               <p className="text-xs text-stone-600 dark:text-stone-400 leading-5">Calculations execute client-side in milliseconds without network bottlenecks.</p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
+            <div className="group orbit-card-hover rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold group-hover:scale-110 transition-transform duration-200">
                 <LockKeyhole size={20} />
               </div>
               <h3 className="font-bold text-stone-900 dark:text-stone-100">Complete Privacy</h3>
               <p className="text-xs text-stone-600 dark:text-stone-400 leading-5">Your documents, text, and numbers stay on your device in your web browser.</p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold">
+            <div className="group orbit-card-hover rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold group-hover:scale-110 transition-transform duration-200">
                 <Cpu size={20} />
               </div>
               <h3 className="font-bold text-stone-900 dark:text-stone-100">Browser Engines</h3>

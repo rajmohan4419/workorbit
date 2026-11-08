@@ -15,6 +15,7 @@ export function FileUploadWithDrive({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedNames, setSelectedNames] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -31,6 +32,7 @@ export function FileUploadWithDrive({
 
   const handleDrop = (e) => {
     e.preventDefault();
+    setIsDragging(false);
     const files = Array.from(e.dataTransfer.files || []);
     if (!files.length) return;
     setError('');
@@ -139,12 +141,20 @@ export function FileUploadWithDrive({
       {mode === 'local' && (
         <div>
           <div
-            onDragOver={(e) => e.preventDefault()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-accent-400 dark:hover:border-accent-500 rounded-2xl p-6 text-center cursor-pointer transition bg-stone-50/50 dark:bg-stone-800/30 hover:bg-accent-50/20 group"
+            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 group ${
+              isDragging
+                ? 'dropzone-active border-accent-500 bg-accent-50/50 dark:bg-accent-950/40 shadow-lg shadow-indigo-500/10'
+                : 'border-stone-200 dark:border-stone-700 hover:border-accent-400 dark:hover:border-accent-500 bg-stone-50/50 dark:bg-stone-800/30 hover:bg-accent-50/20'
+            }`}
           >
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-accent-50 dark:bg-accent-950/60 text-accent-600 dark:text-accent-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <div className={`w-12 h-12 mx-auto rounded-2xl bg-accent-50 dark:bg-accent-950/60 text-accent-600 dark:text-accent-400 flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-110 ${isDragging ? 'animate-bounce scale-110 text-accent-600' : ''}`}>
               <Upload size={22} />
             </div>
             <p className="text-sm font-bold text-stone-800 dark:text-stone-200">
