@@ -267,22 +267,17 @@ export function PayslipGenerator() {
 
   return (
     <div className="space-y-8">
-      {/* Top Banner with Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] shadow-xs">
-        <div>
-          <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-accent-600" />
-            Payslip Generator India
-          </h2>
-          <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-            Calculate statutory salary components, EPF, ESI, PT, and tax with instant PDF and Excel export.
-          </p>
+      {/* Workspace Controls & Action Buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-900/60 dark:text-accent-300">
+          <Building2 className="w-3.5 h-3.5 text-accent-600 dark:text-accent-400" />
+          Indian Statutory Payroll
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={handleExportPDF}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm shadow-xs transition-colors cursor-pointer"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
           >
             <FileText className="w-4 h-4" />
             Download PDF
@@ -290,7 +285,7 @@ export function PayslipGenerator() {
           <button
             type="button"
             onClick={handleExportExcel}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-xs transition-colors cursor-pointer"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4" />
             Download Excel

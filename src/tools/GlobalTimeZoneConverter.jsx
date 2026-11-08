@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { ArrowRight, Share2, Check } from 'lucide-react';
 import {
   TIMEZONES,
   PRESETS,
@@ -15,11 +15,56 @@ import DestinationZoneSelector from './timezone/components/DestinationZoneSelect
 import ConversionResultsList from './timezone/components/ConversionResultsList';
 
 export default function GlobalTimeZoneConverter() {
-  const initial = useMemo(() => getInitialDateTime(), []);
+  const initial = useMemo(() => {
+    const base = getInitialDateTime();
+    if (typeof window === 'undefined') {
+      return { ...base, sourceZone: 'Asia/Kolkata', destinations: null };
+    }
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const fromParam = sp.get('from') || sp.get('sourceZone');
+      const dateParam = sp.get('date');
+      const timeParam = sp.get('time');
+      const toParam = sp.get('to') || sp.get('dests');
+
+      let validZone = 'Asia/Kolkata';
+      if (fromParam && TIMEZONES.some(t => t.id.toLowerCase() === fromParam.toLowerCase())) {
+        const found = TIMEZONES.find(t => t.id.toLowerCase() === fromParam.toLowerCase());
+        if (found) validZone = found.id;
+      }
+
+      let validDate = base.date;
+      if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        validDate = dateParam;
+      }
+
+      let validTime = base.time;
+      if (timeParam && /^\d{1,2}:\d{2}$/.test(timeParam)) {
+        validTime = timeParam.padStart(5, '0');
+      }
+
+      let validDests = null;
+      if (toParam) {
+        const rawList = toParam.split(',').map(s => s.trim().toLowerCase());
+        const matched = TIMEZONES.filter(t => rawList.includes(t.id.toLowerCase())).map(t => t.id);
+        if (matched.length > 0) validDests = matched;
+      }
+
+      return {
+        date: validDate,
+        time: validTime,
+        sourceZone: validZone,
+        destinations: validDests,
+      };
+    } catch {
+      return { ...base, sourceZone: 'Asia/Kolkata', destinations: null };
+    }
+  }, []);
+
   const [sourceDate, setSourceDate] = useState(initial.date);
   const [sourceTime, setSourceTime] = useState(initial.time);
-  const [sourceZone, setSourceZone] = useState('Asia/Kolkata');
-  const [selectedDestinations, setSelectedDestinations] = useState([
+  const [sourceZone, setSourceZone] = useState(initial.sourceZone);
+  const [selectedDestinations, setSelectedDestinations] = useState(initial.destinations || [
     'America/New_York',
     'America/Los_Angeles',
     'Europe/London',
@@ -32,6 +77,42 @@ export default function GlobalTimeZoneConverter() {
   const [filterQuery, setFilterQuery] = useState('');
   const [copiedAll, setCopiedAll] = useState(false);
   const [copiedSingle, setCopiedSingle] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      params.set('from', sourceZone);
+      params.set('date', sourceDate);
+      params.set('time', sourceTime);
+      if (selectedDestinations.length > 0) {
+        params.set('to', selectedDestinations.join(','));
+      } else {
+        params.delete('to');
+      }
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    } catch {
+      // ignore
+    }
+  }, [sourceZone, sourceDate, sourceTime, selectedDestinations]);
+
+  const handleCopyShareLink = useCallback(async () => {
+    const params = new URLSearchParams();
+    if (sourceZone) params.set('from', sourceZone);
+    if (sourceDate) params.set('date', sourceDate);
+    if (sourceTime) params.set('time', sourceTime);
+    if (selectedDestinations.length > 0) params.set('to', selectedDestinations.join(','));
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      // fallback
+    }
+  }, [sourceZone, sourceDate, sourceTime, selectedDestinations]);
 
   const resetToNow = useCallback(() => {
     const now = new Date();
@@ -153,6 +234,30 @@ export default function GlobalTimeZoneConverter() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 shadow-xs">
+        <div>
+          <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">Live Time Zone Meeting Converter</h3>
+          <p className="text-xs text-stone-500 dark:text-stone-400">Convert team times across IST, EST, PST, GMT, BST, JST, and AEDT with automatic DST adjustment.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleCopyShareLink}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-accent-50 dark:bg-accent-950/50 text-accent-700 dark:text-accent-300 border border-accent-200 dark:border-accent-800 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer shrink-0"
+        >
+          {copiedLink ? (
+            <>
+              <Check size={14} className="text-emerald-500" />
+              <span>Link Copied!</span>
+            </>
+          ) : (
+            <>
+              <Share2 size={14} />
+              <span>Copy Shareable Link</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Quick Presets / Conversion Examples */}
       <PresetSelector presets={PRESETS} onSelectPreset={selectPreset} />
 

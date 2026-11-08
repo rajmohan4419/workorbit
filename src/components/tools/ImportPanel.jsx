@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Upload, Download, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Upload, Download, Link as LinkIcon, Loader2, Sparkles } from 'lucide-react';
 import { toCsv, csvToRecords } from '../../lib/csv';
 import { downloadBlob } from '../../lib/toolFormat';
 
@@ -133,6 +133,16 @@ export function ImportPanel({ title, templateName, templateRows, onParsed }) {
           <p className="text-xs text-stone-600 dark:text-stone-300">Your file is read in your browser and is not uploaded to external servers.</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {templateRows && templateRows.length > 0 && (
+            <button
+              type="button"
+              onClick={() => processText(toCsv(templateRows), `${templateName ? templateName.replace(/\.csv$/i, '') : 'Demo'} Sample`)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition cursor-pointer"
+            >
+              <Sparkles size={14} className="text-amber-500" /> Try with Sample Data
+            </button>
+          )}
+
           <button type="button" onClick={handleTemplate}
             className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl border border-[var(--orbit-border)] text-xs font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800">
             <Download size={14} /> Template

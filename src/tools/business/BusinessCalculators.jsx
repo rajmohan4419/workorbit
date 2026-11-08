@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Share2, Check } from 'lucide-react';
 import { Field } from '../../components/tools/ToolFields';
 import { ImportPanel } from '../../components/tools/ImportPanel';
 import { mapColumns, toCsv } from '../../lib/csv';
@@ -55,15 +56,60 @@ function Rated({ label, value, metric, rawValue, suffix = '' }) {
 }
 
 export function SaasRetention() {
-  const [v, setV] = useState({
-    startMrr: '100000', expansionMrr: '15000', contractionMrr: '5000', churnedMrr: '10000',
-    startCustomers: '400', churnedCustomers: '40',
-    acquisitionSpend: '1200000', newCustomers: '200', arpaMonthly: '2000', grossMarginPct: '80',
-  });
+  const initialV = () => {
+    const base = {
+      startMrr: '100000', expansionMrr: '15000', contractionMrr: '5000', churnedMrr: '10000',
+      startCustomers: '400', churnedCustomers: '40',
+      acquisitionSpend: '1200000', newCustomers: '200', arpaMonthly: '2000', grossMarginPct: '80',
+    };
+    if (typeof window === 'undefined') return base;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const res = { ...base };
+      Object.keys(base).forEach(k => {
+        if (sp.has(k)) res[k] = sp.get(k);
+      });
+      return res;
+    } catch {
+      return base;
+    }
+  };
+
+  const [v, setV] = useState(initialV);
   const [importNote, setImportNote] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
   const set = (key) => (value) => setV(prev => ({ ...prev, [key]: value }));
   const r = computeSaasRetention(v);
   const fmt = (n, digits = 1) => (n === null ? null : Number(n.toFixed(digits)).toLocaleString('en-IN'));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      Object.entries(v).forEach(([k, val]) => {
+        if (val) sp.set(k, val);
+      });
+      const newUrl = `${window.location.pathname}?${sp.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    } catch {
+      // ignore
+    }
+  }, [v]);
+
+  const copyShareLink = async () => {
+    const sp = new URLSearchParams();
+    Object.entries(v).forEach(([k, val]) => {
+      if (val) sp.set(k, val);
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${sp.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
 
   const handleImport = ({ headers, records }) => {
     const map = mapColumns(headers, RETENTION_ALIASES);
@@ -153,10 +199,29 @@ export function SaasRetention() {
           <Rated label="Customer lifetime value" metric="none" rawValue={null} value={r.ltv === null ? null : money(r.ltv)} />
           <Rated label="LTV to CAC" metric="ltvToCac" rawValue={r.ltvToCac} value={fmt(r.ltvToCac)} suffix="x" />
           <Rated label="CAC payback" metric="paybackMonths" rawValue={r.paybackMonths} value={fmt(r.paybackMonths)} suffix=" months" />
-          <button type="button" onClick={exportCsv}
-            className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] text-sm font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800">
-            Download results (CSV)
-          </button>
+          <div className="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={copyShareLink}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
+            >
+              {copiedLink ? (
+                <>
+                  <Check size={15} className="text-emerald-500" />
+                  <span>Link Copied to Clipboard!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 size={15} />
+                  <span>Copy Shareable Link</span>
+                </>
+              )}
+            </button>
+            <button type="button" onClick={exportCsv}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] text-xs font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 transition">
+              Download results (CSV)
+            </button>
+          </div>
           <p className="px-1 text-xs leading-5 text-stone-600 dark:text-stone-300">
             Ratings use rough rules of thumb, not targets. LTV needs some churn to be finite, so it shows “—” when churn is zero.
           </p>
@@ -174,11 +239,57 @@ const DEFAULT_STAGES = [
 ];
 
 export function SalesPipelineForecaster() {
-  const [stages, setStages] = useState(DEFAULT_STAGES);
-  const [quota, setQuota] = useState('200000');
+  const initialData = () => {
+    if (typeof window === 'undefined') return { stages: DEFAULT_STAGES, quota: '200000' };
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const q = sp.get('quota') || '200000';
+      const encodedStages = sp.get('stages');
+      if (encodedStages) {
+        const parsed = JSON.parse(decodeURIComponent(encodedStages));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return { stages: parsed, quota: q };
+        }
+      }
+      return { stages: DEFAULT_STAGES, quota: q };
+    } catch {
+      return { stages: DEFAULT_STAGES, quota: '200000' };
+    }
+  };
+
+  const [stages, setStages] = useState(() => initialData().stages);
+  const [quota, setQuota] = useState(() => initialData().quota);
   const [importNote, setImportNote] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
   const updateStage = (index, key, value) =>
     setStages(prev => prev.map((s, i) => (i === index ? { ...s, [key]: value } : s)));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set('quota', quota);
+      sp.set('stages', encodeURIComponent(JSON.stringify(stages)));
+      const newUrl = `${window.location.pathname}?${sp.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    } catch {
+      // ignore
+    }
+  }, [stages, quota]);
+
+  const copyShareLink = async () => {
+    const sp = new URLSearchParams();
+    sp.set('quota', quota);
+    sp.set('stages', encodeURIComponent(JSON.stringify(stages)));
+    const url = `${window.location.origin}${window.location.pathname}?${sp.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
 
   const handleImport = ({ headers, records }) => {
     const map = mapColumns(headers, DEAL_ALIASES);
@@ -257,10 +368,29 @@ export function SalesPipelineForecaster() {
           <Rated label="Pipeline coverage" metric="coverage" rawValue={r.coverage} value={fmt1(r.coverage)} suffix="x" />
           <Rated label="Expected deals won" metric="none" rawValue={null} value={fmt1(r.expectedDeals)} />
           <Rated label="Gap to target" metric="none" rawValue={null} value={r.gap === null ? null : money(r.gap)} />
-          <button type="button" onClick={exportCsv}
-            className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] text-sm font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800">
-            Download results (CSV)
-          </button>
+          <div className="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={copyShareLink}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
+            >
+              {copiedLink ? (
+                <>
+                  <Check size={15} className="text-emerald-500" />
+                  <span>Link Copied to Clipboard!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 size={15} />
+                  <span>Copy Shareable Link</span>
+                </>
+              )}
+            </button>
+            <button type="button" onClick={exportCsv}
+              className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] text-xs font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 transition">
+              Download results (CSV)
+            </button>
+          </div>
           <p className="px-1 text-xs leading-5 text-stone-600 dark:text-stone-300">
             Many sales teams aim for about 3x coverage of their target in open pipeline. Win rates are your own estimates, so treat results as a planning guide.
           </p>
@@ -282,14 +412,59 @@ function PricingCard({ title, model, count }) {
 }
 
 export function SaasPricing() {
-  const [v, setV] = useState({
-    seats: '25', customers: '100', perSeatPrice: '800', flatPrice: '15000',
-    tier1Seats: '10', tier1Price: '1000', tier2Price: '600',
-    usageUnits: '150000', includedUnits: '50000', usagePer1000: '20',
-    annualDiscountPct: '10',
-  });
+  const initialPricing = () => {
+    const base = {
+      seats: '25', customers: '100', perSeatPrice: '800', flatPrice: '15000',
+      tier1Seats: '10', tier1Price: '1000', tier2Price: '600',
+      usageUnits: '150000', includedUnits: '50000', usagePer1000: '20',
+      annualDiscountPct: '10',
+    };
+    if (typeof window === 'undefined') return base;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const res = { ...base };
+      Object.keys(base).forEach(k => {
+        if (sp.has(k)) res[k] = sp.get(k);
+      });
+      return res;
+    } catch {
+      return base;
+    }
+  };
+
+  const [v, setV] = useState(initialPricing);
+  const [copiedLink, setCopiedLink] = useState(false);
   const set = (key) => (value) => setV(prev => ({ ...prev, [key]: value }));
   const r = computeSaasPricing(v);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      Object.entries(v).forEach(([k, val]) => {
+        if (val) sp.set(k, val);
+      });
+      const newUrl = `${window.location.pathname}?${sp.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    } catch {
+      // ignore
+    }
+  }, [v]);
+
+  const copyShareLink = async () => {
+    const sp = new URLSearchParams();
+    Object.entries(v).forEach(([k, val]) => {
+      if (val) sp.set(k, val);
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${sp.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
 
   return (
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
@@ -328,6 +503,23 @@ export function SaasPricing() {
       </div>
 
       <div className="lg:col-span-6 space-y-3">
+        <button
+          type="button"
+          onClick={copyShareLink}
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer mb-2"
+        >
+          {copiedLink ? (
+            <>
+              <Check size={15} className="text-emerald-500" />
+              <span>Link Copied to Clipboard!</span>
+            </>
+          ) : (
+            <>
+              <Share2 size={15} />
+              <span>Copy Shareable Link</span>
+            </>
+          )}
+        </button>
         <PricingCard title="Per seat" model={r.perSeat} count={v.customers} />
         <PricingCard title="Flat plan" model={r.flat} count={v.customers} />
         <PricingCard title="Volume tiers" model={r.tiered} count={v.customers} />

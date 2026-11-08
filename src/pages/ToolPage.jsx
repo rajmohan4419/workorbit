@@ -19,6 +19,7 @@ import { ImageToGif, VideoToGif } from '../tools/media/GifTools';
 import SampleAd from '../components/SampleAd';
 import { isAdEligible, loadAdSense } from '../lib/adsense';
 import AdSenseUnit from '../components/AdSenseUnit';
+import SEO from '../components/layout/SEO';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
@@ -463,6 +464,22 @@ function VariantSalaryCalculator({ params }) {
   );
 }
 
+const SCHEMA_CATEGORY = {
+  Finance: 'FinanceApplication',
+  Business: 'BusinessApplication',
+  Developer: 'DeveloperApplication',
+  Everyday: 'UtilitiesApplication',
+  Career: 'BusinessApplication',
+};
+
+const CATEGORY_LABEL = {
+  Finance: 'Finance & Money',
+  Business: 'Business & SaaS',
+  Developer: 'Developer Tools',
+  Everyday: 'Everyday Utilities',
+  Career: 'Career & Salary',
+};
+
 export default function ToolPage() {
   const { slug } = useParams();
   const variant = useMemo(() => toolVariants.find((v) => v.slug === slug), [slug]);
@@ -586,6 +603,70 @@ export default function ToolPage() {
   const Tool = content;
   const adEligible = isAdEligible({ tool, info, hasTool: Boolean(variant || Tool) });
 
+  const pageTitle = useMemo(() => {
+    if (!tool) return 'OrbitBoard';
+    const base = info?.title || (tool.slug === 'image-compressor'
+      ? `${tool.name} - online compressor | size compressor | online mb reducer | Free Online Tool | OrbitBoard`
+      : `${tool.name} | Free Online Tool | OrbitBoard`);
+    return base.includes('OrbitBoard') ? base : `${base} | OrbitBoard`;
+  }, [tool, info]);
+
+  const pageDescription = useMemo(() => {
+    return info?.metaDescription || info?.intro || tool?.description || '';
+  }, [info, tool]);
+
+  const canonicalUrl = useMemo(() => {
+    return variant?.canonicalUrl || `https://orbitboard.in/tools/${slug}`;
+  }, [variant, slug]);
+
+  const structuredData = useMemo(() => {
+    if (!tool) return null;
+    const url = canonicalUrl;
+    const ld = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: tool.name,
+        description: pageDescription,
+        url,
+        applicationCategory: SCHEMA_CATEGORY[tool.category] || 'UtilitiesApplication',
+        operatingSystem: 'Any',
+        browserRequirements: 'Requires a modern web browser with JavaScript',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+        inLanguage: 'en-IN',
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://orbitboard.in/' },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: CATEGORY_LABEL[tool.category] || tool.category,
+            item: 'https://orbitboard.in/tools',
+          },
+          { '@type': 'ListItem', position: 3, name: tool.name, item: url },
+        ],
+      },
+    ];
+
+    if (info?.faq && info.faq.length > 0) {
+      ld.push({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: info.faq.map(([q, a]) => ({
+          '@type': 'Question',
+          name: q,
+          acceptedAnswer: { '@type': 'Answer', text: a },
+        })),
+      });
+    }
+
+    return ld;
+  }, [tool, canonicalUrl, pageDescription, info]);
+
   useEffect(() => {
     if (adEligible) loadAdSense();
   }, [adEligible]);
@@ -593,22 +674,16 @@ export default function ToolPage() {
   useEffect(() => {
     if (tool) {
       trackToolUsed(tool.slug);
-      const pageTitle = info?.title || (tool.slug === 'image-compressor' ? `${tool.name} - online compressor | size compressor | online mb reducer | Free Online Tool | OrbitBoard` : `${tool.name} | Free Online Tool | OrbitBoard`);
-      document.title = pageTitle.includes('OrbitBoard') ? pageTitle : (pageTitle + ' | OrbitBoard');
-      const desc = info?.metaDescription || info?.intro || tool.description;
-      const setMeta = (name, val) => {
-        let m = document.querySelector('meta[name="' + name + '"]');
-        if (!m) { m = document.createElement('meta'); m.name = name; document.head.appendChild(m); }
-        m.content = val;
-      };
-      setMeta('description', desc);
-      setMeta('robots', tool.status === 'live' ? 'index, follow' : 'noindex, follow');
-      let canonical = document.querySelector('link[rel="canonical"]');
-      if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
-      canonical.href = variant?.canonicalUrl || ('https://orbitboard.in/tools/' + slug);
+      let robots = document.querySelector('meta[name="robots"]');
+      if (!robots) {
+        robots = document.createElement('meta');
+        robots.name = 'robots';
+        document.head.appendChild(robots);
+      }
+      robots.content = tool.status === 'live' ? 'index, follow' : 'noindex, follow';
       window.scrollTo(0, 0);
     }
-  }, [tool, info, slug, variant]);
+  }, [tool]);
 
   if (!tool) {
     return <NotFound />;
@@ -618,6 +693,12 @@ export default function ToolPage() {
 
   return (
     <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex">
+      <SEO
+        title={pageTitle}
+        description={pageDescription}
+        canonical={canonicalUrl}
+        schema={structuredData}
+      />
       <QuickAccessLeftSidebar />
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-accent-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
@@ -647,7 +728,7 @@ export default function ToolPage() {
 
           {adEligible && <SampleAd category={tool?.category} />}
 
-          <AdSenseUnit slot="" />
+          {adEligible && <AdSenseUnit slot="" />}
 
           <div className="space-y-6 pt-8 border-t border-[var(--orbit-border)]">
             <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Tool Guide & Publisher Information</h2>

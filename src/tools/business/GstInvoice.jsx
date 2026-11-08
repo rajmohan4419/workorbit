@@ -687,15 +687,10 @@ export function GstInvoice() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       {/* Page Title */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 rounded-xl">
-            <FileText size={22} className="text-indigo-600" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">GST Invoice Generator</h1>
-            <p className="text-xs text-gray-500">Indian GST compliant professional invoices</p>
-          </div>
+      <div className="flex items-center justify-between flex-wrap gap-3 p-3.5 rounded-2xl border border-[var(--orbit-border)] bg-stone-50/60 dark:bg-stone-900/60 shadow-xs mb-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+          <FileText size={14} className="text-indigo-600 dark:text-indigo-400" />
+          <span>GST Invoice Generator</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button

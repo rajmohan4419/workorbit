@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import {
   Upload, RefreshCw, CheckCircle2, AlertTriangle,
-  AlertOctagon, HelpCircle, Download, FileCheck, Loader2
+  AlertOctagon, HelpCircle, Download, FileCheck, Loader2, Sparkles
 } from 'lucide-react';
 import {
   reconcileGstrData,
@@ -160,32 +160,27 @@ export function GstrReconciliation() {
 
   return (
     <div className="space-y-8">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] shadow-xs">
-        <div>
-          <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-            <FileCheck className="w-5 h-5 text-accent-600" />
-            GSTR-2B vs Purchase Register Reconciliation
-          </h2>
-          <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-            Automated ITC matching on Supplier GSTIN, Invoice Number & Taxable Value. Pinpoint ineligible and unclaimed credit instantly.
-          </p>
+      {/* Workspace Action Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-900/60 dark:text-accent-300">
+          <FileCheck className="w-3.5 h-3.5 text-accent-600 dark:text-accent-400" />
+          ITC Matching Engine
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={handleLoadSample}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-sm transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5" />
             Load Demo Data
           </button>
           <button
             type="button"
             onClick={handleExportExcel}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
             Export Excel Report
           </button>
         </div>
@@ -216,6 +211,17 @@ export function GstrReconciliation() {
             <span className="text-[11px] text-stone-400 mt-1 truncate max-w-xs">{gstrFileName}</span>
             <input type="file" accept=".csv,.xlsx,.xls" onChange={handleGstrUpload} className="hidden" />
           </label>
+          <div className="flex items-center justify-between text-xs pt-1">
+            <span className="text-stone-500">No file right now?</span>
+            <button
+              type="button"
+              onClick={handleLoadSample}
+              className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
+            >
+              <Sparkles className="w-3 h-3 text-amber-500" />
+              Try with Sample Data
+            </button>
+          </div>
         </div>
 
         {/* Source B: Purchase Register */}
@@ -234,13 +240,24 @@ export function GstrReconciliation() {
             <span className="text-[11px] text-stone-400 mt-1 truncate max-w-xs">{prFileName}</span>
             <input type="file" accept=".csv,.xlsx,.xls" onChange={handlePrUpload} className="hidden" />
           </label>
+          <div className="flex items-center justify-between text-xs pt-1">
+            <span className="text-stone-500">No file right now?</span>
+            <button
+              type="button"
+              onClick={handleLoadSample}
+              className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
+            >
+              <Sparkles className="w-3 h-3 text-amber-500" />
+              Try with Sample Data
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Audit KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 anim-fade-up">
         {/* Matched */}
-        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 anim-fade-up" style={{ '--stagger-index': 1 }}>
           <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 mb-1">
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-xs font-bold uppercase">Matched Invoices</span>
@@ -252,7 +269,7 @@ export function GstrReconciliation() {
         </div>
 
         {/* Mismatches */}
-        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 anim-fade-up" style={{ '--stagger-index': 2 }}>
           <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 mb-1">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-xs font-bold uppercase">Value Mismatch</span>
@@ -262,7 +279,7 @@ export function GstrReconciliation() {
         </div>
 
         {/* In Books Only (At Risk) */}
-        <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
+        <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 anim-fade-up" style={{ '--stagger-index': 3 }}>
           <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 mb-1">
             <AlertOctagon className="w-4 h-4" />
             <span className="text-xs font-bold uppercase">In Books Only</span>
@@ -274,7 +291,7 @@ export function GstrReconciliation() {
         </div>
 
         {/* In 2B Only (Unclaimed) */}
-        <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+        <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 anim-fade-up" style={{ '--stagger-index': 4 }}>
           <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-1">
             <HelpCircle className="w-4 h-4" />
             <span className="text-xs font-bold uppercase">In 2B Only</span>

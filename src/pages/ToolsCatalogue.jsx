@@ -150,7 +150,7 @@ export default function ToolsCatalogue() {
                   {filteredTools.map((tool, index) => (
                     <tr 
                       key={tool.slug} 
-                      className="group border-t border-[var(--orbit-border)] hover:bg-accent-50/30 dark:hover:bg-accent-950/20 transition-colors duration-150" 
+                      className="group border-t border-[var(--orbit-border)] hover:bg-accent-50/40 dark:hover:bg-accent-950/30 transition-colors duration-200 cursor-pointer" 
                       style={{ animationDelay: `${Math.min(index, 12) * 25}ms` }}
                     >
                       <td className="px-5 py-4">
@@ -158,7 +158,7 @@ export default function ToolsCatalogue() {
                           to={`/tools/${tool.slug}`} 
                           onMouseEnter={() => preloadToolPage(tool.slug)} 
                           onFocus={() => preloadToolPage(tool.slug)} 
-                          className="font-bold text-stone-900 dark:text-stone-100 hover:text-accent-700 dark:hover:text-accent-400 transition-colors"
+                          className="font-bold text-stone-900 dark:text-stone-100 hover:text-accent-700 dark:hover:text-accent-400 inline-block transition-transform duration-200 group-hover:translate-x-[3px]"
                         >
                           {tool.name}
                         </Link>
@@ -174,7 +174,8 @@ export default function ToolsCatalogue() {
                           aria-label={`Open ${tool.name}`} 
                           to={`/tools/${tool.slug}`} 
                           onMouseEnter={() => preloadToolPage(tool.slug)} 
-                          className="inline-flex rounded-lg p-2 text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 group-hover:translate-x-1 transition-all duration-200"
+                          className="inline-flex rounded-lg p-2 text-accent-700 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 transition-all duration-200 group-hover:translate-x-[5px] group-hover:scale-110"
+                          style={{ transitionTimingFunction: 'var(--ease-spring)' }}
                         >
                           <ArrowRight size={17} />
                         </Link>

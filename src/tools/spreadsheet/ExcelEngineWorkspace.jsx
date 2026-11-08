@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle, Layers, X
+  Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle, Layers, X, Sparkles
 } from 'lucide-react';
 import {
   parseSpreadsheet,
@@ -193,16 +193,11 @@ export default function ExcelEngineWorkspace() {
 
   return (
     <div className="space-y-6">
-      {/* Header bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl border border-[var(--orbit-border)] bg-stone-50/60 dark:bg-stone-900/60">
-        <div>
-          <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-            <FileSpreadsheet className="text-emerald-500" size={22} />
-            Excel & CSV Processing Engine
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1">
-            Production-grade spreadsheet processor: multi-worksheet selection, duplicate/empty header detection, schema validation, formula injection protection, and error report exports.
-          </p>
+      {/* Workspace Action Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-[var(--orbit-border)] bg-stone-50/60 dark:bg-stone-900/60 shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+          <FileSpreadsheet className="text-emerald-500" size={14} />
+          <span>Spreadsheet Engine</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <input
@@ -259,16 +254,30 @@ export default function ExcelEngineWorkspace() {
 
       {/* Upload Dropzone */}
       {!rows.length && (
-        <label className="border-2 border-dashed border-[var(--orbit-border)] hover:border-emerald-500 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer bg-stone-50/40 dark:bg-stone-900/40 transition">
-          <input type="file" multiple accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="hidden" />
-          <Upload size={32} className="text-emerald-500 mb-2" />
-          <span className="text-sm font-bold text-stone-800 dark:text-stone-200">
-            Upload XLSX, XLS, or CSV Spreadsheet
-          </span>
-          <span className="text-xs text-stone-400 mt-1">
-            Max 25 MB / 50,000 rows. Cleaned and processed 100% locally in your browser.
-          </span>
-        </label>
+        <div className="space-y-3">
+          <label className="border-2 border-dashed border-[var(--orbit-border)] hover:border-emerald-500 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer bg-stone-50/40 dark:bg-stone-900/40 transition">
+            <input type="file" multiple accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="hidden" />
+            <Upload size={32} className="text-emerald-500 mb-2" />
+            <span className="text-sm font-bold text-stone-800 dark:text-stone-200">
+              Upload XLSX, XLS, or CSV Spreadsheet
+            </span>
+            <span className="text-xs text-stone-400 mt-1">
+              Max 25 MB / 50,000 rows. Cleaned and processed 100% locally in your browser.
+            </span>
+          </label>
+
+          <div className="flex items-center justify-center gap-2 pt-1 text-xs">
+            <span className="text-stone-500 dark:text-stone-400">Want to explore with demo ecommerce orders?</span>
+            <button
+              type="button"
+              onClick={loadDemoData}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition cursor-pointer"
+            >
+              <Sparkles size={13} className="text-amber-500" />
+              Try with Sample Data
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Data Ingestion Workspace */}

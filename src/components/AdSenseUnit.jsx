@@ -25,7 +25,7 @@ export default function AdSenseUnit({
     }
   }, []);
 
-  if (adBlocked) return null;
+  if (!slot || adBlocked) return null;
 
   return (
     <div className={`my-6 flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-[var(--orbit-border)] bg-stone-50/50 dark:bg-stone-900/30 p-2 min-h-[100px] text-center ${className}`}>

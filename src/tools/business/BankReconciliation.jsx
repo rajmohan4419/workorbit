@@ -249,30 +249,20 @@ export default function BankReconciliation() {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & Quick Demo trigger */}
-      <div className="rounded-2xl border border-[var(--orbit-border)] bg-gradient-to-r from-accent-50/70 via-indigo-50/50 to-white dark:from-accent-950/20 dark:via-indigo-950/10 dark:to-stone-900 p-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-900/60 dark:text-accent-300 mb-2">
-              <Sparkles size={12} />
-              Flagship Business Workflow
-            </div>
-            <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
-              Automated Bank Statement & Ledger Reconciliation
-            </h2>
-            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1 max-w-2xl">
-              Reconcile bank statements and bookkeeping cash books with accounting rigor. Generates a formal Bank Reconciliation Statement, detects timing differences (deposits in transit, unpresented cheques), and flags ambiguous ties for audit review.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={loadSampleDataset}
-            className="self-start md:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-[var(--orbit-border)] hover:bg-stone-50 dark:hover:bg-stone-750 shadow-sm transition"
-          >
-            <Sparkles size={14} className="text-amber-500" />
-            Load Sample Dataset
-          </button>
+      {/* Workspace Controls & Quick Demo trigger */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-[var(--orbit-border)] bg-gradient-to-r from-accent-50/70 via-indigo-50/50 to-white dark:from-accent-950/20 dark:via-indigo-950/10 dark:to-stone-900 shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-900/60 dark:text-accent-300">
+          <Sparkles size={12} />
+          Flagship Business Workflow
         </div>
+        <button
+          type="button"
+          onClick={loadSampleDataset}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-[var(--orbit-border)] hover:bg-stone-50 dark:hover:bg-stone-750 shadow-xs transition"
+        >
+          <Sparkles size={14} className="text-amber-500" />
+          Load Sample Dataset
+        </button>
       </div>
 
       {error && (
@@ -328,6 +318,20 @@ export default function BankReconciliation() {
             </span>
             <span className="text-[10px] text-stone-400 mt-0.5">Click or drag file here</span>
           </label>
+
+          {!bankData && (
+            <div className="flex items-center justify-between text-xs pt-1">
+              <span className="text-stone-500">Need test files?</span>
+              <button
+                type="button"
+                onClick={loadSampleDataset}
+                className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
+              >
+                <Sparkles size={12} className="text-amber-500" />
+                Try with Sample Data
+              </button>
+            </div>
+          )}
 
           {bankHeaders.length > 0 && (
             <div className="space-y-3 pt-2 border-t border-[var(--orbit-border)]">
@@ -421,6 +425,20 @@ export default function BankReconciliation() {
             </span>
             <span className="text-[10px] text-stone-400 mt-0.5">Click or drag file here</span>
           </label>
+
+          {!ledgerData && (
+            <div className="flex items-center justify-between text-xs pt-1">
+              <span className="text-stone-500">Need test files?</span>
+              <button
+                type="button"
+                onClick={loadSampleDataset}
+                className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
+              >
+                <Sparkles size={12} className="text-amber-500" />
+                Try with Sample Data
+              </button>
+            </div>
+          )}
 
           {ledgerHeaders.length > 0 && (
             <div className="space-y-3 pt-2 border-t border-[var(--orbit-border)]">
@@ -523,9 +541,9 @@ export default function BankReconciliation() {
 
       {/* Reconciliation Dashboard & Results */}
       {reconciliation && (
-        <div className="space-y-6">
+        <div className="space-y-6 anim-fade-up">
           {/* Formal Bank Reconciliation Statement Card */}
-          <div className={`rounded-2xl border p-5 shadow-sm transition ${
+          <div className={`anim-fade-up rounded-2xl border p-5 shadow-sm transition ${
             reconciliation.summary.isStatementReconciled
               ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/20'
               : 'border-amber-300 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20'

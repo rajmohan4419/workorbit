@@ -30,7 +30,7 @@ export const AmbientBackground = memo(function AmbientBackground({
         className="absolute -top-[12vw] -left-[10vw] w-[55vw] h-[55vw] min-w-[380px] min-h-[380px] max-w-[850px] max-h-[850px] rounded-full filter blur-[95px] animate-aurora-1 will-change-transform"
         style={{
           background: 'radial-gradient(circle at 45% 45%, var(--bg-glow-1) 0%, transparent 70%)',
-          opacity: isWorkspace ? 0.55 : 1,
+          opacity: isWorkspace ? 0.85 : 1,
           transition: 'opacity 600ms ease, background 600ms ease',
         }}
       />
@@ -39,7 +39,7 @@ export const AmbientBackground = memo(function AmbientBackground({
         className="absolute -bottom-[12vw] -right-[10vw] w-[55vw] h-[55vw] min-w-[380px] min-h-[380px] max-w-[850px] max-h-[850px] rounded-full filter blur-[95px] animate-aurora-2 will-change-transform"
         style={{
           background: 'radial-gradient(circle at 55% 55%, var(--bg-glow-2) 0%, transparent 70%)',
-          opacity: isWorkspace ? 0.55 : 1,
+          opacity: isWorkspace ? 0.85 : 1,
           transition: 'opacity 600ms ease, background 600ms ease',
         }}
       />
@@ -51,9 +51,9 @@ export const AmbientBackground = memo(function AmbientBackground({
           backgroundImage:
             'linear-gradient(to right, var(--bg-accent-grid) 1px, transparent 1px), linear-gradient(to bottom, var(--bg-accent-grid) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
-          WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 25%, #000 30%, transparent 100%)',
-          maskImage: 'radial-gradient(ellipse 80% 70% at 50% 25%, #000 30%, transparent 100%)',
-          opacity: isWorkspace ? 0.45 : 0.85,
+          WebkitMaskImage: 'radial-gradient(ellipse 85% 75% at 50% 25%, #000 35%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse 85% 75% at 50% 25%, #000 35%, transparent 100%)',
+          opacity: isWorkspace ? 0.75 : 0.95,
           transition: 'opacity 600ms ease',
         }}
       />

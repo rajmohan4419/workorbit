@@ -21,6 +21,7 @@ export default function SEO({
   canonical,
   image = DEFAULT_IMAGE,
   type = 'website',
+  schema,
 }) {
   useEffect(() => {
     const fullTitle = title || DEFAULT_TITLE;
@@ -47,8 +48,24 @@ export default function SEO({
     }
     canonicalLink.setAttribute('href', fullCanonical);
 
-    return undefined;
-  }, [title, description, canonical, image, type]);
+    let scriptEl = document.querySelector('script[data-orbitboard-seo="true"]');
+    if (schema) {
+      if (!scriptEl) {
+        scriptEl = document.createElement('script');
+        scriptEl.type = 'application/ld+json';
+        scriptEl.setAttribute('data-orbitboard-seo', 'true');
+        document.head.appendChild(scriptEl);
+      }
+      scriptEl.textContent = JSON.stringify(schema);
+    } else if (scriptEl) {
+      scriptEl.remove();
+    }
+
+    return () => {
+      const el = document.querySelector('script[data-orbitboard-seo="true"]');
+      if (el) el.remove();
+    };
+  }, [title, description, canonical, image, type, schema]);
 
   return null;
 }

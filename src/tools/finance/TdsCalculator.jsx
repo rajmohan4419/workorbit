@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
-  Calculator, AlertTriangle, ShieldAlert, Calendar
+  AlertTriangle, ShieldAlert, Calendar
 } from 'lucide-react';
 import { calculateTds, TDS_CONFIG, isValidPan } from './tdsEngine.js';
 import { formatINR } from '../../lib/toolFormat.js';
@@ -33,18 +33,7 @@ export function TdsCalculator() {
   const hasInvalidPan = panProvided && pan.trim() !== '' && !isValidPan(pan);
 
   return (
-    <div className="space-y-8">
-      {/* Top Banner */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] shadow-xs">
-        <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-accent-600" />
-          TDS Calculator India (FY 2025-26 / FY 2026-27)
-        </h2>
-        <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-          Calculate Tax Deducted at Source across Sections 192, 194A, 194C, 194H, 194I, 194J with Section 206AA PAN compliance.
-        </p>
-      </div>
-
+    <div className="space-y-6">
       {/* Main Grid: Form (Left) & Results Summary (Right) */}
       <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
         {/* Left: Input Configuration */}
