@@ -1,20 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const STORAGE_KEY = 'orbitboard-diwali-2026-dismissed';
 
 export function DiwaliCelebration() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    // The greeting is seasonal and will automatically stop after the festival.
+  const [visible, setVisible] = useState(() => {
+    // Seasonal greeting is initialized once, without a cascading effect render.
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
-    const inSeason = year === 2026 && month === 10 && day >= 1 && day <= 15;
-    if (!inSeason || window.sessionStorage.getItem(STORAGE_KEY) === 'true') return;
-    setVisible(true);
-  }, []);
+    const inSeason = now.getFullYear() === 2026 && now.getMonth() === 10 &&
+      now.getDate() >= 1 && now.getDate() <= 15;
+    if (!inSeason || typeof window === 'undefined') return false;
+    try { return window.sessionStorage.getItem(STORAGE_KEY) !== 'true'; }
+    catch { return true; }
+  });
 
   if (!visible) return null;
 
