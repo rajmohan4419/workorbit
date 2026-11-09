@@ -29,21 +29,24 @@ export function QuickQuiz() {
   useEffect(() => {
     if (!eligible || !consent || safelyRead() === dateKey()) return;
     let timeout;
+    let interval;
     let lastActivity = Date.now();
     const activity = () => { lastActivity = Date.now(); };
     const check = () => {
       if (document.visibilityState !== 'visible') return;
       if (Date.now() - lastActivity < 15000) return;
+      window.clearInterval(interval);
       safelyWrite();
       setMode(current => current === 'hidden' ? 'invite' : current);
       trackEvent('quick_quiz_invitation_shown');
     };
-    const start = () => { timeout = window.setTimeout(check, 60000); };
+    const start = () => { timeout = window.setTimeout(() => { check(); interval = window.setInterval(check, 15000); }, 60000); };
     window.addEventListener('pointerdown', activity, { passive: true });
     window.addEventListener('keydown', activity);
     start();
     return () => {
       window.clearTimeout(timeout);
+      window.clearInterval(interval);
       window.removeEventListener('pointerdown', activity);
       window.removeEventListener('keydown', activity);
     };
