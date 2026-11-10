@@ -1,3 +1,4 @@
+import process from 'node:process';
 const LANGUAGES = new Set(['en','kn','hi','ta','te','ml','mr','bn','gu','pa']);
 const bucket = new Map();
 export default async function handler(req, res) {
