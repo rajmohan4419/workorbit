@@ -1,39 +1,63 @@
 import process from 'node:process';
-const LANGUAGES = new Set(['en','kn','hi','ta','te','ml','mr','bn','gu','pa']);
-const bucket = new Map();
+import { getClientIp } from './_lib/common.js';
+import { isSameOrigin } from './_lib/moments.js';
+import { checkRateLimit, getAdminClient } from './_lib/supabaseClient.js';
+import { MOMENT_LANGUAGE_CODES } from '../src/lib/moments.js';
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ error: 'Method not allowed' }); }
-  const origin = req.headers.origin;
-  const host = req.headers.host;
-  if (origin) {
-    try { if (new URL(origin).host !== host) return res.status(403).json({ error: 'Origin not allowed' }); }
-    catch { return res.status(403).json({ error: 'Invalid origin' }); }
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-  const { text, target } = req.body || {};
-  if (typeof text !== 'string' || !text.trim() || text.length > 500 || !LANGUAGES.has(target)) return res.status(400).json({ error: 'Invalid translation request' });
+  if (!isSameOrigin(req)) return res.status(403).json({ error: 'Origin not allowed' });
+  if (req.headers['content-type']?.split(';')[0].trim() !== 'application/json') {
+    return res.status(415).json({ error: 'JSON required' });
+  }
+
+  const { text, target } = req.body ?? {};
+  if (typeof text !== 'string' || !text.trim() || text.length > 500 || !MOMENT_LANGUAGE_CODES.has(target)) {
+    return res.status(400).json({ error: 'Invalid translation request' });
+  }
   if (target === 'en') return res.status(200).json({ translatedText: text });
-  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
-  const now = Date.now();
-  if (bucket.size > 3000) bucket.clear();
-  const entry = bucket.get(ip) || { count: 0, start: now };
-  if (now - entry.start > 60000) { entry.count = 0; entry.start = now; }
-  entry.count++;
-  bucket.set(ip, entry);
-  if (entry.count > 15) return res.status(429).json({ error: 'Please try again shortly' });
+
   const key = process.env.GOOGLE_TRANSLATE_API_KEY;
-  if (!key) return res.status(503).json({ error: 'Translation is not configured' });
+  if (!key || !getAdminClient()) return res.status(503).json({ error: 'Translation is not configured' });
+  if (await checkRateLimit(getClientIp(req), 'moments-translate', 15, 60, { failClosed: true })) {
+    res.setHeader('Retry-After', '60');
+    return res.status(429).json({ error: 'Too many translation requests. Please try again shortly' });
+  }
+
   try {
     const response = await fetch('https://translation.googleapis.com/language/translate/v2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-goog-api-key': key },
       body: JSON.stringify({ q: text, source: 'en', target, format: 'text' }),
-      signal: AbortSignal.timeout(8000)
+      redirect: 'error',
+      signal: AbortSignal.timeout(8000),
     });
-    if (!response.ok) return res.status(502).json({ error: 'Translation provider unavailable' });
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      const details = Array.isArray(data?.error?.errors) ? data.error.errors : [];
+      const reasons = new Set(details.map(detail => detail?.reason));
+      const message = data?.error?.message ?? '';
+      if (response.status === 403 && (reasons.has('dailyLimitExceeded') || /^Daily Limit Exceeded\b/i.test(message))) {
+        return res.status(429).json({ error: 'The daily translation quota has been reached. Try again after midnight Pacific time' });
+      }
+      if (response.status === 429 || (response.status === 403
+          && (reasons.has('userRateLimitExceeded') || reasons.has('rateLimitExceeded') || /^User Rate Limit Exceeded\b/i.test(message)))) {
+        const retryAfter = response.headers.get('Retry-After');
+        res.setHeader('Retry-After', retryAfter || '60');
+        return res.status(429).json({ error: 'Translation is busy. Please try again shortly' });
+      }
+      return res.status(502).json({ error: 'Translation provider unavailable' });
+    }
     const translatedText = data?.data?.translations?.[0]?.translatedText;
-    if (typeof translatedText !== 'string') return res.status(502).json({ error: 'Invalid translation response' });
+    if (typeof translatedText !== 'string' || !translatedText.trim()) {
+      return res.status(502).json({ error: 'Invalid translation response' });
+    }
     return res.status(200).json({ translatedText });
-  } catch { return res.status(502).json({ error: 'Translation temporarily unavailable' }); }
+  } catch {
+    return res.status(502).json({ error: 'Translation temporarily unavailable' });
+  }
 }
