@@ -55,22 +55,27 @@ export default function WishesStudio() {
     } catch { setError('Unable to export image. Please try again.'); }
   };
 
-  const share = async () => {
+  const whatsappText = [occasion.heading, clean(message, 200), 'From ' + (clean(sender, 40) || 'Your Friend'), 'Create yours: https://orbitboard.in/tools/wishes-studio'].join('\n');
+  const whatsappUrl = 'https://wa.me/?text=' + encodeURIComponent(whatsappText);
+
+  const shareImage = async () => {
     setError('');
     try {
-      const blob = await imageBlob('image/png');
-      const file = new File([blob], 'orbitboard-wish.png', { type: 'image/png' });
-      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
-        await navigator.share({ files: [file], title: occasion.heading });
-        trackEvent('wishes_studio_share', { method: 'native', occasion: occasionId });
-      } else {
-        // WhatsApp Web share URLs support text, not direct binary image uploads.
-        const text = [occasion.heading, clean(message, 200), 'From ' + (clean(sender, 40) || 'Your Friend'), 'Create yours: https://orbitboard.in/tools/wishes-studio'].join('\n');
-        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
-        trackEvent('wishes_studio_share', { method: 'whatsapp_text', occasion: occasionId });
+      // Build the file synchronously during the click so the browser retains user activation.
+      const canvas = canvasRef.current;
+      if (!canvas) throw new Error('Preview unavailable');
+      const dataUrl = canvas.toDataURL('image/png');
+      const binary = atob(dataUrl.split(',')[1]);
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      const file = new File([bytes], 'orbitboard-wish.png', { type: 'image/png' });
+      if (!navigator.share || !navigator.canShare?.({ files: [file] })) {
+        setError('Image sharing is not supported in this browser. Download the card and attach it in WhatsApp, or use Share via WhatsApp for a text greeting.');
+        return;
       }
+      await navigator.share({ files: [file], title: occasion.heading });
+      trackEvent('wishes_studio_share', { method: 'native_image', occasion: occasionId });
     } catch (err) {
-      if (err?.name !== 'AbortError') setError('Sharing is unavailable. Download the image and attach it in WhatsApp.');
+      if (err?.name !== 'AbortError') setError('Image sharing failed. Download the card and attach it in WhatsApp.');
     }
   };
 
@@ -106,10 +111,11 @@ export default function WishesStudio() {
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => download('image/png')} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-violet-700 px-4 py-2 font-semibold text-white"><Download size={17} /> PNG</button>
               <button type="button" onClick={() => download('image/jpeg')} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-violet-400 px-4 py-2 font-semibold">Download JPG</button>
-              <button type="button" onClick={share} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-violet-400 px-4 py-2 font-semibold"><Share2 size={17} /> Share / WhatsApp</button>
+              <button type="button" onClick={shareImage} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-violet-400 px-4 py-2 font-semibold"><Share2 size={17} /> Share image</button>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent('wishes_studio_share', { method: 'whatsapp_text', occasion: occasionId })} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-500 px-4 py-2 font-semibold text-emerald-700 dark:text-emerald-300">Share via WhatsApp</a>
             </div>
             {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
-            <p className="text-xs text-stone-500 dark:text-stone-400">On supported devices, Share sends the actual image. Otherwise WhatsApp opens with a text greeting; download and attach the card manually.</p>
+            <p className="text-xs text-stone-500 dark:text-stone-400">Share image sends the PNG on supported devices. Share via WhatsApp sends the greeting text; to share the card itself on desktop, download it and attach the image in WhatsApp.</p>
           </section>
           <section aria-label="Live greeting card preview" className="rounded-2xl border border-[var(--orbit-border)] bg-white p-4 dark:bg-stone-900">
             <h2 className="mb-3 text-sm font-semibold">Live preview · Square card (1080 × 1080)</h2>
