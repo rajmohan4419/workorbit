@@ -9,6 +9,7 @@ import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
 import { loadGoogleAnalytics } from './lib/analytics';
+const WishesStudio = lazy(() => import('./pages/WishesStudio'));
 const ToolsCatalogue = lazy(() => import('./pages/ToolsCatalogue'));
 const ToolPageRoute = lazy(() => import('./pages/ToolPageRoute'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/tools/wishes-studio" element={<WishesStudio />} />
             <Route path="/tools/:slug" element={<ToolPageRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
