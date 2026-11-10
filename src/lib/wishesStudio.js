@@ -13,7 +13,7 @@ export const THEMES = [
 ];
 export const WIDTH = 1080;
 export const HEIGHT = 1080;
-const clean = (value, max = 160) => value.trim().slice(0, max);
+export const clean = (value, max = 160) => value.trim().slice(0, max);
 
 function wrapLines(ctx, value, maxWidth, maxLines) {
   const words = value.split(/\s+/).filter(Boolean);
