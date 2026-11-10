@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-
-const LANGUAGES = [{ code: 'en', label: 'English' }, { code: 'kn', label: 'ಕನ್ನಡ' }, { code: 'hi', label: 'हिन्दी' }, { code: 'ta', label: 'தமிழ்' }, { code: 'te', label: 'తెలుగు' }, { code: 'ml', label: 'മലയാളം' }, { code: 'mr', label: 'मराठी' }, { code: 'bn', label: 'বাংলা' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }];
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { MOMENT_LANGUAGES, MOMENT_SHARE_ID, SHARED_MOMENT_PATH } from '../lib/moments.js';
 
 const MOMENTS = [
   { slug: 'diwali', title: 'Diwali', emoji: '🪔', prompt: 'Tap to light the diya', reveal: 'May your Diwali shine with joy and new beginnings!', action: 'Light the diya', accent: '#e9a23b' },
@@ -33,7 +32,12 @@ export function MomentsHome() {
 
 export function MomentExperience() {
   const { slug } = useParams();
-  const moment = useMemo(() => MOMENTS.find(item => item.slug === slug), [slug]);
+  const moment = MOMENTS.find(item => item.slug === slug);
+  if (!moment) return <main className="p-10"><h1>Moment not found</h1><Link to="/moments">Explore Moments</Link></main>;
+  return <MomentEditor key={slug} moment={moment} />;
+}
+
+function MomentEditor({ moment }) {
   const [sender, setSender] = useState('');
   const [recipient, setRecipient] = useState('');
   const [message, setMessage] = useState('');
@@ -43,32 +47,67 @@ export function MomentExperience() {
   const [translated, setTranslated] = useState(null);
   const [translating, setTranslating] = useState(false);
   const [translationError, setTranslationError] = useState('');
+  const [savedShare, setSavedShare] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [shareStatus, setShareStatus] = useState('');
+  const sourceText = [(headline ?? moment.reveal).trim(), message.trim()].filter(Boolean).join('\n');
+  const translatedText = translated?.language === language && translated?.source === sourceText ? translated.value : null;
+  const snapshot = {
+    slug: moment.slug,
+    sender: sender.trim(),
+    recipient: recipient.trim(),
+    text: translatedText ?? sourceText,
+    language: translatedText ? language : 'en',
+  };
+  const draft = JSON.stringify(snapshot);
+  const shareUrl = savedShare?.draft === draft ? savedShare.url : '';
+
   const translate = async () => {
-    if (!moment || language === 'en') return;
+    if (language === 'en') return;
     setTranslating(true);
     setTranslationError('');
     try {
-      const source = [(headline ?? moment.reveal).trim(), message.trim()].filter(Boolean).join('\n');
-      const response = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: source, target: language }) });
+      const response = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: sourceText, target: language }) });
       if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error || `Translation request failed (${response.status})`); }
       const data = await response.json();
-      setTranslated({ language, source, value: data.translatedText });
+      setTranslated({ language, source: sourceText, value: data.translatedText });
     } catch (error) { setTranslationError(`${error.message || 'Translation unavailable'}. Your English greeting is still ready.`); }
     finally { setTranslating(false); }
   };
-  if (!moment) return <main className="p-10"><h1>Moment not found</h1><Link to="/moments">Explore Moments</Link></main>;
-  const sourceText = [(headline ?? moment.reveal).trim(), message.trim()].filter(Boolean).join('\n');
-  const translatedText = translated?.language === language && translated?.source === sourceText ? translated.value : null;
-  const greeting = [translatedText || sourceText, sender.trim() ? `From ${sender.trim()}` : ''].filter(Boolean).join('\n');
-  const share = async () => {
-    const text = [recipient.trim() ? `For ${recipient.trim()}` : '', greeting, 'Made with OrbitBoard Moments'].filter(Boolean).join('\n');
-    if (navigator.share) {
-      try { await navigator.share({ title: `${moment.title} greeting`, text, url: window.location.href }); } catch { /* User cancelled */ }
-    } else {
-      try { await navigator.clipboard.writeText(`${text}\n${window.location.href}`); window.alert('Greeting copied to clipboard'); }
-      catch { window.alert('Sharing is not supported in this browser.'); }
+  const saveShare = async () => {
+    setSaving(true);
+    setShareStatus('');
+    try {
+      const response = await requestShare({ action: 'create', ...snapshot });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      if (typeof data.id !== 'string' || !MOMENT_SHARE_ID.test(data.id)) throw new Error();
+      setSavedShare({ draft, url: new URL(`${SHARED_MOMENT_PATH}#${data.id}`, window.location.origin).href });
+    } catch (error) {
+      setShareStatus(error.message || 'Could not create a share link. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
+
+  const share = async () => {
+    setShareStatus('');
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${moment.title} greeting`, url: shareUrl });
+        return;
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareStatus('Link copied to clipboard.');
+    } catch {
+      setShareStatus('Select the link above to copy it.');
+    }
+  };
+
   return <main className="min-h-screen px-5 py-10">
     <div className="mx-auto max-w-3xl">
       <Link to="/moments" className="text-sm underline">← All Moments</Link>
@@ -86,26 +125,97 @@ export function MomentExperience() {
       <div className="mt-5 flex flex-wrap items-end gap-3">
         <label className="text-sm">Greeting language
           <select value={language} onChange={e => { setLanguage(e.target.value); setTranslated(null); setTranslationError(''); }} className="mt-1 block rounded-xl border bg-transparent p-3">
-            {LANGUAGES.map(item => <option key={item.code} value={item.code} className="text-slate-900">{item.label}</option>)}
+            {MOMENT_LANGUAGES.map(item => <option key={item.code} value={item.code} className="text-slate-900">{item.label}</option>)}
           </select>
         </label>
         {language !== 'en' && <button type="button" disabled={translating} onClick={translate} className="rounded-xl bg-violet-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{translating ? 'Translating…' : 'Translate wishes'}</button>}
         {translatedText && <span className="text-xs text-green-700 dark:text-green-300">Translation ready — review before sharing</span>}
       </div>
       {translationError && <p role="status" className="mt-2 text-sm text-amber-700">{translationError}</p>}
-      <section aria-label="Interactive greeting" className="relative mt-7 flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-3xl p-8 text-center text-white" style={{ background: `radial-gradient(circle at 50% 70%, ${moment.accent}55, #17142d 75%)` }}>
-        <div className={`text-7xl transition-all duration-700 motion-reduce:transition-none ${revealed ? 'scale-125 drop-shadow-2xl' : 'opacity-60'}`} aria-hidden="true">{moment.emoji}</div>
-        {revealed ? <div aria-live="polite" className="mt-8 max-w-lg whitespace-pre-line">
-          <h2 className="text-2xl font-bold">{recipient.trim() ? `Dear ${recipient.trim()},` : moment.title}</h2>
-          <p className="mt-4 text-lg">{greeting}</p>
-          <div className="mt-8 text-xs tracking-widest opacity-60">Made with OrbitBoard</div>
-        </div> : <div className="mt-8"><p>{moment.prompt}</p><button onClick={() => setRevealed(true)} className="mt-5 rounded-full bg-white px-7 py-3 font-semibold text-slate-900">{moment.action} ✨</button></div>}
-      </section>
+      <GreetingScene moment={moment} {...snapshot} revealed={revealed} onReveal={() => setRevealed(true)} />
       <div className="mt-5 flex flex-wrap gap-3">
-        <button onClick={() => setRevealed(false)} className="rounded-full border px-6 py-3">Replay</button>
-        <button disabled={!revealed} onClick={share} className="rounded-full bg-violet-700 px-6 py-3 text-white disabled:opacity-40">Share greeting</button>
+        <button type="button" onClick={() => setRevealed(false)} className="rounded-full border px-6 py-3">Replay</button>
+        {shareUrl ? <button type="button" onClick={share} className="rounded-full bg-violet-700 px-6 py-3 text-white">{navigator.share ? 'Share greeting' : 'Copy link'}</button>
+          : <button type="button" disabled={!revealed || saving || translating} onClick={saveShare} className="rounded-full bg-violet-700 px-6 py-3 text-white disabled:opacity-40">{saving ? 'Creating link…' : 'Create share link'}</button>}
       </div>
-      <p className="mt-5 text-xs opacity-60">Preview only. Translated wishes are included in share text, but the shared link still opens the default template; saved personalized links and ₹9/₹29 paid branding are not yet enabled.</p>
+      {shareUrl && <label className="mt-4 block text-sm">Share link
+        <input readOnly value={shareUrl} onFocus={e => e.target.select()} className="mt-1 w-full rounded-xl border bg-transparent p-3" />
+      </label>}
+      {shareStatus && <p role="status" className="mt-2 text-sm">{shareStatus}</p>}
+      <p className="mt-5 text-xs opacity-60">Creating a link saves this greeting and its names. Anyone with the link can open it. Changes need a new link.</p>
     </div>
   </main>;
+}
+
+function requestShare(body, signal) {
+  return fetch('/api/moment-shares', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
+}
+
+export function SharedMoment() {
+  const { hash } = useLocation();
+  return <SharedGreeting key={hash} id={hash.slice(1)} />;
+}
+
+function SharedGreeting({ id }) {
+  const validId = MOMENT_SHARE_ID.test(id);
+  const [result, setResult] = useState(null);
+  const [attempt, setAttempt] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (!validId) return;
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const response = await requestShare({ action: 'read', id }, controller.signal);
+        if (!controller.signal.aborted) {
+          if (response.status === 404) {
+            setResult({ missing: true });
+          } else if (!response.ok) {
+            setResult({ unavailable: true });
+          } else {
+            const greeting = await response.json();
+            if (!controller.signal.aborted) setResult({ greeting });
+          }
+        }
+      } catch {
+        if (!controller.signal.aborted) setResult({ unavailable: true });
+      }
+    }
+    load();
+    return () => controller.abort();
+  }, [id, validId, attempt]);
+
+  const moment = MOMENTS.find(item => item.slug === result?.greeting?.slug);
+  return <main className="min-h-screen px-5 py-10">
+    <div className="mx-auto max-w-3xl">
+      <a href="/moments" className="text-sm underline">Create your own Moment</a>
+      {!validId || result?.missing || (result?.greeting && !moment) ? <h1 className="mt-7 text-3xl font-bold">Greeting not found</h1>
+        : result?.unavailable ? <div className="mt-7">
+          <h1 className="text-3xl font-bold">Greeting temporarily unavailable</h1>
+          <button type="button" className="mt-3 underline" onClick={() => { setResult(null); setAttempt(value => value + 1); }}>Try again</button>
+        </div>
+          : moment ? <>
+            <h1 className="mt-7 text-3xl font-bold">{moment.title} Moment</h1>
+            <GreetingScene moment={moment} {...result.greeting} revealed={revealed} onReveal={() => setRevealed(true)} />
+            {revealed && <button type="button" onClick={() => setRevealed(false)} className="mt-5 rounded-full border px-6 py-3">Replay</button>}
+          </> : <p role="status" className="mt-7">Loading greeting…</p>}
+    </div>
+  </main>;
+}
+
+function GreetingScene({ moment, sender, recipient, text, language, revealed, onReveal }) {
+  return <section aria-label="Interactive greeting" className="relative mt-7 flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-3xl p-8 text-center text-white" style={{ background: `radial-gradient(circle at 50% 70%, ${moment.accent}55, #17142d 75%)` }}>
+    <div className={`text-7xl transition-all duration-700 motion-reduce:transition-none ${revealed ? 'scale-125 drop-shadow-2xl' : 'opacity-60'}`} aria-hidden="true">{moment.emoji}</div>
+    {revealed ? <div aria-live="polite" className="mt-8 max-w-lg whitespace-pre-line">
+      <h2 className="text-2xl font-bold">{recipient ? `Dear ${recipient},` : moment.title}</h2>
+      <p className="mt-4 text-lg" lang={language}>{text}</p>
+      {sender && <p className="mt-2">From {sender}</p>}
+      <div className="mt-8 text-xs tracking-widest opacity-60">Made with OrbitBoard</div>
+    </div> : <div className="mt-8"><p>{moment.prompt}</p><button onClick={onReveal} className="mt-5 rounded-full bg-white px-7 py-3 font-semibold text-slate-900">{moment.action} ✨</button></div>}
+  </section>;
 }

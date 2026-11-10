@@ -31,10 +31,20 @@
           "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
         }
       ]
+    },
+    {
+      "source": "/moments/shared",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
     }
   ],
   "cleanUrls": true,
   "rewrites": [
+    {
+      "source": "/moments/:path*",
+      "destination": "/"
+    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
