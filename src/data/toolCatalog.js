@@ -3,6 +3,7 @@
 // Planned tools return a "coming soon" page and are excluded from listings.
 
 export const TOOLS = [
+  { slug: "wishes-studio", name: "Festive Wishes & Greeting Card Maker", description: "Create personalized Diwali, Ugadi, birthday, New Year and Christmas cards. Download PNG or JPG and share.", category: "Everyday", icon: "✦", status: "live" },
   { slug: "ctc-to-inhand", name: "CTC to In-Hand Salary", description: "Estimate take-home salary with tax regime, PF, gratuity, variable pay and professional tax.", category: "Career", icon: "₹", status: "live" },
   { slug: "salary-hike", name: "Salary Hike Calculator", description: "Calculate your hike percentage and revised salary instantly.", category: "Career", icon: "%", status: "live" },
   { slug: "offer-comparison", name: "Offer Comparison", description: "Compare two job offers by CTC, monthly take-home and hike.", category: "Career", icon: "⇄", status: "live" },
