@@ -9,6 +9,8 @@ import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
 import { loadGoogleAnalytics } from './lib/analytics';
+const MomentsHome = lazy(() => import('./pages/Moments').then(m => ({ default: m.MomentsHome })));
+const MomentExperience = lazy(() => import('./pages/Moments').then(m => ({ default: m.MomentExperience })));
 const ToolsCatalogue = lazy(() => import('./pages/ToolsCatalogue'));
 const ToolPageRoute = lazy(() => import('./pages/ToolPageRoute'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
@@ -34,6 +36,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<ToolsHome />} />
             <Route path="/tools" element={<ToolsCatalogue />} />
+            <Route path="/moments" element={<MomentsHome />} />
+            <Route path="/moments/:slug" element={<MomentExperience />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
