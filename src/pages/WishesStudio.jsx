@@ -5,7 +5,7 @@ import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 import { trackEvent } from '../lib/analytics';
 
-import { OCCASIONS, THEMES, WIDTH, HEIGHT, drawWish } from '../lib/wishesStudio';
+import { OCCASIONS, THEMES, WIDTH, HEIGHT, drawWish, clean } from '../lib/wishesStudio';
 
 export default function WishesStudio() {
   const canvasRef = useRef(null);
