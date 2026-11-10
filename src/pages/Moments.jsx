@@ -37,6 +37,7 @@ export function MomentExperience() {
   const [sender, setSender] = useState('');
   const [recipient, setRecipient] = useState('');
   const [message, setMessage] = useState('');
+  const [headline, setHeadline] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [language, setLanguage] = useState('en');
   const [translated, setTranslated] = useState(null);
@@ -47,16 +48,16 @@ export function MomentExperience() {
     setTranslating(true);
     setTranslationError('');
     try {
-      const source = [moment.reveal, message.trim()].filter(Boolean).join('\n');
+      const source = [(headline ?? moment.reveal).trim(), message.trim()].filter(Boolean).join('\n');
       const response = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: source, target: language }) });
-      if (!response.ok) throw new Error('Translation unavailable');
+      if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.error || `Translation request failed (${response.status})`); }
       const data = await response.json();
       setTranslated({ language, source, value: data.translatedText });
-    } catch { setTranslationError('Translation is unavailable. Your English greeting is still ready.'); }
+    } catch (error) { setTranslationError(`${error.message || 'Translation unavailable'}. Your English greeting is still ready.`); }
     finally { setTranslating(false); }
   };
   if (!moment) return <main className="p-10"><h1>Moment not found</h1><Link to="/moments">Explore Moments</Link></main>;
-  const sourceText = [moment.reveal, message.trim()].filter(Boolean).join('\n');
+  const sourceText = [(headline ?? moment.reveal).trim(), message.trim()].filter(Boolean).join('\n');
   const translatedText = translated?.language === language && translated?.source === sourceText ? translated.value : null;
   const greeting = [translatedText || sourceText, sender.trim() ? `From ${sender.trim()}` : ''].filter(Boolean).join('\n');
   const share = async () => {
@@ -76,6 +77,10 @@ export function MomentExperience() {
       <div className="mt-7 grid gap-3 sm:grid-cols-2">
         <label className="text-sm">Your name<input maxLength={60} value={sender} onChange={e => setSender(e.target.value)} placeholder="Sender name" className="mt-1 w-full rounded-xl border bg-transparent p-3"/></label>
         <label className="text-sm">Recipient<input maxLength={60} value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="Recipient name" className="mt-1 w-full rounded-xl border bg-transparent p-3"/></label>
+        <label className="text-sm sm:col-span-2">Greeting headline
+          <textarea maxLength={200} rows={2} value={headline ?? moment.reveal} onChange={e => setHeadline(e.target.value)} className="mt-1 w-full rounded-xl border bg-transparent p-3" />
+          <button type="button" onClick={() => setHeadline(null)} className="mt-1 text-xs underline">Restore default message</button>
+        </label>
         <label className="text-sm sm:col-span-2">Personal message<textarea maxLength={240} rows={2} value={message} onChange={e => setMessage(e.target.value)} placeholder="Add your wishes (optional)" className="mt-1 w-full rounded-xl border bg-transparent p-3"/></label>
       </div>
       <div className="mt-5 flex flex-wrap items-end gap-3">
