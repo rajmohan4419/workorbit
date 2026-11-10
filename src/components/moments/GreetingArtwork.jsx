@@ -42,6 +42,12 @@ export default function GreetingArtwork({ occasion }) {
           <path d="M122 62c1 14 9 19 9 27 0 6-5 11-12 11s-11-5-11-11c0-8 8-14 14-27Z" fill="#fff5ca" />
         </g>
       </>}
+      {occasion === 'chhath-puja' && <>
+        <circle cx="120" cy="64" r="27" fill={fill} />
+        <path d="M54 97q26-14 54-3t70 0v34H54Z" fill="#4b344e" />
+        <path d="M78 101h85m-70 8h54m-69 8h79m-52 8h31" stroke="var(--moment-highlight)" strokeWidth="2" strokeLinecap="round" opacity=".7" />
+      </>}
+      {occasion === 'christmas' && <path d="M120 28l11 34 34 11-34 11-11 34-11-34-34-11 34-11Z" fill={fill} />}
       {occasion === 'birthday' && <>
         <path d="M77 94h86v32H77z" fill={fill} />
         <path d="M77 89h86v11c-9 10-14-5-22 1s-11 4-18 0-11 5-18 1-13 6-28-2Z" fill="var(--moment-highlight)" />

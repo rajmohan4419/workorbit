@@ -107,7 +107,8 @@ describe('Moments translation', () => {
 describe('Moments shares', () => {
   const snapshot = { slug: 'birthday', sender: 'Asha', recipient: 'Sam', text: 'ಶುಭಾಶಯಗಳು ✨', language: 'kn' };
 
-  it('saves a snapshot and reads it by its server-generated ID', async () => {
+  it.each(['birthday', 'chhath-puja', 'christmas'])('saves and reads a %s snapshot by its server-generated ID', async (slug) => {
+    const greeting = { ...snapshot, slug };
     const rows = new Map();
     const admin = {
       from: vi.fn(() => ({
@@ -117,14 +118,14 @@ describe('Moments shares', () => {
     };
     getAdminClient.mockReturnValue(admin);
 
-    const saved = await request(share, { action: 'create', ...snapshot });
+    const saved = await request(share, { action: 'create', ...greeting });
     expect(saved).toMatchObject({ status: 201, headers: { 'Cache-Control': 'no-store' } });
     expect(Object.keys(saved.data)).toEqual(['id']);
     expect(checkRateLimit).toHaveBeenCalledWith('192.0.2.12', 'moments-share-create', 10, 60, { failClosed: true });
 
-    const edited = await request(share, { action: 'create', ...snapshot, text: 'New wishes' });
+    const edited = await request(share, { action: 'create', ...greeting, text: 'New wishes' });
     expect(edited.data.id).not.toBe(saved.data.id);
-    expect(await request(share, { action: 'read', id: saved.data.id })).toMatchObject({ status: 200, data: snapshot });
+    expect(await request(share, { action: 'read', id: saved.data.id })).toMatchObject({ status: 200, data: greeting });
     expect((await request(share, { action: 'read', id: '00000000-0000-4000-8000-000000000001' })).status).toBe(404);
   });
 

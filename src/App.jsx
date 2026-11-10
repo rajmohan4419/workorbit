@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, useLocation, useMatch } from 'react-route
 import { TOOLS } from './data/toolCatalog';
 import { AmbientBackground } from './components/layout/AmbientBackground';
 import { InstallPrompt } from './components/InstallPrompt';
-import { DiwaliCelebration } from './components/DiwaliCelebration';
 import { QuickQuiz } from './components/QuickQuiz';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
@@ -42,7 +41,6 @@ function AppContent() {
       <Analytics />
       <Telemetry />
       <InstallPrompt />
-      <DiwaliCelebration />
       <QuickQuiz />
       <CookieConsentBanner />
       <GlobalPreviewModal />

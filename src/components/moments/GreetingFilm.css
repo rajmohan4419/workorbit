@@ -1,0 +1,54 @@
+.moment-canvas[data-occasion="chhath-puja"] {
+  --moment-accent: #f9ab74;
+  --moment-highlight: #ffe5a9;
+  --moment-metal: #be6952;
+  --moment-light: #6d3c57;
+  --moment-depth: #201a37;
+}
+
+.moment-canvas[data-occasion="christmas"] {
+  --moment-accent: #e8ba67;
+  --moment-highlight: #ffe9b3;
+  --moment-metal: #a37944;
+  --moment-light: #245340;
+  --moment-depth: #122b2c;
+}
+
+.moment-film-canvas, .moment-film-static {
+  display: block;
+  inline-size: min(100%, 39rem);
+  block-size: auto;
+  aspect-ratio: 16 / 9;
+  margin-block: .6rem;
+  border: 1px solid #ffffff2b;
+  border-radius: .8rem;
+}
+
+.moment-film-static {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse, var(--moment-light), var(--moment-depth));
+}
+
+.moment-film-static .moment-artwork { inline-size: min(54%, 14rem); }
+.moment-film-static .moment-flame { animation: none; }
+
+.moment-film-stage {
+  display: grid;
+  align-items: center;
+  inline-size: min(100%, 35rem);
+  min-inline-size: 0;
+  min-block-size: 7.75rem;
+}
+
+.moment-film .moment-message[hidden] { display: none; }
+.moment-film-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .25rem .5rem;
+  margin-block: .45rem .1rem;
+}
+
+.moment-film-controls button:disabled { opacity: .55; cursor: wait; }
+.moment-film-status { font-size: .85rem; color: #ffdfba; }
