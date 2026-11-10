@@ -51,6 +51,21 @@ describe('Share Engine & Privacy Guardrails (shareResults.js)', () => {
       expect(url).not.toContain('rawRows');
     });
 
+    it('allowlists aggregate metrics for sensitive tools even when new PII keys appear', () => {
+      const url = buildShareableToolUrl('bank-reconciliation', {
+        matchRate: 94,
+        matchedCount: 20,
+        newSupplierReference: 'Sensitive Vendor',
+        statementMemo: 'Confidential bank notes',
+        accountAlias: 'Private account'
+      }, 'https://orbitboard.in');
+      expect(url).toContain('matchRate=94');
+      expect(url).toContain('matchedCount=20');
+      expect(url).not.toContain('Sensitive');
+      expect(url).not.toContain('Confidential');
+      expect(url).not.toContain('Private');
+    });
+
     it('handles empty or missing parameters gracefully', () => {
       const url = buildShareableToolUrl('emi', {}, 'https://orbitboard.in');
       expect(url).toBe('https://orbitboard.in/tools/emi');

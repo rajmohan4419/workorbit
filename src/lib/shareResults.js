@@ -24,6 +24,11 @@ const BLOCKED_PARAM_KEYS = new Set([
   'email', 'address', 'password', 'token', 'secret', 'jwt'
 ]);
 
+// Sensitive tools must opt in to aggregate-only URL parameters.
+const SENSITIVE_TOOL_SLUG = /(?:bank-reconciliation|gstr|gst-invoice|payslip|salary-sheet)/i;
+const SAFE_AGGREGATE_KEYS = new Set(['matchrate', 'matchratepercent', 'matchedcount', 'reconciledcount', 'totalreconciledcount', 'totalcount']);
+const SENSITIVE_VALUE_PATTERN = /(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z][Z][0-9A-Z]|\\b\\d{9,18}\\b)/i;
+
 /**
  * Serializes safe calculator parameters into a shareable URL.
  * Never serializes raw rows, table arrays, or personally identifiable fields.
@@ -42,12 +47,13 @@ export function buildShareableToolUrl(slug, stateParams = {}, origin) {
       if (val === null || val === undefined || val === '') return;
       const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
       if (BLOCKED_PARAM_KEYS.has(normalizedKey)) return;
+      if (SENSITIVE_TOOL_SLUG.test(slug) && !SAFE_AGGREGATE_KEYS.has(normalizedKey)) return;
 
       // Only serialize safe primitive scalars (string, number, boolean)
       if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
         // Exclude massive strings or serialized json
         const strVal = String(val);
-        if (strVal.length <= 120 && !strVal.startsWith('{') && !strVal.startsWith('[')) {
+        if (strVal.length <= 120 && !strVal.startsWith('{') && !strVal.startsWith('[') && !SENSITIVE_VALUE_PATTERN.test(strVal)) {
           sp.set(key, strVal);
         }
       }
