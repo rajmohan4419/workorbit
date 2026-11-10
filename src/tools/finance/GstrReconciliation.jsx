@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import {
   Upload, RefreshCw, CheckCircle2, AlertTriangle,
-  AlertOctagon, HelpCircle, Download, FileCheck, Loader2, Sparkles
+  AlertOctagon, HelpCircle, Download, FileCheck, Loader2, Sparkles, Share2
 } from 'lucide-react';
+import { useToolShareContext } from '../../lib/shareResults.js';
 import {
   reconcileGstrData,
   SAMPLE_GSTR_DATA,
@@ -21,6 +22,7 @@ async function parseSpreadsheetFile(file) {
 }
 
 export function GstrReconciliation() {
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const [gstrRows, setGstrRows] = useState(SAMPLE_GSTR_DATA);
   const [prRows, setPrRows] = useState(SAMPLE_PURCHASE_DATA);
   const [tolerance, setTolerance] = useState(1.0);
@@ -33,6 +35,25 @@ export function GstrReconciliation() {
   const recon = useMemo(() => {
     return reconcileGstrData(gstrRows, prRows, tolerance);
   }, [gstrRows, prRows, tolerance]);
+
+  // Live Result Share Context Registration
+  useEffect(() => {
+    if (recon?.summary) {
+      const sum = recon.summary;
+      const totalInvoices = (sum.totalPr || (sum.matchedCount + sum.mismatchCount + sum.missingIn2BCount)) || 1;
+      const matchRate = Math.round((sum.matchedCount / totalInvoices) * 100);
+      updateSharePayload({
+        headlineMetric: `${sum.matchedCount} Matched Invoices`,
+        subMetrics: [
+          { label: 'Match Rate', value: `${matchRate}%` },
+          { label: 'Eligible ITC', value: formatINR(sum.matchedTax) },
+          { label: 'At-Risk ITC', value: formatINR(sum.atRiskTax) },
+        ],
+        summaryText: `Reconciled GSTR-2B vs Purchase Register: ${sum.matchedCount} matched invoices, Eligible ITC ${formatINR(sum.matchedTax)}, At-Risk ITC ${formatINR(sum.atRiskTax)} on OrbitBoard.`,
+        queryParams: {}, // Zero PII in URL
+      });
+    }
+  }, [recon, updateSharePayload]);
 
   // File Upload Handlers
   const handleGstrUpload = useCallback(async (e) => {
@@ -182,6 +203,14 @@ export function GstrReconciliation() {
           >
             <Download className="w-3.5 h-3.5" />
             Export Excel Report
+          </button>
+          <button
+            type="button"
+            onClick={() => openShareModal()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
+          >
+            <Share2 className="w-3.5 h-3.5 text-accent-500" />
+            Share Scorecard
           </button>
         </div>
       </div>

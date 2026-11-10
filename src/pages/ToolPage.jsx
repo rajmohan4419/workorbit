@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { lazy, useEffect, useMemo, useState, useRef } from 'react';
+import { lazy, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { 
   ArrowRight, Share2, RotateCcw, Maximize2, Star, ChevronRight, 
   ChevronDown, Coins, BriefcaseBusiness, Code2, Calculator, TrendingUp 
@@ -24,6 +24,8 @@ import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 import { trackToolUsed } from '../lib/analytics';
+import { ToolShareContext, useToolShareContext } from '../lib/shareResults';
+import { ShareResultModal } from '../components/tools/ShareResultModal';
 
 // Extracted Modular Tool Packages
 import { SalaryCalculator, SalaryHike, Offer, Notice, Experience } from '../tools/career/CareerTools';
@@ -59,7 +61,7 @@ const GlobalIncomeTaxCalculator = lazy(() => import('../tools/finance/GlobalInco
 const PdfESign = lazy(() => import('../tools/pdf/PdfESign'));
 const GlobalTimeZoneConverter = lazy(() => import('../tools/GlobalTimeZoneConverter'));
 
-function ToolHeaderStrip({ tool, info, workspaceRef }) {
+function ToolHeaderStrip({ tool, info, workspaceRef, onOpenShareModal }) {
   const [shared, setShared] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef(null);
@@ -109,6 +111,10 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
   };
 
   const share = async () => {
+    if (onOpenShareModal) {
+      onOpenShareModal();
+      return;
+    }
     const data = { title: tool.name, text: 'Try ' + tool.name + ' on OrbitBoard', url: window.location.href };
     try {
       if (navigator.share) await navigator.share(data);
@@ -257,12 +263,26 @@ function ToolHeaderStrip({ tool, info, workspaceRef }) {
 }
 
 function VariantEmi({ params }) {
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const [principal, setPrincipal] = useState(String(params?.principal ?? '1000000'));
   const [rate, setRate] = useState(String(params?.interestRate ?? '8.5'));
   const [years, setYears] = useState(String(params?.tenureYears ?? '20'));
   const p = num(principal), r = num(rate) / 1200, n = Math.max(1, Math.round(num(years) * 12));
   const emi = r ? (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : p / n;
   const total = emi * n;
+
+  useEffect(() => {
+    updateSharePayload({
+      headlineMetric: `₹ ${money(emi)} Monthly EMI`,
+      subMetrics: [
+        { label: 'Loan Amount', value: `₹ ${money(p)}` },
+        { label: 'Total Interest', value: `₹ ${money(total - p)}` },
+        { label: 'Tenure', value: `${years} Years` },
+      ],
+      summaryText: `Calculated monthly EMI of ₹ ${money(emi)} on a ₹ ${money(p)} loan at ${rate}% for ${years} years`,
+      queryParams: { principal, interestRate: rate, tenureYears: years },
+    });
+  }, [emi, p, total, rate, years, principal, updateSharePayload]);
 
   return (
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
@@ -275,6 +295,14 @@ function VariantEmi({ params }) {
         <Result label="Monthly EMI" value={`₹ ${money(emi)}`} highlight />
         <Result label="Total interest" value={`₹ ${money(total - p)}`} />
         <Result label="Total repayment" value={`₹ ${money(total)}`} />
+        <button
+          type="button"
+          onClick={() => openShareModal()}
+          className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-850 hover:bg-stone-50 dark:hover:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-accent-600 dark:hover:text-accent-400 transition shadow-2xs cursor-pointer active:scale-[0.98]"
+        >
+          <Share2 size={14} className="text-stone-400" />
+          <span>Share Result Scorecard</span>
+        </button>
       </div>
     </div>
   );
@@ -320,6 +348,7 @@ function calculateOldTax(taxable) {
 }
 
 function VariantSalaryCalculator({ params }) {
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const [ctc, setCtc] = useState(String(params?.ctcAnnual ?? '1200000'));
   const [basicPct, setBasicPct] = useState(String(params?.basicPct ?? '40'));
   const [variable, setVariable] = useState('0');
@@ -357,6 +386,19 @@ function VariantSalaryCalculator({ params }) {
       monthlyTakeHome: annualTakeHome / 12,
     };
   }, [ctc, basicPct, variable, gratuity, pfCap, regime, state]);
+
+  useEffect(() => {
+    updateSharePayload({
+      headlineMetric: `₹ ${money(result.monthlyTakeHome)} Monthly In-Hand`,
+      subMetrics: [
+        { label: 'Annual CTC', value: `₹ ${money(result.annualCtc)}` },
+        { label: 'Annual Tax', value: `₹ ${money(result.incomeTax)}` },
+        { label: 'Regime', value: regime === 'new' ? 'New (115BAC)' : 'Old Regime' },
+      ],
+      summaryText: `Estimated take-home of ₹ ${money(result.monthlyTakeHome)}/mo on a ₹ ${money(result.annualCtc)} CTC under ${regime} tax regime`,
+      queryParams: { ctcAnnual: ctc, basicPct, regime },
+    });
+  }, [result, ctc, basicPct, regime, updateSharePayload]);
 
   return (
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
@@ -435,6 +477,14 @@ function VariantSalaryCalculator({ params }) {
           <Result label="Employee EPF" value={`₹ ${money(result.employeePf)}`} />
           <Result label="Employer EPF included in CTC" value={`₹ ${money(result.employerPf)}`} />
           <Result label="Professional tax" value={`₹ ${money(result.pt)}`} />
+          <button
+            type="button"
+            onClick={() => openShareModal()}
+            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-850 hover:bg-stone-50 dark:hover:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-accent-600 dark:hover:text-accent-400 transition shadow-2xs cursor-pointer active:scale-[0.98]"
+          >
+            <Share2 size={14} className="text-stone-400" />
+            <span>Share Result Scorecard</span>
+          </button>
         </div>
         <div className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 text-xs text-stone-600 dark:text-stone-400 space-y-2">
           <div className="flex justify-between">
@@ -482,6 +532,40 @@ const CATEGORY_LABEL = {
 
 export default function ToolPage() {
   const { slug } = useParams();
+  const [shareData, setShareData] = useState({ slug: null, payload: null });
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const slugRef = useRef(slug);
+
+  useEffect(() => {
+    slugRef.current = slug;
+  }, [slug]);
+
+  const sharePayload = shareData.slug === slug ? shareData.payload : null;
+
+  const updateSharePayload = useCallback((payload) => {
+    setShareData((prev) => {
+      if (prev.slug === slugRef.current && prev.payload?.headlineMetric === payload?.headlineMetric) {
+        return prev;
+      }
+      return { slug: slugRef.current, payload };
+    });
+  }, []);
+
+  const openShareModal = useCallback((customPayload) => {
+    if (customPayload) {
+      setShareData({ slug: slugRef.current, payload: customPayload });
+    }
+    setIsShareModalOpen(true);
+  }, []);
+
+  const shareContextValue = useMemo(() => ({
+    sharePayload,
+    updateSharePayload,
+    openShareModal,
+    isShareModalOpen,
+    setIsShareModalOpen,
+  }), [sharePayload, updateSharePayload, openShareModal, isShareModalOpen]);
+
   const variant = useMemo(() => toolVariants.find((v) => v.slug === slug), [slug]);
   const baseTool = useMemo(
     () => (variant ? TOOLS.find((t) => t.slug === variant.baseToolSlug) : null),
@@ -704,9 +788,15 @@ export default function ToolPage() {
         <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-accent-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
         <div>
           <ToolsHomeHeader />
-          <ToolHeaderStrip tool={tool} info={info} workspaceRef={workspaceRef} />
+          <ToolHeaderStrip
+            tool={tool}
+            info={info}
+            workspaceRef={workspaceRef}
+            onOpenShareModal={() => setIsShareModalOpen(true)}
+          />
 
-          <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
+          <ToolShareContext.Provider value={shareContextValue}>
+            <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
           <div id="tool-workspace" key={slug} ref={workspaceRef} className="orbit-card-enter relative rounded-3xl border border-[var(--orbit-border)] bg-[var(--orbit-surface)] shadow-md overflow-hidden ring-1 ring-accent-500/10 dark:ring-accent-400/10 transition-shadow duration-300 hover:shadow-lg">
             <div className="h-1.5 w-full bg-gradient-to-r from-accent-600 via-indigo-500 to-accent-400 opacity-85 animate-orbit-beam" />
             <div className="p-5 sm:p-8">
@@ -760,15 +850,27 @@ export default function ToolPage() {
 
             <section className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
               <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100">Frequently Asked Questions</h3>
-              <div className="border-t border-[var(--orbit-border)] pt-4 space-y-4">
+              <div className="border-t border-[var(--orbit-border)] divide-y divide-[var(--orbit-border)]">
                 {(info?.faq || [
-                  [`Is ${tool.name} free to use?`, `Yes, ${tool.name} is 100% free with no sign-up or registration required.`],
-                  [`Is my data safe when using ${tool.name}?`, `Yes. All calculations and file transformations occur client-side in your browser. Your data is not stored or shared on external servers.`]
-                ]).map(([q, a]) => (
-                  <div key={q} className="space-y-1">
-                    <p className="font-semibold text-sm text-stone-800 dark:text-stone-200">{q}</p>
-                    <p className="text-sm text-stone-600 dark:text-stone-400 leading-6">{a}</p>
-                  </div>
+                  [`Is ${tool.name} free to use?`, `Yes, ${tool.name} is 100% free with no sign-up or registration required. All results are calculated instantly.`],
+                  [`Is my data safe when using ${tool.name}?`, `Yes. All calculations and file transformations occur client-side in your browser. Your data is never uploaded, stored, or shared on external servers.`]
+                ]).map(([q, a], i) => (
+                  <details
+                    key={q}
+                    className="group py-4 first:pt-4 last:pb-2 transition-colors cursor-pointer list-none"
+                    open={i === 0}
+                  >
+                    <summary className="flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-stone-800 dark:text-stone-200 list-none select-none hover:text-accent-600 dark:hover:text-accent-400 transition-colors">
+                      <span>{q}</span>
+                      <ChevronDown
+                        size={18}
+                        className="shrink-0 text-stone-400 transition-transform duration-200 group-open:rotate-180"
+                      />
+                    </summary>
+                    <div className="mt-3 text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed pl-1">
+                      {a}
+                    </div>
+                  </details>
                 ))}
               </div>
             </section>
@@ -804,6 +906,13 @@ export default function ToolPage() {
             </div>
           </div>
         </main>
+        <ShareResultModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          tool={tool}
+          sharePayload={sharePayload}
+        />
+      </ToolShareContext.Provider>
       </div>
 
       <ToolsHomeFooter />

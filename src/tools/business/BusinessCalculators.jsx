@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Share2, Check } from 'lucide-react';
+import { Share2, Check, Sparkles } from 'lucide-react';
 import { Field } from '../../components/tools/ToolFields';
 import { ImportPanel } from '../../components/tools/ImportPanel';
 import { mapColumns, toCsv } from '../../lib/csv';
 import { downloadBlob } from '../../lib/toolFormat';
 import { RETENTION_ALIASES, retentionFromCustomers } from './retentionCustomers';
 import { DEAL_ALIASES, aggregateDeals } from './deals';
+import { useToolShareContext } from '../../lib/shareResults';
 
 const RETENTION_TEMPLATE = [
   ['Customer', 'Start MRR', 'End MRR'],
@@ -56,6 +57,7 @@ function Rated({ label, value, metric, rawValue, suffix = '' }) {
 }
 
 export function SaasRetention() {
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const initialV = () => {
     const base = {
       startMrr: '100000', expansionMrr: '15000', contractionMrr: '5000', churnedMrr: '10000',
@@ -95,6 +97,20 @@ export function SaasRetention() {
       // ignore
     }
   }, [v]);
+
+  // Live Result Share Context Registration for SaaS Retention
+  useEffect(() => {
+    updateSharePayload({
+      headlineMetric: r.nrr !== null ? `${fmt(r.nrr)}% Net Retention` : 'SaaS Retention Report',
+      subMetrics: [
+        { label: 'Gross Retention', value: r.grr !== null ? `${fmt(r.grr)}%` : '—' },
+        { label: 'Logo Churn', value: r.logoChurnPct !== null ? `${fmt(r.logoChurnPct)}%` : '—' },
+        { label: 'LTV to CAC', value: r.ltvToCac !== null ? `${fmt(r.ltvToCac)}x` : '—' },
+      ],
+      summaryText: `SaaS Retention: ${fmt(r.nrr)}% NRR, ${fmt(r.grr)}% GRR, and ${fmt(r.logoChurnPct)}% logo churn on OrbitBoard`,
+      queryParams: v,
+    });
+  }, [r, v, updateSharePayload]);
 
   const copyShareLink = async () => {
     const sp = new URLSearchParams();
@@ -200,23 +216,33 @@ export function SaasRetention() {
           <Rated label="LTV to CAC" metric="ltvToCac" rawValue={r.ltvToCac} value={fmt(r.ltvToCac)} suffix="x" />
           <Rated label="CAC payback" metric="paybackMonths" rawValue={r.paybackMonths} value={fmt(r.paybackMonths)} suffix=" months" />
           <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={copyShareLink}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
-            >
-              {copiedLink ? (
-                <>
-                  <Check size={15} className="text-emerald-500" />
-                  <span>Link Copied to Clipboard!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 size={15} />
-                  <span>Copy Shareable Link</span>
-                </>
-              )}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={copyShareLink}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
+              >
+                {copiedLink ? (
+                  <>
+                    <Check size={15} className="text-emerald-500" />
+                    <span>Link Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={15} />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => openShareModal()}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-850 hover:bg-stone-50 dark:hover:bg-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer shadow-2xs"
+              >
+                <Sparkles size={15} className="text-amber-500" />
+                <span>Share Scorecard</span>
+              </button>
+            </div>
             <button type="button" onClick={exportCsv}
               className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] text-xs font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 transition">
               Download results (CSV)
@@ -239,6 +265,7 @@ const DEFAULT_STAGES = [
 ];
 
 export function SalesPipelineForecaster() {
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const initialData = () => {
     if (typeof window === 'undefined') return { stages: DEFAULT_STAGES, quota: '200000' };
     try {
@@ -324,6 +351,19 @@ export function SalesPipelineForecaster() {
   const r = computePipeline({ stages, quota });
   const fmt1 = (n) => (n === null ? null : Number(n.toFixed(1)).toLocaleString('en-IN'));
 
+  useEffect(() => {
+    updateSharePayload({
+      headlineMetric: `₹ ${money(r.weightedValue)} Weighted Pipeline`,
+      subMetrics: [
+        { label: 'Total Pipeline', value: `₹ ${money(r.totalValue)}` },
+        { label: 'Coverage', value: `${fmt1(r.coverage)}x` },
+        { label: 'Deals Won', value: `${fmt1(r.expectedDeals)} deals` },
+      ],
+      summaryText: `Sales Pipeline Forecast: ₹ ${money(r.weightedValue)} expected revenue against ₹ ${money(quota)} quota on OrbitBoard`,
+      queryParams: { quota },
+    });
+  }, [r, quota, updateSharePayload]);
+
   const exportCsv = () => {
     const rows = [['Stage', 'Open deals', 'Average deal value', 'Win rate (%)', 'Weighted value']];
     r.perStage.forEach((p, i) => {
@@ -369,23 +409,33 @@ export function SalesPipelineForecaster() {
           <Rated label="Expected deals won" metric="none" rawValue={null} value={fmt1(r.expectedDeals)} />
           <Rated label="Gap to target" metric="none" rawValue={null} value={r.gap === null ? null : money(r.gap)} />
           <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={copyShareLink}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
-            >
-              {copiedLink ? (
-                <>
-                  <Check size={15} className="text-emerald-500" />
-                  <span>Link Copied to Clipboard!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 size={15} />
-                  <span>Copy Shareable Link</span>
-                </>
-              )}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={copyShareLink}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
+              >
+                {copiedLink ? (
+                  <>
+                    <Check size={15} className="text-emerald-500" />
+                    <span>Link Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={15} />
+                    <span>Copy Link</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => openShareModal()}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-850 hover:bg-stone-50 dark:hover:bg-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer shadow-2xs"
+              >
+                <Sparkles size={15} className="text-amber-500" />
+                <span>Share Scorecard</span>
+              </button>
+            </div>
             <button type="button" onClick={exportCsv}
               className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] text-xs font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 transition">
               Download results (CSV)
@@ -412,6 +462,7 @@ function PricingCard({ title, model, count }) {
 }
 
 export function SaasPricing() {
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const initialPricing = () => {
     const base = {
       seats: '25', customers: '100', perSeatPrice: '800', flatPrice: '15000',
@@ -450,6 +501,20 @@ export function SaasPricing() {
       // ignore
     }
   }, [v]);
+
+  // Live Result Share Context Registration
+  useEffect(() => {
+    updateSharePayload({
+      headlineMetric: `₹ ${money(r.perSeat?.monthly)} / seat / mo`,
+      subMetrics: [
+        { label: 'Annual Contract', value: `₹ ${money(r.perSeat?.annual)}` },
+        { label: 'Flat Alternative', value: `₹ ${money(r.flat?.monthly)}/mo` },
+        { label: 'Customers', value: `${v.customers} accounts` },
+      ],
+      summaryText: `SaaS Pricing Model: ₹ ${money(r.perSeat?.monthly)} per seat per month (or ₹ ${money(r.flat?.monthly)} flat plan) for ${v.customers} customers on OrbitBoard`,
+      queryParams: v,
+    });
+  }, [r, v, updateSharePayload]);
 
   const copyShareLink = async () => {
     const sp = new URLSearchParams();
@@ -503,23 +568,33 @@ export function SaasPricing() {
       </div>
 
       <div className="lg:col-span-6 space-y-3">
-        <button
-          type="button"
-          onClick={copyShareLink}
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer mb-2"
-        >
-          {copiedLink ? (
-            <>
-              <Check size={15} className="text-emerald-500" />
-              <span>Link Copied to Clipboard!</span>
-            </>
-          ) : (
-            <>
-              <Share2 size={15} />
-              <span>Copy Shareable Link</span>
-            </>
-          )}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
+          <button
+            type="button"
+            onClick={copyShareLink}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent-200 dark:border-accent-800 bg-accent-50/70 dark:bg-accent-950/40 text-xs font-semibold text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
+          >
+            {copiedLink ? (
+              <>
+                <Check size={15} className="text-emerald-500" />
+                <span>Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={15} />
+                <span>Copy Link</span>
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => openShareModal()}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-850 hover:bg-stone-50 dark:hover:bg-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200 transition cursor-pointer shadow-2xs"
+          >
+            <Sparkles size={15} className="text-amber-500" />
+            <span>Share Scorecard</span>
+          </button>
+        </div>
         <PricingCard title="Per seat" model={r.perSeat} count={v.customers} />
         <PricingCard title="Flat plan" model={r.flat} count={v.customers} />
         <PricingCard title="Volume tiers" model={r.tiered} count={v.customers} />

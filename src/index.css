@@ -63,7 +63,10 @@
 /* ─── OrbitBoard design tokens ───────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  /* ── Timing Curves ── */
+  /* ── Timing Curves & Durations ── */
+  --dur-fast: 150ms;
+  --dur-base: 280ms;
+  --dur-slow: 400ms;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
@@ -665,6 +668,71 @@ input, textarea, select {
   background: rgba(156, 163, 175, 0.5);
 }
 
+/* ─── Motion Utility Classes ─────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--dur-slow) var(--ease-out-expo), transform var(--dur-slow) var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+
+.reveal.revealed,
+.reveal[data-revealed="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity var(--dur-slow) var(--ease-out-expo), transform var(--dur-slow) var(--ease-out-expo);
+}
+
+.reveal-stagger.revealed > *,
+.reveal-stagger[data-revealed="true"] > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-stagger > *:nth-child(1) { transition-delay: 40ms; }
+.reveal-stagger > *:nth-child(2) { transition-delay: 80ms; }
+.reveal-stagger > *:nth-child(3) { transition-delay: 120ms; }
+.reveal-stagger > *:nth-child(4) { transition-delay: 160ms; }
+.reveal-stagger > *:nth-child(5) { transition-delay: 200ms; }
+.reveal-stagger > *:nth-child(6) { transition-delay: 240ms; }
+.reveal-stagger > *:nth-child(7) { transition-delay: 280ms; }
+.reveal-stagger > *:nth-child(8) { transition-delay: 320ms; }
+
+.orbit-hover {
+  position: relative;
+  transition: transform var(--dur-fast) var(--ease-out-expo), box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease;
+}
+
+.orbit-hover:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes ring-pulse-kf {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}
+
+.ring-pulse {
+  animation: ring-pulse-kf 0.75s var(--ease-out-expo) forwards;
+}
+
+.count-up {
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+}
+
 /* ─── Reduced motion ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -674,6 +742,10 @@ input, textarea, select {
     transition-duration: 0.01ms !important;
   }
 
+  .reveal,
+  .reveal-stagger > *,
+  .ring-pulse,
+  .orbit-hover,
   .anim-fade-up,
   .anim-zero-g,
   .animate-orbit-float,
@@ -686,6 +758,7 @@ input, textarea, select {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;
+    transition: none !important;
   }
 
   .brand-icon-orbit,

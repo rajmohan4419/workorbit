@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { Share2 } from 'lucide-react';
+import { useToolShareContext } from '../../lib/shareResults';
 
 const COUNTRIES = {
   us: {
@@ -95,9 +97,38 @@ function japanTax(income) {
 }
 
 export default function GlobalIncomeTaxCalculator() {
-  const [country, setCountry] = useState('us');
-  const [income, setIncome] = useState('100000');
-  const [status, setStatus] = useState('single');
+  const { updateSharePayload, openShareModal } = useToolShareContext();
+
+  const [country, setCountry] = useState(() => {
+    if (typeof window === 'undefined') return 'us';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('country') || 'us';
+  });
+  const [income, setIncome] = useState(() => {
+    if (typeof window === 'undefined') return '100000';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('income') || '100000';
+  });
+  const [status, setStatus] = useState(() => {
+    if (typeof window === 'undefined') return 'single';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('status') || 'single';
+  });
+
+  // Sync to URL state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set('country', country);
+      sp.set('income', income);
+      if (country === 'us') sp.set('status', status);
+      else sp.delete('status');
+      window.history.replaceState(null, '', `${window.location.pathname}?${sp.toString()}`);
+    } catch {
+      // ignore
+    }
+  }, [country, income, status]);
 
   const result = useMemo(() => {
     const config = COUNTRIES[country];
@@ -121,6 +152,22 @@ export default function GlobalIncomeTaxCalculator() {
   }, [country, income, status]);
 
   const format = value => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.max(0, value));
+
+  // Live Result Share Context Registration
+  useEffect(() => {
+    const curr = COUNTRIES[country]?.currency || '$';
+    const countryLabel = COUNTRIES[country]?.name?.split('—')?.[0]?.trim() || country.toUpperCase();
+    updateSharePayload({
+      headlineMetric: `${curr} ${format(result.tax)} Total Tax`,
+      subMetrics: [
+        { label: 'Jurisdiction', value: countryLabel },
+        { label: 'Effective Rate', value: `${result.effective.toFixed(1)}%` },
+        { label: 'Taxable Base', value: `${curr} ${format(result.taxable)}` },
+      ],
+      summaryText: `Estimated ${countryLabel} tax of ${curr} ${format(result.tax)} on ${curr} ${format(result.gross)} (${result.effective.toFixed(1)}% effective rate)`,
+      queryParams: { country, income, status: country === 'us' ? status : undefined },
+    });
+  }, [country, income, status, result, updateSharePayload]);
 
   return (
     <div className="space-y-5">
@@ -161,6 +208,15 @@ export default function GlobalIncomeTaxCalculator() {
           <strong className="text-sm text-white">{COUNTRIES[country].currency} {format(result.taxable)}</strong>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() => openShareModal()}
+        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[var(--orbit-border)] bg-slate-900 hover:bg-slate-850 text-xs sm:text-sm font-semibold text-slate-100 hover:text-accent-400 hover:border-accent-500/40 transition shadow-sm cursor-pointer active:scale-[0.98]"
+      >
+        <Share2 size={15} className="text-accent-400" />
+        <span>Share Tax Result Scorecard</span>
+      </button>
 
       <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs text-slate-400 space-y-2">
         <p>{COUNTRIES[country].note}</p>
