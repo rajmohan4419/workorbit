@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import GreetingFilm from '../components/moments/GreetingFilm';
 import GreetingScene from '../components/moments/GreetingScene';
-import { MOMENT_LANGUAGES, MOMENT_SHARE_ID, SHARED_MOMENT_PATH } from '../lib/moments.js';
-
-const MOMENTS = [
-  { slug: 'diwali', title: 'Diwali', emoji: '🪔', prompt: 'Tap to light the diya', reveal: 'May your Diwali shine with joy and new beginnings!', action: 'Light the diya', invitation: 'A little light for you' },
-  { slug: 'birthday', title: 'Birthday', emoji: '🎂', prompt: 'Make a birthday wish', reveal: 'Happy Birthday! Here’s to a wonderful year ahead!', action: 'Make a wish', invitation: 'A wish made just for you' },
-  { slug: 'anniversary', title: 'Anniversary', emoji: '💍', prompt: 'Celebrate your story', reveal: 'Happy Anniversary! May your journey together keep blooming.', action: 'Celebrate', invitation: 'Here’s to your story' },
-  { slug: 'announcement', title: 'Announcement', emoji: '📣', prompt: 'Ready for the big reveal?', reveal: 'Something wonderful is happening!', action: 'Reveal', invitation: 'A little news to share' },
-  { slug: 'celebrations', title: 'Celebrations', emoji: '🎉', prompt: 'Let the celebration begin', reveal: 'Congratulations! Here’s to this special milestone!', action: 'Celebrate', invitation: 'This moment is yours' },
-];
+import { trackEvent } from '../lib/analytics';
+import { MOMENTS, MOMENT_LANGUAGES, MOMENT_SHARE_ID, SHARED_MOMENT_PATH } from '../lib/moments.js';
 
 export function MomentsHome() {
   return <main className="min-h-screen px-5 py-12" style={{ color: 'var(--orbit-text, inherit)' }}>
@@ -83,6 +77,7 @@ function MomentEditor({ moment }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       if (typeof data.id !== 'string' || !MOMENT_SHARE_ID.test(data.id)) throw new Error();
+      trackEvent('moments_share_created', { template: snapshot.slug, language: snapshot.language });
       setSavedShare({ draft, url: new URL(`${SHARED_MOMENT_PATH}#${data.id}`, window.location.origin).href });
     } catch (error) {
       setShareStatus(error.message || 'Could not create a share link. Please try again.');
@@ -166,7 +161,6 @@ function SharedGreeting({ id }) {
   const validId = MOMENT_SHARE_ID.test(id);
   const [result, setResult] = useState(null);
   const [attempt, setAttempt] = useState(0);
-  const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     if (!validId) return;
     const controller = new AbortController();
@@ -196,7 +190,7 @@ function SharedGreeting({ id }) {
     <div className="moment-shared-inner">
       <p className="moment-shared-brand"><span aria-hidden="true">✦</span> OrbitBoard Moments</p>
       {moment ? (
-        <GreetingScene moment={moment} {...result.greeting} revealed={revealed} onReveal={() => setRevealed(true)} shared />
+        <GreetingFilm moment={moment} greeting={result.greeting} />
       ) : (
         <div className="moment-shared-state">
           {!validId || result?.missing || result?.greeting ? <h1>Greeting not found</h1>

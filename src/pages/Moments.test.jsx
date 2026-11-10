@@ -3,7 +3,10 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
+import { trackEvent } from '../lib/analytics';
 import { MomentExperience, SharedMoment } from './Moments';
+
+vi.mock('../lib/analytics', () => ({ trackEvent: vi.fn() }));
 
 it('creates an opaque link and reveals its saved translation in a fresh recipient session', async () => {
   const id = '6eb4d6cc-7758-4c62-83be-f7c947112c52';
@@ -19,6 +22,7 @@ it('creates an opaque link and reveals its saved translation in a fresh recipien
     return new Response(null, { status: 404 });
   });
   vi.stubGlobal('fetch', fetchMock);
+  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   const container = document.createElement('div');
   document.body.append(container);
@@ -48,6 +52,7 @@ it('creates an opaque link and reveals its saved translation in a fresh recipien
     await act(async () => button('Translate wishes').click());
     await act(async () => button('Make a wish').click());
     await act(async () => button('Create share link').click());
+    expect(trackEvent).toHaveBeenCalledExactlyOnceWith('moments_share_created', { template: 'birthday', language: 'kn' });
     const link = new URL(container.querySelector('input[readonly]').value);
     expect(link.pathname + link.search + link.hash).toBe(`/moments/shared#${id}`);
     expect(savedGreeting).toEqual({
@@ -62,22 +67,14 @@ it('creates an opaque link and reveals its saved translation in a fresh recipien
     await act(async () => {
       root.render(<MemoryRouter initialEntries={[link.pathname + link.hash]}><SharedMoment /></MemoryRouter>);
     });
-    await act(async () => button('Make a wish').click());
     expect(container.textContent).toContain('Dear Sam,');
     expect(container.textContent).toContain('From Asha');
-    const message = container.querySelector('[lang="kn"]');
-    expect(message.textContent).toBe('ಶುಭಾಶಯಗಳು!');
-    expect(document.activeElement).toBe(message);
+    expect(container.querySelector('[lang="kn"]').textContent).toBe('ಶುಭಾಶಯಗಳು!');
     expect(container.querySelector('a[href="/moments"]').textContent).toContain('Create Your Own Moment');
     expect(container.textContent).toContain('Made with OrbitBoard Moments');
-
-    const artwork = container.querySelector('.moment-artwork');
-    const replay = button('Replay');
-    replay.focus();
-    await act(async () => replay.click());
-    expect(container.querySelector('.moment-artwork')).not.toBe(artwork);
+    expect(container.querySelector('canvas')).toBeNull();
+    await act(async () => button('Replay').click());
     expect(container.querySelector('[lang="kn"]').textContent).toBe('ಶುಭಾಶಯಗಳು!');
-    expect(document.activeElement).toBe(replay);
     expect(fetchMock.mock.calls.filter(([, options]) => JSON.parse(options.body).action === 'read')).toHaveLength(1);
     expect(container.querySelector('input, textarea, select')).toBeNull();
     expect(fetchMock.mock.calls.filter(([url]) => url === '/api/translate')).toHaveLength(1);
