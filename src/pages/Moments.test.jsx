@@ -65,7 +65,20 @@ it('creates an opaque link and reveals its saved translation in a fresh recipien
     await act(async () => button('Make a wish').click());
     expect(container.textContent).toContain('Dear Sam,');
     expect(container.textContent).toContain('From Asha');
+    const message = container.querySelector('[lang="kn"]');
+    expect(message.textContent).toBe('ಶುಭಾಶಯಗಳು!');
+    expect(document.activeElement).toBe(message);
+    expect(container.querySelector('a[href="/moments"]').textContent).toContain('Create Your Own Moment');
+    expect(container.textContent).toContain('Made with OrbitBoard Moments');
+
+    const artwork = container.querySelector('.moment-artwork');
+    const replay = button('Replay');
+    replay.focus();
+    await act(async () => replay.click());
+    expect(container.querySelector('.moment-artwork')).not.toBe(artwork);
     expect(container.querySelector('[lang="kn"]').textContent).toBe('ಶುಭಾಶಯಗಳು!');
+    expect(document.activeElement).toBe(replay);
+    expect(fetchMock.mock.calls.filter(([, options]) => JSON.parse(options.body).action === 'read')).toHaveLength(1);
     expect(container.querySelector('input, textarea, select')).toBeNull();
     expect(fetchMock.mock.calls.filter(([url]) => url === '/api/translate')).toHaveLength(1);
   } finally {

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import GreetingScene from '../components/moments/GreetingScene';
 import { MOMENT_LANGUAGES, MOMENT_SHARE_ID, SHARED_MOMENT_PATH } from '../lib/moments.js';
 
 const MOMENTS = [
-  { slug: 'diwali', title: 'Diwali', emoji: '🪔', prompt: 'Tap to light the diya', reveal: 'May your Diwali shine with joy and new beginnings!', action: 'Light the diya', accent: '#e9a23b' },
-  { slug: 'birthday', title: 'Birthday', emoji: '🎂', prompt: 'Make a birthday wish', reveal: 'Happy Birthday! Here’s to a wonderful year ahead!', action: 'Make a wish', accent: '#b888ed' },
-  { slug: 'anniversary', title: 'Anniversary', emoji: '💍', prompt: 'Celebrate your story', reveal: 'Happy Anniversary! May your journey together keep blooming.', action: 'Celebrate', accent: '#ed9cb6' },
-  { slug: 'announcement', title: 'Announcement', emoji: '📣', prompt: 'Ready for the big reveal?', reveal: 'Something wonderful is happening!', action: 'Reveal', accent: '#8ccde2' },
-  { slug: 'celebrations', title: 'Celebrations', emoji: '🎉', prompt: 'Let the celebration begin', reveal: 'Congratulations! Here’s to this special milestone!', action: 'Celebrate', accent: '#e6c96f' },
+  { slug: 'diwali', title: 'Diwali', emoji: '🪔', prompt: 'Tap to light the diya', reveal: 'May your Diwali shine with joy and new beginnings!', action: 'Light the diya', invitation: 'A little light for you' },
+  { slug: 'birthday', title: 'Birthday', emoji: '🎂', prompt: 'Make a birthday wish', reveal: 'Happy Birthday! Here’s to a wonderful year ahead!', action: 'Make a wish', invitation: 'A wish made just for you' },
+  { slug: 'anniversary', title: 'Anniversary', emoji: '💍', prompt: 'Celebrate your story', reveal: 'Happy Anniversary! May your journey together keep blooming.', action: 'Celebrate', invitation: 'Here’s to your story' },
+  { slug: 'announcement', title: 'Announcement', emoji: '📣', prompt: 'Ready for the big reveal?', reveal: 'Something wonderful is happening!', action: 'Reveal', invitation: 'A little news to share' },
+  { slug: 'celebrations', title: 'Celebrations', emoji: '🎉', prompt: 'Let the celebration begin', reveal: 'Congratulations! Here’s to this special milestone!', action: 'Celebrate', invitation: 'This moment is yours' },
 ];
 
 export function MomentsHome() {
@@ -191,31 +192,21 @@ function SharedGreeting({ id }) {
   }, [id, validId, attempt]);
 
   const moment = MOMENTS.find(item => item.slug === result?.greeting?.slug);
-  return <main className="min-h-screen px-5 py-10">
-    <div className="mx-auto max-w-3xl">
-      <a href="/moments" className="text-sm underline">Create your own Moment</a>
-      {!validId || result?.missing || (result?.greeting && !moment) ? <h1 className="mt-7 text-3xl font-bold">Greeting not found</h1>
-        : result?.unavailable ? <div className="mt-7">
-          <h1 className="text-3xl font-bold">Greeting temporarily unavailable</h1>
-          <button type="button" className="mt-3 underline" onClick={() => { setResult(null); setAttempt(value => value + 1); }}>Try again</button>
+  return <main className="moment-shared">
+    <div className="moment-shared-inner">
+      <p className="moment-shared-brand"><span aria-hidden="true">✦</span> OrbitBoard Moments</p>
+      {moment ? (
+        <GreetingScene moment={moment} {...result.greeting} revealed={revealed} onReveal={() => setRevealed(true)} shared />
+      ) : (
+        <div className="moment-shared-state">
+          {!validId || result?.missing || result?.greeting ? <h1>Greeting not found</h1>
+            : result?.unavailable ? <>
+              <h1>Greeting temporarily unavailable</h1>
+              <button type="button" className="moment-replay" onClick={() => { setResult(null); setAttempt(value => value + 1); }}>Try again</button>
+            </> : <p role="status">Loading greeting…</p>}
         </div>
-          : moment ? <>
-            <h1 className="mt-7 text-3xl font-bold">{moment.title} Moment</h1>
-            <GreetingScene moment={moment} {...result.greeting} revealed={revealed} onReveal={() => setRevealed(true)} />
-            {revealed && <button type="button" onClick={() => setRevealed(false)} className="mt-5 rounded-full border px-6 py-3">Replay</button>}
-          </> : <p role="status" className="mt-7">Loading greeting…</p>}
+      )}
+      <a href="/moments" className="moment-shared-cta">Create Your Own Moment <span aria-hidden="true">→</span></a>
     </div>
   </main>;
-}
-
-function GreetingScene({ moment, sender, recipient, text, language, revealed, onReveal }) {
-  return <section aria-label="Interactive greeting" className="relative mt-7 flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-3xl p-8 text-center text-white" style={{ background: `radial-gradient(circle at 50% 70%, ${moment.accent}55, #17142d 75%)` }}>
-    <div className={`text-7xl transition-all duration-700 motion-reduce:transition-none ${revealed ? 'scale-125 drop-shadow-2xl' : 'opacity-60'}`} aria-hidden="true">{moment.emoji}</div>
-    {revealed ? <div aria-live="polite" className="mt-8 max-w-lg whitespace-pre-line">
-      <h2 className="text-2xl font-bold">{recipient ? `Dear ${recipient},` : moment.title}</h2>
-      <p className="mt-4 text-lg" lang={language}>{text}</p>
-      {sender && <p className="mt-2">From {sender}</p>}
-      <div className="mt-8 text-xs tracking-widest opacity-60">Made with OrbitBoard</div>
-    </div> : <div className="mt-8"><p>{moment.prompt}</p><button onClick={onReveal} className="mt-5 rounded-full bg-white px-7 py-3 font-semibold text-slate-900">{moment.action} ✨</button></div>}
-  </section>;
 }
