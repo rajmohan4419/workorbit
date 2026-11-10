@@ -7,6 +7,7 @@ const trackEvent = (name, payload) => {
   import('../lib/telemetry').then(({ logEvent }) => logEvent(name, payload)).catch(() => {});
 };
 
+import { MomentsMarquee } from '../components/MomentsMarquee';
 import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeHero } from '../components/toolsHome/ToolsHomeHero';
 import { BusinessWorkspacesHero } from '../components/toolsHome/BusinessWorkspacesHero';
@@ -152,6 +153,8 @@ export default function ToolsHome() {
             addRecent={addRecent}
             logEvent={trackEvent}
           />
+
+          {!query.trim() && !category && <MomentsMarquee />}
 
           {/* Task-Based Business & Financial Workspaces */}
           {showExploreCards && !category && (
