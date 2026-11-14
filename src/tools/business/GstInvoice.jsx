@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect, cloneElement } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect, useLayoutEffect, cloneElement } from 'react';
 import { Plus, Trash2, Download, Building2, FileText, Save, X, CheckCircle2 } from 'lucide-react';
 import { downloadBlob } from '../../lib/toolFormat';
 import { generateInvoicePDF } from './gstInvoicePdf.js';
@@ -328,9 +328,16 @@ export function GstInvoice() {
   const warnings = supply.warnings;
   const totals = useMemo(() => invoiceEditorTotals(items, isInterState), [items, isInterState]);
   const [exportErrors, setExportErrors] = useState([]);
-  const [exportAttempted, setExportAttempted] = useState(false);
-  const validationErrors = exportAttempted ? validateInvoice({ seller, buyer, meta, items }).errors : [];
+  const [exportAttempts, setExportAttempts] = useState(0);
+  const exportErrorRef = useRef(null);
+  const validationErrors = exportAttempts > 0 ? validateInvoice({ seller, buyer, meta, items }).errors : [];
   const visibleErrors = [...validationErrors, ...exportErrors];
+  useLayoutEffect(() => {
+    if (exportAttempts > 0 && exportErrorRef.current) {
+      exportErrorRef.current.focus();
+      exportErrorRef.current.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+    }
+  }, [exportAttempts, exportErrors]);
 
   // Seller field helpers
   const setSF = useCallback((key, val) => {
@@ -385,13 +392,13 @@ export function GstInvoice() {
 
   const handleDownloadPDF = useCallback(async () => {
     const validation = validateInvoice({ seller, buyer, meta, items });
-    setExportAttempted(true);
+    setExportAttempts(count => count + 1);
     setExportErrors([]);
     if (validation.errors.length) return;
     setGenerating(true);
     try {
       const blob = await generateInvoicePDF({ seller, buyer, meta, items, totals, notes, signatory, isInterState });
-      downloadBlob(blob, 'orbitboard-gst-invoice.pdf');
+      if (!downloadBlob(blob, 'orbitboard-gst-invoice.pdf')) throw new Error('The download dialog could not open. Refresh this tab and try again.');
       trackExportClicked('pdf');
     } catch (err) {
       setExportErrors([err.message || 'Could not generate PDF. Review the invoice inputs.']);
@@ -458,7 +465,7 @@ export function GstInvoice() {
 
       <p className="text-sm">Supported workflow: ordinary domestic supply. Tax split uses seller state and explicit place of supply. GSTIN format/checksum validation is local only, never government verification. PDF text supports Latin/WinAnsi; other scripts can be printed from the browser preview using a suitable local font.</p>
       {warnings.map(w => <p key={w} role="status" className="text-sm text-amber-800">{w}</p>)}
-      {visibleErrors.length > 0 && <div role="alert" className="text-sm text-red-700">{visibleErrors.map((error, i) => <p key={i}>{error}</p>)}</div>}
+      {visibleErrors.length > 0 && <div ref={exportErrorRef} tabIndex={-1} role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800 focus:outline-2 focus:outline-red-600"><h3 className="mb-2 font-semibold">Download needs attention</h3>{visibleErrors.map((error, i) => <p key={i}>{error}</p>)}</div>}
       {/* ── Seller Details ── */}
       <SectionCard icon={Building2} title="Your Company / Seller Details">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

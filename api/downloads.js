@@ -48,7 +48,8 @@ export default async function handler(req, res) {
     const usage = Array.isArray(data) ? data[0] : data;
     if (usage?.allowed !== true) return reply(503, { error: 'metering_unavailable' });
     return reply(200, { allowed: true, downloads: usage.units_used, mode: 'metering_only', periodStart: usage.meter_period || period });
-  } catch {
+  } catch (error) {
+    console.error('[DOWNLOAD_METERING_ERROR]', { operation: req.method, code: typeof error?.code === 'string' && /^[A-Z0-9_]{1,32}$/.test(error.code) ? error.code : 'STORE_ERROR' });
     return reply(503, { error: 'metering_unavailable' });
   }
 }

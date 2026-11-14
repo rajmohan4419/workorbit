@@ -64,8 +64,12 @@ export function directDownloadBlob(blob, filename, toolSlug) {
   }
 
   a.download = finalName;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  a.style.display = 'none';
+  (document.fullscreenElement || document.body).appendChild(a);
+  try { a.click(); } finally {
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
   return true;
 }
 
