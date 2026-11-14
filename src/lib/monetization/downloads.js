@@ -12,7 +12,7 @@ export async function authorizeDocumentDownload({ requestId, format, toolSlug })
   });
   const body = await response.json();
   if (!response.ok) {
-    const err = new Error(response.status === 401 ? 'Sign in again to continue.' : 'Could not record the download. Please retry; your file remains in this tab.');
+    const err = new Error(response.status === 402 ? 'Your PDF credits are used up. Top up your account to continue; your file remains in this tab.' : response.status === 401 ? 'Sign in again to continue.' : 'Could not record the download. Please retry; your file remains in this tab.');
     err.code = body.error; throw err;
   }
   if (body.allowed !== true) throw new Error('Download was not authorised. Please retry.');

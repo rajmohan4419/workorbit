@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Lock, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useAccountSession } from '../../lib/monetization/useAccountSession';
 import { usePlan } from '../../lib/monetization/usePlan';
 import { trackPaywallViewed } from '../../lib/analytics';
 
@@ -30,6 +31,8 @@ export function PlanGate({
   title,
   description,
 }) {
+  const { session } = useAccountSession();
+  const signedIn = session && !session.user?.is_anonymous;
   const { hasFeature, loading } = usePlan();
   const isEntitled = hasFeature(feature);
 
@@ -52,8 +55,8 @@ export function PlanGate({
     description: 'Upgrade your OrbitBoard plan to access this capability.',
   };
 
-  const displayTitle = title || meta.title;
-  const displayDescription = description || meta.description;
+  const displayTitle = signedIn ? 'Manage your download account' : title || meta.title;
+  const displayDescription = signedIn ? 'View your usage, PDF credit balance and top-up options in your account.' : description || meta.description;
 
   return (
     <div
@@ -88,7 +91,7 @@ export function PlanGate({
           to="/account"
           className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs sm:text-sm font-semibold transition inline-flex items-center justify-center gap-2 shadow-xs"
         >
-          <span>Sign up / Sign in</span>
+          <span>{signedIn ? 'View account & usage' : 'Sign up / Sign in'}</span>
           <ArrowRight size={14} />
         </Link>
       </div>

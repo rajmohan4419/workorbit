@@ -1,3 +1,4 @@
+import { PDF_TOPUP_PRODUCT } from '../../src/lib/monetization/pdfCredits.js';
 import Razorpay from 'razorpay';
 import { getAdminClient } from './supabaseClient.js';
 
@@ -54,10 +55,15 @@ export async function fulfilPayment(admin, { orderId, paymentId, amountPaise, cu
 
   const { data: orderRow, error: orderError } = await admin
     .from('payment_orders')
-    .select('user_id, plan_id')
+    .select('user_id, plan_id, product_id')
     .eq('razorpay_order_id', orderId)
     .maybeSingle();
   if (orderError) throw orderError;
+
+  if (orderRow?.product_id === PDF_TOPUP_PRODUCT) {
+    const { error: creditError } = await admin.rpc('grant_pdf_topup', { p_order_id: orderId, p_payment_id: paymentId });
+    if (creditError) throw creditError;
+  }
 
   if (orderRow?.user_id && orderRow?.plan_id) {
     const { error: grantError } = await admin.rpc('grant_pass', {

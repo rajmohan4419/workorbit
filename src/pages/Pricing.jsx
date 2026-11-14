@@ -196,11 +196,11 @@ export default function Pricing() {
       features: [
         'Everything in Free, plus:',
         '100% Ad-free experience',
-        'PDF & XLSX report exports within your plan allowance',
+        'Advanced export workflows within your plan allowance',
         `${proPlan.limits.advanced_export.toLocaleString('en-IN')} advanced exports / period`,
         'Saved cloud workspaces & seller profiles',
         `${proPlan.limits.bulk_job.toLocaleString('en-IN')} bulk spreadsheet batch jobs`,
-        'High-resolution PDF generation',
+        'PDF downloads: prepaid credits at ₹0.25 per file',
       ],
       limitations: [],
       buttonText: currentPlanCode?.startsWith('pro') ? 'Active Plan' : 'Subscribe to Pro',
@@ -237,7 +237,7 @@ export default function Pricing() {
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <div>
           <ToolsHomeHeader />
-          <div className="mx-auto max-w-6xl px-4 pt-6"><p className="text-center text-sm">Use tools free without an account. <Link className="font-semibold text-indigo-700 underline" to="/account">Sign up to download and track usage</Link>.</p><DownloadOffers /></div>
+          <div className="mx-auto max-w-6xl px-4 pt-6"><p className="text-center text-sm">Use tools free without an account. <Link className="font-semibold text-indigo-700 underline" to="/account">View your download account & usage</Link>.</p><DownloadOffers /></div>
 
           {/* Hero Section */}
           <section className="py-12 sm:py-16 text-center max-w-4xl mx-auto px-4 sm:px-6">

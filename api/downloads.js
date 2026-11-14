@@ -34,20 +34,23 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const { data, error } = await admin.from('usage_counters').select('units_used').eq('user_id', user.id).eq('feature_key', 'document_download').eq('period_start', period).maybeSingle();
       if (error) throw error;
-      return reply(200, { downloads: data?.units_used || 0, periodStart: period, periodTimezone: 'UTC', mode: 'metering_only', quota: null });
+      const { data: account, error: accountError } = await admin.from('pdf_credit_accounts').select('purchased, used').eq('user_id',user.id).maybeSingle();
+      if (accountError) throw accountError;
+      const purchased = Number(account?.purchased || 0), used = Number(account?.used || 0);
+      return reply(200, { downloads: data?.units_used || 0, periodStart: period, periodTimezone: 'UTC', mode:'pdf_credits', pdf:{purchased,used,remaining:purchased-used,pricePaise:25}, quota:purchased });
     }
     let parsed;
     try { parsed = validateDownload(await parseBody(req)); } catch { /* invalid input */ }
     if (!parsed) return reply(400, { error: 'invalid_download_request' });
-    // Signed-in metering pilot only. No free allowance or new paid quota has been approved.
-    // This server-side RPC atomically counts a browser download initiation once per request ID.
-    const { data, error } = await admin.rpc('record_document_download', {
+    // PDF credits are debited atomically and once per request; XLSX retains the metering pilot.
+    const { data, error } = await admin.rpc(parsed.format === 'pdf' ? 'charge_pdf_download' : 'record_document_download', {
       p_user_id: user.id, p_request_id: parsed.requestId, p_format: parsed.format, p_tool_slug: parsed.toolSlug,
     });
     if (error) throw error;
     const usage = Array.isArray(data) ? data[0] : data;
+    if (usage?.allowed === false && parsed.format === 'pdf') return reply(402, { error:'pdf_credits_required', remaining:0 });
     if (usage?.allowed !== true) return reply(503, { error: 'metering_unavailable' });
-    return reply(200, { allowed: true, downloads: usage.units_used, mode: 'metering_only', periodStart: usage.meter_period || period });
+    return reply(200, { allowed: true, downloads: usage.units_used, mode: parsed.format === 'pdf' ? 'pdf_credits' : 'metering_only', remaining:usage.remaining, periodStart: usage.meter_period || period });
   } catch (error) {
     console.error('[DOWNLOAD_METERING_ERROR]', { operation: req.method, code: typeof error?.code === 'string' && /^[A-Z0-9_]{1,32}$/.test(error.code) ? error.code : 'STORE_ERROR' });
     return reply(503, { error: 'metering_unavailable' });

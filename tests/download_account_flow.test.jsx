@@ -8,7 +8,7 @@ import * as format from '../src/lib/toolFormat';
 import { useAccountSession } from '../src/lib/monetization/useAccountSession';
 import { supabase } from '../src/lib/supabase';
 vi.mock('../src/lib/monetization/useAccountSession', () => ({ useAccountSession: vi.fn() }));
-vi.mock('../src/lib/supabase', () => ({ supabase: { auth: { getSession: vi.fn() } } }));
+vi.mock('../src/lib/supabase', () => ({ supabase: { auth: { getSession: vi.fn(), onAuthStateChange: vi.fn(() => ({data:{subscription:{unsubscribe:vi.fn()}}})) } } }));
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const session = { access_token: 'test-token', user: { id: 'owner', email: 'synthetic@example.test' } };
 
