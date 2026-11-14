@@ -1,0 +1,10 @@
+{
+  "schema": "orbitboard-gstr2b/1",
+  "invoices": [
+    {"gstin":"29ABCDE1234F1Z5","invoiceNumber":"SYN-IGST","invoiceDate":"2026-10-01","taxableValue":1000,"igst":180,"cgst":0,"sgst":0,"cess":0},
+    {"gstin":"27XYZAB9876C1Z1","invoiceNumber":"SYN-SPLIT","invoiceDate":"02/10/2026","taxableValue":"2,000.00","igst":0,"cgst":180,"sgst":180,"cess":20},
+    {"gstin":"29ABCDE1234F1Z5","invoiceNumber":"SYN-MISSING-TAX","taxableValue":100},
+    {"gstin":"29ABCDE1234F1Z5","invoiceNumber":"SYN-INVALID-AMOUNT","taxableValue":"100oops"},
+    {"gstin":"29ABCDE1234F1Z5","invoiceNumber":"SYN-INVALID-DATE","invoiceDate":"2026-02-30","taxableValue":100}
+  ]
+}

@@ -111,3 +111,24 @@ describe('GST Invoice Calculations (gstInvoice.test.js)', () => {
     expect(amountToWords(1500000000)).toBe('One Hundred Fifty Crore Rupees Only');
   });
 });
+
+// Reliability release: explicit place of supply, local GSTIN checks and export validation.
+describe('invoice export reliability', () => {
+  it('uses explicit place of supply even when buyer state differs', async () => {
+    const { resolveSupply } = await import('./gstInvoiceEngine');
+    const result = resolveSupply({ state: 'Maharashtra' }, { state: 'Maharashtra' }, { placeOfSupply: 'Karnataka' });
+    expect(result.isInterState).toBe(true);
+    expect(result.warnings.length).toBeGreaterThan(0);
+  });
+  it('checks GSTIN checksum locally', async () => {
+    const { validateGstin } = await import('./gstInvoiceEngine');
+    expect(validateGstin('27AAPFU0939F1ZV')).toBe('');
+    expect(validateGstin('27AAPFU0939F1ZA')).toMatch(/checksum/i);
+    expect(validateGstin('bad')).toMatch(/format/i);
+  });
+  it('rejects empty required fields and non-finite line inputs', async () => {
+    const { validateInvoice } = await import('./gstInvoiceEngine');
+    const result = validateInvoice({ seller: {}, buyer: {}, meta: {}, items: [{ qty: Infinity, rate: '12oops' }] });
+    expect(result.errors.length).toBeGreaterThan(2);
+  });
+});

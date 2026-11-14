@@ -1244,28 +1244,26 @@ export const TOOL_CONTENT = {
     ]
   },
   'gst-invoice-generator': {
-    title: 'Free GST Invoice Generator Online | Create & Download GST Tax Invoices (PDF)',
-    h1: 'Free GST Invoice Generator with Custom Branding & Instant PDF',
-    metaDescription: 'Create free GST-compliant tax invoices in your browser with custom logo, company address, GSTIN validation, CGST/SGST/IGST breakdown, and instant PDF download. 100% private.',
-    intro: 'Create professional, GST-compliant tax invoices with custom company logo, automatic CGST/SGST/IGST computation, HSN/SAC codes, and instant PDF download directly in your browser.',
-    keywords: 'free GST invoice generator online, GST tax invoice maker India, create GST bill with logo, online invoice generator with GSTIN, download GST invoice PDF free, intra-state CGST SGST invoice maker, inter-state IGST invoice generator, free invoice maker for freelancers and small businesses India, how to make GST invoice online, GST bill format in PDF, client-side GST invoice tool, GST invoice template India 2026',
+    title: 'GST Invoice Generator | Local Preview and PDF Export',
+    h1: 'GST Invoice Generator with Local Validation and PDF',
+    metaDescription: 'Create ordinary domestic supply invoices with explicit place of supply, local GSTIN format/checksum validation, shared totals and multipage PDF export.',
+    intro: 'Prepare an invoice using manually entered details for the supported ordinary domestic supply workflow. Review the assumptions and local validation results before exporting.',
+    keywords: 'GST invoice generator, local invoice PDF, ordinary domestic supply, GSTIN checksum validation, CGST SGST IGST invoice',
     how: [
-      'Enter your business details: Company name, GSTIN, PAN, address, bank details and upload your logo.',
-      'Add client/buyer billing details and select the State for automatic place of supply detection.',
-      'Add itemized lines with descriptions, HSN/SAC codes, quantity, rate, discount and select GST slab rate (0%, 5%, 12%, 18%, 28%).',
-      'The system automatically determines Intra-State (CGST + SGST) or Inter-State (IGST) taxation and computes amount in words in Indian currency.',
-      'Preview your invoice live on-screen and click Download PDF for instant, printable tax invoice.'
+      'Enter seller and buyer details. GSTIN format and checksum checks run locally; they are not government verification.',
+      'Set the explicit place of supply. It is compared with seller state to select IGST or CGST/SGST; buyer state does not override it.',
+      'Add descriptions, HSN/SAC, positive quantities, finite rates, discounts and a supported GST rate.',
+      'Review state/GSTIN contradictions and any difference between buyer state and place of supply.',
+      'Preview the shared totals and export the multipage PDF. Latin/WinAnsi text is supported by the PDF font; use browser printing with a suitable local font for other scripts.'
     ],
     faq: [
-      ['How does this tool distinguish between Intra-State and Inter-State GST supplies?', 'The invoice generator compares the supplier state with the recipient place of supply. When both parties operate within the identical Indian state, it applies Intra-State taxation by splitting the applicable GST rate equally into Central GST (CGST) and State GST (SGST). When states differ, it automatically levies Integrated GST (IGST) at the full statutory tax rate.'],
-      ['Can I customize company branding, logos, and authorized signatures on invoices?', 'Yes. You can upload high-resolution corporate logos (JPEG or PNG format) and enter authorized signatory names directly in the tool. The browser-side rendering engine encodes these assets and embeds them neatly into your generated printable PDF tax invoice without compressing or distorting your corporate visual identity.'],
-      ['Is this generated invoice compliant with statutory Indian GST invoicing rules?', 'Yes. The invoice template fulfills all statutory invoicing criteria mandated under Rule 46 of the CGST Rules, including sequential invoice numbering, supply date, 15-digit GSTINs, 6-digit HSN/SAC codes, reverse charge declarations, place of supply with state codes, itemized taxable breakdowns, and total amounts written in words with paise precision.'],
-      ['Are my client lists, invoicing figures, and banking details stored on remote servers?', 'No. OrbitBoard utilizes a strict zero-knowledge client-side architecture. All tax calculations, party addresses, bank details, and PDF document generation take place entirely within your local browser memory. No client data, line items, or financial invoices are ever transmitted to or stored on our servers.'],
-      ['How is the total invoice amount in words calculated for Indian currency?', 'The tool incorporates a specialized Indian currency numbering converter that translates numerical values into the Indian numbering system using Lakhs and Crores rather than Western millions. It also accounts for fractional decimal amounts to display exact paise terminology, ensuring compliance with commercial banking and tax audit standards.'],
-      ['What is the difference between an invoice and a bill of supply under GST?', 'A registered business issues a GST tax invoice when charging tax on taxable goods or services to enable buyers to claim input tax credit. A bill of supply is issued by composition scheme dealers or businesses dealing exclusively in exempt items where no tax can be legally charged or claimed.'],
-      ['Can I add my company logo and signature?', 'Yes. Upload your image logo and customize the authorized signatory name. The logo is encoded and printed directly onto your generated PDF invoice.'],
-      ['Are my business and financial records private?', 'Yes. All invoice generation and PDF rendering executes client-side in your browser. No invoice data or customer details are transmitted to external servers.'],
-      ['Is this invoice compliant with Indian GST rules?', 'Yes. It contains all mandatory fields: GSTIN, HSN/SAC code, invoice number, date, place of supply, state code, itemized tax breakup, and amount in words with paise precision.']
+      ['What supply workflow is supported?', 'Ordinary domestic supply using manually entered seller state and explicit place of supply. Exports, SEZ, reverse charge and other special supply rules are outside this workflow.'],
+      ['Is a GSTIN government verified?', 'No. Only local format, state code and checksum validation is performed. No government or GST portal request is made.'],
+      ['Does the tool establish statutory compliance?', 'No. It prepares an invoice from your entries within a limited workflow. Review the details and applicable requirements for your transaction.'],
+      ['How are totals calculated?', 'Editor, preview and PDF use the same line and aggregate calculations. Line amounts are rounded to paise and the final invoice rounds to whole rupees with a visible round-off adjustment.'],
+      ['Can descriptions and notes span pages?', 'Yes. Descriptions and notes wrap in full. Item tables repeat their headers on continuation pages and totals and signatures have reserved space.'],
+      ['Which PDF text is supported?', 'The bundled standard PDF font supports Latin/WinAnsi. Unsupported characters cause an actionable error instead of being silently removed. Browser preview printing can use suitable fonts installed on your device.'],
+      ['Where are seller details saved?', 'Seller details and explicitly saved workspaces are stored in this browser. These invoice generation steps do not upload document contents, bank details or invoice identifiers to analytics or logs.']
     ]
   },
   'bank-reconciliation': {
@@ -1342,27 +1340,26 @@ export const TOOL_CONTENT = {
     ]
   },
   'gstr-2b-reconciliation': {
-    title: 'GSTR-2B vs Purchase Register Reconciliation Online | Free ITC Matching Tool',
+    title: 'GSTR-2B vs Purchase Register Reconciliation Online | Local File Matching',
     h1: 'GSTR-2B vs Purchase Register Reconciliation Tool',
-    metaDescription: 'Reconcile your GST portal GSTR-2B against your internal purchase register. Match invoices on GSTIN, invoice number, and taxable value to pinpoint eligible, at-risk, and unclaimed ITC.',
-    intro: 'Reconcile GST portal GSTR-2B filing data against your internal purchase register to claim 100% eligible Input Tax Credit and prevent tax notices.',
-    keywords: 'GSTR 2B reconciliation tool, purchase register reconciliation Excel, GST ITC matching India, GSTR 2B vs books, GST ITC audit tool',
+    metaDescription: 'Compare uploaded GSTR-2B and purchase register files locally. Review taxable and tax-component differences, rejected rows and ambiguous invoices. Matching does not determine ITC eligibility.',
+    intro: 'Compare your uploaded GSTR-2B invoice data with your purchase register. Review factual file differences; matching does not determine ITC eligibility.',
+    keywords: 'GSTR 2B reconciliation tool, purchase register reconciliation Excel, GST file matching India, GSTR 2B vs books',
     how: [
-      'Upload your GSTR-2B filing (CSV or XLSX) downloaded from the GST Portal.',
-      'Upload your internal Purchase Register (CSV or XLSX) exported from Tally, Zoho, or SAP.',
-      'Select match tolerance (default ₹1.00 for rounding differences).',
-      'Review audit KPI cards: Matched ITC, Value Mismatches, At-Risk ITC (Books only), and Unclaimed ITC (2B only).',
-      'Export the complete multi-sheet reconciliation audit report to Excel.'
+      'Start with empty sources or explicitly load the synthetic demo.',
+      'Upload local CSV/XLS/XLSX files. Select the worksheet and header row, confirm mappings and inspect the preview.',
+      'For JSON, use only the documented orbitboard-gstr2b/1 normalized invoice schema and synthetic template. Raw portal JSON and other sections are unsupported.',
+      'Activate both sources and select the rupee tolerance for taxable value and each available tax component.',
+      'Review matched records, differences, source-only invoices, rejected rows and ambiguous records. Export all categories to Excel.'
     ],
     faq: [
-      ['Why is reconciling GSTR-2B against internal purchase registers mandatory under GST?', 'Under Section 16(2)(aa) of the CGST Act and Rule 36(4), businesses can only legally claim Input Tax Credit (ITC) if their suppliers have uploaded corresponding invoices in GSTR-1 and those invoices appear in the recipient auto-drafted, static GSTR-2B portal statement.'],
-      ['What is the practical difference between In Books Only and In 2B Only audit buckets?', 'In Books Only signifies purchases recorded in your accounting ledger that vendors have failed to report on the GST portal, putting your ITC at risk of disallowance. In 2B Only represents vendor invoices uploaded to GSTN that your accounting department has not yet recorded.'],
-      ['How does the matching engine handle invoice number formatting variations?', 'Suppliers and buyers frequently enter invoice reference numbers with differing punctuation delimiters like slashes, dashes, or extraneous leading zeros. The reconciliation engine applies smart string normalization, stripping non-alphanumeric characters to match commercial invoices accurately regardless of minor clerical formatting discrepancies.'],
-      ['Can I export comprehensive multi-tab reconciliation audit reports to Excel?', 'Yes. Once reconciliation completes, you can download a formatted multi-sheet Excel (.xlsx) workbook featuring categorized tabs for exact matches, taxable value mismatches, at-risk ITC invoices, and unclaimed portal credits ready for immediate vendor follow-up and statutory tax audit filing.'],
-      ['Is confidential commercial purchase data or vendor GSTIN records uploaded to servers?', 'No. All GSTR-2B JSON or Excel parsing, purchase register matching, tax variance calculations, and audit spreadsheet generation occur strictly in your local browser sandbox. OrbitBoard never transmits, records, logs, or stores your proprietary vendor trade details or commercial invoices on remote servers.'],
-      ['What action should finance teams take when a supplier invoice is missing from GSTR-2B?', 'When invoices appear in books only, finance teams should promptly notify the supplier to file their overdue GSTR-1 or amend wrong GSTINs. Claiming ITC on missing invoices risks GST demand notices, mandatory ITC reversals, and 18% statutory interest penalties.'],
-      ['What is the difference between "In Books Only" and "In 2B Only"?', '"In Books Only" means your purchase register recorded an invoice, but the vendor has not uploaded it to the GST portal (ITC at risk). "In 2B Only" means the vendor reported an invoice that your accounting team has not yet recorded (unclaimed ITC).'],
-      ['How does the tool handle invoice numbering differences?', 'The reconciliation engine normalizes invoice numbers by stripping slashes, hyphens, spaces, and leading zeros to eliminate common formatting discrepancies.']
+      ['Does matching establish ITC eligibility?', 'No. The tool compares only the supplied files and available fields. It does not determine eligibility, verify government records or establish whether a supplier filed a return.'],
+      ['What does present in uploaded books only mean?', 'The invoice could not be paired with a record in the supplied GSTR-2B file. Check file scope, period, mappings and original records before drawing conclusions.'],
+      ['How are invoice identifier collisions handled?', 'Original identifiers remain in the report. Punctuation and case are normalized for candidate lookup. If either source has multiple candidates for a key, all those records require review; no first candidate is accepted silently.'],
+      ['Which JSON is supported?', 'Only OrbitBoard normalized schema orbitboard-gstr2b/1: flat invoice records with GSTIN, invoice number, optional date, taxable value and optional IGST, CGST, SGST and cess. Raw GST portal JSON, amendments, notes, imports and ISD are unsupported. Unknown sections or versions reject the replacement.'],
+      ['Does financial data leave my device?', 'These import, matching and export steps run locally in your browser. File contents, GSTINs, filenames and bank details are not sent by these steps to analytics or logs.'],
+      ['How are missing tax fields treated?', 'Missing is distinct from zero. A component missing from one side requires review. Components absent from both sides are outside the comparison scope.'],
+      ['Can I export rejected and ambiguous rows?', 'Yes. The workbook includes rejected rows, ambiguous records, row references, source labels, tolerance and supported scope. Invalid amounts do not contribute to monetary totals.']
     ]
   },
   'tds-calculator-india': {

@@ -1,12 +1,12 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect, cloneElement } from 'react';
 import { Plus, Trash2, Download, Building2, FileText, Save, X, CheckCircle2 } from 'lucide-react';
 import { downloadBlob } from '../../lib/toolFormat';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { generateInvoicePDF } from './gstInvoicePdf.js';
 import './GstInvoice.css';
-import { amountToWords, calcItem } from './gstInvoiceEngine';
+import { amountToWords, calcItem, invoiceEditorTotals, resolveSupply, validateGstin, validateInvoice } from './gstInvoiceEngine';
 import { usePlan } from '../../lib/monetization/usePlan';
 import { PlanGate } from '../../components/monetization/PlanGate';
-import { trackExportClicked, trackInvoiceCreated } from '../../lib/analytics';
+import { trackExportClicked } from '../../lib/analytics';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -22,15 +22,10 @@ const INDIAN_STATES = [
 
 const UNITS = ['Nos', 'Kg', 'Hr', 'Ltr', 'Mtr', 'Pcs', 'Set', 'Box', 'Day', 'Month'];
 const GST_RATES = [0, 5, 12, 18, 28];
-const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const SELLER_KEY = 'orbitboard:gst-seller';
 const INVOICE_NUM_KEY = 'orbitboard:gst-invoice-num';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function inr(n) {
-  return Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
-}
 
 const formatAmount = value => Number(value || 0).toLocaleString('en-IN', {
   minimumFractionDigits: 2,
@@ -107,7 +102,7 @@ function Field({ label, children, error }) {
   return (
     <label className="flex min-w-0 flex-col gap-1">
       <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-      {children}
+      {[Input, Select, Textarea].includes(children?.type) ? cloneElement(children, { 'aria-label': children.props['aria-label'] || label }) : children}
       {error && <span className="text-xs text-red-500">{error}</span>}
     </label>
   );
@@ -157,277 +152,6 @@ function SectionCard({ icon: Icon, title, children }) {
 // ─── PDF Generation ───────────────────────────────────────────────────────────
 
 
-function sanitizeForPdf(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/₹/g, 'Rs. ')
-    .replace(/[—–]/g, '-')
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
-    .replace(/•/g, '*')
-    .split('')
-    .map(c => {
-      const code = c.charCodeAt(0);
-      return (code >= 32 && code <= 255) || code === 10 || code === 13 ? c : ' ';
-    })
-    .join('');
-}
-
-async function generatePDF({ seller, buyer, meta, items, totals, notes, signatory, isInterState }) {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4
-  const { width, height } = page.getSize();
-
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const fontReg = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-  const indigo = rgb(0.31, 0.275, 0.898);
-  const dark = rgb(0.1, 0.1, 0.1);
-  const gray = rgb(0.45, 0.45, 0.45);
-  const white = rgb(1, 1, 1);
-  const amber = rgb(0.98, 0.7, 0.1);
-
-  const drawLeft = (text, leftX, yPos, font, size, color) => {
-    const s = sanitizeForPdf(String(text ?? ''));
-    if (!s) return;
-    page.drawText(s, { x: leftX, y: yPos, font, size, color });
-  };
-
-  const drawRight = (text, rightX, yPos, font, size, color) => {
-    const s = sanitizeForPdf(String(text ?? ''));
-    if (!s) return;
-    const textWidth = font.widthOfTextAtSize(s, size);
-    page.drawText(s, { x: rightX - textWidth, y: yPos, font, size, color });
-  };
-
-  // 1. Header band
-  page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: indigo });
-
-  // Company Name & details (Left)
-  drawLeft(seller.companyName || 'Company Name', 30, height - 38, fontBold, 18, white);
-  drawLeft(`GSTIN: ${seller.gstin || '-'}  |  PAN: ${seller.pan || '-'}`, 30, height - 54, fontReg, 8.5, rgb(0.85, 0.85, 1));
-  const contactParts = [seller.phone, seller.email].filter(Boolean).join('  |  ');
-  if (contactParts) {
-    drawLeft(contactParts, 30, height - 66, fontReg, 8.5, rgb(0.85, 0.85, 1));
-  }
-
-  // TAX INVOICE label & invoice meta (Right-aligned to width - 30)
-  drawRight('TAX INVOICE', width - 30, height - 38, fontBold, 13, amber);
-  drawRight(`No: ${meta.invoiceNumber}`, width - 30, height - 53, fontReg, 8.5, white);
-  drawRight(`Date: ${meta.invoiceDate}`, width - 30, height - 65, fontReg, 8.5, white);
-
-  if (seller.logo && seller.logo.startsWith('data:image/')) {
-    try {
-      const base64Data = seller.logo.split(',')[1];
-      const binaryStr = atob(base64Data);
-      const imgBytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        imgBytes[i] = binaryStr.charCodeAt(i);
-      }
-      const isPng = seller.logo.startsWith('data:image/png');
-      const img = isPng ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
-      const scaled = img.scaleToFit(50, 45);
-      page.drawImage(img, {
-        x: width - 210,
-        y: height - 68,
-        width: scaled.width,
-        height: scaled.height,
-      });
-    } catch {
-      /* ignore invalid logo data */
-    }
-  }
-
-  // 2. Seller Address line (below banner, accounts for multi-line textarea)
-  let y = height - 96;
-
-  const sellerAddrLines = [];
-  if (seller.address) {
-    seller.address.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => sellerAddrLines.push(l));
-  }
-  const sellerCityStatePin = [
-    seller.city,
-    seller.pin ? `- ${seller.pin}` : '',
-    seller.state
-  ].filter(Boolean).join(' ');
-  if (sellerCityStatePin) sellerAddrLines.push(sellerCityStatePin);
-
-  sellerAddrLines.forEach(line => {
-    drawLeft(line, 30, y, fontReg, 8, gray);
-    y -= 11;
-  });
-
-  y -= 4;
-  // Clean divider
-  page.drawLine({ start: { x: 30, y }, end: { x: width - 30, y }, thickness: 0.5, color: rgb(0.85, 0.85, 0.85) });
-  y -= 15;
-
-  // 3. Bill To (Left) & Invoice Details (Right)
-  const billToStartY = y;
-
-  drawLeft('BILL TO', 30, y, fontBold, 9, indigo);
-  let buyerY = y - 13;
-
-  drawLeft(buyer.name || '-', 30, buyerY, fontBold, 9.5, dark);
-  buyerY -= 12;
-
-  const buyerAddrLines = [];
-  if (buyer.address && buyer.address !== '-') {
-    buyer.address.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => {
-      if (l !== '-') buyerAddrLines.push(l);
-    });
-  }
-  const buyerCityStatePin = [
-    buyer.city,
-    buyer.pin ? `- ${buyer.pin}` : '',
-    buyer.state
-  ].filter(Boolean).join(' ');
-  if (buyerCityStatePin) buyerAddrLines.push(buyerCityStatePin);
-  if (buyer.gstin) buyerAddrLines.push(`GSTIN: ${buyer.gstin}`);
-  if (buyer.phone) buyerAddrLines.push(`Phone: ${buyer.phone}`);
-
-  buyerAddrLines.forEach(line => {
-    drawLeft(line, 30, buyerY, fontReg, 8, dark);
-    buyerY -= 11;
-  });
-
-  // Invoice Details on the right
-  let metaY = billToStartY;
-  drawLeft('INVOICE DETAILS', 340, metaY, fontBold, 9, indigo);
-  metaY -= 13;
-
-  const metaLines = [
-    ['Due Date', meta.dueDate || '-'],
-    ['PO Ref', meta.poReference || '-'],
-    ['Place of Supply', meta.placeOfSupply || '-'],
-    ['Supply Type', isInterState ? 'Inter-State (IGST)' : 'Intra-State (CGST+SGST)'],
-  ];
-
-  metaLines.forEach(([k, v]) => {
-    drawLeft(`${k}:`, 340, metaY, fontBold, 8, gray);
-    drawLeft(String(v), 425, metaY, fontReg, 8, dark);
-    metaY -= 12;
-  });
-
-  y = Math.min(buyerY, metaY) - 16;
-
-  // 4. Items Table Header
-  page.drawRectangle({ x: 30, y: y - 3, width: width - 60, height: 16, color: indigo });
-  const hdrY = y + 3;
-
-  // Table columns: # (left), Desc (left), HSN (left), Qty (right), Rate (right), Taxable (right), GST% (right), Tax (right), Amount (right)
-  drawLeft('#', 34, hdrY, fontBold, 7.5, white);
-  drawLeft('Description', 52, hdrY, fontBold, 7.5, white);
-  drawLeft('HSN', 170, hdrY, fontBold, 7.5, white);
-  drawRight('Qty', 245, hdrY, fontBold, 7.5, white);
-  drawRight('Rate (Rs)', 305, hdrY, fontBold, 7.5, white);
-  drawRight('Taxable', 370, hdrY, fontBold, 7.5, white);
-  drawRight('GST%', 410, hdrY, fontBold, 7.5, white);
-  drawRight(isInterState ? 'IGST' : 'CGST+SGST', 480, hdrY, fontBold, 7.5, white);
-  drawRight('Amount (Rs)', 560, hdrY, fontBold, 7.5, white);
-
-  y -= 17;
-
-  // Item rows
-  items.forEach((item, idx) => {
-    const calc = calcItem(item, isInterState);
-    const rowColor = idx % 2 === 0 ? rgb(0.98, 0.98, 1) : white;
-    page.drawRectangle({ x: 30, y: y - 4, width: width - 60, height: 15, color: rowColor });
-
-    const ry = y + 2;
-    drawLeft(String(idx + 1), 34, ry, fontReg, 7, dark);
-    drawLeft((item.description || '').slice(0, 24), 52, ry, fontReg, 7, dark);
-    drawLeft(item.hsn || '-', 170, ry, fontReg, 7, dark);
-    drawRight(`${item.qty} ${item.unit}`, 245, ry, fontReg, 7, dark);
-    drawRight(inr(item.rate), 305, ry, fontReg, 7, dark);
-    drawRight(inr(calc.taxable), 370, ry, fontReg, 7, dark);
-    drawRight(`${item.gstRate}%`, 410, ry, fontReg, 7, dark);
-    const taxAmt = isInterState ? calc.igst : (calc.cgst + calc.sgst);
-    drawRight(inr(taxAmt), 480, ry, fontReg, 7, dark);
-    drawRight(inr(calc.total), 560, ry, fontBold, 7, dark);
-
-    y -= 15;
-  });
-
-  // 5. Totals
-  y -= 6;
-  page.drawLine({ start: { x: 30, y }, end: { x: width - 30, y }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
-  y -= 14;
-
-  const totalsRows = [
-    ['Subtotal', inr(totals.subtotal)],
-    ...(totals.totalDiscount > 0 ? [['Total Discount', `- Rs. ${inr(totals.totalDiscount)}`]] : []),
-    ['Taxable Amount', inr(totals.taxableAmount)],
-    ...(isInterState
-      ? [['IGST', inr(totals.igst)]]
-      : [['CGST', inr(totals.cgst)], ['SGST', inr(totals.sgst)]]),
-    ['Round Off', (totals.roundOff >= 0 ? '+' : '') + inr(totals.roundOff)],
-  ];
-
-  totalsRows.forEach(([k, v]) => {
-    drawLeft(k, 370, y, fontReg, 8, gray);
-    drawRight(v, 560, y, fontBold, 8, dark);
-    y -= 13;
-  });
-
-  // Grand Total band - ample breathing space, perfectly right-aligned
-  y -= 5;
-  page.drawRectangle({ x: 350, y: y - 5, width: width - 380, height: 22, color: indigo });
-  drawLeft('GRAND TOTAL', 362, y + 2, fontBold, 9.5, white);
-  drawRight(`Rs. ${inr(totals.grandTotal)}`, 560, y + 2, fontBold, 10, amber);
-  y -= 25;
-
-  // Amount in words
-  drawLeft(`Amount in Words: ${amountToWords(totals.grandTotal)}`, 30, y, fontReg, 7.5, dark);
-  y -= 18;
-
-  // Notes
-  if (notes) {
-    drawLeft('Notes / Terms:', 30, y, fontBold, 8, indigo);
-    y -= 12;
-    const noteLines = notes.match(/.{1,90}/g) || [];
-    noteLines.slice(0, 4).forEach(line => {
-      drawLeft(line, 30, y, fontReg, 7.5, dark);
-      y -= 11;
-    });
-    y -= 6;
-  }
-
-  // Bank details footer
-  page.drawLine({ start: { x: 30, y }, end: { x: width - 30, y }, thickness: 0.5, color: rgb(0.85, 0.85, 0.85) });
-  y -= 14;
-  const footerSectionStartY = y;
-
-  drawLeft('Bank Details', 30, y, fontBold, 8, indigo);
-  let bankY = y - 12;
-  [
-    `Bank: ${seller.bankName || '-'}`,
-    `Account No: ${seller.accountNo || '-'}`,
-    `IFSC: ${seller.ifsc || '-'}`,
-    `UPI: ${seller.upiId || '-'}`,
-  ].forEach(line => {
-    drawLeft(line, 30, bankY, fontReg, 7.5, dark);
-    bankY -= 11;
-  });
-
-  // Signatory (with proper signature line above label)
-  if (signatory) {
-    const sigBoxRight = width - 30; // 565
-    const sigBoxLeft = width - 210; // 385
-    const sigLineY = footerSectionStartY - 24;
-
-    page.drawLine({ start: { x: sigBoxLeft, y: sigLineY }, end: { x: sigBoxRight, y: sigLineY }, thickness: 0.5, color: gray });
-    drawLeft(`Authorised Signatory: ${signatory}`, sigBoxLeft, sigLineY - 12, fontBold, 8, dark);
-  }
-
-  // Footer note
-  drawLeft('This is a computer generated invoice.', 30, 20, fontReg, 7, gray);
-  drawRight('Generated by OrbitBoard', width - 30, 20, fontReg, 7, gray);
-
-  const pdfBytes = await pdfDoc.save();
-  return new Blob([pdfBytes], { type: 'application/pdf' });
-}
-
 // ─── Live HTML Preview ────────────────────────────────────────────────────────
 
 function InvoicePreview({ seller, buyer, meta, items, totals, notes, signatory, isInterState }) {
@@ -473,7 +197,7 @@ function InvoicePreview({ seller, buyer, meta, items, totals, notes, signatory, 
 
       {/* Items Table */}
       <div className="px-6 py-4 overflow-x-auto">
-        <table className="w-full text-xs border-collapse">
+        <table className="invoice-preview-table w-full text-xs border-collapse">
           <thead>
             <tr className="bg-indigo-700 text-white">
               <th className="py-2 px-2 text-left rounded-tl-lg w-6">#</th>
@@ -500,15 +224,15 @@ function InvoicePreview({ seller, buyer, meta, items, totals, notes, signatory, 
                   <td className="py-1.5 px-2 font-medium text-gray-800">{item.description || '—'}</td>
                   <td className="py-1.5 px-2 text-gray-500">{item.hsn || '—'}</td>
                   <td className="py-1.5 px-2 text-right">{item.qty} {item.unit}</td>
-                  <td className="py-1.5 px-2 text-right">{inr(item.rate)}</td>
+                  <td className="py-1.5 px-2 text-right">{formatAmount(item.rate)}</td>
                   <td className="py-1.5 px-2 text-right">{item.discount}%</td>
-                  <td className="py-1.5 px-2 text-right">{inr(calc.taxable)}</td>
+                  <td className="py-1.5 px-2 text-right">{formatAmount(calc.taxable)}</td>
                   <td className="py-1.5 px-2 text-right">{item.gstRate}%</td>
                   {isInterState
-                    ? <td className="py-1.5 px-2 text-right">{inr(calc.igst)}</td>
-                    : <><td className="py-1.5 px-2 text-right">{inr(calc.cgst)}</td><td className="py-1.5 px-2 text-right">{inr(calc.sgst)}</td></>
+                    ? <td className="py-1.5 px-2 text-right">{formatAmount(calc.igst)}</td>
+                    : <><td className="py-1.5 px-2 text-right">{formatAmount(calc.cgst)}</td><td className="py-1.5 px-2 text-right">{formatAmount(calc.sgst)}</td></>
                   }
-                  <td className="py-1.5 px-2 text-right font-semibold">{inr(calc.total)}</td>
+                  <td className="py-1.5 px-2 text-right font-semibold">{formatAmount(calc.total)}</td>
                 </tr>
               );
             })}
@@ -520,13 +244,13 @@ function InvoicePreview({ seller, buyer, meta, items, totals, notes, signatory, 
       <div className="px-6 pb-4 flex justify-end">
         <div className="w-72 space-y-1 text-sm">
           {[
-            ['Subtotal', inr(totals.subtotal)],
-            ['Total Discount', `- ₹${inr(totals.totalDiscount)}`],
-            ['Taxable Amount', inr(totals.taxableAmount)],
+            ['Subtotal', formatAmount(totals.subtotal)],
+            ['Total Discount', `- ₹${formatAmount(totals.totalDiscount)}`],
+            ['Taxable Amount', formatAmount(totals.taxableAmount)],
             ...(isInterState
-              ? [['IGST', inr(totals.igst)]]
-              : [['CGST', inr(totals.cgst)], ['SGST', inr(totals.sgst)]]),
-            ['Round Off', (totals.roundOff >= 0 ? '+' : '') + inr(totals.roundOff)],
+              ? [['IGST', formatAmount(totals.igst)]]
+              : [['CGST', formatAmount(totals.cgst)], ['SGST', formatAmount(totals.sgst)]]),
+            ['Round Off', (totals.roundOff >= 0 ? '+' : '') + formatAmount(totals.roundOff)],
           ].map(([k, v]) => (
             <div key={k} className="flex justify-between text-gray-600 text-xs">
               <span>{k}</span><span className="font-medium">{v}</span>
@@ -534,7 +258,7 @@ function InvoicePreview({ seller, buyer, meta, items, totals, notes, signatory, 
           ))}
           <div className="flex justify-between items-center bg-indigo-700 text-white rounded-lg px-3 py-2 mt-2">
             <span className="font-bold">GRAND TOTAL</span>
-            <span className="font-bold text-amber-300 text-base">₹{inr(totals.grandTotal)}</span>
+            <span className="font-bold text-amber-300 text-base">₹{formatAmount(totals.grandTotal)}</span>
           </div>
           <p className="text-xs text-gray-500 italic mt-1">{amountToWords(totals.grandTotal)}</p>
         </div>
@@ -596,40 +320,27 @@ export function GstInvoice() {
     }
   }, [seller]);
 
-  const isInterState = useMemo(() => seller.state !== buyer.state, [seller.state, buyer.state]);
-
-  const totals = useMemo(() => {
-    let subtotal = 0, totalDiscount = 0, taxableAmount = 0, cgst = 0, sgst = 0, igst = 0;
-    items.forEach(item => {
-      const c = calcItem(item, isInterState);
-      subtotal += c.gross;
-      totalDiscount += c.discAmt;
-      taxableAmount += c.taxable;
-      cgst += c.cgst;
-      sgst += c.sgst;
-      igst += c.igst;
-    });
-    const rawTotal = taxableAmount + cgst + sgst + igst;
-    const grandTotal = Math.round(rawTotal);
-    const roundOff = grandTotal - rawTotal;
-    return { subtotal, totalDiscount, taxableAmount, cgst, sgst, igst, rawTotal, grandTotal, roundOff };
-  }, [items, isInterState]);
+  const supply = useMemo(() => resolveSupply(seller, buyer, meta), [seller, buyer, meta]);
+  const isInterState = seller.state !== meta.placeOfSupply;
+  const warnings = supply.warnings;
+  const totals = useMemo(() => invoiceEditorTotals(items, isInterState), [items, isInterState]);
+  const [exportErrors, setExportErrors] = useState([]);
+  const [exportAttempted, setExportAttempted] = useState(false);
+  const validationErrors = exportAttempted ? validateInvoice({ seller, buyer, meta, items }).errors : [];
+  const visibleErrors = [...validationErrors, ...exportErrors];
 
   // Seller field helpers
   const setSF = useCallback((key, val) => {
     setSeller(s => ({ ...s, [key]: val }));
     if (key === 'gstin') {
-      setSellerErrors(e => ({ ...e, gstin: val && !GSTIN_REGEX.test(val) ? 'Invalid GSTIN format' : '' }));
+      setSellerErrors(e => ({ ...e, gstin: val ? validateGstin(val) : '' }));
     }
   }, []);
 
   const setBF = useCallback((key, val) => {
     setBuyer(b => ({ ...b, [key]: val }));
-    if (key === 'state') {
-      setMeta(m => ({ ...m, placeOfSupply: val }));
-    }
     if (key === 'gstin') {
-      setBuyerErrors(e => ({ ...e, gstin: val && !GSTIN_REGEX.test(val) ? 'Invalid GSTIN format' : '' }));
+      setBuyerErrors(e => ({ ...e, gstin: val ? validateGstin(val) : '' }));
     }
   }, []);
 
@@ -661,14 +372,17 @@ export function GstInvoice() {
       setGateFeature('advanced_exports');
       return;
     }
+    const validation = validateInvoice({ seller, buyer, meta, items });
+    setExportAttempted(true);
+    setExportErrors([]);
+    if (validation.errors.length) return;
     setGenerating(true);
     try {
-      const blob = await generatePDF({ seller, buyer, meta, items, totals, notes, signatory, isInterState });
+      const blob = await generateInvoicePDF({ seller, buyer, meta, items, totals, notes, signatory, isInterState });
       downloadBlob(blob, 'orbitboard-gst-invoice.pdf');
       trackExportClicked('pdf');
-      trackInvoiceCreated(meta.invoiceNumber);
     } catch (err) {
-      console.error('PDF generation error:', err);
+      setExportErrors([err.message || 'Could not generate PDF. Review the invoice inputs.']);
     } finally {
       setGenerating(false);
     }
@@ -682,11 +396,10 @@ export function GstInvoice() {
     try {
       const workspace = { seller, buyer, meta, items, notes, signatory };
       localStorage.setItem('orbitboard:saved-workspace-invoice', JSON.stringify(workspace));
-      trackInvoiceCreated(meta.invoiceNumber);
-      setSaveMessage('Invoice workspace saved to your account!');
+      setSaveMessage('Invoice workspace saved in this browser!');
       setTimeout(() => setSaveMessage(null), 4000);
-    } catch (err) {
-      console.error('Failed to save workspace:', err);
+    } catch {
+      setExportErrors(['Could not save locally. Check browser storage availability.']);
     }
   }, [hasFeature, seller, buyer, meta, items, notes, signatory]);
 
@@ -731,6 +444,9 @@ export function GstInvoice() {
         </div>
       )}
 
+      <p className="text-sm">Supported workflow: ordinary domestic supply. Tax split uses seller state and explicit place of supply. GSTIN format/checksum validation is local only, never government verification. PDF text supports Latin/WinAnsi; other scripts can be printed from the browser preview using a suitable local font.</p>
+      {warnings.map(w => <p key={w} role="status" className="text-sm text-amber-800">{w}</p>)}
+      {visibleErrors.length > 0 && <div role="alert" className="text-sm text-red-700">{visibleErrors.map((error, i) => <p key={i}>{error}</p>)}</div>}
       {/* ── Seller Details ── */}
       <SectionCard icon={Building2} title="Your Company / Seller Details">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -890,7 +606,7 @@ export function GstInvoice() {
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                     <td className="py-1 px-2 text-gray-400">{idx + 1}</td>
                     <td className="py-1 px-2">
-                      <Input aria-label={`Description, row ${idx + 1}`} value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Service / Product description" className="orbit-control--dense w-full" />
+                      <Textarea rows={2} aria-label={`Description, row ${idx + 1}`} value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Service / Product description" className="orbit-control--dense w-full" />
                     </td>
                     <td className="py-1 px-2">
                       <Input aria-label={`HSN/SAC, row ${idx + 1}`} value={item.hsn} onChange={e => updateItem(item.id, 'hsn', e.target.value)} placeholder="998314" className="orbit-control--dense w-full" />

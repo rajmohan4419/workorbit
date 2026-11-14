@@ -168,3 +168,61 @@ export function calcInvoiceTotals(items, isInterState) {
     isInterState,
   };
 }
+
+export const GST_STATE_CODES = {
+  'Jammu & Kashmir': '01', 'Himachal Pradesh': '02', Punjab: '03', Chandigarh: '04', Uttarakhand: '05', Haryana: '06', Delhi: '07', Rajasthan: '08', 'Uttar Pradesh': '09', Bihar: '10', Sikkim: '11', 'Arunachal Pradesh': '12', Nagaland: '13', Manipur: '14', Mizoram: '15', Tripura: '16', Meghalaya: '17', Assam: '18', 'West Bengal': '19', Jharkhand: '20', Odisha: '21', Chhattisgarh: '22', 'Madhya Pradesh': '23', Gujarat: '24', 'Daman & Diu': '25', 'Dadra & Nagar Haveli': '26', Maharashtra: '27', Karnataka: '29', Goa: '30', Lakshadweep: '31', Kerala: '32', 'Tamil Nadu': '33', Puducherry: '34', 'Andaman & Nicobar Islands': '35', Telangana: '36', 'Andhra Pradesh': '37', Ladakh: '38',
+};
+export function validateGstin(value) {
+  const gstin = String(value ?? '').trim().toUpperCase();
+  if (!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin) || !Object.values(GST_STATE_CODES).includes(gstin.slice(0, 2))) return 'Invalid GSTIN format/state code (local validation only).';
+  const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let sum = 0;
+  for (let i = 0; i < 14; i++) {
+    const product = alphabet.indexOf(gstin[i]) * (i % 2 === 0 ? 1 : 2);
+    sum += Math.floor(product / 36) + product % 36;
+  }
+  return alphabet[(36 - sum % 36) % 36] === gstin[14] ? '' : 'GSTIN checksum mismatch (local validation only).';
+}
+export function resolveSupply(seller, buyer, meta) {
+  const warnings = [];
+  if (meta.placeOfSupply && buyer.state && meta.placeOfSupply !== buyer.state) warnings.push('Place of supply differs from buyer state. Confirm the explicit place of supply for this ordinary domestic supply.');
+  return { isInterState: seller.state !== meta.placeOfSupply, warnings };
+}
+export function invoiceEditorTotals(items, isInterState) {
+  const t = calcInvoiceTotals(items, isInterState);
+  const grandTotal = Math.round(t.grandTotal);
+  return { ...t, subtotal: t.grossTotal, totalDiscount: t.discountTotal, taxableAmount: t.taxableTotal,
+    cgst: t.cgstTotal, sgst: t.sgstTotal, igst: t.igstTotal, rawTotal: t.grandTotal, grandTotal, roundOff: round2(grandTotal - t.grandTotal) };
+}
+export function validateInvoice({ seller = {}, buyer = {}, meta = {}, items = [] }) {
+  const errors = [];
+  for (const [label, value] of [['Seller name', seller.companyName], ['Seller address', seller.address], ['Seller GSTIN', seller.gstin], ['Buyer name', buyer.name], ['Buyer address', buyer.address], ['Invoice number', meta.invoiceNumber]]) if (!String(value ?? '').trim()) errors.push(`${label} is required.`);
+  for (const [label, state] of [['Seller state', seller.state], ['Buyer state', buyer.state], ['Place of supply', meta.placeOfSupply]]) if (!GST_STATE_CODES[state]) errors.push(`${label} must be a supported domestic state.`);
+  for (const [label, party] of [['Seller', seller], ['Buyer', buyer]]) {
+    if (party.gstin) {
+      const error = validateGstin(party.gstin);
+      if (error) errors.push(`${label}: ${error}`);
+      else if (party.gstin.slice(0, 2) !== GST_STATE_CODES[party.state]) errors.push(`${label} state conflicts with GSTIN state code. Correct one before export.`);
+    }
+  }
+  if (!validInvoiceDate(meta.invoiceDate)) errors.push('A valid invoice date is required.');
+  if (meta.dueDate && (!validInvoiceDate(meta.dueDate) || meta.dueDate < meta.invoiceDate)) errors.push('Due date must be valid and on or after the invoice date.');
+  if (!items.length) errors.push('At least one line item is required.');
+  items.forEach((item, i) => {
+    if (!String(item.description ?? '').trim()) errors.push(`Row ${i + 1}: description is required.`);
+    if (!String(item.hsn ?? '').trim()) errors.push(`Row ${i + 1}: HSN/SAC is required.`);
+    for (const key of ['qty', 'rate', 'discount', 'gstRate']) {
+      const value = item[key], number = Number(value);
+      if (value == null || String(value).trim() === '' || !Number.isFinite(number) || number < 0 || (key === 'qty' && number <= 0) || (key === 'discount' && number > 100) || (key === 'gstRate' && ![0, 5, 12, 18, 28].includes(number)) || number > 1e9) errors.push(`Row ${i + 1}: ${key} must be a finite supported value (quantity > 0, discount 0–100, rate/quantity at most 1 billion).`);
+    }
+  });
+  const supply = resolveSupply(seller, buyer, meta);
+  const totals = invoiceEditorTotals(items, supply.isInterState);
+  if (!Number.isFinite(totals.grandTotal) || totals.grandTotal > 1e12) errors.push('Invoice total exceeds the supported finite amount limit of Rs. 1 trillion.');
+  return { errors, warnings: supply.warnings, ...supply, totals };
+}
+function validInvoiceDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value ?? '')) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
