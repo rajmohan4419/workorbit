@@ -36,6 +36,11 @@ describe('account download metering', () => {
     admin.rpc.mockResolvedValue({ error: new Error('database internal details') });
     expect(await call({})).toEqual({ status: 503, body: { error: 'metering_unavailable' } });
   });
+  it('rejects exhausted PDF balances and uses the paid RPC only for PDFs', async () => {
+    admin.rpc.mockResolvedValue({data:[{allowed:false,remaining:0}]});
+    expect((await call({})).status).toBe(402);
+    expect(admin.rpc).toHaveBeenCalledWith('charge_pdf_download',expect.objectContaining({p_format:'pdf'}));
+  });
   it('validates supported formats and request IDs', async () => {
     expect((await call({ body: { requestId, format: 'png' } })).status).toBe(400);
     expect((await call({ body: '{invalid' })).status).toBe(400);
@@ -47,7 +52,7 @@ describe('account download metering', () => {
     const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn().mockResolvedValue({ data: { units_used: 12 } }) };
     admin.from = vi.fn().mockReturnValue(query);
     const result = await call({ method: 'GET' });
-    expect(result.body).toMatchObject({ downloads: 12, mode: 'metering_only', quota: null });
+    expect(result.body).toMatchObject({ downloads:12, mode:'pdf_credits', pdf:{purchased:0,used:0,remaining:0}, quota:0 });
     expect(query.eq).toHaveBeenCalledWith('user_id', (await admin.auth.getUser()).data.user.id);
     expect(admin.rpc).not.toHaveBeenCalled();
   });

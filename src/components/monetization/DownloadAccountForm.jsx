@@ -24,7 +24,7 @@ export function DownloadAccountForm({ onSignedIn }) {
   }
   return <div className="space-y-4 text-left">
     <h2 className="text-xl font-bold">{mode === 'signup' ? 'Sign up to download' : 'Sign in to download'}</h2>
-    <p className="text-sm text-stone-600">Use tools free without an account. Sign up for PDF/XLSX downloads and track your usage. No payment is requested in this pilot.</p>
+    <p className="text-sm text-stone-600">Use tools free without an account. Sign up for PDF/XLSX downloads and track your usage. PDF downloads cost ₹0.25 each using prepaid credits; minimum top-up ₹100.</p>
     <form onSubmit={submit} className="space-y-3">
       <label className="block text-sm font-medium">Email<input className="orbit-control mt-1 w-full border rounded-lg" type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} /></label>
       <label className="block text-sm font-medium">Password<input className="orbit-control mt-1 w-full border rounded-lg" type="password" minLength={mode === 'signup' ? 8 : 1} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required value={password} onChange={event => setPassword(event.target.value)} /></label>

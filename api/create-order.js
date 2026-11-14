@@ -6,6 +6,7 @@ import { isPassOrderRequest, createPassOrder } from './_lib/passOrders.js';
 import { getPlan, getRazorpayPlanId, getPlanPricePaise } from '../src/lib/monetization/planCatalog.js';
 import { getUserFromRequest } from './_lib/entitlements.js';
 import crypto from 'crypto';
+import { createPdfTopup } from './_lib/pdfTopups.js';
 
 export async function parseRequestBody(req) {
   if (req.body) {
@@ -53,6 +54,13 @@ export default async function handler(req, res) {
   }
 
   const body = await parseRequestBody(req);
+
+  if (body?.purchaseType === 'pdf_topup') {
+    const result = await createPdfTopup({ req, body, razorpay });
+    res.writeHead(result.status, corsHeaders);
+    res.end(JSON.stringify(result.body));
+    return;
+  }
 
   // Commercial subscriptions (Pro / Business monthly & annual)
   const planCode = body?.planCode || body?.plan_code;

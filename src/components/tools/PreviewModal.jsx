@@ -172,6 +172,7 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
           </div>
 
           {/* ── Footer ── */}
+          {isMeteredDocument(filename, mimeType) && documentFormat(filename, mimeType || '') === 'pdf' && <p className="px-5 py-2 text-sm text-stone-600">This PDF download uses 1 credit (₹0.25). <a href="/account#pdf-topup" target="_blank" rel="noreferrer" className="text-indigo-700 underline">View balance / top up ↗</a></p>}
           {error && <p role="alert" className="px-5 py-2 text-sm text-red-700">{error}</p>}
           {queueLength > 1 && <p className="px-5 py-2 text-xs text-stone-600">{queueLength} files queued. Each confirmed PDF/XLSX file counts as one download.</p>}
           <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-[var(--orbit-border,#e5e7eb)] shrink-0 bg-[var(--orbit-surface,#fff)]">

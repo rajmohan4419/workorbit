@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, Sparkles, ShieldCheck, Users } from 'lucide-react';
+import { useAccountSession } from '../../lib/monetization/useAccountSession';
 import { OrbitBoardIcon } from '../brand/OrbitBoardIcon';
 
 export function ToolsHomeHeader({ visitorCount }) {
+  const { session, loading } = useAccountSession();
+  const signedIn = session && !session.user?.is_anonymous;
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -71,7 +74,7 @@ export function ToolsHomeHeader({ visitorCount }) {
               to="/account"
               className="px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold text-stone-700 dark:text-stone-200 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-stone-100 dark:hover:bg-stone-800 border border-transparent hover:border-[var(--orbit-border)] transition shrink-0"
             >
-              Sign up / Account
+              {loading || signedIn ? 'Account' : 'Sign up / Sign in'}
             </Link>
 
             {/* Primary Announcement Pill */}
@@ -79,7 +82,7 @@ export function ToolsHomeHeader({ visitorCount }) {
               <Sparkles size={13} className="shrink-0 text-accent-600 dark:text-accent-400" />
               <span className="truncate">
                 <span className="hidden sm:inline font-bold">Announcement: </span>
-                <span>Free tools · Sign up for PDF/XLSX downloads</span>
+                <span>{signedIn ? 'Free tools · Manage your download credits' : 'Free tools · Sign up for PDF/XLSX downloads'}</span>
               </span>
             </div>
 
