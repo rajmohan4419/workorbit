@@ -1,4 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useTaskFeedback } from '../lib/feedback/useTaskFeedback';
+import { unlockSound } from '../lib/feedback/sound';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { CreditCard, CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
 import { loadRazorpayScript } from '../lib/razorpay';
 
@@ -23,6 +25,11 @@ export function RazorpayCheckout({
   showAmountSelector = false,
   compact = false,
 }) {
+  const { begin } = useTaskFeedback('payment');
+  const retryVerification = useRef(null);
+  const checkoutLock = useRef(false);
+  const pendingPayment = useRef(null);
+  const [confirmationPending, setConfirmationPending] = useState(false);
   const effectiveOptions = useMemo(() => {
     return amountOptions || (productId === 'coffee-orbitboard' ? COFFEE_AMOUNT_OPTIONS : DEFAULT_AMOUNT_OPTIONS);
   }, [amountOptions, productId]);
@@ -33,6 +40,12 @@ export function RazorpayCheckout({
   const [status, setStatus] = useState(null); // { type: 'success' | 'error' | 'info', message: string, details?: object }
 
   const handleCheckout = useCallback(async () => {
+    if (checkoutLock.current || pendingPayment.current) return;
+    unlockSound();
+    const task = begin({ label: 'Preparing secure checkout', stage: 'Creating your order' });
+    if (!task) return;
+    checkoutLock.current = true;
+    let callbackReceived = false;
     setLoading(true);
     setStatus(null);
 
@@ -100,6 +113,9 @@ export function RazorpayCheckout({
         },
         modal: {
           ondismiss: () => {
+            if (callbackReceived || !task.active()) return;
+            checkoutLock.current = false;
+            task.cancel('Checkout cancelled. You can try again when ready.');
             setLoading(false);
             const cancelStatus = {
               type: 'info',
@@ -109,7 +125,14 @@ export function RazorpayCheckout({
             if (onCancel) onCancel();
           },
         },
-        handler: async (paymentResponse) => {
+        handler: async (paymentResponse, retry = false) => {
+          if ((callbackReceived && !retry) || (retry && checkoutLock.current)) return;
+          checkoutLock.current = true;
+          callbackReceived = true;
+          pendingPayment.current = paymentResponse; setConfirmationPending(true);
+          const verificationTask = task.active() ? task : begin({ label: 'Confirming your payment', stage: 'Confirming captured payment' });
+          retryVerification.current = () => options.handler(paymentResponse, true);
+          verificationTask?.stage('Confirming captured payment');
           setLoading(true);
           try {
             // Step 5: Send razorpay_payment_id, razorpay_order_id, and razorpay_signature to backend verify endpoint
@@ -127,19 +150,22 @@ export function RazorpayCheckout({
 
             const verifyData = await verifyRes.json();
 
-            if (verifyRes.ok && verifyData.success) {
+            if (verifyRes.ok && verifyData.success === true && verifyData.payment_captured === true) {
+              pendingPayment.current = null; setConfirmationPending(false);
+              verificationTask?.success('Payment confirmed.');
               const successStatus = {
                 type: 'success',
-                message: 'Payment verified successfully!',
+                message: 'Payment confirmed.',
                 details: {
                   paymentId: paymentResponse.razorpay_payment_id,
                   orderId: paymentResponse.razorpay_order_id,
                 },
               };
               setStatus(successStatus);
-              if (onSuccess) onSuccess(verifyData, paymentResponse);
+              if (onSuccess) void Promise.resolve().then(() => onSuccess(verifyData, paymentResponse)).catch(() => {});
             } else {
-              const errorMsg = verifyData.error || 'Payment signature verification failed.';
+              const errorMsg = 'Payment confirmation is pending. Check your account or contact support before paying again.';
+              verificationTask?.error(errorMsg);
               const failStatus = {
                 type: 'error',
                 message: errorMsg,
@@ -148,10 +174,12 @@ export function RazorpayCheckout({
               if (onError) onError(new Error(errorMsg));
             }
           } catch (err) {
-            const verifyErrorMsg = err?.message || 'Failed to verify payment';
+            const verifyErrorMsg = 'Payment confirmation is pending. Check your account or contact support before paying again.';
+            verificationTask?.error(verifyErrorMsg);
             setStatus({ type: 'error', message: verifyErrorMsg });
             if (onError) onError(err);
           } finally {
+            checkoutLock.current = false;
             setLoading(false);
           }
         },
@@ -160,8 +188,11 @@ export function RazorpayCheckout({
       const rzp = new window.Razorpay(options);
 
       rzp.on('payment.failed', (failData) => {
+        if (callbackReceived || !task.active()) return;
+        checkoutLock.current = false;
         setLoading(false);
         const failureReason = failData.error?.description || 'Payment process failed.';
+        task.error(failureReason);
         const failStatus = {
           type: 'error',
           message: failureReason,
@@ -171,15 +202,18 @@ export function RazorpayCheckout({
         if (onError) onError(failData.error || new Error(failureReason));
       });
 
+      task.stage('Complete payment in secure checkout');
       rzp.open();
-      setLoading(false);
     } catch (err) {
+      checkoutLock.current = false;
+      task.error('Could not start checkout. Please retry.');
       setLoading(false);
       const errMsg = err?.message || 'An error occurred during checkout.';
       setStatus({ type: 'error', message: errMsg });
       if (onError) onError(err);
     }
   }, [
+    begin,
     productId,
     selectedAmount,
     description,
@@ -221,7 +255,7 @@ export function RazorpayCheckout({
         <button
           type="button"
           onClick={handleCheckout}
-          disabled={loading}
+          disabled={loading || confirmationPending}
           className={
             buttonClassName ||
             'shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl bg-violet-600 hover:bg-violet-500 text-white transition-colors inline-flex items-center justify-center gap-2 shadow-xs disabled:opacity-50'
@@ -237,6 +271,7 @@ export function RazorpayCheckout({
           )}
         </button>
 
+        {confirmationPending && <button type="button" disabled={loading} onClick={() => retryVerification.current?.()} className="min-h-11 text-xs text-violet-700 underline">Retry payment confirmation</button>}
         {status && (
           <div
             className={`text-[11px] font-medium flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
@@ -302,7 +337,7 @@ export function RazorpayCheckout({
       <button
         type="button"
         onClick={handleCheckout}
-        disabled={loading}
+        disabled={loading || confirmationPending}
         className={
           buttonClassName ||
           'w-full min-h-[48px] inline-flex items-center justify-center gap-2 rounded-xl bg-accent-600 dark:bg-accent-500 hover:bg-accent-700 dark:hover:bg-accent-600 text-white font-bold text-sm shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed'
@@ -321,6 +356,7 @@ export function RazorpayCheckout({
         )}
       </button>
 
+      {confirmationPending && <button type="button" disabled={loading} onClick={() => retryVerification.current?.()} className="min-h-11 text-sm text-violet-700 underline">Retry payment confirmation</button>}
       {status && (
         <div
           className={`mt-4 p-3.5 rounded-xl border text-xs font-medium relative flex items-start gap-2.5 ${

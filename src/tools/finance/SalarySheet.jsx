@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState, useMemo, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import {
@@ -7,6 +8,7 @@ import { generateSalarySheet, SAMPLE_TEAM } from './salarySheetEngine.js';
 import { money, formatDownloadFilename, downloadBlob } from '../../lib/toolFormat.js';
 
 export function SalarySheet() {
+  const feedback = useExportFeedback('spreadsheet');
   const [companyName, setCompanyName] = useState('WorkOrbit Technologies Pvt Ltd');
   const [monthYear, setMonthYear] = useState('October 2026');
   const [daysInMonth, setDaysInMonth] = useState('30');
@@ -154,15 +156,15 @@ export function SalarySheet() {
           <button
             type="button"
             onClick={handleLoadSample}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
+            className="orbit-feedback-button flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Reset Sample Team
           </button>
           <button
             type="button"
-            onClick={handleExportExcel}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
+            disabled={feedback.busy} onClick={() => feedback.run(handleExportExcel, 'xlsx')}
+            className="orbit-feedback-button flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             Export XLSX

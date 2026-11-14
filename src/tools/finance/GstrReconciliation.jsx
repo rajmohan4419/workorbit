@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState, useMemo, useEffect } from 'react';
 import { useToolShareContext } from '../../lib/shareResults.js';
 import { FinanceFileImport } from '../../components/tools/FinanceFileImport.jsx';
@@ -14,6 +15,7 @@ function validate(row, index) {
   return r.errors.map(message => ({ rowNumber: r.rowNumber, message }));
 }
 export function GstrReconciliation() {
+  const feedback = useExportFeedback('spreadsheet');
   const { updateSharePayload, openShareModal } = useToolShareContext();
   const [sources, setSources] = useState({ gstr: null, books: null });
   const [demo, setDemo] = useState(false);
@@ -45,7 +47,7 @@ export function GstrReconciliation() {
     <div className="flex flex-wrap gap-3 items-center">
       <button className="orbit-control border rounded-lg" onClick={() => { setImportEpoch(n => n + 1); setDemo(true); setSources({ gstr: { rows: SAMPLE_GSTR_DATA, label: 'Synthetic GSTR-2B demo' }, books: { rows: SAMPLE_PURCHASE_DATA, label: 'Synthetic books demo' } }); }}>Load demo</button>
       <button className="orbit-control border rounded-lg" onClick={() => { setSources({ gstr: null, books: null }); setDemo(false); setImportEpoch(n => n + 1); }}>Reset workspace</button>
-      <button className="orbit-control border rounded-lg" disabled={!ready} onClick={() => { if (recon) downloadBlob(exportGstrReport(recon, { gstr: sources.gstr.label, books: sources.books.label }), 'gstr-reconciliation.xlsx'); }}>Export Excel report</button>
+      <button className="orbit-control border rounded-lg" disabled={!ready || feedback.busy} onClick={() => feedback.run(() => downloadBlob(exportGstrReport(recon, { gstr: sources.gstr.label, books: sources.books.label }), 'gstr-reconciliation.xlsx'), 'xlsx')}>Export Excel report</button>
       <button className="orbit-control border rounded-lg" disabled={!ready} onClick={() => openShareModal()}>Share scorecard</button>
     </div>
     <p role="status">{demo ? 'Demo mode — synthetic data. Activating a real file clears both demo sources.' : ready ? 'Ready — both sources supplied.' : 'Awaiting both sources. Confirm each import to enable a report.'}</p>

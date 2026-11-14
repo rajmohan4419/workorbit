@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState, useMemo } from 'react';
 import {
   Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle, Layers, X, Sparkles
@@ -16,6 +17,7 @@ import { PlanGate } from '../../components/monetization/PlanGate';
 import { trackExportClicked } from '../../lib/analytics';
 
 export default function ExcelEngineWorkspace() {
+  const feedback = useExportFeedback('spreadsheet');
   const [fileObj, setFileObj] = useState(null);
   const [fileName, setFileName] = useState('');
   const [sheetNames, setSheetNames] = useState([]);
@@ -140,7 +142,7 @@ export default function ExcelEngineWorkspace() {
   };
 
   const handleExport = (format) => {
-    if (!rows.length) return;
+    if (!rows.length) return false;
     const blob = exportSpreadsheet({
       sheets: [{ name: selectedSheet || 'Processed Data', data: rows }],
       format,
@@ -318,7 +320,7 @@ export default function ExcelEngineWorkspace() {
               </button>
               <button
                 type="button"
-                onClick={() => handleExport('xlsx')}
+                disabled={feedback.busy} onClick={() => feedback.run(() => handleExport('xlsx'), 'xlsx')}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs transition"
               >
                 <Download size={14} />
@@ -326,7 +328,7 @@ export default function ExcelEngineWorkspace() {
               </button>
               <button
                 type="button"
-                onClick={() => handleExport('csv')}
+                disabled={feedback.busy} onClick={() => feedback.run(() => handleExport('csv'), 'csv')}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-medium text-xs transition"
                 title="Protected against CSV formula injection"
               >
@@ -372,7 +374,7 @@ export default function ExcelEngineWorkspace() {
                   {!validationResults.isValid && (
                     <button
                       type="button"
-                      onClick={() => handleDownloadErrorReport('xlsx')}
+                      disabled={feedback.busy} onClick={() => feedback.run(() => handleDownloadErrorReport('xlsx'), 'xlsx')}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-bold hover:bg-amber-300 transition"
                     >
                       <Download size={12} />

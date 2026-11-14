@@ -143,7 +143,7 @@ export default async function handler(req, res) {
     }
 
     // Step 5: idempotent fulfilment.
-    await fulfilPayment(admin, {
+    const fulfilment = await fulfilPayment(admin, {
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
       amountPaise: orderRecord.amount_paise,
@@ -155,6 +155,8 @@ export default async function handler(req, res) {
     res.end(JSON.stringify({
       success: true,
       message: 'Payment verified successfully',
+      payment_captured: true,
+      credits_granted: fulfilment.creditsGranted === true,
       order_id: razorpay_order_id,
       payment_id: razorpay_payment_id,
       plan_id: orderRecord.plan_id || null,
