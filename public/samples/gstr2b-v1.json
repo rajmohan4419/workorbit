@@ -1,0 +1,6 @@
+{
+  "schema": "orbitboard-gstr2b/1",
+  "invoices": [
+    { "gstin": "29ABCDE1234F1Z5", "invoiceNumber": "SYNTHETIC-001", "invoiceDate": "2026-10-01", "taxableValue": 1000, "igst": 180, "cgst": 0, "sgst": 0, "cess": 0 }
+  ]
+}

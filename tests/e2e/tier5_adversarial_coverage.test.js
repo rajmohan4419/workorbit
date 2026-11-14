@@ -201,9 +201,9 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite', () => {
       it('T5.2.7: parseAmount handles currency symbols, accounting parens, and non-numeric inputs', () => {
         expect(gstrEngine.parseAmount('(45,000.50)')).toBe(-45000.50);
         expect(gstrEngine.parseAmount('₹ 1,50,000')).toBe(150000);
-        expect(gstrEngine.parseAmount(null)).toBe(0);
-        expect(gstrEngine.parseAmount(undefined)).toBe(0);
-        expect(gstrEngine.parseAmount('N/A')).toBe(0);
+        expect(gstrEngine.parseAmount(null)).toBeNaN();
+        expect(gstrEngine.parseAmount(undefined)).toBeNaN();
+        expect(gstrEngine.parseAmount('N/A')).toBeNaN();
         expect(gstrEngine.parseAmount(25000)).toBe(25000);
       });
 
@@ -237,11 +237,12 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite', () => {
           { gstin: '29ABCDE1234F1Z5', invoiceNumber: 'INV-100', taxableValue: 50000, igst: 9000 }, // copy 2 (duplicate in books!)
         ];
         const result = gstrEngine.reconcileGstrData(gstr, pr);
-        // Exactly one should match
-        expect(result.summary.matchedCount).toBe(1);
-        // The duplicate in PR must be flagged as missingIn2B (at-risk ITC!)
-        expect(result.summary.missingIn2BCount).toBe(1);
-        expect(result.missingIn2B[0].taxableValue).toBe(50000);
+        // No arbitrary first-candidate match: all three imported rows require review.
+        expect(result.summary.matchedCount).toBe(0);
+        expect(result.summary.missingIn2BCount).toBe(0);
+        expect(result.reviewRecords).toHaveLength(3);
+        expect(result.reviewRecords.filter(r => r.source === 'purchase_register')).toHaveLength(2);
+        expect(result.rowAccounting).toEqual({ imported: 3, processed: 0, rejected: 0, awaitingReview: 3 });
       });
 
       it('T5.2.11: tolerance parameter boundary strictly partitions MATCHED vs VALUE_MISMATCH', () => {

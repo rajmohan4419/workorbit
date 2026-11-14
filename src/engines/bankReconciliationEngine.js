@@ -1,3 +1,4 @@
+import { strictAmount, strictDate } from './financeValidation.js';
 /**
  * Bank Reconciliation Engine
  * High-precision reconciliation between Bank Statements and Accounting Ledgers.
@@ -17,7 +18,7 @@
  * @returns {{ transaction: Object|null, error: string|null }}
  */
 export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0) {
-  const rowNum = rowIndex + 1;
+  const rowNum = row.__sourceRow ?? rowIndex + 1;
   const dateStr = String(row[mapping.date] || '').trim();
 
   if (!dateStr) {
@@ -27,7 +28,7 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
     };
   }
 
-  const dateObj = parseValidDate(dateStr);
+  const dateObj = parseValidDate(row[mapping.date]);
   if (!dateObj) {
     return {
       transaction: null,
@@ -59,10 +60,10 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
     const debit = parseAmount(rawDebit);
     const credit = parseAmount(rawCredit);
 
-    if (isNaN(debit) || isNaN(credit)) {
+    if (!Number.isFinite(debit) || !Number.isFinite(credit) || debit < 0 || credit < 0 || (debit > 0 && credit > 0) || mapping.debit === mapping.credit) {
       return {
         transaction: null,
-        error: `Row ${rowNum}: Amount contains invalid non-numeric characters.`,
+        error: `Row ${rowNum}: Amount contains invalid non-numeric characters or conflicting debit/credit values. Debit/credit must be finite non-negative amounts in distinct columns; only one may be non-zero.`,
       };
     }
 
@@ -89,7 +90,7 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
     }
 
     const rawAmt = parseAmount(rawVal);
-    if (isNaN(rawAmt)) {
+    if (!Number.isFinite(rawAmt)) {
       return {
         transaction: null,
         error: `Row ${rowNum}: Invalid amount "${rawVal}".`,
@@ -98,19 +99,12 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
 
     const type = String(row[mapping.type] || '').toUpperCase().trim();
 
-    if (source === 'bank') {
-      if (type.includes('CR') || type.includes('DEP') || rawAmt > 0) {
-        amount = Math.abs(rawAmt);
-      } else {
-        amount = -Math.abs(rawAmt);
-      }
-    } else {
-      if (type.includes('DR') || type.includes('REC') || rawAmt > 0) {
-        amount = Math.abs(rawAmt);
-      } else {
-        amount = -Math.abs(rawAmt);
-      }
-    }
+    const words = type.split(/[^A-Z]+/).filter(Boolean);
+    const incoming = words.some(w => ['RECEIPT', 'REC', 'DEPOSIT', 'DEP', ...(source === 'bank' ? ['CR', 'CREDIT'] : ['DR', 'DEBIT'])].includes(w));
+    const outgoing = words.some(w => ['PAYMENT', 'PAY', 'WITHDRAWAL', ...(source === 'bank' ? ['DR', 'DEBIT'] : ['CR', 'CREDIT'])].includes(w));
+    if ((incoming && outgoing) || (type && !incoming && !outgoing)) return { transaction: null, error: `Row ${rowNum}: Conflicting or unsupported direction indicator.` };
+    // Positive magnitudes are common even for withdrawals. Explicit type wins.
+    amount = incoming ? Math.abs(rawAmt) : outgoing ? -Math.abs(rawAmt) : rawAmt;
     hasValidAmount = true;
   } else {
     return {
@@ -118,6 +112,18 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
       error: `Row ${rowNum}: No amount column mapped.`,
     };
   }
+
+  // Cross-check a separately supplied type against debit/credit direction.
+  const indicator = String(row[mapping.type] ?? '').trim().toUpperCase();
+  if (indicator) {
+    const words = indicator.split(/[^A-Z]+/).filter(Boolean);
+    const ins = new Set(['RECEIPT', 'REC', 'DEPOSIT', 'DEP', ...(source === 'bank' ? ['CR', 'CREDIT'] : ['DR', 'DEBIT'])]);
+    const outs = new Set(['PAYMENT', 'PAY', 'WITHDRAWAL', ...(source === 'bank' ? ['DR', 'DEBIT'] : ['CR', 'CREDIT'])]);
+    const incoming = words.some(w => ins.has(w)), outgoing = words.some(w => outs.has(w));
+    if (incoming === outgoing || words.some(w => !ins.has(w) && !outs.has(w)) || (incoming && amount < 0) || (outgoing && amount > 0)) return { transaction: null, error: `Row ${rowNum}: Conflicting or unsupported direction indicator.` };
+  }
+  if (!Number.isFinite(amount) || Math.abs(amount) > 1e12) return { transaction: null, error: `Row ${rowNum}: Amount must be finite and at most 1 trillion in magnitude.` };
+  if (amount !== 0 && Math.round(Math.abs(amount) * 100) === 0) return { transaction: null, error: `Row ${rowNum}: Amount rounds to zero at two decimals.` };
 
   if (!hasValidAmount || amount === 0) {
     return {
@@ -139,6 +145,7 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
       rowIndex,
       rowNumber: rowNum,
       source,
+      sourceLabel: row.__sourceLabel ?? source,
       raw: row,
       date: dateFormatted,
       dateObj,
@@ -162,66 +169,11 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
  * Parses diverse date formats into a valid Date object.
  * Rejects invalid strings without silent fallbacks.
  */
-export function parseValidDate(dateStr) {
-  if (!dateStr || typeof dateStr !== 'string' && typeof dateStr !== 'number' && !(dateStr instanceof Date)) {
-    return null;
-  }
-
-  if (dateStr instanceof Date && !isNaN(dateStr.getTime())) {
-    return dateStr;
-  }
-
-  // Handle Excel serial date numbers (e.g. 45678)
-  if (typeof dateStr === 'number' || (!isNaN(Number(dateStr)) && !String(dateStr).includes('-') && !String(dateStr).includes('/'))) {
-    const serial = Number(dateStr);
-    if (serial > 1000 && serial < 100000) {
-      // Excel epoch starts 1899-12-30 (accounting for 1900 leap year bug)
-      const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-      const parsed = new Date(excelEpoch.getTime() + serial * 86400000);
-      if (!isNaN(parsed.getTime())) return parsed;
-    }
-  }
-
-  const s = String(dateStr).trim();
-
-  // Try standard ISO (YYYY-MM-DD)
-  const isoMatch = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (isoMatch) {
-    const year = parseInt(isoMatch[1], 10);
-    const month = parseInt(isoMatch[2], 10) - 1;
-    const day = parseInt(isoMatch[3], 10);
-    const d = new Date(Date.UTC(year, month, day));
-    if (d.getUTCFullYear() === year && d.getUTCMonth() === month && d.getUTCDate() === day) {
-      return d;
-    }
-    return null;
-  }
-
-  // Try DD/MM/YYYY or DD-MM-YYYY
-  const dmyMatch = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
-  if (dmyMatch) {
-    const day = parseInt(dmyMatch[1], 10);
-    const month = parseInt(dmyMatch[2], 10) - 1;
-    const year = parseInt(dmyMatch[3], 10);
-    const d = new Date(Date.UTC(year, month, day));
-    if (d.getUTCFullYear() === year && d.getUTCMonth() === month && d.getUTCDate() === day) {
-      return d;
-    }
-  }
-
-  // General Date.parse (fallback for other textual formats)
-  const general = new Date(s);
-  return !isNaN(general.getTime()) ? general : null;
+export function parseValidDate(value) {
+  const date = strictDate(value);
+  return date ? new Date(`${date}T00:00:00Z`) : null;
 }
-
-export function parseAmount(val) {
-  if (val === null || val === undefined) return 0;
-  if (typeof val === 'number') return isNaN(val) ? NaN : val;
-  const cleaned = String(val).replace(/[$€£₹,\s]/g, '').trim();
-  if (cleaned === '') return 0;
-  const num = parseFloat(cleaned);
-  return isNaN(num) ? NaN : num;
-}
+export function parseAmount(value) { return strictAmount(value, 0); }
 
 function hashDeterministic(str) {
   let hash = 0;

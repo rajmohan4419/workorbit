@@ -1,9 +1,4 @@
-/**
- * GSTR-2B vs Purchase Register (Books) Reconciliation Engine
- * High-precision reconciliation between GST Portal GSTR-2B filing and internal Purchase Register.
- * Matches on Supplier GSTIN, Normalized Invoice Number, and Taxable Value.
- * Identifies Matched ITC, Value Mismatches, At-Risk ITC (in Books only), and Unclaimed ITC (in 2B only).
- */
+/** Local uploaded GSTR-2B / purchase register matching. No eligibility determination. */
 
 import { formatINR } from '../../lib/toolFormat.js';
 
@@ -15,39 +10,8 @@ export function normalizeInvoiceNumber(inv) {
   return String(inv || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-export function parseAmount(val) {
-  if (val === null || val === undefined) return 0;
-  if (typeof val === 'number') return isNaN(val) ? 0 : val;
-  const str = String(val).trim();
-  const isNegative = str.startsWith('(') && str.endsWith(')');
-  const cleaned = str.replace(/[₹,()\s]/g, '').trim();
-  const n = parseFloat(cleaned);
-  if (isNaN(n)) return 0;
-  return isNegative ? -n : n;
-}
-
-export function parseDate(val) {
-  if (!val) return '';
-  if (typeof val === 'number') {
-    // Excel date serial number
-    const date = new Date(Math.round((val - 25569) * 86400 * 1000));
-    return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
-  }
-  const str = String(val).trim();
-  // Standard YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-  // DD/MM/YYYY or DD-MM-YYYY
-  const parts = str.split(/[/.-]/);
-  if (parts.length === 3) {
-    if (parts[0].length === 4) {
-      return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-    }
-    if (parts[2].length === 4) {
-      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-    }
-  }
-  return str;
-}
+export { strictAmount as parseAmount, strictDate as parseDate } from '../../engines/financeValidation.js';
+import { strictAmount as parseAmount, strictDate as parseDate } from '../../engines/financeValidation.js';
 
 /**
  * Intelligent column mapping for diverse CSV/XLSX headers.
@@ -111,13 +75,12 @@ export function detectColumnMapping(headers = []) {
     igst,
     cgst,
     sgst,
+    cess: findBest([['cess']]),
   };
 }
 
-let unmatchableSeq = 0;
 export function generateUnmatchableKey(source = 'record', index = 0) {
-  unmatchableSeq += 1;
-  return `__unmatchable_${source}_${index}_${unmatchableSeq}__`;
+  return `__unmatchable_${source}_${index}_row__`;
 }
 
 /**
@@ -140,26 +103,34 @@ export function normalizeInvoiceRecord(row, mapping = {}, source = 'gstr', index
 
   const rawTaxable = (mapping.taxableValue && r[mapping.taxableValue] !== undefined)
     ? r[mapping.taxableValue]
-    : (r.taxableValue ?? r['Taxable Value'] ?? r['Taxable Value (₹)'] ?? r.taxableAmount ?? r['Taxable Amount'] ?? r['Assessable Value'] ?? 0);
+    : (r.taxableValue ?? r['Taxable Value'] ?? r['Taxable Value (₹)'] ?? r.taxableAmount ?? r['Taxable Amount'] ?? r['Assessable Value'] ?? null);
 
   const rawIgst = (mapping.igst && r[mapping.igst] !== undefined)
     ? r[mapping.igst]
-    : (r.igst ?? r.IGST ?? r['Integrated Tax'] ?? r['Integrated Tax (₹)'] ?? r['IGST Amount'] ?? 0);
+    : (r.igst ?? r.IGST ?? r['Integrated Tax'] ?? r['Integrated Tax (₹)'] ?? r['IGST Amount'] ?? null);
 
   const rawCgst = (mapping.cgst && r[mapping.cgst] !== undefined)
     ? r[mapping.cgst]
-    : (r.cgst ?? r.CGST ?? r['Central Tax'] ?? r['Central Tax (₹)'] ?? r['CGST Amount'] ?? 0);
+    : (r.cgst ?? r.CGST ?? r['Central Tax'] ?? r['Central Tax (₹)'] ?? r['CGST Amount'] ?? null);
 
   const rawSgst = (mapping.sgst && r[mapping.sgst] !== undefined)
     ? r[mapping.sgst]
-    : (r.sgst ?? r.SGST ?? r['State/UT Tax'] ?? r['State/UT Tax (₹)'] ?? r['State Tax'] ?? r['SGST Amount'] ?? 0);
+    : (r.sgst ?? r.SGST ?? r['State/UT Tax'] ?? r['State/UT Tax (₹)'] ?? r['State Tax'] ?? r['SGST Amount'] ?? null);
 
   const taxableValue = parseAmount(rawTaxable);
   const igst = parseAmount(rawIgst);
   const cgst = parseAmount(rawCgst);
   const sgst = parseAmount(rawSgst);
-  const totalTax = igst + cgst + sgst;
+  const rawCess = mapping.cess ? r[mapping.cess] : (r.cess ?? r.Cess ?? r['Cess (₹)'] ?? null);
+  const cess = parseAmount(rawCess);
+  const taxPresent = Object.fromEntries(Object.entries({ igst: rawIgst, cgst: rawCgst, sgst: rawSgst, cess: rawCess }).map(([k, v]) => [k, v != null && String(v).trim() !== '']));
+  const errors = [];
+  if (!Number.isFinite(taxableValue)) errors.push('Taxable value must be a finite amount.');
+  for (const [key, value] of Object.entries({ igst, cgst, sgst, cess })) if (taxPresent[key] && !Number.isFinite(value)) errors.push(`${key.toUpperCase()} must be a finite amount.`);
+  if (rawDate != null && String(rawDate).trim() !== '' && !parseDate(rawDate)) errors.push('Invalid calendar date; use YYYY-MM-DD or DD/MM/YYYY.');
+  const totalTax = [igst, cgst, sgst, cess].reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0);
 
+  if ([taxableValue, igst, cgst, sgst, cess].some(v => Number.isFinite(v) && Math.abs(v) > 1e12)) errors.push('Amount exceeds supported per-field limit of 1 trillion. Split or correct this record.');
   const normGstin = normalizeGstin(rawGstin);
   const normInvoice = normalizeInvoiceNumber(rawInvoice);
   const isUnmatchable = !normGstin || !normInvoice;
@@ -169,15 +140,20 @@ export function normalizeInvoiceRecord(row, mapping = {}, source = 'gstr', index
 
   return {
     source,
+    rowNumber: r.__sourceRow ?? index + 1,
+    sourceLabel: r.__sourceLabel ?? source,
+    errors,
+    taxPresent,
+    cess: taxPresent.cess ? cess : null,
     gstin: String(rawGstin || '').trim(),
     normalizedGstin: normGstin,
     invoiceNumber: String(rawInvoice || '').trim(),
     normalizedInvoiceNumber: normInvoice,
     invoiceDate: parseDate(rawDate),
     taxableValue,
-    igst,
-    cgst,
-    sgst,
+    igst: taxPresent.igst ? igst : null,
+    cgst: taxPresent.cgst ? cgst : null,
+    sgst: taxPresent.sgst ? sgst : null,
     totalTax,
     totalInvoiceValue: taxableValue + totalTax,
     isUnmatchable,
@@ -215,90 +191,54 @@ export function reconcileGstrData(gstrInvoices = [], prInvoices = [], tolerance 
     normalizeInvoiceRecord(inv, prMapping, 'purchase_register', idx)
   );
 
-  // Group purchase register by key: GSTIN::INVOICE
-  const prMap = new Map();
-  normPr.forEach((pr, idx) => {
-    if (!pr.isUnmatchable) {
-      const key = pr.matchKey;
-      if (!prMap.has(key)) {
-        prMap.set(key, []);
-      }
-      prMap.get(key).push({ record: pr, prIndex: idx });
-    }
-  });
-
-  const matches = [];
-  const mismatches = [];
-  const missingInPr = [];
-  const matchedPrIndices = new Set();
-
-  for (let gIdx = 0; gIdx < normGstr.length; gIdx++) {
-    const g2b = normGstr[gIdx];
-
-    // If GSTR record is unmatchable (missing GSTIN or invoice number), treat as missing in PR
-    if (g2b.isUnmatchable) {
-      missingInPr.push(g2b);
+  if (!Number.isFinite(tolerance) || tolerance < 0) throw new Error('Tolerance must be finite and non-negative.');
+  const invalidRows = [...normGstr, ...normPr].filter(r => r.errors.length);
+  const validGstr = normGstr.filter(r => !r.errors.length);
+  const validPr = normPr.filter(r => !r.errors.length);
+  const groups = new Map();
+  for (const r of [...validGstr, ...validPr]) {
+    if (r.isUnmatchable) continue;
+    if (!groups.has(r.matchKey)) groups.set(r.matchKey, { gstr: [], pr: [] });
+    groups.get(r.matchKey)[r.source === 'gstr_2b' ? 'gstr' : 'pr'].push(r);
+  }
+  const matches = [], mismatches = [], reviewRecords = [];
+  const missingInPr = validGstr.filter(r => r.isUnmatchable);
+  const missingIn2B = validPr.filter(r => r.isUnmatchable);
+  for (const group of groups.values()) {
+    const { gstr, pr } = group;
+    if (gstr.length > 1 || pr.length > 1) {
+      const all = [...gstr, ...pr];
+      const collision = new Set(all.map(r => r.invoiceNumber.trim().toUpperCase())).size > 1;
+      all.forEach(r => reviewRecords.push({ ...r, reviewReason: collision ? 'Invoice identifier normalization collision / duplicate candidates' : 'Ambiguous duplicate candidates' }));
       continue;
     }
-
-    const key = g2b.matchKey;
-    const prCandidates = prMap.get(key) || [];
-
-    // Find available candidate not already matched
-    let matchedCandidate = null;
-    let candidateIndex = -1;
-
-    for (const cand of prCandidates) {
-      if (!matchedPrIndices.has(cand.prIndex)) {
-        matchedCandidate = cand.record;
-        candidateIndex = cand.prIndex;
-        break;
-      }
+    if (!gstr.length) { missingIn2B.push(...pr); continue; }
+    if (!pr.length) { missingInPr.push(...gstr); continue; }
+    const g2b = gstr[0], book = pr[0];
+    const componentDiffs = {};
+    let missingComponent = false;
+    for (const key of ['igst', 'cgst', 'sgst', 'cess']) {
+      componentDiffs[key] = g2b.taxPresent[key] && book.taxPresent[key] ? Math.abs(g2b[key] - book[key]) : null;
+      if (g2b.taxPresent[key] !== book.taxPresent[key]) missingComponent = true;
     }
-
-    if (!matchedCandidate) {
-      // In 2B but not in Books -> Unclaimed ITC!
-      missingInPr.push(g2b);
-    } else {
-      matchedPrIndices.add(candidateIndex);
-      const valDiff = Math.abs(g2b.taxableValue - matchedCandidate.taxableValue);
-      const taxDiff = Math.abs(g2b.totalTax - matchedCandidate.totalTax);
-
-      if (valDiff <= tolerance) {
-        matches.push({
-          gstr: g2b,
-          pr: matchedCandidate,
-          diff: valDiff,
-          taxDiff,
-          status: 'MATCHED',
-          notes: 'Full match within tolerance. Safe for ITC claim.',
-        });
-      } else {
-        mismatches.push({
-          gstr: g2b,
-          pr: matchedCandidate,
-          gstrValue: g2b.taxableValue,
-          prValue: matchedCandidate.taxableValue,
-          diff: valDiff,
-          taxDiff,
-          status: 'VALUE_MISMATCH',
-          notes: `Value mismatch of ₹${valDiff.toFixed(2)}. Verify credit/debit notes or amended invoice.`,
-        });
-      }
+    if (missingComponent) {
+      [g2b, book].forEach(r => reviewRecords.push({ ...r, reviewReason: 'Tax component missing in one source; explicit zero differs from missing.' }));
+      continue;
     }
+    const diff = Math.abs(g2b.taxableValue - book.taxableValue);
+    const taxDiff = Math.abs(g2b.totalTax - book.totalTax);
+    const matched = diff <= tolerance && Object.values(componentDiffs).every(d => d === null || d <= tolerance);
+    const result = { gstr: g2b, pr: book, diff, taxableDiff: diff, taxDiff, componentDiffs,
+      gstrValue: g2b.taxableValue, prValue: book.taxableValue,
+      status: matched ? 'MATCHED' : 'VALUE_MISMATCH',
+      identifierNormalizationUsed: g2b.invoiceNumber.toUpperCase() !== book.invoiceNumber.toUpperCase(),
+      notes: (matched ? 'Matched within configured tolerances for available fields.' : 'Requires review: taxable value or tax components differ.') + (g2b.invoiceNumber.toUpperCase() !== book.invoiceNumber.toUpperCase() ? ' Original invoice identifiers differ in formatting; confirm the same invoice.' : '') };
+    (matched ? matches : mismatches).push(result);
   }
 
-  // Identify invoices in PR missing in GSTR-2B -> Ineligible / At-Risk ITC!
-  const missingIn2B = [];
-  normPr.forEach((pr, idx) => {
-    if (!matchedPrIndices.has(idx)) {
-      missingIn2B.push(pr);
-    }
-  });
-
   // Calculate Aggregates
-  const totalGstrTaxable = normGstr.reduce((sum, r) => sum + r.taxableValue, 0);
-  const totalPrTaxable = normPr.reduce((sum, r) => sum + r.taxableValue, 0);
+  const totalGstrTaxable = validGstr.reduce((sum, r) => sum + r.taxableValue, 0);
+  const totalPrTaxable = validPr.reduce((sum, r) => sum + r.taxableValue, 0);
   const matchedTaxable = matches.reduce((sum, m) => sum + m.gstr.taxableValue, 0);
   const mismatchTaxable = mismatches.reduce((sum, m) => sum + m.gstr.taxableValue, 0);
   const missingIn2BTaxable = missingIn2B.reduce((sum, r) => sum + r.taxableValue, 0);
@@ -309,9 +249,17 @@ export function reconcileGstrData(gstrInvoices = [], prInvoices = [], tolerance 
   const unclaimedTax = missingInPr.reduce((sum, r) => sum + r.totalTax, 0);
 
   return {
+    tolerance,
+    invalidRows,
+    reviewRecords,
+    rowAccounting: { imported: normGstr.length + normPr.length,
+      processed: 2 * (matches.length + mismatches.length) + missingInPr.length + missingIn2B.length,
+      rejected: invalidRows.length, awaitingReview: reviewRecords.length },
     summary: {
       totalGstr: normGstr.length,
       totalPr: normPr.length,
+      rejectedCount: invalidRows.length,
+      reviewCount: reviewRecords.length,
       matchedCount: matches.length,
       mismatchCount: mismatches.length,
       missingIn2BCount: missingIn2B.length,

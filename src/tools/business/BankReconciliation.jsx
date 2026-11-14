@@ -1,132 +1,73 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
-  Upload, CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check, X, Share2
+  CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check, X, Share2
 } from 'lucide-react';
 import { useToolShareContext } from '../../lib/shareResults';
-import { parseSpreadsheet, exportSpreadsheet, downloadSpreadsheetBlob } from '../../engines/excelEngine';
+import { exportSpreadsheet, downloadSpreadsheetBlob } from '../../engines/excelEngine';
 import {
   normalizeTransaction,
   reconcileTransactions,
   SAMPLE_RECONCILIATION_DATA,
 } from '../../engines/bankReconciliationEngine';
+import { FinanceFileImport } from '../../components/tools/FinanceFileImport.jsx';
+import { FINANCE_SCOPE } from '../../engines/financeImport.js';
 import { usePlan } from '../../lib/monetization/usePlan';
 import { PlanGate } from '../../components/monetization/PlanGate';
 import { trackExportClicked } from '../../lib/analytics';
 
+const BANK_FIELDS = [
+  { key: 'date', label: 'Date', required: true }, { key: 'reference', label: 'Reference' }, { key: 'description', label: 'Description' },
+  { key: 'debit', label: 'Debit (bank out / ledger in)' }, { key: 'credit', label: 'Credit (bank in / ledger out)' },
+  { key: 'amount', label: 'Signed amount (alternative)' }, { key: 'type', label: 'DR/CR or receipt/payment indicator' },
+];
+const CANONICAL_MAPPING = Object.fromEntries(BANK_FIELDS.map(f => [f.key, f.key]));
+function detectBankColumns(headers) {
+  const patterns = { date: /^(date|transaction date|value date)$/i, reference: /reference|ref|cheque|utr|voucher/i, description: /description|narration|particular/i, debit: /^(debit|withdrawal|receipt|dr)$/i, credit: /^(credit|deposit|payment|cr)$/i, amount: /^(amount|signed amount|amt)$/i, type: /^(type|dr.?cr|direction|indicator)$/i };
+  return Object.fromEntries(Object.entries(patterns).map(([key, pattern]) => [key, headers.find(h => pattern.test(h)) || '']));
+}
+function bankErrors(row, index, source) {
+  const result = normalizeTransaction(row, CANONICAL_MAPPING, source, index);
+  return result.error ? [{ rowNumber: row.__sourceRow ?? index + 1, message: result.error }] : [];
+}
+const validateBank = (row, index) => bankErrors(row, index, 'bank');
+const validateLedger = (row, index) => bankErrors(row, index, 'ledger');
 export default function BankReconciliation() {
   const { hasFeature } = usePlan();
   const { updateSharePayload, openShareModal } = useToolShareContext();
   const [showGateModal, setShowGateModal] = useState(false);
-  const [bankFile, setBankFile] = useState(null);
-  const [bankData, setBankData] = useState(null);
-  const [bankHeaders, setBankHeaders] = useState([]);
-  const [bankMapping, setBankMapping] = useState({
-    date: '',
-    description: '',
-    reference: '',
-    credit: '', // Deposit / Money In
-    debit: '',  // Withdrawal / Money Out
-    amount: '',
-  });
-
-  const [ledgerFile, setLedgerFile] = useState(null);
-  const [ledgerData, setLedgerData] = useState(null);
-  const [ledgerHeaders, setLedgerHeaders] = useState([]);
-  const [ledgerMapping, setLedgerMapping] = useState({
-    date: '',
-    description: '',
-    reference: '',
-    debit: '',  // Receipt / Money In
-    credit: '', // Payment / Money Out
-    amount: '',
-  });
-
-  const [closingBankBalance, setClosingBankBalance] = useState('244990');
-  const [closingLedgerBalance, setClosingLedgerBalance] = useState('268550');
-
+  const [bankSource, setBankSource] = useState(null);
+  const [ledgerSource, setLedgerSource] = useState(null);
+  const [demo, setDemo] = useState(false);
+  const [importEpoch, setImportEpoch] = useState(0);
+  const bankData = bankSource?.rows, ledgerData = ledgerSource?.rows;
+  const bankMapping = CANONICAL_MAPPING, ledgerMapping = CANONICAL_MAPPING;
+  const [closingBankBalance, setClosingBankBalance] = useState('0');
+  const [closingLedgerBalance, setClosingLedgerBalance] = useState('0');
   const [dateToleranceDays, setDateToleranceDays] = useState(3);
-  const [activeTab, setActiveTab] = useState('matched'); // 'statement' | 'matched' | 'ambiguous' | 'bank_unmatched' | 'ledger_unmatched'
+  const [activeTab, setActiveTab] = useState('matched');
   const [searchTerm, setSearchTerm] = useState('');
-  const [error, setError] = useState(null);
-
-  // Auto-detect column mappings from headers
-  const autoDetectBankMapping = (headers) => {
-    const map = { date: '', description: '', reference: '', credit: '', debit: '', amount: '' };
-    headers.forEach(h => {
-      const lower = h.toLowerCase();
-      if (!map.date && (lower.includes('date') || lower.includes('dt'))) map.date = h;
-      if (!map.description && (lower.includes('desc') || lower.includes('narration') || lower.includes('particular') || lower.includes('details'))) map.description = h;
-      if (!map.reference && (lower.includes('ref') || lower.includes('chk') || lower.includes('cheque') || lower.includes('utr') || lower.includes('txn'))) map.reference = h;
-      if (!map.credit && (lower.includes('deposit') || lower.includes('credit') || lower.includes('cr') || lower.includes('inward'))) map.credit = h;
-      if (!map.debit && (lower.includes('withdraw') || lower.includes('debit') || lower.includes('dr') || lower.includes('outward'))) map.debit = h;
-      if (!map.amount && (lower.includes('amount') || lower.includes('amt') || lower.includes('sum'))) map.amount = h;
-    });
-    return map;
-  };
-
-  const autoDetectLedgerMapping = (headers) => {
-    const map = { date: '', description: '', reference: '', debit: '', credit: '', amount: '' };
-    headers.forEach(h => {
-      const lower = h.toLowerCase();
-      if (!map.date && (lower.includes('date') || lower.includes('dt'))) map.date = h;
-      if (!map.description && (lower.includes('desc') || lower.includes('account') || lower.includes('party') || lower.includes('particular'))) map.description = h;
-      if (!map.reference && (lower.includes('ref') || lower.includes('chk') || lower.includes('cheque') || lower.includes('voucher') || lower.includes('bill'))) map.reference = h;
-      if (!map.debit && (lower.includes('receipt') || lower.includes('debit') || lower.includes('dr') || lower.includes('received'))) map.debit = h;
-      if (!map.credit && (lower.includes('payment') || lower.includes('credit') || lower.includes('cr') || lower.includes('paid'))) map.credit = h;
-      if (!map.amount && (lower.includes('amount') || lower.includes('amt'))) map.amount = h;
-    });
-    return map;
-  };
-
-  const handleBankUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setError(null);
-      setBankFile(file.name);
-      const parsed = await parseSpreadsheet(file);
-      setBankData(parsed.rows);
-      setBankHeaders(parsed.headers);
-      setBankMapping(autoDetectBankMapping(parsed.headers));
-    } catch (err) {
-      setError(`Failed to read bank statement: ${err.message}`);
-    }
-  };
-
-  const handleLedgerUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setError(null);
-      setLedgerFile(file.name);
-      const parsed = await parseSpreadsheet(file);
-      setLedgerData(parsed.rows);
-      setLedgerHeaders(parsed.headers);
-      setLedgerMapping(autoDetectLedgerMapping(parsed.headers));
-    } catch (err) {
-      setError(`Failed to read accounting ledger: ${err.message}`);
-    }
-  };
-
-  // Load 1-click sample demo dataset
+  const error = !Number.isFinite(Number(closingBankBalance)) || !Number.isFinite(Number(closingLedgerBalance)) || closingBankBalance === '' || closingLedgerBalance === '' ? 'Enter finite closing balances.' : null;
+  function reset() {
+    setBankSource(null); setLedgerSource(null); setDemo(false); setClosingBankBalance('0'); setClosingLedgerBalance('0'); setImportEpoch(n => n + 1);
+  }
+  function commit(source, data) {
+    if (demo) { setBankSource(null); setLedgerSource(null); setClosingBankBalance('0'); setClosingLedgerBalance('0'); }
+    setDemo(false);
+    (source === 'bank' ? setBankSource : setLedgerSource)(data);
+  }
   const loadSampleDataset = () => {
-    setError(null);
-    setBankFile('Q1_Corporate_Bank_Statement.xlsx');
-    setBankData(SAMPLE_RECONCILIATION_DATA.bankRows);
-    setBankHeaders(['Date', 'Description', 'Reference', 'Deposit', 'Withdrawal', 'Balance']);
-    setBankMapping({ date: 'Date', description: 'Description', reference: 'Reference', credit: 'Deposit', debit: 'Withdrawal', amount: '' });
+    const map = (rows, source) => rows.map((r, i) => ({ date: r.Date, description: r.Description, reference: r.Reference,
+      debit: source === 'bank' ? r.Withdrawal : r.Receipt, credit: source === 'bank' ? r.Deposit : r.Payment, __sourceRow: i + 2, __sourceLabel: `Synthetic ${source}` }));
+    setBankSource({ rows: map(SAMPLE_RECONCILIATION_DATA.bankRows, 'bank'), label: 'Synthetic bank demo' });
+    setLedgerSource({ rows: map(SAMPLE_RECONCILIATION_DATA.ledgerRows, 'ledger'), label: 'Synthetic ledger demo' });
     setClosingBankBalance(String(SAMPLE_RECONCILIATION_DATA.closingBankBalance));
-
-    setLedgerFile('Q1_Cash_Book_Ledger.xlsx');
-    setLedgerData(SAMPLE_RECONCILIATION_DATA.ledgerRows);
-    setLedgerHeaders(['Date', 'Description', 'Reference', 'Receipt', 'Payment', 'Balance']);
-    setLedgerMapping({ date: 'Date', description: 'Description', reference: 'Reference', debit: 'Receipt', credit: 'Payment', amount: '' });
     setClosingLedgerBalance(String(SAMPLE_RECONCILIATION_DATA.closingLedgerBalance));
+    setDemo(true); setImportEpoch(n => n + 1);
   };
 
   // Perform reconciliation & calculate row errors
   const { reconciliation, rowErrors } = useMemo(() => {
-    if (!bankData || !ledgerData || bankData.length === 0 || ledgerData.length === 0) {
+    if (error || !bankData || !ledgerData || bankData.length === 0 || ledgerData.length === 0) {
       return { reconciliation: null, rowErrors: { bank: [], ledger: [] } };
     }
 
@@ -148,9 +89,9 @@ export default function BankReconciliation() {
       });
 
       const rec = reconcileTransactions(bankNormalized, ledgerNormalized, {
-        dateToleranceDays: Number(dateToleranceDays) || 3,
-        closingBankBalance: parseFloat(closingBankBalance) || 0,
-        closingLedgerBalance: parseFloat(closingLedgerBalance) || 0,
+        dateToleranceDays: Number(dateToleranceDays),
+        closingBankBalance: Number(closingBankBalance),
+        closingLedgerBalance: Number(closingLedgerBalance),
       });
 
       return {
@@ -160,10 +101,13 @@ export default function BankReconciliation() {
     } catch {
       return { reconciliation: null, rowErrors: { bank: [], ledger: [] } };
     }
-  }, [bankData, ledgerData, bankMapping, ledgerMapping, dateToleranceDays, closingBankBalance, closingLedgerBalance]);
+  }, [bankData, ledgerData, bankMapping, ledgerMapping, dateToleranceDays, closingBankBalance, closingLedgerBalance, error]);
+
+  const reviewRequired = rowErrors.bank.length + rowErrors.ledger.length > 0 || (reconciliation?.summary.ambiguousMatchesCount ?? 0) > 0;
 
   // Live Result Share Context Registration
   useEffect(() => {
+    if (!reconciliation) { updateSharePayload(null); return; }
     if (reconciliation?.summary) {
       const sum = reconciliation.summary;
       const matchPct = sum.matchRatePercent ?? 0;
@@ -171,14 +115,14 @@ export default function BankReconciliation() {
         headlineMetric: `${matchPct}% Match Rate`,
         subMetrics: [
           { label: 'Matched Pairs', value: `${sum.matchedPairsCount || 0} pairs` },
-          { label: 'Recon Status', value: sum.isStatementReconciled ? 'Agreed (0 Diff)' : 'Variance Detected' },
+          { label: 'Recon Status', value: reviewRequired ? 'Requires review' : sum.isStatementReconciled ? 'Adjusted balances agree' : 'Variance detected' },
           { label: 'Adjusted Bank', value: `₹${(sum.adjustedBankBalance || 0).toLocaleString('en-IN')}` },
         ],
         summaryText: `Reconciled bank statement with ${matchPct}% match rate (${sum.matchedPairsCount || 0} matched transaction pairs) on OrbitBoard.`,
         queryParams: {}, // Strictly zero PII in query params
       });
     }
-  }, [reconciliation, updateSharePayload]);
+  }, [reconciliation, reviewRequired, updateSharePayload]);
 
   const handleExportReport = () => {
     if (!reconciliation) return;
@@ -210,6 +154,7 @@ export default function BankReconciliation() {
       'Match Type': m.type,
       'Ambiguous Tie?': m.isAmbiguous ? 'YES - Manual Review Recommended' : 'No',
       'Match Reason': m.bank.matchReason,
+      'Bank source': m.bank.sourceLabel, 'Bank row': m.bank.rowNumber, 'Ledger source': m.ledger.sourceLabel, 'Ledger row': m.ledger.rowNumber,
       'Bank Date': m.bank.date,
       'Bank Description': m.bank.description,
       'Bank Reference': m.bank.reference,
@@ -221,23 +166,37 @@ export default function BankReconciliation() {
     }));
 
     const bankUnmatchedSheet = reconciliation.bankUnmatched.map(t => ({
+      'Source': t.sourceLabel, 'Row': t.rowNumber,
       'Date': t.date,
       'Description': t.description,
       'Reference': t.reference,
       'Amount': t.amount,
-      'Classification': t.isMoneyIn ? 'Direct Bank Deposit (Customer Wire / Interest)' : 'Direct Bank Debit (Service Charges / Tax)',
+      'Classification': 'Present in uploaded bank statement only — requires review',
     }));
 
     const ledgerUnmatchedSheet = reconciliation.ledgerUnmatched.map(t => ({
+      'Source': t.sourceLabel, 'Row': t.rowNumber,
       'Date': t.date,
       'Description': t.description,
       'Reference': t.reference,
       'Amount': t.amount,
-      'Classification': t.isMoneyIn ? 'Deposit in Transit / Uncredited' : 'Outstanding / Unpresented Cheque',
+      'Classification': 'Present in uploaded ledger only — requires review',
     }));
 
     const blob = exportSpreadsheet({
       sheets: [
+        { name: 'Import and settings', data: [
+          { Setting: 'Bank source', Value: bankSource.label }, { Setting: 'Ledger source', Value: ledgerSource.label },
+          { Setting: 'Date tolerance (days)', Value: dateToleranceDays }, { Setting: 'Amount tolerance', Value: 'Difference < 0.005 before rounded normalization' },
+          { Setting: 'Matching scope', Value: 'Exact reference + amount; nearest date for duplicates. Otherwise date window OR description similarity >= 0.5. Ambiguities require review.' },
+          { Setting: 'Supported import', Value: FINANCE_SCOPE },
+          { Setting: 'Bank accepted', Value: reconciliation.summary.bankTotalTxns }, { Setting: 'Bank rejected', Value: rowErrors.bank.length },
+          { Setting: 'Ledger accepted', Value: reconciliation.summary.ledgerTotalTxns }, { Setting: 'Ledger rejected', Value: rowErrors.ledger.length },
+        ] },
+        { name: 'Rejected rows', data: [['bank', bankData, bankSource.label], ['ledger', ledgerData, ledgerSource.label]].flatMap(([source, rows, label]) => rows.flatMap((row, index) => {
+          const result = normalizeTransaction(row, CANONICAL_MAPPING, source, index);
+          return result.error ? [{ Source: label, Row: row.__sourceRow ?? index + 1, Error: result.error, 'Original row (literal JSON)': JSON.stringify(row) }] : [];
+        })) },
         { name: 'Reconciliation Statement', data: statementSheet },
         { name: 'Matched Items', data: matchedSheet },
         { name: 'Bank Unreconciled', data: bankUnmatchedSheet },
@@ -310,234 +269,30 @@ export default function BankReconciliation() {
         </div>
       )}
 
-      {/* Upload & Column Mapping Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Card 1: Bank Statement */}
-        <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold text-xs">
-                1
-              </span>
-              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-                Bank Statement (Bank Portal)
-              </h3>
-            </div>
-            {bankData && (
-              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md">
-                {bankData.length} txns loaded
-              </span>
-            )}
-          </div>
-
-          <label className="border-2 border-dashed border-[var(--orbit-border)] hover:border-blue-400 dark:hover:border-blue-500 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer bg-stone-50/50 dark:bg-stone-850/50 transition">
-            <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBankUpload} className="hidden" />
-            <Upload size={20} className="text-stone-400 mb-1" />
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-200">
-              {bankFile ? bankFile : 'Upload Bank Statement (XLSX / CSV)'}
-            </span>
-            <span className="text-[10px] text-stone-400 mt-0.5">Click or drag file here</span>
-          </label>
-
-          {!bankData && (
-            <div className="flex items-center justify-between text-xs pt-1">
-              <span className="text-stone-500">Need test files?</span>
-              <button
-                type="button"
-                onClick={loadSampleDataset}
-                className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
-              >
-                <Sparkles size={12} className="text-amber-500" />
-                Try with Sample Data
-              </button>
-            </div>
-          )}
-
-          {bankHeaders.length > 0 && (
-            <div className="space-y-3 pt-2 border-t border-[var(--orbit-border)]">
-              <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Detected Column Mapping</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Date Column</label>
-                  <select
-                    value={bankMapping.date}
-                    onChange={e => setBankMapping(m => ({ ...m, date: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select...</option>
-                    {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Ref / Cheque #</label>
-                  <select
-                    value={bankMapping.reference}
-                    onChange={e => setBankMapping(m => ({ ...m, reference: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select (Optional)...</option>
-                    {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Deposit (Credit / In)</label>
-                  <select
-                    value={bankMapping.credit}
-                    onChange={e => setBankMapping(m => ({ ...m, credit: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select...</option>
-                    {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Withdrawal (Debit / Out)</label>
-                  <select
-                    value={bankMapping.debit}
-                    onChange={e => setBankMapping(m => ({ ...m, debit: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select...</option>
-                    {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] text-stone-500 font-bold uppercase tracking-wider block mb-1">
-                  Closing Bank Statement Balance (₹)
-                </label>
-                <input
-                  type="number"
-                  value={closingBankBalance}
-                  onChange={e => setClosingBankBalance(e.target.value)}
-                  placeholder="e.g. 244990"
-                  className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 font-mono font-semibold text-stone-900 dark:text-stone-100"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Card 2: Cash Book / Accounting Ledger */}
-        <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
-                2
-              </span>
-              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-                Accounting Ledger (Cash Book)
-              </h3>
-            </div>
-            {ledgerData && (
-              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md">
-                {ledgerData.length} txns loaded
-              </span>
-            )}
-          </div>
-
-          <label className="border-2 border-dashed border-[var(--orbit-border)] hover:border-emerald-400 dark:hover:border-emerald-500 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer bg-stone-50/50 dark:bg-stone-850/50 transition">
-            <input type="file" accept=".xlsx,.xls,.csv" onChange={handleLedgerUpload} className="hidden" />
-            <Upload size={20} className="text-stone-400 mb-1" />
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-200">
-              {ledgerFile ? ledgerFile : 'Upload Accounting Ledger (XLSX / CSV)'}
-            </span>
-            <span className="text-[10px] text-stone-400 mt-0.5">Click or drag file here</span>
-          </label>
-
-          {!ledgerData && (
-            <div className="flex items-center justify-between text-xs pt-1">
-              <span className="text-stone-500">Need test files?</span>
-              <button
-                type="button"
-                onClick={loadSampleDataset}
-                className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
-              >
-                <Sparkles size={12} className="text-amber-500" />
-                Try with Sample Data
-              </button>
-            </div>
-          )}
-
-          {ledgerHeaders.length > 0 && (
-            <div className="space-y-3 pt-2 border-t border-[var(--orbit-border)]">
-              <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Detected Column Mapping</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Date Column</label>
-                  <select
-                    value={ledgerMapping.date}
-                    onChange={e => setLedgerMapping(m => ({ ...m, date: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select...</option>
-                    {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Ref / Voucher #</label>
-                  <select
-                    value={ledgerMapping.reference}
-                    onChange={e => setLedgerMapping(m => ({ ...m, reference: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select (Optional)...</option>
-                    {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Receipt (Debit / In)</label>
-                  <select
-                    value={ledgerMapping.debit}
-                    onChange={e => setLedgerMapping(m => ({ ...m, debit: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select...</option>
-                    {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-stone-400 block mb-0.5">Payment (Credit / Out)</label>
-                  <select
-                    value={ledgerMapping.credit}
-                    onChange={e => setLedgerMapping(m => ({ ...m, credit: e.target.value }))}
-                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
-                  >
-                    <option value="">Select...</option>
-                    {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] text-stone-500 font-bold uppercase tracking-wider block mb-1">
-                  Closing Ledger / Cash Book Balance (₹)
-                </label>
-                <input
-                  type="number"
-                  value={closingLedgerBalance}
-                  onChange={e => setClosingLedgerBalance(e.target.value)}
-                  placeholder="e.g. 268550"
-                  className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 font-mono font-semibold text-stone-900 dark:text-stone-100"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+      <p role="status">{demo ? 'Demo mode — synthetic data. Activating a real file clears both demo sources and balances.' : bankData && ledgerData ? 'Ready — both sources supplied.' : 'Awaiting both sources. Confirm each import to enable reports.'}</p>
+      <p className="text-sm">Bank statement: CR/deposit = money in; DR/withdrawal = money out. Ledger: DR/receipt = money in; CR/payment = money out. Explicit indicators take precedence over amount signs. Matching and balance agreement require review. Adjustment buckets assume unmatched ledger outflows are outstanding payments and inflows are deposits in transit; verify each classification.</p>
+      <button className="orbit-control border rounded-lg" onClick={reset}>Reset workspace</button>
+      <div className="grid md:grid-cols-2 gap-4">
+        <FinanceFileImport key={`bank-${importEpoch}`} title="Bank statement" fields={BANK_FIELDS} detect={detectBankColumns} validate={validateBank} sample={SAMPLE_RECONCILIATION_DATA.bankRows} activeRows={bankData} activeLabel={bankSource?.label} onCommit={data => commit('bank', data)} onClear={() => setBankSource(null)} />
+        <FinanceFileImport key={`ledger-${importEpoch}`} title="Accounting ledger" fields={BANK_FIELDS} detect={detectBankColumns} validate={validateLedger} sample={SAMPLE_RECONCILIATION_DATA.ledgerRows} activeRows={ledgerData} activeLabel={ledgerSource?.label} onCommit={data => commit('ledger', data)} onClear={() => setLedgerSource(null)} />
       </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <label>Closing bank balance (₹)<input aria-label="Closing bank balance" type="number" className="orbit-control w-full" value={closingBankBalance} onChange={e => setClosingBankBalance(e.target.value)} /></label>
+        <label>Closing ledger balance (₹)<input aria-label="Closing ledger balance" type="number" className="orbit-control w-full" value={closingLedgerBalance} onChange={e => setClosingLedgerBalance(e.target.value)} /></label>
+      </div>
+      {reconciliation && <p role="status">Bank: {reconciliation.summary.bankTotalTxns} accepted / {rowErrors.bank.length} rejected. Ledger: {reconciliation.summary.ledgerTotalTxns} accepted / {rowErrors.ledger.length} rejected.</p>}
 
       {/* Date Tolerance & Engine Settings */}
       {bankData && ledgerData && (
         <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50/70 dark:bg-stone-850/60 text-xs">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <span className="font-semibold text-stone-700 dark:text-stone-200">Matching Tolerance:</span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <span>Date window:</span>
               <select
                 value={dateToleranceDays}
                 onChange={e => setDateToleranceDays(Number(e.target.value))}
-                className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 font-semibold text-stone-900 dark:text-stone-100"
+                className="orbit-control max-w-full rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 font-semibold text-stone-900 dark:text-stone-100"
               >
                 <option value={0}>Exact Date Only</option>
                 <option value={1}>+/- 1 Day</option>
@@ -551,7 +306,7 @@ export default function BankReconciliation() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={handleExportReport}
+              disabled={!reconciliation} onClick={handleExportReport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs transition cursor-pointer"
             >
               <Download size={13} />
@@ -559,7 +314,7 @@ export default function BankReconciliation() {
             </button>
             <button
               type="button"
-              onClick={() => openShareModal()}
+              disabled={!reconciliation} onClick={() => openShareModal()}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-750 text-stone-800 dark:text-stone-200 font-medium text-xs shadow-xs transition cursor-pointer"
             >
               <Share2 size={13} className="text-accent-500" />
@@ -580,12 +335,12 @@ export default function BankReconciliation() {
           }`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--orbit-border)]">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Statutory Accounting Report</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Uploaded-file comparison</span>
                 <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                   Bank Reconciliation Statement
                   {reconciliation.summary.isStatementReconciled ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300">
-                      <Check size={13} /> Reconciled & Agreed
+                      <Check size={13} /> {reviewRequired ? 'Requires review' : 'Adjusted balances agree'}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300">

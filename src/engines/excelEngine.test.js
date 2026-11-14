@@ -208,3 +208,10 @@ describe('Excel Engine (excelEngine.js)', () => {
     expect(validation.validRows[0].reference).toBe('INV-100');
   });
 });
+
+it('preserves ordinary monetary amounts in the Excel date-serial range', async () => {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Date', 'Taxable value', 'Amount'], [45658, 45000, 65000]]), 'Synthetic finance');
+  const result = await parseSpreadsheet(XLSX.write(wb, { type:'array', bookType:'xlsx' }));
+  expect(result.rows[0]).toEqual({ Date:'2025-01-01', 'Taxable value':45000, Amount:65000 });
+});

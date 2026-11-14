@@ -1,510 +1,72 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import * as XLSX from 'xlsx';
-import {
-  Upload, RefreshCw, CheckCircle2, AlertTriangle,
-  AlertOctagon, HelpCircle, Download, FileCheck, Loader2, Sparkles, Share2
-} from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
 import { useToolShareContext } from '../../lib/shareResults.js';
-import {
-  reconcileGstrData,
-  SAMPLE_GSTR_DATA,
-  SAMPLE_PURCHASE_DATA,
-} from './gstrReconciliationEngine.js';
-import { formatINR, money, formatDownloadFilename, downloadBlob } from '../../lib/toolFormat.js';
-
-async function parseSpreadsheetFile(file) {
-  const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer, { type: 'array' });
-  const firstSheetName = wb.SheetNames[0];
-  const worksheet = wb.Sheets[firstSheetName];
-  const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-  return rows;
+import { FinanceFileImport } from '../../components/tools/FinanceFileImport.jsx';
+import { reconcileGstrData, detectColumnMapping, normalizeInvoiceRecord, SAMPLE_GSTR_DATA, SAMPLE_PURCHASE_DATA } from './gstrReconciliationEngine.js';
+import { exportGstrReport } from '../../engines/financeReports.js';
+import { downloadBlob, formatINR } from '../../lib/toolFormat.js';
+const FIELDS = [
+  { key: 'gstin', label: 'Supplier GSTIN', required: true }, { key: 'invoiceNumber', label: 'Invoice number', required: true },
+  { key: 'invoiceDate', label: 'Invoice date' }, { key: 'taxableValue', label: 'Taxable value', required: true },
+  ...['igst', 'cgst', 'sgst', 'cess'].map(key => ({ key, label: key.toUpperCase() })),
+];
+function validate(row, index) {
+  const r = normalizeInvoiceRecord(row, {}, 'preview', index);
+  return r.errors.map(message => ({ rowNumber: r.rowNumber, message }));
 }
-
 export function GstrReconciliation() {
   const { updateSharePayload, openShareModal } = useToolShareContext();
-  const [gstrRows, setGstrRows] = useState(SAMPLE_GSTR_DATA);
-  const [prRows, setPrRows] = useState(SAMPLE_PURCHASE_DATA);
-  const [tolerance, setTolerance] = useState(1.0);
-  const [activeTab, setActiveTab] = useState('all');
-  const [gstrFileName, setGstrFileName] = useState('sample-gstr-2b.xlsx');
-  const [prFileName, setPrFileName] = useState('sample-purchase-register.xlsx');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Reconcile
-  const recon = useMemo(() => {
-    return reconcileGstrData(gstrRows, prRows, tolerance);
-  }, [gstrRows, prRows, tolerance]);
-
-  // Live Result Share Context Registration
+  const [sources, setSources] = useState({ gstr: null, books: null });
+  const [demo, setDemo] = useState(false);
+  const [importEpoch, setImportEpoch] = useState(0);
+  const [tolerance, setTolerance] = useState(1);
+  const ready = Boolean(sources.gstr && sources.books);
+  const recon = useMemo(() => ready ? reconcileGstrData(sources.gstr.rows, sources.books.rows, tolerance) : null, [sources, ready, tolerance]);
   useEffect(() => {
-    if (recon?.summary) {
-      const sum = recon.summary;
-      const totalInvoices = (sum.totalPr || (sum.matchedCount + sum.mismatchCount + sum.missingIn2BCount)) || 1;
-      const matchRate = Math.round((sum.matchedCount / totalInvoices) * 100);
-      updateSharePayload({
-        headlineMetric: `${sum.matchedCount} Matched Invoices`,
-        subMetrics: [
-          { label: 'Match Rate', value: `${matchRate}%` },
-          { label: 'Eligible ITC', value: formatINR(sum.matchedTax) },
-          { label: 'At-Risk ITC', value: formatINR(sum.atRiskTax) },
-        ],
-        summaryText: `Reconciled GSTR-2B vs Purchase Register: ${sum.matchedCount} matched invoices, Eligible ITC ${formatINR(sum.matchedTax)}, At-Risk ITC ${formatINR(sum.atRiskTax)} on OrbitBoard.`,
-        queryParams: {}, // Zero PII in URL
-      });
-    }
+    updateSharePayload(recon ? {
+      headlineMetric: `${recon.summary.matchedCount} matched invoices`,
+      subMetrics: [{ label: 'Requires review', value: String(recon.summary.mismatchCount + recon.summary.reviewCount) }],
+      summaryText: 'Matched within configured tolerances. File matching does not determine ITC eligibility.', queryParams: {},
+    } : null);
   }, [recon, updateSharePayload]);
-
-  // File Upload Handlers
-  const handleGstrUpload = useCallback(async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsLoading(true);
-    try {
-      const rows = await parseSpreadsheetFile(file);
-      setGstrRows(rows);
-      setGstrFileName(file.name);
-    } catch (err) {
-      alert(`Error reading GSTR-2B file: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handlePrUpload = useCallback(async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsLoading(true);
-    try {
-      const rows = await parseSpreadsheetFile(file);
-      setPrRows(rows);
-      setPrFileName(file.name);
-    } catch (err) {
-      alert(`Error reading Purchase Register file: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const handleLoadSample = useCallback(() => {
-    setGstrRows(SAMPLE_GSTR_DATA);
-    setPrRows(SAMPLE_PURCHASE_DATA);
-    setGstrFileName('sample-gstr-2b.xlsx');
-    setPrFileName('sample-purchase-register.xlsx');
-  }, []);
-
-  // Export Reconciliation to Excel
-  const handleExportExcel = useCallback(() => {
-    const wb = XLSX.utils.book_new();
-
-    // Summary Sheet
-    const summaryData = [
-      ['GSTR-2B VS PURCHASE REGISTER RECONCILIATION SUMMARY'],
-      ['Generated by WorkOrbit', new Date().toLocaleDateString('en-IN')],
-      [],
-      ['Metric', 'Count', 'Taxable Value (INR)', 'Tax Amount (INR)'],
-      ['Matched Invoices (Eligible ITC)', recon.summary.matchedCount, recon.summary.matchedTaxable, recon.summary.matchedTax],
-      ['Value Mismatches (Requires Action)', recon.summary.mismatchCount, recon.summary.mismatchTaxable, 0],
-      ['In Books Only (At-Risk ITC)', recon.summary.missingIn2BCount, recon.summary.missingIn2BTaxable, recon.summary.atRiskTax],
-      ['In GSTR-2B Only (Unclaimed ITC)', recon.summary.missingInPrCount, recon.summary.missingInPrTaxable, recon.summary.unclaimedTax],
-      [],
-      ['Total GSTR-2B Invoices', recon.summary.totalGstr, recon.summary.totalGstrTaxable],
-      ['Total Purchase Register Invoices', recon.summary.totalPr, recon.summary.totalPrTaxable],
-    ];
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
-
-    // Matched Sheet
-    if (recon.matches.length > 0) {
-      const matchedData = recon.matches.map(m => ({
-        'Supplier GSTIN': m.gstr.gstin,
-        'Invoice Number': m.gstr.invoiceNumber,
-        'Invoice Date': m.gstr.invoiceDate,
-        '2B Taxable Value': m.gstr.taxableValue,
-        'Books Taxable Value': m.pr.taxableValue,
-        '2B Total Tax': m.gstr.totalTax,
-        'Books Total Tax': m.pr.totalTax,
-        'Status': 'MATCHED',
-      }));
-      const wsMatched = XLSX.utils.json_to_sheet(matchedData);
-      XLSX.utils.book_append_sheet(wb, wsMatched, 'Matched ITC');
-    }
-
-    // Mismatches Sheet
-    if (recon.mismatches.length > 0) {
-      const mismatchData = recon.mismatches.map(m => ({
-        'Supplier GSTIN': m.gstr.gstin,
-        'Invoice Number': m.gstr.invoiceNumber,
-        'Invoice Date': m.gstr.invoiceDate,
-        '2B Taxable Value': m.gstr.taxableValue,
-        'Books Taxable Value': m.pr.taxableValue,
-        'Difference (INR)': m.diff,
-        'Status': 'VALUE_MISMATCH',
-        'Action Required': m.notes,
-      }));
-      const wsMismatch = XLSX.utils.json_to_sheet(mismatchData);
-      XLSX.utils.book_append_sheet(wb, wsMismatch, 'Value Mismatches');
-    }
-
-    // At Risk Sheet (Missing in 2B)
-    if (recon.missingIn2B.length > 0) {
-      const atRiskData = recon.missingIn2B.map(r => ({
-        'Supplier GSTIN': r.gstin,
-        'Invoice Number': r.invoiceNumber,
-        'Invoice Date': r.invoiceDate,
-        'Books Taxable Value': r.taxableValue,
-        'Books Tax Amount': r.totalTax,
-        'Risk Status': 'AT RISK - Supplier has not uploaded in GSTR-1',
-      }));
-      const wsAtRisk = XLSX.utils.json_to_sheet(atRiskData);
-      XLSX.utils.book_append_sheet(wb, wsAtRisk, 'At Risk (Missing in 2B)');
-    }
-
-    // Unclaimed Sheet (Missing in PR)
-    if (recon.missingInPr.length > 0) {
-      const unclaimedData = recon.missingInPr.map(r => ({
-        'Supplier GSTIN': r.gstin,
-        'Invoice Number': r.invoiceNumber,
-        'Invoice Date': r.invoiceDate,
-        '2B Taxable Value': r.taxableValue,
-        '2B Tax Amount': r.totalTax,
-        'Opportunity': 'UNCLAIMED ITC - In 2B but missing in books',
-      }));
-      const wsUnclaimed = XLSX.utils.json_to_sheet(unclaimedData);
-      XLSX.utils.book_append_sheet(wb, wsUnclaimed, 'Unclaimed ITC (Missing in PR)');
-    }
-
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    downloadBlob(blob, formatDownloadFilename('gstr-2b-reconciliation', 'xlsx'), 'gstr-2b-reconciliation');
-  }, [recon]);
-
-  return (
-    <div className="space-y-8">
-      {/* Workspace Action Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] shadow-xs">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-900/60 dark:text-accent-300">
-          <FileCheck className="w-3.5 h-3.5 text-accent-600 dark:text-accent-400" />
-          ITC Matching Engine
-        </div>
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={handleLoadSample}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Load Demo Data
-          </button>
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export Excel Report
-          </button>
-          <button
-            type="button"
-            onClick={() => openShareModal()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
-          >
-            <Share2 className="w-3.5 h-3.5 text-accent-500" />
-            Share Scorecard
-          </button>
-        </div>
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-accent-50 dark:bg-accent-950/40 text-accent-700 dark:text-accent-300 text-xs font-semibold">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Reading and indexing spreadsheet invoices...
-        </div>
-      )}
-
-      {/* Dual File Upload Dropzones */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Source A: GSTR-2B */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-bold uppercase tracking-wider text-accent-600 dark:text-accent-400">
-              Source 1: GSTR-2B (GST Portal)
-            </span>
-            <span className="text-xs text-stone-500 font-mono">{gstrRows.length} records</span>
-          </div>
-          <label className="border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-accent-500 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer transition-colors bg-stone-50/50 dark:bg-stone-800/40">
-            <Upload className="w-6 h-6 text-stone-400 mb-2" />
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
-              Upload GSTR-2B (CSV or XLSX)
-            </span>
-            <span className="text-[11px] text-stone-400 mt-1 truncate max-w-xs">{gstrFileName}</span>
-            <input type="file" accept=".csv,.xlsx,.xls" onChange={handleGstrUpload} className="hidden" />
-          </label>
-          <div className="flex items-center justify-between text-xs pt-1">
-            <span className="text-stone-500">No file right now?</span>
-            <button
-              type="button"
-              onClick={handleLoadSample}
-              className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
-            >
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              Try with Sample Data
-            </button>
-          </div>
-        </div>
-
-        {/* Source B: Purchase Register */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-bold uppercase tracking-wider text-accent-600 dark:text-accent-400">
-              Source 2: Purchase Register (Books / ERP)
-            </span>
-            <span className="text-xs text-stone-500 font-mono">{prRows.length} records</span>
-          </div>
-          <label className="border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-accent-500 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer transition-colors bg-stone-50/50 dark:bg-stone-800/40">
-            <Upload className="w-6 h-6 text-stone-400 mb-2" />
-            <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
-              Upload Purchase Register (CSV or XLSX)
-            </span>
-            <span className="text-[11px] text-stone-400 mt-1 truncate max-w-xs">{prFileName}</span>
-            <input type="file" accept=".csv,.xlsx,.xls" onChange={handlePrUpload} className="hidden" />
-          </label>
-          <div className="flex items-center justify-between text-xs pt-1">
-            <span className="text-stone-500">No file right now?</span>
-            <button
-              type="button"
-              onClick={handleLoadSample}
-              className="inline-flex items-center gap-1 font-semibold text-accent-600 dark:text-accent-400 hover:underline cursor-pointer"
-            >
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              Try with Sample Data
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Audit KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 anim-fade-up">
-        {/* Matched */}
-        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 anim-fade-up" style={{ '--stagger-index': 1 }}>
-          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 mb-1">
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase">Matched Invoices</span>
-          </div>
-          <div className="text-2xl font-black text-emerald-800 dark:text-emerald-200">{recon.summary.matchedCount}</div>
-          <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-            ITC: {formatINR(recon.summary.matchedTax)}
-          </div>
-        </div>
-
-        {/* Mismatches */}
-        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 anim-fade-up" style={{ '--stagger-index': 2 }}>
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 mb-1">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase">Value Mismatch</span>
-          </div>
-          <div className="text-2xl font-black text-amber-800 dark:text-amber-200">{recon.summary.mismatchCount}</div>
-          <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">Requires reconciliation</div>
-        </div>
-
-        {/* In Books Only (At Risk) */}
-        <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 anim-fade-up" style={{ '--stagger-index': 3 }}>
-          <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 mb-1">
-            <AlertOctagon className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase">In Books Only</span>
-          </div>
-          <div className="text-2xl font-black text-rose-800 dark:text-rose-200">{recon.summary.missingIn2BCount}</div>
-          <div className="text-xs text-rose-600 dark:text-rose-400 mt-1">
-            At-Risk: {formatINR(recon.summary.atRiskTax)}
-          </div>
-        </div>
-
-        {/* In 2B Only (Unclaimed) */}
-        <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 anim-fade-up" style={{ '--stagger-index': 4 }}>
-          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-1">
-            <HelpCircle className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase">In 2B Only</span>
-          </div>
-          <div className="text-2xl font-black text-blue-800 dark:text-blue-200">{recon.summary.missingInPrCount}</div>
-          <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-            Unclaimed: {formatINR(recon.summary.unclaimedTax)}
-          </div>
-        </div>
-      </div>
-
-      {/* Discrepancy Table with Filter Tabs */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-[var(--orbit-border)] shadow-xs space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--orbit-border)] pb-3">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'all'
-                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900'
-                  : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
-              }`}
-            >
-              All Invoices ({recon.summary.matchedCount + recon.summary.mismatchCount + recon.summary.missingIn2BCount + recon.summary.missingInPrCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('matched')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'matched'
-                  ? 'bg-emerald-700 text-white'
-                  : 'text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-              }`}
-            >
-              Matched ({recon.summary.matchedCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('mismatches')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'mismatches'
-                  ? 'bg-amber-600 text-white'
-                  : 'text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40'
-              }`}
-            >
-              Mismatches ({recon.summary.mismatchCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('missingIn2B')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'missingIn2B'
-                  ? 'bg-rose-700 text-white'
-                  : 'text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
-              }`}
-            >
-              In Books Only ({recon.summary.missingIn2BCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('missingInPr')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
-                activeTab === 'missingInPr'
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40'
-              }`}
-            >
-              In 2B Only ({recon.summary.missingInPrCount})
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-stone-500">
-            <span>Tolerance:</span>
-            <select
-              value={tolerance}
-              onChange={e => setTolerance(Number(e.target.value))}
-              className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800"
-            >
-              <option value="0">₹0 (Strict)</option>
-              <option value="1">₹1 (Standard)</option>
-              <option value="5">₹5</option>
-              <option value="10">₹10</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Tabular Output */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-stone-50 dark:bg-stone-800/60 text-stone-500 dark:text-stone-400 uppercase text-[10px] tracking-wider">
-              <tr>
-                <th className="py-2.5 px-3">Status</th>
-                <th className="py-2.5 px-3">Supplier GSTIN</th>
-                <th className="py-2.5 px-3">Invoice No</th>
-                <th className="py-2.5 px-3">Date</th>
-                <th className="py-2.5 px-3 text-right">2B Taxable (₹)</th>
-                <th className="py-2.5 px-3 text-right">Books Taxable (₹)</th>
-                <th className="py-2.5 px-3 text-right">Diff (₹)</th>
-                <th className="py-2.5 px-3">Action / Audit Remark</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--orbit-border)] font-mono text-stone-800 dark:text-stone-200">
-              {/* Matched Rows */}
-              {(activeTab === 'all' || activeTab === 'matched') &&
-                recon.matches.map((m, i) => (
-                  <tr key={`match-${i}`} className="hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10">
-                    <td className="py-2.5 px-3 font-sans">
-                      <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold text-[11px]">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Matched
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3">{m.gstr.gstin}</td>
-                    <td className="py-2.5 px-3 font-semibold">{m.gstr.invoiceNumber}</td>
-                    <td className="py-2.5 px-3">{m.gstr.invoiceDate || '-'}</td>
-                    <td className="py-2.5 px-3 text-right">{money(m.gstr.taxableValue)}</td>
-                    <td className="py-2.5 px-3 text-right">{money(m.pr.taxableValue)}</td>
-                    <td className="py-2.5 px-3 text-right text-emerald-600">0</td>
-                    <td className="py-2.5 px-3 font-sans text-stone-500 text-[11px]">Eligible for 100% ITC</td>
-                  </tr>
-                ))}
-
-              {/* Mismatch Rows */}
-              {(activeTab === 'all' || activeTab === 'mismatches') &&
-                recon.mismatches.map((m, i) => (
-                  <tr key={`mismatch-${i}`} className="hover:bg-amber-50/30 dark:hover:bg-amber-950/10">
-                    <td className="py-2.5 px-3 font-sans">
-                      <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold text-[11px]">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Mismatch
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3">{m.gstr.gstin}</td>
-                    <td className="py-2.5 px-3 font-semibold">{m.gstr.invoiceNumber}</td>
-                    <td className="py-2.5 px-3">{m.gstr.invoiceDate || '-'}</td>
-                    <td className="py-2.5 px-3 text-right">{money(m.gstr.taxableValue)}</td>
-                    <td className="py-2.5 px-3 text-right">{money(m.pr.taxableValue)}</td>
-                    <td className="py-2.5 px-3 text-right text-amber-600 font-bold">{money(m.diff)}</td>
-                    <td className="py-2.5 px-3 font-sans text-amber-700 dark:text-amber-400 text-[11px]">Check credit/debit note</td>
-                  </tr>
-                ))}
-
-              {/* Missing in 2B Rows */}
-              {(activeTab === 'all' || activeTab === 'missingIn2B') &&
-                recon.missingIn2B.map((r, i) => (
-                  <tr key={`pr-only-${i}`} className="hover:bg-rose-50/30 dark:hover:bg-rose-950/10">
-                    <td className="py-2.5 px-3 font-sans">
-                      <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-400 font-semibold text-[11px]">
-                        <AlertOctagon className="w-3.5 h-3.5" /> In Books Only
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3">{r.gstin}</td>
-                    <td className="py-2.5 px-3 font-semibold">{r.invoiceNumber}</td>
-                    <td className="py-2.5 px-3">{r.invoiceDate || '-'}</td>
-                    <td className="py-2.5 px-3 text-right text-stone-400">-</td>
-                    <td className="py-2.5 px-3 text-right">{money(r.taxableValue)}</td>
-                    <td className="py-2.5 px-3 text-right text-rose-600 font-bold">-{money(r.taxableValue)}</td>
-                    <td className="py-2.5 px-3 font-sans text-rose-700 dark:text-rose-400 text-[11px]">Follow up with vendor to file GSTR-1</td>
-                  </tr>
-                ))}
-
-              {/* Missing in PR Rows */}
-              {(activeTab === 'all' || activeTab === 'missingInPr') &&
-                recon.missingInPr.map((r, i) => (
-                  <tr key={`2b-only-${i}`} className="hover:bg-blue-50/30 dark:hover:bg-blue-950/10">
-                    <td className="py-2.5 px-3 font-sans">
-                      <span className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-400 font-semibold text-[11px]">
-                        <HelpCircle className="w-3.5 h-3.5" /> In 2B Only
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3">{r.gstin}</td>
-                    <td className="py-2.5 px-3 font-semibold">{r.invoiceNumber}</td>
-                    <td className="py-2.5 px-3">{r.invoiceDate || '-'}</td>
-                    <td className="py-2.5 px-3 text-right">{money(r.taxableValue)}</td>
-                    <td className="py-2.5 px-3 text-right text-stone-400">-</td>
-                    <td className="py-2.5 px-3 text-right text-blue-600 font-bold">+{money(r.taxableValue)}</td>
-                    <td className="py-2.5 px-3 font-sans text-blue-700 dark:text-blue-400 text-[11px]">Account in purchase register to claim ITC</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  function commit(key, data) {
+    // Activating any real file exits demo mode and removes BOTH synthetic sources.
+    setSources(previous => ({ ...(demo ? { gstr: null, books: null } : previous), [key]: data }));
+    setDemo(false);
+  }
+  const results = recon ? [
+    ...recon.matches.map(m => ({ ...m.gstr, status: m.notes, books: m.pr, diffs: m.componentDiffs, diff: m.diff })),
+    ...recon.mismatches.map(m => ({ ...m.gstr, status: m.notes, books: m.pr, diffs: m.componentDiffs, diff: m.diff })),
+    ...recon.missingIn2B.map(r => ({ ...r, status: 'Present in uploaded books only' })),
+    ...recon.missingInPr.map(r => ({ ...r, status: 'Present in uploaded GSTR-2B only' })),
+    ...recon.reviewRecords.map(r => ({ ...r, status: `Requires review: ${r.reviewReason}` })),
+    ...recon.invalidRows.map(r => ({ ...r, status: `Rejected: ${r.errors.join(' ')}` })),
+  ] : [];
+  return <div className="space-y-5 min-w-0">
+    <div className="flex flex-wrap gap-3 items-center">
+      <button className="orbit-control border rounded-lg" onClick={() => { setImportEpoch(n => n + 1); setDemo(true); setSources({ gstr: { rows: SAMPLE_GSTR_DATA, label: 'Synthetic GSTR-2B demo' }, books: { rows: SAMPLE_PURCHASE_DATA, label: 'Synthetic books demo' } }); }}>Load demo</button>
+      <button className="orbit-control border rounded-lg" onClick={() => { setSources({ gstr: null, books: null }); setDemo(false); setImportEpoch(n => n + 1); }}>Reset workspace</button>
+      <button className="orbit-control border rounded-lg" disabled={!ready} onClick={() => { if (recon) downloadBlob(exportGstrReport(recon, { gstr: sources.gstr.label, books: sources.books.label }), 'gstr-reconciliation.xlsx'); }}>Export Excel report</button>
+      <button className="orbit-control border rounded-lg" disabled={!ready} onClick={() => openShareModal()}>Share scorecard</button>
     </div>
-  );
+    <p role="status">{demo ? 'Demo mode — synthetic data. Activating a real file clears both demo sources.' : ready ? 'Ready — both sources supplied.' : 'Awaiting both sources. Confirm each import to enable a report.'}</p>
+    <p className="text-sm">File matching does not determine ITC eligibility. Missing tax fields are distinct from explicit zero; only mutually available components are compared. Missing identifiers require review.</p>
+    <div className="grid md:grid-cols-2 gap-4">
+      <FinanceFileImport key={`gstr-${importEpoch}`} title="GSTR-2B" fields={FIELDS} detect={detectColumnMapping} validate={validate} sample={SAMPLE_GSTR_DATA} allowJson activeRows={sources.gstr?.rows} activeLabel={sources.gstr?.label} onCommit={data => commit('gstr', data)} onClear={() => setSources(s => ({ ...s, gstr: null }))} />
+      <FinanceFileImport key={`books-${importEpoch}`} title="Purchase register" fields={FIELDS} detect={detectColumnMapping} validate={validate} sample={SAMPLE_PURCHASE_DATA} activeRows={sources.books?.rows} activeLabel={sources.books?.label} onCommit={data => commit('books', data)} onClear={() => setSources(s => ({ ...s, books: null }))} />
+    </div>
+    <label className="block text-sm">Tolerance per taxable value and each available tax component (₹)
+      <select className="orbit-control ml-2" value={tolerance} onChange={e => setTolerance(Number(e.target.value))}>{[0,1,5,10].map(v => <option key={v}>{v}</option>)}</select>
+    </label>
+    {recon && <>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{[
+        ['Matched', recon.summary.matchedCount], ['Differences', recon.summary.mismatchCount], ['Books only', recon.summary.missingIn2BCount], ['GSTR-2B only', recon.summary.missingInPrCount],
+        ['Awaiting review', recon.rowAccounting.awaitingReview], ['Rejected rows', recon.rowAccounting.rejected], ['GSTR-2B taxable', formatINR(recon.summary.totalGstrTaxable)], ['Books taxable', formatINR(recon.summary.totalPrTaxable)],
+      ].map(([label, value]) => <div className="border rounded-xl p-3 min-w-0 break-words" key={label}><p className="text-xs">{label}</p><strong>{value}</strong></div>)}</div>
+      <p role="status">{recon.rowAccounting.imported} imported rows = {recon.rowAccounting.processed} processed + {recon.rowAccounting.rejected} rejected + {recon.rowAccounting.awaitingReview} awaiting review.</p>
+      <div className="overflow-x-auto"><table className="text-xs w-full"><thead><tr>{['Status', 'Source / row', 'GSTIN', 'Original invoice', 'Books invoice / row', 'Taxable', 'Taxable difference', 'Tax-component differences'].map(h => <th className="p-2 text-left" key={h}>{h}</th>)}</tr></thead>
+        <tbody>{results.slice(0, 500).map((r, i) => <tr key={i} className="border-b"><td className="p-2">{r.status}</td><td className="p-2">{r.sourceLabel} / {r.rowNumber}</td><td className="p-2">{r.gstin}</td><td className="p-2">{r.invoiceNumber}</td><td className="p-2">{r.books ? `${r.books.invoiceNumber} / ${r.books.rowNumber}` : '—'}</td><td className="p-2">{Number.isFinite(r.taxableValue) ? formatINR(r.taxableValue) : 'Invalid'}</td><td className="p-2">{r.diff ?? '—'}</td><td className="p-2">{r.diffs ? Object.entries(r.diffs).map(([key, v]) => `${key.toUpperCase()}: ${v ?? 'not supplied'}`).join('; ') : '—'}</td></tr>)}</tbody>
+      </table></div>{results.length > 500 && <p>Showing first 500 results. Export includes all records.</p>}
+    </>}
+  </div>;
 }
-
 export default GstrReconciliation;

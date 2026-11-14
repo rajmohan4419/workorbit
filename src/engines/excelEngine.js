@@ -170,7 +170,7 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
       let val = rowArray[colIdx];
       if (val instanceof Date) {
         val = formatUtcDate(val);
-      } else if (typeof val === 'number' && isLikelySerialDate(val)) {
+      } else if (typeof val === 'number' && /date/i.test(header) && isLikelySerialDate(val)) {
         val = formatSerialDate(val);
       }
       rowObj[header] = val ?? '';

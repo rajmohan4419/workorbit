@@ -32,8 +32,8 @@ describe('gstrReconciliationEngine', () => {
       expect(parseAmount('(50,000)')).toBe(-50000);
       expect(parseAmount('(₹ 1,200.50)')).toBe(-1200.5);
       expect(parseAmount('-50,000')).toBe(-50000);
-      expect(parseAmount(null)).toBe(0);
-      expect(parseAmount('invalid')).toBe(0);
+      expect(parseAmount(null)).toBeNaN();
+      expect(parseAmount('invalid')).toBeNaN();
     });
 
     it('parses diverse date formats (YYYY-MM-DD, DD/MM/YYYY)', () => {

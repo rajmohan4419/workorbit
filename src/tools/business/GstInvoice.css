@@ -6,8 +6,8 @@
 
 .invoice-items {
   inline-size: 100%;
-  min-inline-size: 1660px;
-  table-layout: fixed;
+  min-inline-size: 1380px;
+  table-layout: auto;
   border-collapse: collapse;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
@@ -18,15 +18,15 @@
 .invoice-items td:not(:nth-child(2)) { white-space: nowrap; }
 .invoice-col-number { inline-size: 32px; }
 .invoice-col-description { inline-size: auto; }
-.invoice-col-hsn { inline-size: 136px; }
-.invoice-col-qty { inline-size: 90px; }
+.invoice-col-hsn { inline-size: 100px; }
+.invoice-col-qty { inline-size: 120px; }
 .invoice-col-unit { inline-size: 106px; }
-.invoice-col-rate { inline-size: 150px; }
+.invoice-col-rate { inline-size: 180px; }
 .invoice-col-discount { inline-size: 86px; }
-.invoice-col-money { inline-size: 134px; }
-.invoice-col-gst { inline-size: 92px; }
-.invoice-col-tax { inline-size: 122px; }
-.invoice-col-amount { inline-size: 150px; }
+.invoice-col-money { inline-size: 118px; }
+.invoice-col-gst { inline-size: 116px; }
+.invoice-col-tax { inline-size: 110px; }
+.invoice-col-amount { inline-size: 124px; }
 .invoice-col-action { inline-size: 52px; }
 
 .invoice-row-action {
@@ -44,12 +44,12 @@
 .invoice-totals p { overflow-wrap: anywhere; }
 
 @media (max-width: 767px), (pointer: coarse) {
-  .invoice-items { min-inline-size: 1780px; }
-  .invoice-col-hsn { inline-size: 150px; }
-  .invoice-col-qty { inline-size: 100px; }
+  .invoice-items { min-inline-size: 1480px; }
+  .invoice-col-hsn { inline-size: 124px; }
+  .invoice-col-qty { inline-size: 120px; }
   .invoice-col-unit { inline-size: 116px; }
   .invoice-col-discount { inline-size: 100px; }
-  .invoice-col-gst { inline-size: 104px; }
+  .invoice-col-gst { inline-size: 116px; }
   .invoice-row-action { min-inline-size: 44px; min-block-size: 44px; }
 }
 
@@ -59,3 +59,11 @@
   -webkit-appearance: none;
   margin: 0;
 }
+
+.invoice-items textarea { min-inline-size: 180px; overflow-wrap: anywhere; }
+.invoice-items td { padding-block: 6px; }
+.gst-invoice { overflow-wrap: anywhere; }
+.gst-invoice input[type="file"] { max-inline-size: 100%; }
+
+.invoice-preview-table { min-inline-size: 980px; }
+.invoice-preview-table td { vertical-align: top; }
