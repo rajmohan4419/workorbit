@@ -1307,27 +1307,21 @@ export const TOOL_CONTENT = {
     ]
   },
   'excel-engine': {
-    title: 'Excel & CSV Data Processor Online | Clean, Validate, Map & Export Spreadsheets',
-    h1: 'Universal Excel & CSV Data Processing Engine',
-    metaDescription: 'Upload XLSX/CSV files, map columns, validate data against custom schemas, clean strings and numbers, preview in an interactive table, and export transformed spreadsheets.',
-    intro: 'A powerful, browser-based spreadsheet engine to inspect, clean, validate, and convert XLSX and CSV datasets with zero data sent to external servers.',
-    keywords: 'excel data processor online, csv validator tool, spreadsheet schema validation, clean excel data online, browser xlsx editor, map csv columns online',
-    how: [
-      'Upload an XLSX, XLS, or CSV spreadsheet.',
-      'Inspect auto-detected column types (Text, Number, Date, Email).',
-      'Apply schema validation rules to flag missing values or data mismatches.',
-      'Use quick transformation actions (Trim, Uppercase, Number cleaning) to clean rows.',
-      'Search and preview results live, then export the processed sheet to XLSX or CSV.'
-    ],
+    title: 'Excel & CSV Data Processor | Clean, Validate, Map & Export',
+    h1: 'Excel & CSV Data Processor',
+    metaDescription: 'Clean spreadsheet values, rename export columns, configure validation rules, correct rows and export XLSX or CSV locally in your browser.',
+    intro: 'Upload a spreadsheet, correct cell values, choose validation rules and export a clean data table. Files are processed locally in your browser.',
+    keywords: 'excel data processor, csv validator, spreadsheet column mapping, clean excel data online',
+    how: ['Upload XLSX, XLS or CSV, then choose a worksheet.', 'Review inferred types and set required fields or numeric minimums.', 'Edit cells or trim and change case for a selected column; undo recent changes when needed.', 'Rename export columns, correct flagged rows and export all rows as XLSX or CSV.'],
     faq: [
-      ['What file formats and workbook sizes does the Excel data processing engine support?', 'The engine accepts modern Microsoft Excel workbooks (.xlsx), legacy spreadsheets (.xls), and comma-separated values (.csv) up to 25 MB and approximately 50,000 rows. It utilizes Web Workers and streaming data structures to deliver responsive filtering, searching, and transformations without locking your browser tab.'],
-      ['How does automated schema validation identify data quality issues in spreadsheets?', 'Upon file upload, the engine analyzes header rows and infers data types such as text, numeric values, dates, and email addresses. It tests every record against user-defined schema validation rules, instantly flagging missing mandatory values, irregular date formats, negative numbers, or invalid email structures with row-by-row error highlights.'],
-      ['Can I apply batch text transformations like trimming whitespace and casing changes?', 'Yes. The engine provides one-click batch transformation operations across entire columns, including trimming leading and trailing whitespace, converting text to uppercase or lowercase, standardizing phone numbers, and stripping currency symbols or non-numeric characters from price columns prior to analysis or database import.'],
-      ['Can I export cleaned spreadsheet datasets to multiple file formats?', 'Yes. After cleaning, mapping, and validating your tabular dataset, you can export the finalized records with one click to either formatted Microsoft Excel (.xlsx) workbooks or lightweight CSV files. The export preserves normalized data types and column structures without altering your underlying system configuration.'],
-      ['Are proprietary business spreadsheets and customer records uploaded to external cloud storage?', 'No. The entire data processing lifecycle—including spreadsheet file decoding, in-memory array manipulation, schema auditing, cell formatting, and file serialization—is executed inside your browser sandbox. OrbitBoard never transmits, copies, logs, or stores your confidential enterprise spreadsheets or customer databases on remote cloud infrastructure or third-party servers.'],
-      ['Why do dates in Excel spreadsheets often appear as five-digit numbers?', 'Microsoft Excel internally stores dates as sequential serial integers starting with 1 for January 1, 1900. When spreadsheets are parsed without appropriate formatting masks, dates appear as raw numbers like 45200. This tool automatically recognizes and formats these serial integers into readable Gregorian calendar dates.'],
-      ['Is my data uploaded to any server?', 'No. OrbitBoard processes all files in-memory in your browser sandbox. Your data remains on your local device.']
-    ]
+      ['Which file sizes and spreadsheet formats can I process?', 'Upload XLSX, XLS or CSV files up to 25 MB. Each selected worksheet is limited to 50,000 data rows and 256 columns. Large files may take time to process in the browser.'],
+      ['How do I configure validation rules for my spreadsheet?', 'Choose Text, Number, Date or Email for each column. Mark required fields and optionally set numeric minimums. The report updates when you correct cells or change validation rules.'],
+      ['Can I clean columns and correct individual cells?', 'Yes. Select any column to trim spaces or change letter case, or edit visible cells directly. Undo restores up to five recent edits or column transformations.'],
+      ['What does column mapping change in the exported file?', 'Enter an export name beside each source column. Names must be non-empty and unique. Number columns export as numeric values; keep identifiers with leading zeros as Text.'],
+      ['Does this tool preserve formulas, charts and workbook formatting?', 'No. This workspace processes cell values. It does not recalculate Excel formulas or preserve macros, charts or source formatting. Keep your original workbook; the export is a separate data table.'],
+      ['How do worksheet selection, batch uploads and export work?', 'Single uploads let you select worksheets and retain edits while switching between them. Batch processing combines the first worksheet from each file with a source-workbook column, up to 10 files, 50 MB combined and 50,000 combined rows. Export contains all rows of the current table, regardless of the search filter. XLSX downloads use the existing account flow.'],
+      ['Are spreadsheet contents uploaded to a remote server?', 'Spreadsheet parsing, editing and export run locally. Account usage records download metadata rather than workbook contents. CSV exports protect formula-like text values and column names.'],
+    ],
   },
   'payslip-generator': {
     title: 'Payslip Generator Online | Download Free Salary Slip PDF & Excel',
