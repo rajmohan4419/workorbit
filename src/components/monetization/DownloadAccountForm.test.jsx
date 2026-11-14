@@ -5,6 +5,7 @@ import {MemoryRouter} from 'react-router-dom';
 import {beforeEach,afterEach,describe,expect,it,vi} from 'vitest';
 import {DownloadAccountForm} from './DownloadAccountForm';
 import {supabase} from '../../lib/supabase';
+import {getFeedbackSnapshot} from '../../lib/feedback/taskFeedback';
 vi.mock('../../lib/supabase',()=>({supabase:{auth:{signInWithOAuth:vi.fn(),onAuthStateChange:vi.fn()}}}));
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
 describe('Google account sign-in',()=>{
@@ -24,7 +25,9 @@ describe('Google account sign-in',()=>{
   const done=vi.fn();await render({onSignedIn:done});await click();
   expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({provider:'google',options:{redirectTo:`${window.location.origin}/account`,skipBrowserRedirect:true,queryParams:{prompt:'select_account'}}});
   expect(popup.opener).toBeNull();expect(popup.location.replace).toHaveBeenCalledWith(expect.stringContaining('https://synthetic.supabase.co/auth/v1/authorize'));
-  await act(async()=>listener('SIGNED_IN',{user:{id:'synthetic'}}));expect(done).toHaveBeenCalledOnce();
+  expect(getFeedbackSnapshot().tasks.at(-1).state).toBe('processing');
+  await act(async()=>{listener('SIGNED_IN',{user:{id:'synthetic'}});listener('SIGNED_IN',{user:{id:'synthetic'}});});expect(done).toHaveBeenCalledOnce();
+  expect(getFeedbackSnapshot().tasks.at(-1).label).toBe('You’re signed in.');
  });
  it('keeps email sign-in available when the popup is blocked',async()=>{
   window.open.mockReturnValue(null);await render();await click();
@@ -40,4 +43,17 @@ describe('Google account sign-in',()=>{
   window.history.replaceState({},'','/account#error=access_denied&error_description=private-data');await render();
   expect(container.textContent).toContain('cancelled');expect(container.textContent).not.toContain('private-data');
  });
+ it('blocks duplicate OAuth starts, cancels cleanly, and allows retry without clearing inputs',async()=>{
+  await render();await click();await click();
+  expect(window.open).toHaveBeenCalledTimes(1);
+  await act(async()=>[...container.querySelectorAll('button')].find(button=>button.textContent==='Cancel Google sign-in').click());
+  expect(getFeedbackSnapshot().tasks.at(-1).state).toBe('cancelled');
+  await click();expect(window.open).toHaveBeenCalledTimes(2);
+ });
+ it('does not celebrate restored sessions without a user-initiated OAuth attempt',async()=>{
+  const done=vi.fn();await render({onSignedIn:done});
+  await act(async()=>listener('SIGNED_IN',{user:{id:'synthetic'}}));
+  expect(done).not.toHaveBeenCalled();
+ });
+
 });

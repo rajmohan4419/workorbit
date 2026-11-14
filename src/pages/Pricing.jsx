@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useTaskFeedback } from '../lib/feedback/useTaskFeedback';
+import { unlockSound } from '../lib/feedback/sound';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Check,
   Sparkles,
@@ -24,6 +26,11 @@ import {
 } from '../lib/analytics';
 
 export default function Pricing() {
+  const { begin } = useTaskFeedback('payment');
+  const retryVerification = useRef(null);
+  const verificationLock = useRef(false);
+  const confirmationPendingRef = useRef(false);
+  const [confirmationPending, setConfirmationPending] = useState(false);
   const [billingInterval, setBillingInterval] = useState('annual'); // 'monthly' | 'annual'
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [statusMessage, setStatusMessage] = useState(null); // { type: 'success' | 'error' | 'info', text: string }
@@ -37,6 +44,7 @@ export default function Pricing() {
   }, []);
 
   const handleSubscribe = useCallback(async (baseTier) => {
+    if (confirmationPendingRef.current) return;
     setStatusMessage(null);
 
     if (baseTier === 'free') {
@@ -51,6 +59,10 @@ export default function Pricing() {
       return;
     }
 
+    unlockSound();
+    const task = begin({ label: 'Preparing secure checkout', stage: 'Checking your account' });
+    if (!task) return;
+    let callbackReceived = false;
     setLoadingPlan(planCode);
     trackCheckoutStarted(planCode);
 
@@ -68,6 +80,7 @@ export default function Pricing() {
           text: 'Create your download account or sign in before choosing a plan. No account is needed for on-screen tools.',
         });
         setLoadingPlan(null);
+        task.cancel('Sign in before choosing a plan.');
         return;
       }
 
@@ -101,7 +114,14 @@ export default function Pricing() {
         subscription_id: subscriptionId,
         name: 'OrbitBoard',
         description: `${plan.name} (${billingInterval})`,
-        handler: async (paymentResponse) => {
+        handler: async (paymentResponse, retry = false) => {
+          if ((callbackReceived && !retry) || verificationLock.current) return;
+          verificationLock.current = true;
+          confirmationPendingRef.current = true; setConfirmationPending(true);
+          retryVerification.current = () => options.handler(paymentResponse, true);
+          const verificationTask = task.active() ? task : begin({ label: 'Checking subscription status', stage: 'Checking with the server' });
+          callbackReceived = true;
+          verificationTask?.stage('Checking subscription status with the server');
           setLoadingPlan(planCode);
           try {
             const verifyRes = await fetch('/api/verify-payment', {
@@ -118,23 +138,31 @@ export default function Pricing() {
             });
             const verifyData = await verifyRes.json();
             if (verifyRes.ok && verifyData.success) {
+              // This legacy subscription endpoint acknowledges a signature, not
+              // captured credit fulfilment. Do not celebrate it as a payment.
+              confirmationPendingRef.current = false; setConfirmationPending(false);
+              verificationTask?.success('Subscription verification received. Check your account for status.', { celebrate: false });
               trackSubscriptionActive(planCode);
               setStatusMessage({
                 type: 'success',
-                text: `Welcome to ${plan.name}! Your subscription is active.`,
+                text: 'Subscription verification received. Check your account for subscription status.',
               });
               await refresh();
             } else {
               throw new Error(verifyData.error || 'Subscription verification failed.');
             }
-          } catch (err) {
-            setStatusMessage({ type: 'error', text: err.message || 'Payment verification failed.' });
+          } catch {
+            verificationTask?.error('Could not confirm subscription status. Check your account before paying again.');
+            setStatusMessage({ type: 'error', text: 'Could not confirm subscription status. Check your account before paying again.' });
           } finally {
+            verificationLock.current = false;
             setLoadingPlan(null);
           }
         },
         modal: {
           ondismiss: () => {
+            if (callbackReceived || !task.active()) return;
+            task.cancel('Checkout cancelled. You can try again when ready.');
             setLoadingPlan(null);
             setStatusMessage({ type: 'info', text: 'Checkout was cancelled.' });
           },
@@ -144,16 +172,24 @@ export default function Pricing() {
 
       if (typeof window !== 'undefined' && window.Razorpay) {
         const rzp = new window.Razorpay(options);
+        task.stage('Complete payment in secure checkout');
+        rzp.on('payment.failed', () => {
+          if (callbackReceived || !task.active()) return;
+          task.error('Payment did not complete. Check your account before paying again.');
+          setLoadingPlan(null);
+          setStatusMessage({ type: 'error', text: 'Payment did not complete. Check your account before paying again.' });
+        });
         rzp.open();
       } else {
         throw new Error('Razorpay client not ready.');
       }
     } catch (err) {
+      task.error('Could not start checkout. Please retry.');
       console.error('[Pricing subscribe error]', err);
       setStatusMessage({ type: 'error', text: err.message || 'Failed to start checkout.' });
       setLoadingPlan(null);
     }
-  }, [billingInterval, refresh]);
+  }, [billingInterval, refresh, begin]);
 
   // Dynamic plan card data
   const proPlan = billingInterval === 'annual' ? PLAN_CATALOG.pro_annual : PLAN_CATALOG.pro_monthly;
@@ -283,6 +319,7 @@ export default function Pricing() {
               </button>
             </div>
 
+            {confirmationPending && <button type="button" disabled={Boolean(loadingPlan)} onClick={() => retryVerification.current?.()} className="mt-4 min-h-11 text-sm text-violet-700 underline">Retry subscription confirmation</button>}
             {/* Status notification */}
             {statusMessage && (
               <div
@@ -371,7 +408,7 @@ export default function Pricing() {
                   <div className="mt-8 pt-6 border-t border-[var(--orbit-border)]">
                     <button
                       type="button"
-                      disabled={tier.buttonDisabled || loadingPlan === `${tier.key}_${billingInterval}`}
+                      disabled={confirmationPending || Boolean(loadingPlan) || tier.buttonDisabled || loadingPlan === `${tier.key}_${billingInterval}`}
                       onClick={() => handleSubscribe(tier.key)}
                       className={`w-full py-3 px-4 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2 shadow-xs hover:shadow-md ${
                         tier.highlighted

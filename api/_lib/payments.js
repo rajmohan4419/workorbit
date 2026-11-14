@@ -75,5 +75,5 @@ export async function fulfilPayment(admin, { orderId, paymentId, amountPaise, cu
     if (grantError) throw grantError;
   }
 
-  return { newlyFulfilled: Array.isArray(data) && data.length > 0 };
+  return { newlyFulfilled: Array.isArray(data) && data.length > 0, creditsGranted: orderRow?.product_id === PDF_TOPUP_PRODUCT };
 }

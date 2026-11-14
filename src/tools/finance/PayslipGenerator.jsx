@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState, useMemo, useCallback } from 'react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as XLSX from 'xlsx';
@@ -12,6 +13,7 @@ function sanitizeForPdf(text) {
 }
 
 export function PayslipGenerator() {
+  const feedback = useExportFeedback('spreadsheet');
   // Company details
   const [companyName, setCompanyName] = useState('Acme Technologies Pvt Ltd');
   const [companyAddress, setCompanyAddress] = useState('Tech Park, Outer Ring Road, Bengaluru, Karnataka 560103');
@@ -276,16 +278,16 @@ export function PayslipGenerator() {
         <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
-            onClick={handleExportPDF}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
+            disabled={feedback.busy} onClick={() => feedback.run(handleExportPDF, 'pdf')}
+            className="orbit-feedback-button flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
           >
             <FileText className="w-4 h-4" />
             Download PDF
           </button>
           <button
             type="button"
-            onClick={handleExportExcel}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
+            disabled={feedback.busy} onClick={() => feedback.run(handleExportExcel, 'xlsx')}
+            className="orbit-feedback-button flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4" />
             Download Excel
