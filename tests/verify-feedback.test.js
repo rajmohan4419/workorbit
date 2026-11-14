@@ -1,9 +1,9 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import crypto from 'node:crypto';
-import handler from './verify-payment';
-import { getRazorpay, requireAdmin } from './_lib/payments';
-vi.mock('./_lib/payments', async importOriginal => ({ ...await importOriginal(), getRazorpay: vi.fn(), requireAdmin: vi.fn() }));
-vi.mock('./_lib/entitlements', async importOriginal => ({ ...await importOriginal(), getUserFromRequest: vi.fn().mockResolvedValue({ id: 'owner' }) }));
+import handler from '../api/verify-payment';
+import { getRazorpay, requireAdmin } from '../api/_lib/payments';
+vi.mock('../api/_lib/payments', async importOriginal => ({ ...await importOriginal(), getRazorpay: vi.fn(), requireAdmin: vi.fn() }));
+vi.mock('../api/_lib/entitlements', async importOriginal => ({ ...await importOriginal(), getUserFromRequest: vi.fn().mockResolvedValue({ id: 'owner' }) }));
 
 describe('payment feedback server contract', () => {
   let admin, payment, row, req, res;

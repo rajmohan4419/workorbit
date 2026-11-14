@@ -25,3 +25,7 @@ Executed against local Vite with synthetic Supabase configuration. All external 
 - No uncaught browser errors or unsafe popup-navigation console errors.
 
 The legacy subscription endpoint acknowledges signature verification without the captured-credit contract. Its UI shows a non-celebratory acknowledgement and offers confirmation retry; no payment/credit celebration is inferred from that response. No database migration, production credit mutation, real charge, merge, or production deployment was performed.
+
+## Pull request checks
+
+The first automatic preview exceeded Vercel Hobby’s 12-function limit because a new endpoint test was placed under `api/`, where Vercel treats it as another function. Moved that test to `tests/verify-feedback.test.js`, restoring the original function count. Added the stacked PR base to the existing quality workflow filter so GitHub runs lint/build/tests for this PR.
