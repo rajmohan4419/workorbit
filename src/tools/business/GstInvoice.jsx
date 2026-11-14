@@ -32,6 +32,11 @@ function inr(n) {
   return Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 }
 
+const formatAmount = value => Number(value || 0).toLocaleString('en-IN', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -904,17 +909,17 @@ export function GstInvoice() {
                     <td className="py-1 px-2">
                       <Input type="number" min="0" max="100" aria-label={`Discount percentage, row ${idx + 1}`} value={item.discount} onChange={e => updateItem(item.id, 'discount', e.target.value)} className="orbit-control--dense w-full text-right" />
                     </td>
-                    <td className="py-1 px-2 text-right font-medium text-gray-700">{inr(calc.taxable)}</td>
+                    <td className="py-1 px-2 text-right font-medium text-gray-700">{formatAmount(calc.taxable)}</td>
                     <td className="py-1 px-2">
                       <Select aria-label={`GST percentage, row ${idx + 1}`} value={item.gstRate} onChange={e => updateItem(item.id, 'gstRate', Number(e.target.value))} className="orbit-control--dense w-full">
                         {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
                       </Select>
                     </td>
                     {isInterState
-                      ? <td className="py-1 px-2 text-right text-gray-600">{inr(calc.igst)}</td>
-                      : <><td className="py-1 px-2 text-right text-gray-600">{inr(calc.cgst)}</td><td className="py-1 px-2 text-right text-gray-600">{inr(calc.sgst)}</td></>
+                      ? <td className="py-1 px-2 text-right text-gray-600">{formatAmount(calc.igst)}</td>
+                      : <><td className="py-1 px-2 text-right text-gray-600">{formatAmount(calc.cgst)}</td><td className="py-1 px-2 text-right text-gray-600">{formatAmount(calc.sgst)}</td></>
                     }
-                    <td className="py-1 px-2 text-right font-semibold text-indigo-700">₹{inr(calc.total)}</td>
+                    <td className="py-1 px-2 text-right font-semibold text-indigo-700">₹{formatAmount(calc.total)}</td>
                     <td className="py-1 px-2">
                       <button type="button" aria-label={`Remove item ${idx + 1}`} onClick={() => removeItem(item.id)} className="invoice-row-action text-red-400 hover:text-red-600 transition-colors">
                         <Trash2 size={14} />
@@ -934,13 +939,13 @@ export function GstInvoice() {
         <div className="mt-2 flex justify-end">
           <div className="invoice-totals space-y-1 text-sm">
             {[
-              ['Subtotal', `₹${inr(totals.subtotal)}`],
-              ['Total Discount', `- ₹${inr(totals.totalDiscount)}`],
-              ['Taxable Amount', `₹${inr(totals.taxableAmount)}`],
+              ['Subtotal', `₹${formatAmount(totals.subtotal)}`],
+              ['Total Discount', `- ₹${formatAmount(totals.totalDiscount)}`],
+              ['Taxable Amount', `₹${formatAmount(totals.taxableAmount)}`],
               ...(isInterState
-                ? [['IGST', `₹${inr(totals.igst)}`]]
-                : [['CGST', `₹${inr(totals.cgst)}`], ['SGST', `₹${inr(totals.sgst)}`]]),
-              ['Round Off', (totals.roundOff >= 0 ? '+' : '') + `₹${inr(totals.roundOff)}`],
+                ? [['IGST', `₹${formatAmount(totals.igst)}`]]
+                : [['CGST', `₹${formatAmount(totals.cgst)}`], ['SGST', `₹${formatAmount(totals.sgst)}`]]),
+              ['Round Off', (totals.roundOff >= 0 ? '+' : '') + `₹${formatAmount(totals.roundOff)}`],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4 text-gray-600 text-sm border-b border-gray-50 pb-1">
                 <span>{k}</span><span className="font-medium text-right tabular-nums">{v}</span>
@@ -948,7 +953,7 @@ export function GstInvoice() {
             ))}
             <div className="flex justify-between items-center bg-indigo-700 text-white rounded-xl px-4 py-2.5 mt-2">
               <span className="font-bold">GRAND TOTAL</span>
-              <span className="font-bold text-amber-300 text-lg">₹{inr(totals.grandTotal)}</span>
+              <span className="font-bold text-amber-300 text-lg">₹{formatAmount(totals.grandTotal)}</span>
             </div>
             <p className="text-xs text-gray-500 italic">{amountToWords(totals.grandTotal)}</p>
           </div>
