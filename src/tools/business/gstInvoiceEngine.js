@@ -213,7 +213,7 @@ export function validateInvoice({ seller = {}, buyer = {}, meta = {}, items = []
     if (!String(item.hsn ?? '').trim()) errors.push(`Row ${i + 1}: HSN/SAC is required.`);
     for (const key of ['qty', 'rate', 'discount', 'gstRate']) {
       const value = item[key], number = Number(value);
-      if (value == null || String(value).trim() === '' || !Number.isFinite(number) || number < 0 || (key === 'qty' && number <= 0) || (key === 'discount' && number > 100) || (key === 'gstRate' && ![0, 5, 12, 18, 28].includes(number)) || number > 1e9) errors.push(`Row ${i + 1}: ${key} must be a finite supported value (quantity > 0, discount 0–100, rate/quantity at most 1 billion).`);
+      if (value == null || String(value).trim() === '' || !Number.isFinite(number) || number < 0 || (key === 'qty' && number <= 0) || (key === 'discount' && number > 100) || (key === 'gstRate' && number > 100) || number > 1e9) errors.push(`Row ${i + 1}: ${key} must be a finite supported value (quantity > 0, discount 0–100, rate/quantity at most 1 billion).`);
     }
   });
   const supply = resolveSupply(seller, buyer, meta);

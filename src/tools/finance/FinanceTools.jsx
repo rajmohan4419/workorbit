@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Field, Result } from '../../components/tools/ToolFields';
 import { money, num } from '../../lib/toolFormat';
 import { getToolParams } from '../../data/toolParams';
+import { GstLookup } from '../../components/gst/GstReference';
 import { CopyResultLink } from '../../components/tools/CopyResultLink';
 
 export function Emi() {
@@ -66,12 +67,11 @@ export function Gst() {
   return (
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
       <div className="lg:col-span-7 space-y-4">
+        <GstLookup onApply={value => setRate(String(value))} />
         <Field label={mode === 'exclusive' ? 'Pre-GST amount (₹)' : 'GST-inclusive amount (₹)'} value={amount} onChange={setAmount} />
         <label className="block">
           <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">GST rate</span>
-          <select value={rate} onChange={e => setRate(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 min-h-[44px]">
-            <option value="0">0% (Nil / Exempt)</option><option value="5">5% (Merit Rate)</option><option value="18">18% (Standard Rate)</option><option value="40">40% (Luxury Rate)</option><option value="3">3% (Special Rate)</option>
-          </select>
+          <input type="number" min="0" max="100" step="0.01" value={rate} onChange={e => setRate(e.target.value)} className="orbit-control mt-1.5 w-full" />
         </label>
         <label className="block">
           <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Calculation mode</span>
