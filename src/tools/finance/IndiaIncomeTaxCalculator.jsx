@@ -9,7 +9,7 @@ function Field({ label, value, onChange }) {
   return (
     <label className="block">
       <span className="text-xs font-medium text-slate-400">{label}</span>
-      <input type="number" min="0" value={value} onChange={e => onChange(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-accent-500" />
+      <input type="number" min="0" value={value} onChange={e => onChange(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 outline-none focus:border-accent-500" />
     </label>
   );
 }
@@ -149,21 +149,21 @@ export default function IndiaIncomeTaxCalculator() {
       <div className="grid sm:grid-cols-3 gap-4">
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Income type</span>
-          <select value={incomeType} onChange={e => setIncomeType(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
+          <select value={incomeType} onChange={e => setIncomeType(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950">
             <option value="salary">Salary</option>
             <option value="other">Other income</option>
           </select>
         </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Tax regime</span>
-          <select value={regime} onChange={e => setRegime(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
+          <select value={regime} onChange={e => setRegime(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950">
             <option value="new">New regime</option>
             <option value="old">Old regime</option>
           </select>
         </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Age band</span>
-          <select value={ageBand} onChange={e => setAgeBand(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
+          <select value={ageBand} onChange={e => setAgeBand(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950">
             <option value="below60">Below 60</option>
             <option value="senior">60 to 79</option>
             <option value="super">80+</option>

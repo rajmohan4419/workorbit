@@ -313,7 +313,7 @@ export function PayslipGenerator() {
                   type="number"
                   value={annualCtc}
                   onChange={e => setAnnualCtc(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -325,7 +325,7 @@ export function PayslipGenerator() {
                   type="number"
                   value={basicPct}
                   onChange={e => setBasicPct(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -337,7 +337,7 @@ export function PayslipGenerator() {
                   type="number"
                   value={hraPct}
                   onChange={e => setHraPct(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -350,7 +350,7 @@ export function PayslipGenerator() {
                   placeholder="Auto from tax slabs"
                   value={customTds}
                   onChange={e => setCustomTds(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
             </div>
@@ -364,7 +364,7 @@ export function PayslipGenerator() {
                   type="number"
                   value={daysInMonth}
                   onChange={e => setDaysInMonth(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
               <div>
@@ -375,7 +375,7 @@ export function PayslipGenerator() {
                   type="number"
                   value={paidDays}
                   onChange={e => setPaidDays(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
             </div>
@@ -414,7 +414,7 @@ export function PayslipGenerator() {
                 <select
                   value={regime}
                   onChange={e => setRegime(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 >
                   <option value="new">New Regime (Default Section 115BAC)</option>
                   <option value="old">Old Regime</option>
@@ -428,7 +428,7 @@ export function PayslipGenerator() {
                 <select
                   value={state}
                   onChange={e => setState(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 >
                   <option value="Karnataka">Karnataka (₹200/mo over ₹25k)</option>
                   <option value="None">None / Exempt</option>
@@ -451,7 +451,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={companyName}
                   onChange={e => setCompanyName(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -461,7 +461,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={payPeriod}
                   onChange={e => setPayPeriod(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -471,7 +471,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={empName}
                   onChange={e => setEmpName(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -481,7 +481,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={empId}
                   onChange={e => setEmpId(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -491,7 +491,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={designation}
                   onChange={e => setDesignation(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -501,7 +501,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={department}
                   onChange={e => setDepartment(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -511,7 +511,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={pan}
                   onChange={e => setPan(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -521,7 +521,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={companyAddress}
                   onChange={e => setCompanyAddress(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -531,7 +531,7 @@ export function PayslipGenerator() {
                   type="date"
                   value={doj}
                   onChange={e => setDoj(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -541,7 +541,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={uan}
                   onChange={e => setUan(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -551,7 +551,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={bankName}
                   onChange={e => setBankName(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
 
@@ -561,7 +561,7 @@ export function PayslipGenerator() {
                   type="text"
                   value={accountNo}
                   onChange={e => setAccountNo(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 />
               </div>
             </div>

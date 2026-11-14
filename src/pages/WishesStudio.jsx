@@ -89,20 +89,20 @@ export default function WishesStudio() {
         <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <section aria-label="Customize your greeting" className="space-y-4 rounded-2xl border border-[var(--orbit-border)] bg-white p-5 dark:bg-stone-900">
             <label className="block text-sm font-semibold">Occasion
-              <select value={occasionId} onChange={event => selectOccasion(event.target.value)} className="mt-1 w-full rounded-xl border border-stone-300 bg-white p-3 text-stone-900">
+              <select value={occasionId} onChange={event => selectOccasion(event.target.value)} className="orbit-control mt-1 w-full rounded-xl border border-stone-300 bg-white text-stone-900">
                 {OCCASIONS.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
               </select>
             </label>
             <label className="block text-sm font-semibold">Card design
-              <select value={themeId} onChange={event => setThemeId(event.target.value)} className="mt-1 w-full rounded-xl border border-stone-300 bg-white p-3 text-stone-900">
+              <select value={themeId} onChange={event => setThemeId(event.target.value)} className="orbit-control mt-1 w-full rounded-xl border border-stone-300 bg-white text-stone-900">
                 {THEMES.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
               </select>
             </label>
             <label className="block text-sm font-semibold">Recipient
-              <input maxLength={35} value={recipient} onChange={event => setRecipient(event.target.value)} className="mt-1 w-full rounded-xl border border-stone-300 bg-white p-3 text-stone-900" />
+              <input maxLength={35} value={recipient} onChange={event => setRecipient(event.target.value)} className="orbit-control mt-1 w-full rounded-xl border border-stone-300 bg-white text-stone-900" />
             </label>
             <label className="block text-sm font-semibold">Your name
-              <input maxLength={40} placeholder="Your name" value={sender} onChange={event => setSender(event.target.value)} className="mt-1 w-full rounded-xl border border-stone-300 bg-white p-3 text-stone-900" />
+              <input maxLength={40} placeholder="Your name" value={sender} onChange={event => setSender(event.target.value)} className="orbit-control mt-1 w-full rounded-xl border border-stone-300 bg-white text-stone-900" />
             </label>
             <label className="block text-sm font-semibold">Greeting message
               <textarea rows={4} maxLength={200} value={message} onChange={event => setMessage(event.target.value)} className="mt-1 w-full rounded-xl border border-stone-300 bg-white p-3 text-stone-900" />

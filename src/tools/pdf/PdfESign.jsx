@@ -63,21 +63,21 @@ export default function PdfESign() {
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Signature name</span>
-          <input value={signature} onChange={e => setSignature(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm" />
+          <input value={signature} onChange={e => setSignature(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950" />
         </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Page number</span>
-          <input type="number" min="1" value={page} onChange={e => setPage(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm" />
+          <input type="number" min="1" value={page} onChange={e => setPage(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950" />
         </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Position</span>
-          <select value={position} onChange={e => setPosition(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
+          <select value={position} onChange={e => setPosition(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950">
             {['top-left','top-center','top-right','middle-left','middle-center','middle-right','bottom-left','bottom-center','bottom-right'].map(item => <option key={item} value={item}>{item.replace('-', ' ')}</option>)}
           </select>
         </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Signature size</span>
-          <input type="number" min="8" max="72" value={size} onChange={e => setSize(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm" />
+          <input type="number" min="8" max="72" value={size} onChange={e => setSize(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950" />
         </label>
       </div>
 

@@ -110,8 +110,8 @@ function MomentEditor({ moment }) {
       <h1 className="mt-7 text-3xl font-bold">{moment.title} Moment</h1>
       <p className="mt-2 text-sm opacity-70">Personalize the message, then interact with the scene.</p>
       <div className="mt-7 grid gap-3 sm:grid-cols-2">
-        <label className="text-sm">Your name<input maxLength={60} value={sender} onChange={e => setSender(e.target.value)} placeholder="Sender name" className="mt-1 w-full rounded-xl border bg-transparent p-3"/></label>
-        <label className="text-sm">Recipient<input maxLength={60} value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="Recipient name" className="mt-1 w-full rounded-xl border bg-transparent p-3"/></label>
+        <label className="text-sm">Your name<input maxLength={60} value={sender} onChange={e => setSender(e.target.value)} placeholder="Sender name" className="orbit-control mt-1 w-full rounded-xl border bg-transparent"/></label>
+        <label className="text-sm">Recipient<input maxLength={60} value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="Recipient name" className="orbit-control mt-1 w-full rounded-xl border bg-transparent"/></label>
         <label className="text-sm sm:col-span-2">Greeting headline
           <textarea maxLength={200} rows={2} value={headline ?? moment.reveal} onChange={e => setHeadline(e.target.value)} className="mt-1 w-full rounded-xl border bg-transparent p-3" />
           <button type="button" onClick={() => setHeadline(null)} className="mt-1 text-xs underline">Restore default message</button>
@@ -120,7 +120,7 @@ function MomentEditor({ moment }) {
       </div>
       <div className="mt-5 flex flex-wrap items-end gap-3">
         <label className="text-sm">Greeting language
-          <select value={language} onChange={e => { setLanguage(e.target.value); setTranslated(null); setTranslationError(''); }} className="mt-1 block rounded-xl border bg-transparent p-3">
+          <select value={language} onChange={e => { setLanguage(e.target.value); setTranslated(null); setTranslationError(''); }} className="orbit-control mt-1 block rounded-xl border bg-transparent">
             {MOMENT_LANGUAGES.map(item => <option key={item.code} value={item.code} className="text-slate-900">{item.label}</option>)}
           </select>
         </label>
@@ -135,7 +135,7 @@ function MomentEditor({ moment }) {
           : <button type="button" disabled={!revealed || saving || translating} onClick={saveShare} className="rounded-full bg-violet-700 px-6 py-3 text-white disabled:opacity-40">{saving ? 'Creating link…' : 'Create share link'}</button>}
       </div>
       {shareUrl && <label className="mt-4 block text-sm">Share link
-        <input readOnly value={shareUrl} onFocus={e => e.target.select()} className="mt-1 w-full rounded-xl border bg-transparent p-3" />
+        <input readOnly value={shareUrl} onFocus={e => e.target.select()} className="orbit-control mt-1 w-full rounded-xl border bg-transparent" />
       </label>}
       {shareStatus && <p role="status" className="mt-2 text-sm">{shareStatus}</p>}
       <p className="mt-5 text-xs opacity-60">Creating a link saves this greeting and its names. Anyone with the link can open it. Changes need a new link.</p>

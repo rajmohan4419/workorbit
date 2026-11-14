@@ -362,7 +362,7 @@ export default function BankReconciliation() {
                   <select
                     value={bankMapping.date}
                     onChange={e => setBankMapping(m => ({ ...m, date: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select...</option>
                     {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -373,7 +373,7 @@ export default function BankReconciliation() {
                   <select
                     value={bankMapping.reference}
                     onChange={e => setBankMapping(m => ({ ...m, reference: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select (Optional)...</option>
                     {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -384,7 +384,7 @@ export default function BankReconciliation() {
                   <select
                     value={bankMapping.credit}
                     onChange={e => setBankMapping(m => ({ ...m, credit: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select...</option>
                     {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -395,7 +395,7 @@ export default function BankReconciliation() {
                   <select
                     value={bankMapping.debit}
                     onChange={e => setBankMapping(m => ({ ...m, debit: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select...</option>
                     {bankHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -412,7 +412,7 @@ export default function BankReconciliation() {
                   value={closingBankBalance}
                   onChange={e => setClosingBankBalance(e.target.value)}
                   placeholder="e.g. 244990"
-                  className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs font-mono font-semibold text-stone-900 dark:text-stone-100"
+                  className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 font-mono font-semibold text-stone-900 dark:text-stone-100"
                 />
               </div>
             </div>
@@ -469,7 +469,7 @@ export default function BankReconciliation() {
                   <select
                     value={ledgerMapping.date}
                     onChange={e => setLedgerMapping(m => ({ ...m, date: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select...</option>
                     {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -480,7 +480,7 @@ export default function BankReconciliation() {
                   <select
                     value={ledgerMapping.reference}
                     onChange={e => setLedgerMapping(m => ({ ...m, reference: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select (Optional)...</option>
                     {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -491,7 +491,7 @@ export default function BankReconciliation() {
                   <select
                     value={ledgerMapping.debit}
                     onChange={e => setLedgerMapping(m => ({ ...m, debit: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select...</option>
                     {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -502,7 +502,7 @@ export default function BankReconciliation() {
                   <select
                     value={ledgerMapping.credit}
                     onChange={e => setLedgerMapping(m => ({ ...m, credit: e.target.value }))}
-                    className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs text-stone-800 dark:text-stone-200"
+                    className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200"
                   >
                     <option value="">Select...</option>
                     {ledgerHeaders.map(h => <option key={h} value={h}>{h}</option>)}
@@ -519,7 +519,7 @@ export default function BankReconciliation() {
                   value={closingLedgerBalance}
                   onChange={e => setClosingLedgerBalance(e.target.value)}
                   placeholder="e.g. 268550"
-                  className="w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 p-1.5 text-xs font-mono font-semibold text-stone-900 dark:text-stone-100"
+                  className="orbit-control w-full rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 font-mono font-semibold text-stone-900 dark:text-stone-100"
                 />
               </div>
             </div>
@@ -537,7 +537,7 @@ export default function BankReconciliation() {
               <select
                 value={dateToleranceDays}
                 onChange={e => setDateToleranceDays(Number(e.target.value))}
-                className="rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 px-2 py-1 font-semibold text-stone-900 dark:text-stone-100"
+                className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 font-semibold text-stone-900 dark:text-stone-100"
               >
                 <option value={0}>Exact Date Only</option>
                 <option value={1}>+/- 1 Day</option>
@@ -755,7 +755,7 @@ export default function BankReconciliation() {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Filter transactions..."
-              className="rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-850 px-3 py-1.5 text-xs text-stone-900 dark:text-stone-100 outline-none w-full sm:w-56"
+              className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-850 text-stone-900 dark:text-stone-100 outline-none w-full sm:w-56"
             />
           </div>
 

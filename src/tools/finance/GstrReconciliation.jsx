@@ -398,7 +398,7 @@ export function GstrReconciliation() {
             <select
               value={tolerance}
               onChange={e => setTolerance(Number(e.target.value))}
-              className="rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-2 py-1 text-xs"
+              className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800"
             >
               <option value="0">₹0 (Strict)</option>
               <option value="1">₹1 (Standard)</option>

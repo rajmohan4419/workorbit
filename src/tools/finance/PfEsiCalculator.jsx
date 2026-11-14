@@ -37,7 +37,7 @@ export function PfEsiCalculator() {
                 type="number"
                 value={basicSalary}
                 onChange={e => setBasicSalary(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
               />
               <span className="text-[11px] text-stone-400 mt-1 block">
                 EPF is computed on Basic + Dearness Allowance.
@@ -52,7 +52,7 @@ export function PfEsiCalculator() {
                 type="number"
                 value={grossSalary}
                 onChange={e => setGrossSalary(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
               />
               <span className="text-[11px] text-stone-400 mt-1 block">
                 ESI applies if gross salary is ≤ ₹21,000 (or ₹25,000 for disability).

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-const field = 'w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-stone-900 outline-none focus:border-indigo-600';
+const field = 'orbit-control w-full rounded-xl border border-stone-300 bg-white text-stone-900 outline-none focus:border-indigo-600';
 const button = 'w-full rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 disabled:opacity-50';
 const card = 'mx-auto w-full max-w-lg rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-9';
 

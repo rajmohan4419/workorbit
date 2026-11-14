@@ -585,9 +585,43 @@ main {
 }
 
 /* ─── Form inputs ────────────────────────────────────────────────────────── */
-/* Prevent iOS zoom on focus (min 16px) */
-input, textarea, select {
-  font-size: 16px !important;
+/* Explicit control variants. Textareas, editors and search retain their own sizing. */
+.orbit-control {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  min-block-size: 40px;
+  block-size: 40px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+select.orbit-control {
+  padding-inline-end: 32px;
+}
+
+.orbit-control--leading-icon { padding-inline-start: 36px; }
+
+select.orbit-control--with-icon { padding-inline-end: 44px; }
+
+.orbit-control--dense {
+  min-block-size: 36px;
+  block-size: 36px;
+  padding: 6px 8px;
+}
+
+select.orbit-control--dense {
+  padding-inline-end: 28px;
+}
+
+@media (max-width: 767px), (pointer: coarse) {
+  .orbit-control {
+    min-block-size: 44px;
+    block-size: 44px;
+    padding-block: 10px;
+    font-size: 16px;
+    line-height: 22px;
+  }
 }
 
 .dark input, .dark textarea, .dark select {

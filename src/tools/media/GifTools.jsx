@@ -365,7 +365,7 @@ export function VideoToGif() {
                   step="0.5"
                   value={startTime}
                   onChange={e => setStartTime(Number(e.target.value))}
-                  className="p-2 rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                  className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
                 />
               </label>
 
@@ -378,7 +378,7 @@ export function VideoToGif() {
                   step="0.5"
                   value={endTime}
                   onChange={e => setEndTime(Number(e.target.value))}
-                  className="p-2 rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
+                  className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100"
                 />
               </label>
             </div>
@@ -396,7 +396,7 @@ export function VideoToGif() {
             <select
               value={fps}
               onChange={e => setFps(Number(e.target.value))}
-              className="p-2.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none"
+              className="orbit-control rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none"
             >
               <option value="5">5 FPS (Smallest file size)</option>
               <option value="8">8 FPS (Recommended smooth)</option>
@@ -410,7 +410,7 @@ export function VideoToGif() {
             <select
               value={targetWidth}
               onChange={e => setTargetWidth(Number(e.target.value))}
-              className="p-2.5 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none"
+              className="orbit-control rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none"
             >
               <option value="240">240px (Micro thumbnail)</option>
               <option value="360">360px (Standard / Email friendly)</option>

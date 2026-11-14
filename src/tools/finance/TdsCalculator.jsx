@@ -56,7 +56,7 @@ export function TdsCalculator() {
                   if (s === '194I') setSubType('building');
                   if (s === '194J') setSubType('technical');
                 }}
-                className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
               >
                 <option value="194C">Section 194C - Payments to Contractors & Sub-contractors</option>
                 <option value="194J">Section 194J - Fees for Professional & Technical Services</option>
@@ -79,7 +79,7 @@ export function TdsCalculator() {
                 type="number"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
               />
             </div>
 
@@ -207,7 +207,7 @@ export function TdsCalculator() {
                 <select
                   value={regime}
                   onChange={e => setRegime(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+                  className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
                 >
                   <option value="new">New Tax Regime (Section 115BAC - ₹75k standard deduction)</option>
                   <option value="old">Old Tax Regime (₹50k standard deduction)</option>
@@ -239,7 +239,7 @@ export function TdsCalculator() {
                     placeholder="e.g. ABCDE1234F"
                     value={pan}
                     onChange={e => setPan(e.target.value.toUpperCase())}
-                    className="w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2.5 text-sm text-stone-900 dark:text-stone-100 uppercase font-mono outline-none focus:border-accent-500"
+                    className="orbit-control w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 uppercase font-mono outline-none focus:border-accent-500"
                   />
                   {hasInvalidPan && (
                     <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">

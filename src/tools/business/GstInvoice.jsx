@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Plus, Trash2, Download, Building2, FileText, Save, X, CheckCircle2 } from 'lucide-react';
 import { downloadBlob } from '../../lib/toolFormat';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import './GstInvoice.css';
 import { amountToWords, calcItem } from './gstInvoiceEngine';
 import { usePlan } from '../../lib/monetization/usePlan';
 import { PlanGate } from '../../components/monetization/PlanGate';
@@ -99,18 +100,18 @@ function defaultItem(id) {
 
 function Field({ label, children, error }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</label>
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
       {children}
       {error && <span className="text-xs text-red-500">{error}</span>}
-    </div>
+    </label>
   );
 }
 
 function Input({ className = '', ...props }) {
   return (
     <input
-      className={`border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white ${className}`}
+      className={`orbit-control border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white ${className}`}
       {...props}
     />
   );
@@ -119,7 +120,7 @@ function Input({ className = '', ...props }) {
 function Select({ className = '', children, ...props }) {
   return (
     <select
-      className={`border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white ${className}`}
+      className={`orbit-control border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white ${className}`}
       {...props}
     >
       {children}
@@ -138,12 +139,12 @@ function Textarea({ className = '', ...props }) {
 
 function SectionCard({ icon: Icon, title, children }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-w-0">
       <div className="flex items-center gap-2 px-5 py-3 bg-indigo-50 border-b border-indigo-100">
         {Icon && <Icon size={16} className="text-indigo-600" />}
         <h2 className="text-sm font-semibold text-indigo-800">{title}</h2>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-3 sm:p-4">{children}</div>
     </div>
   );
 }
@@ -685,7 +686,7 @@ export function GstInvoice() {
   }, [hasFeature, seller, buyer, meta, items, notes, signatory]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div className="gst-invoice min-w-0 max-w-6xl mx-auto px-2 sm:px-4 py-5 space-y-4">
       {/* Page Title */}
       <div className="flex items-center justify-between flex-wrap gap-3 p-3.5 rounded-2xl border border-[var(--orbit-border)] bg-stone-50/60 dark:bg-stone-900/60 shadow-xs mb-2">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
@@ -846,25 +847,35 @@ export function GstInvoice() {
 
       {/* ── Line Items ── */}
       <SectionCard icon={FileText} title="Line Items">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse min-w-[900px]">
+        <div className="invoice-items-scroll" role="region" aria-label="Invoice line items, scroll horizontally for all columns" tabIndex={0}>
+          <table className="invoice-items">
+            <caption className="sr-only">Invoice line items with quantities, discounts and GST</caption>
+            <colgroup>
+              <col className="invoice-col-number" /><col className="invoice-col-description" />
+              <col className="invoice-col-hsn" /><col className="invoice-col-qty" />
+              <col className="invoice-col-unit" /><col className="invoice-col-rate" />
+              <col className="invoice-col-discount" /><col className="invoice-col-money" />
+              <col className="invoice-col-gst" />
+              {isInterState ? <col className="invoice-col-money" /> : <><col className="invoice-col-tax" /><col className="invoice-col-tax" /></>}
+              <col className="invoice-col-amount" /><col className="invoice-col-action" />
+            </colgroup>
             <thead>
               <tr className="bg-gray-50 text-gray-600">
-                <th className="py-2 px-2 text-left font-semibold w-8">#</th>
+                <th className="py-2 px-2 text-left font-semibold">#</th>
                 <th className="py-2 px-2 text-left font-semibold">Description</th>
-                <th className="py-2 px-2 text-left font-semibold w-24">HSN/SAC</th>
-                <th className="py-2 px-2 text-right font-semibold w-16">Qty</th>
-                <th className="py-2 px-2 text-left font-semibold w-20">Unit</th>
-                <th className="py-2 px-2 text-right font-semibold w-24">Rate (₹)</th>
-                <th className="py-2 px-2 text-right font-semibold w-16">Disc%</th>
-                <th className="py-2 px-2 text-right font-semibold w-24">Taxable</th>
-                <th className="py-2 px-2 text-right font-semibold w-20">GST%</th>
+                <th className="py-2 px-2 text-left font-semibold">HSN/SAC</th>
+                <th className="py-2 px-2 text-right font-semibold">Qty</th>
+                <th className="py-2 px-2 text-left font-semibold">Unit</th>
+                <th className="py-2 px-2 text-right font-semibold">Rate (₹)</th>
+                <th className="py-2 px-2 text-right font-semibold">Disc%</th>
+                <th className="py-2 px-2 text-right font-semibold">Taxable</th>
+                <th className="py-2 px-2 text-right font-semibold">GST%</th>
                 {isInterState
-                  ? <th className="py-2 px-2 text-right font-semibold w-24">IGST</th>
-                  : <><th className="py-2 px-2 text-right font-semibold w-20">CGST</th><th className="py-2 px-2 text-right font-semibold w-20">SGST</th></>
+                  ? <th className="py-2 px-2 text-right font-semibold">IGST</th>
+                  : <><th className="py-2 px-2 text-right font-semibold">CGST</th><th className="py-2 px-2 text-right font-semibold">SGST</th></>
                 }
-                <th className="py-2 px-2 text-right font-semibold w-24">Amount</th>
-                <th className="py-2 px-2 w-8" />
+                <th className="py-2 px-2 text-right font-semibold">Amount</th>
+                <th className="py-2 px-2" />
               </tr>
             </thead>
             <tbody>
@@ -872,40 +883,40 @@ export function GstInvoice() {
                 const calc = calcItem(item, isInterState);
                 return (
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                    <td className="py-1.5 px-2 text-gray-400">{idx + 1}</td>
-                    <td className="py-1.5 px-2">
-                      <Input value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Service / Product description" className="w-full" />
+                    <td className="py-1 px-2 text-gray-400">{idx + 1}</td>
+                    <td className="py-1 px-2">
+                      <Input aria-label={`Description, row ${idx + 1}`} value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Service / Product description" className="orbit-control--dense w-full" />
                     </td>
-                    <td className="py-1.5 px-2">
-                      <Input value={item.hsn} onChange={e => updateItem(item.id, 'hsn', e.target.value)} placeholder="998314" className="w-full" />
+                    <td className="py-1 px-2">
+                      <Input aria-label={`HSN/SAC, row ${idx + 1}`} value={item.hsn} onChange={e => updateItem(item.id, 'hsn', e.target.value)} placeholder="998314" className="orbit-control--dense w-full" />
                     </td>
-                    <td className="py-1.5 px-2">
-                      <Input type="number" min="0" value={item.qty} onChange={e => updateItem(item.id, 'qty', e.target.value)} className="w-full text-right" />
+                    <td className="py-1 px-2">
+                      <Input type="number" min="0" aria-label={`Quantity, row ${idx + 1}`} value={item.qty} onChange={e => updateItem(item.id, 'qty', e.target.value)} className="orbit-control--dense w-full text-right" />
                     </td>
-                    <td className="py-1.5 px-2">
-                      <Select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="w-full">
+                    <td className="py-1 px-2">
+                      <Select aria-label={`Unit, row ${idx + 1}`} value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="orbit-control--dense w-full">
                         {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                       </Select>
                     </td>
-                    <td className="py-1.5 px-2">
-                      <Input type="number" min="0" value={item.rate} onChange={e => updateItem(item.id, 'rate', e.target.value)} className="w-full text-right" />
+                    <td className="py-1 px-2">
+                      <Input type="number" min="0" aria-label={`Rate, row ${idx + 1}`} value={item.rate} onChange={e => updateItem(item.id, 'rate', e.target.value)} className="orbit-control--dense w-full text-right" />
                     </td>
-                    <td className="py-1.5 px-2">
-                      <Input type="number" min="0" max="100" value={item.discount} onChange={e => updateItem(item.id, 'discount', e.target.value)} className="w-full text-right" />
+                    <td className="py-1 px-2">
+                      <Input type="number" min="0" max="100" aria-label={`Discount percentage, row ${idx + 1}`} value={item.discount} onChange={e => updateItem(item.id, 'discount', e.target.value)} className="orbit-control--dense w-full text-right" />
                     </td>
-                    <td className="py-1.5 px-2 text-right font-medium text-gray-700">{inr(calc.taxable)}</td>
-                    <td className="py-1.5 px-2">
-                      <Select value={item.gstRate} onChange={e => updateItem(item.id, 'gstRate', Number(e.target.value))} className="w-full">
+                    <td className="py-1 px-2 text-right font-medium text-gray-700">{inr(calc.taxable)}</td>
+                    <td className="py-1 px-2">
+                      <Select aria-label={`GST percentage, row ${idx + 1}`} value={item.gstRate} onChange={e => updateItem(item.id, 'gstRate', Number(e.target.value))} className="orbit-control--dense w-full">
                         {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
                       </Select>
                     </td>
                     {isInterState
-                      ? <td className="py-1.5 px-2 text-right text-gray-600">{inr(calc.igst)}</td>
-                      : <><td className="py-1.5 px-2 text-right text-gray-600">{inr(calc.cgst)}</td><td className="py-1.5 px-2 text-right text-gray-600">{inr(calc.sgst)}</td></>
+                      ? <td className="py-1 px-2 text-right text-gray-600">{inr(calc.igst)}</td>
+                      : <><td className="py-1 px-2 text-right text-gray-600">{inr(calc.cgst)}</td><td className="py-1 px-2 text-right text-gray-600">{inr(calc.sgst)}</td></>
                     }
-                    <td className="py-1.5 px-2 text-right font-semibold text-indigo-700">₹{inr(calc.total)}</td>
-                    <td className="py-1.5 px-2">
-                      <button onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 transition-colors">
+                    <td className="py-1 px-2 text-right font-semibold text-indigo-700">₹{inr(calc.total)}</td>
+                    <td className="py-1 px-2">
+                      <button type="button" aria-label={`Remove item ${idx + 1}`} onClick={() => removeItem(item.id)} className="invoice-row-action text-red-400 hover:text-red-600 transition-colors">
                         <Trash2 size={14} />
                       </button>
                     </td>
@@ -915,13 +926,13 @@ export function GstInvoice() {
             </tbody>
           </table>
         </div>
-        <button onClick={addItem} className="mt-3 flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+        <button onClick={addItem} className="mt-1 min-h-11 flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
           <Plus size={15} /> Add Item
         </button>
 
         {/* Totals Summary */}
-        <div className="mt-6 flex justify-end">
-          <div className="w-72 space-y-1.5 text-sm">
+        <div className="mt-2 flex justify-end">
+          <div className="invoice-totals space-y-1 text-sm">
             {[
               ['Subtotal', `₹${inr(totals.subtotal)}`],
               ['Total Discount', `- ₹${inr(totals.totalDiscount)}`],
@@ -931,8 +942,8 @@ export function GstInvoice() {
                 : [['CGST', `₹${inr(totals.cgst)}`], ['SGST', `₹${inr(totals.sgst)}`]]),
               ['Round Off', (totals.roundOff >= 0 ? '+' : '') + `₹${inr(totals.roundOff)}`],
             ].map(([k, v]) => (
-              <div key={k} className="flex justify-between text-gray-600 text-xs border-b border-gray-50 pb-1">
-                <span>{k}</span><span className="font-medium">{v}</span>
+              <div key={k} className="flex justify-between gap-4 text-gray-600 text-sm border-b border-gray-50 pb-1">
+                <span>{k}</span><span className="font-medium text-right tabular-nums">{v}</span>
               </div>
             ))}
             <div className="flex justify-between items-center bg-indigo-700 text-white rounded-xl px-4 py-2.5 mt-2">
