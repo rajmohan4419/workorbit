@@ -27,3 +27,11 @@
 .gst-selection-summary button { min-height: 36px; text-decoration: underline; }
 .gst-title-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .gst-show-more { min-height: 40px; padding: 8px 12px; font-size: 13px; color: #4338ca; text-decoration: underline; }
+
+.hsn-search > label { display:block; margin:14px 0 6px; font-weight:600; }
+.hsn-search > input, .hsn-search > select { width:100%; min-height:42px; padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; background:white; color:#1e293b; }
+.hsn-search li button:first-child { display:block; width:100%; text-align:left; overflow-wrap:anywhere; padding:6px 0; }
+.hsn-search button { cursor:pointer; }
+.hsn-search li button:last-child, .hsn-search > button { margin-top:8px; padding:7px 12px; border:1px solid #a5b4fc; border-radius:6px; color:#4338ca; background:white; }
+.hsn-search > a { display:inline-block; margin-top:12px; color:#4338ca; text-decoration:underline; }
+.hsn-search p { margin:10px 0; }

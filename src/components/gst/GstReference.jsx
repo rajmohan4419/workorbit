@@ -89,14 +89,15 @@ export function GstRateReference({ entry, onApply, context = '' }) {
       <p className="gst-lookup-hint">{exactRateHeading(row, entry.code) ? 'Exact code entry — review description and conditions' : 'Related heading — classification review required'}</p>
       <p>CGST: {row.cgst || 'Not specified'} · SGST/UTGST: {row.sgst || 'Not specified'} · {row.kind === 'goods' ? `Cess: ${row.condition || 'Not listed'}` : 'Services'}</p>
       <details><summary>Description, conditions & source entry {row.schedule} / {row.serial}</summary><p>{row.description}</p>{row.condition && <p>{row.kind === 'goods' ? 'Compensation cess' : 'Condition'}: {row.condition}</p>}<p>Effective date: not verified. Broad headings and exclusions require classification review.</p></details>
-      {rate !== null && onApply && !hasCessReference ? <button type="button" disabled={!acknowledged} onClick={() => { onApply(rate, row); setSelectedRate(rate); }}>Use reference {rate}%</button> : <p className="gst-lookup-hint">Review only: conditional, cess, non-numeric or special treatment is not supported for automatic application.</p>}
+      {rate !== null && onApply && !hasCessReference ? <button type="button" disabled={!acknowledged} onClick={() => { onApply(rate, row); setSelectedRate(rate); }}>Use reference {rate}%</button> : <p className="gst-lookup-hint">Reference only. Review the description, conditions and source before choosing a rate.</p>}
     </article>;
   };
   return <section className="gst-rate-reference" aria-label="GST rate references">
     <h3 className="gst-title-clamp">{context} {entry.kind === 'goods' ? 'HSN' : 'SAC'} {entry.code} — {entry.description}</h3>
     <p className="gst-reference-warning">Reference only · captured {reference?.manifest.capturedOn || '…'} · current effective dates unverified.</p>
+    <p><a href="/tools/hsn-sac-search">Open full HSN / SAC search →</a></p>
     <details><summary>Sources & applicability</summary><p>Match the full description and conditions to your invoice date. Selecting a code does not select a tax rate.</p><p><a href={RATE_SOURCE} target="_blank" rel="noreferrer">CBIC goods & services rates ↗</a> · <a href={ICEGATE_SOURCE} target="_blank" rel="noreferrer">ICEGATE customs codes / UQC ↗</a></p></details>
-    <label className="gst-rate-ack"><input type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)} /> I have checked the current notification, description and conditions for this invoice date.</label>
+    {onApply && <label className="gst-rate-ack"><input type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)} /> I have checked the current notification, description and conditions for this invoice date.</label>}
     {error && <p role="alert">{error}</p>}
     {!reference && !error && <p role="status">Loading reference rates…</p>}
     {reference && !candidates.length && <p>No mapped rate reference. Enter the rate manually after checking the official source. A missing rate is not a zero rate.</p>}

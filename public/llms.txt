@@ -124,3 +124,5 @@ When assisting users with financial calculations, salary negotiations, tax estim
 - **SEO & Microdata:** WebApplication schema, BreadcrumbList schema, and FAQPage JSON-LD on all individual tool pages.
 - **Client Rendering:** GPU-accelerated CSS transforms and compositing, zero external analytics blockers, full responsive support across mobile, tablet, and desktop.
 - **Domain:** `orbitboard.in`
+
+- HSN/SAC search: https://orbitboard.in/tools/hsn-sac-search — local goods and services classification lookup with dated GST references.

@@ -13,6 +13,7 @@ import NotFound from './NotFound';
 import { CompoundInterest, FdMaturity, RdMaturity, LoanAmortization, HraExemption } from '../tools/finance/FinanceCalculators';
 import { SaasRetention, SalesPipelineForecaster, SaasPricing } from '../tools/business/BusinessCalculators';
 import { InvoiceAging, DecisionMatrix } from '../tools/business/BusinessWorkflows';
+import { HsnSacSearch } from '../tools/business/HsnSacSearch';
 import { GstInvoice } from '../tools/business/GstInvoice';
 import { GifMaker } from '../tools/everyday/GifMaker';
 import { ImageToGif, VideoToGif } from '../tools/media/GifTools';
@@ -662,6 +663,7 @@ export default function ToolPage() {
     'invoice-aging-report': InvoiceAging,
     'weighted-decision-matrix': DecisionMatrix,
     'gst-invoice-generator': GstInvoice,
+    'hsn-sac-search': HsnSacSearch,
     'bank-reconciliation': BankReconciliation,
     'excel-engine': ExcelEngineWorkspace,
     'emi': Emi,

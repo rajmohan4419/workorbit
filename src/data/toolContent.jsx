@@ -1,5 +1,20 @@
 
 export const TOOL_CONTENT = {
+  'hsn-sac-search': {
+    h1: 'HSN / SAC Code Search for Goods & Services',
+    intro: 'Find goods and services classifications by code or description, copy results and review GST rate references in one place.',
+    keywords: 'HSN code search, SAC code search, GST goods services classification, HSN SAC lookup',
+    how: ['Enter at least two characters of a code or description.', 'Filter goods or services and select a matching classification.', 'Review source descriptions and rate conditions before using a code in your invoice.'],
+    faq: [
+      ['What is the difference between HSN and SAC?', 'HSN classifies goods and SAC classifies services. Use the goods or services filter to narrow the local catalogue to the relevant classification.'],
+      ['Can I search using a product description?', 'Yes. Enter a product or service description, or a numeric code. Exact code matches appear first, followed by broader matching classifications.'],
+      ['Why do codes have different numbers of digits?', 'The catalogue includes broader headings and more detailed classifications. A short heading may cover several specific products; read the full description before choosing.'],
+      ['Does selecting an HSN code determine my GST rate?', 'No. Rates can depend on descriptions, conditions, effective dates and notifications. This page provides reference candidates rather than a guaranteed applicable tax rate.'],
+      ['Are the GST rate references always current?', 'The rate information is a dated reference snapshot. Effective dates and subsequent amendments are not verified here. Review the linked official source and relevant notification for your invoice date.'],
+      ['Do I need to sign up to search classifications?', 'No account is required to search or copy classifications. Searches run locally in your browser after the catalogue loads, without government taxpayer data retrieval.'],
+      ['Can I use the results to create a GST invoice?', 'Use the linked GST invoice generator and enter your selected code. Review the full classification and applicable rate separately before finalising your invoice.'],
+    ],
+  },
   'wishes-studio': {
     h1: 'Free Festive Wishes & Greeting Card Maker',
     intro: 'Personalize Diwali, Ugadi, birthday, New Year and Christmas cards, then download your design as an image.',
