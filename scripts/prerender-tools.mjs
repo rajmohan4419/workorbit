@@ -310,9 +310,17 @@ function applyHead(template, h) {
 function noscriptBodyForTool(tool, content) {
   const how = (content?.how || []).map((s) => `<li>${esc(s)}</li>`).join('');
   const faq = (content?.faq || []).map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('');
+  const article = Array.isArray(content?.article)
+    ? content.article.map((p) => `<p>${esc(p)}</p>`).join('')
+    : typeof content?.article === 'string'
+    ? `<p>${esc(content.article)}</p>`
+    : '';
+
   return `<noscript><main><h1>${esc(tool.name)}</h1><p>${esc(
     content?.intro || tool.description
   )}</p>${how ? `<h2>How to use it</h2><ol>${how}</ol>` : ''}${
+    article ? `<h2>Guide & Technical Reference</h2>${article}` : ''
+  }${
     faq ? `<h2>Questions</h2>${faq}` : ''
   }<p><a href="/tools">Browse all free tools</a></p></main></noscript>`;
 }

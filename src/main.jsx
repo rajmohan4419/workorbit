@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { TaskFeedback } from './components/feedback/TaskFeedback.jsx'
 
 // Apply saved theme, or follow the device setting on first visit.
 {
@@ -13,5 +14,6 @@ import App from './App.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
+    <TaskFeedback />
   </StrictMode>
 )
