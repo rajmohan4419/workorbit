@@ -845,7 +845,13 @@ export default function ToolPage() {
               <section className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
                 <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100">About & Detailed Guide</h3>
                 <div className="border-t border-[var(--orbit-border)] pt-4 text-sm leading-7 text-stone-700 dark:text-stone-300 space-y-3">
-                  {info.article}
+                  {Array.isArray(info.article)
+                    ? info.article.map((p, idx) => (
+                        <p key={idx} className="text-stone-600 dark:text-stone-300 leading-7">{p}</p>
+                      ))
+                    : typeof info.article === 'string'
+                    ? <p className="text-stone-600 dark:text-stone-300 leading-7 whitespace-pre-line">{info.article}</p>
+                    : info.article}
                 </div>
               </section>
             )}
