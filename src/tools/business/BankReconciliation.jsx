@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
-  Upload, CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check, X
+  Upload, CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check, X, Share2
 } from 'lucide-react';
+import { useToolShareContext } from '../../lib/shareResults';
 import { parseSpreadsheet, exportSpreadsheet, downloadSpreadsheetBlob } from '../../engines/excelEngine';
 import {
   normalizeTransaction,
@@ -14,6 +15,7 @@ import { trackExportClicked } from '../../lib/analytics';
 
 export default function BankReconciliation() {
   const { hasFeature } = usePlan();
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const [showGateModal, setShowGateModal] = useState(false);
   const [bankFile, setBankFile] = useState(null);
   const [bankData, setBankData] = useState(null);
@@ -159,6 +161,24 @@ export default function BankReconciliation() {
       return { reconciliation: null, rowErrors: { bank: [], ledger: [] } };
     }
   }, [bankData, ledgerData, bankMapping, ledgerMapping, dateToleranceDays, closingBankBalance, closingLedgerBalance]);
+
+  // Live Result Share Context Registration
+  useEffect(() => {
+    if (reconciliation?.summary) {
+      const sum = reconciliation.summary;
+      const matchPct = sum.matchRatePercent ?? 0;
+      updateSharePayload({
+        headlineMetric: `${matchPct}% Match Rate`,
+        subMetrics: [
+          { label: 'Matched Pairs', value: `${sum.matchedPairsCount || 0} pairs` },
+          { label: 'Recon Status', value: sum.isStatementReconciled ? 'Agreed (0 Diff)' : 'Variance Detected' },
+          { label: 'Adjusted Bank', value: `₹${(sum.adjustedBankBalance || 0).toLocaleString('en-IN')}` },
+        ],
+        summaryText: `Reconciled bank statement with ${matchPct}% match rate (${sum.matchedPairsCount || 0} matched transaction pairs) on OrbitBoard.`,
+        queryParams: {}, // Strictly zero PII in query params
+      });
+    }
+  }, [reconciliation, updateSharePayload]);
 
   const handleExportReport = () => {
     if (!reconciliation) return;
@@ -528,14 +548,24 @@ export default function BankReconciliation() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleExportReport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs transition"
-          >
-            <Download size={13} />
-            Export Reconciliation Statement (XLSX)
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleExportReport}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs transition cursor-pointer"
+            >
+              <Download size={13} />
+              Export Reconciliation Statement (XLSX)
+            </button>
+            <button
+              type="button"
+              onClick={() => openShareModal()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-750 text-stone-800 dark:text-stone-200 font-medium text-xs shadow-xs transition cursor-pointer"
+            >
+              <Share2 size={13} className="text-accent-500" />
+              Share Scorecard
+            </button>
+          </div>
         </div>
       )}
 

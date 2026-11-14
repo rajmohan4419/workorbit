@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Field, Result } from '../../components/tools/ToolFields';
 import { money, num } from '../../lib/toolFormat';
+import { getToolParams } from '../../data/toolParams';
+import { CopyResultLink } from '../../components/tools/CopyResultLink';
 
 function calculateNewTax(taxable) {
   const slabs = [[400000, 0], [400000, .05], [400000, .10], [400000, .15], [400000, .20], [400000, .25], [Infinity, .30]];
@@ -19,13 +21,29 @@ function calculateOldTax(taxable) {
 }
 
 export function SalaryCalculator() {
-  const [ctc, setCtc] = useState('1000000');
-  const [basicPct, setBasicPct] = useState('40');
-  const [variable, setVariable] = useState('0');
-  const [gratuity, setGratuity] = useState('0');
-  const [pfCap, setPfCap] = useState(true);
-  const [regime, setRegime] = useState('new');
-  const [state, setState] = useState('Karnataka');
+  const init = () => getToolParams('ctc-to-inhand');
+  const [ctc, setCtc] = useState(() => init().ctc);
+  const [basicPct, setBasicPct] = useState(() => init().basicPct);
+  const [variable, setVariable] = useState(() => init().variable);
+  const [gratuity, setGratuity] = useState(() => init().gratuity);
+  const [pfCap, setPfCap] = useState(() => init().pfCap !== 'false');
+  const [regime, setRegime] = useState(() => init().regime);
+  const [state, setState] = useState(() => init().state);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set('ctc', ctc);
+      sp.set('basicPct', basicPct);
+      sp.set('variable', variable);
+      sp.set('gratuity', gratuity);
+      sp.set('pfCap', String(pfCap));
+      sp.set('regime', regime);
+      sp.set('state', state);
+      window.history.replaceState(null, '', `${window.location.pathname}?${sp.toString()}`);
+    } catch { /* ignore */ }
+  }, [ctc, basicPct, variable, gratuity, pfCap, regime, state]);
 
   const result = useMemo(() => {
     const annualCtc = num(ctc), basic = annualCtc * num(basicPct) / 100;
@@ -88,6 +106,7 @@ export function SalaryCalculator() {
           <Result label="Employee EPF" value={`₹ ${money(result.employeePf)}`} />
           <Result label="Employer EPF included in CTC" value={`₹ ${money(result.employerPf)}`} />
           <Result label="Professional tax" value={`₹ ${money(result.pt)}`} />
+          <CopyResultLink slug="ctc-to-inhand" params={{ ctc, basicPct, variable, gratuity, pfCap: String(pfCap), regime, state }} />
         </div>
         <div className="rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 text-xs text-stone-600 dark:text-stone-400 space-y-2">
           <div className="flex justify-between"><span>Gross cash salary before deductions</span><span className="font-semibold text-stone-900 dark:text-stone-100">₹ {money(result.fixedGross)}</span></div>
@@ -101,9 +120,20 @@ export function SalaryCalculator() {
 }
 
 export function SalaryHike() {
-  const [old, setOld] = useState('1000000');
-  const [next, setNext] = useState('1200000');
+  const init = () => getToolParams('salary-hike');
+  const [old, setOld] = useState(() => init().current);
+  const [next, setNext] = useState(() => init().revised);
   const o = num(old), n = num(next), h = o ? ((n - o) / o) * 100 : 0;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set('current', old);
+      sp.set('revised', next);
+      window.history.replaceState(null, '', `${window.location.pathname}?${sp.toString()}`);
+    } catch { /* ignore */ }
+  }, [old, next]);
 
   return (
     <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
@@ -115,6 +145,7 @@ export function SalaryHike() {
         <Result label="Percentage Hike" value={`${h.toFixed(2)}%`} highlight />
         <Result label="Absolute Increase" value={`₹ ${money(n - o)} / year`} />
         <Result label="Monthly Increase" value={`₹ ${money((n - o) / 12)} / month`} />
+        <CopyResultLink slug="salary-hike" params={{ current: old, revised: next }} />
       </div>
     </div>
   );

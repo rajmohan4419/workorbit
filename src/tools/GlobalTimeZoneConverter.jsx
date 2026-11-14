@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { ArrowRight, Share2, Check } from 'lucide-react';
+import { ArrowRight, Share2, Check, Sparkles } from 'lucide-react';
+import { useToolShareContext } from '../lib/shareResults';
 import {
   TIMEZONES,
   PRESETS,
@@ -15,6 +16,7 @@ import DestinationZoneSelector from './timezone/components/DestinationZoneSelect
 import ConversionResultsList from './timezone/components/ConversionResultsList';
 
 export default function GlobalTimeZoneConverter() {
+  const { updateSharePayload, openShareModal } = useToolShareContext();
   const initial = useMemo(() => {
     const base = getInitialDateTime();
     if (typeof window === 'undefined') {
@@ -97,6 +99,27 @@ export default function GlobalTimeZoneConverter() {
       // ignore
     }
   }, [sourceZone, sourceDate, sourceTime, selectedDestinations]);
+
+  // Live Result Share Context Registration
+  useEffect(() => {
+    const fromCity = (sourceZone || '').split('/').pop().replace('_', ' ');
+    const toCity = selectedDestinations?.[0] ? selectedDestinations[0].split('/').pop().replace('_', ' ') : 'Global';
+    updateSharePayload({
+      headlineMetric: `${fromCity} ↔ ${toCity}`,
+      subMetrics: [
+        { label: 'Source Time', value: `${sourceTime} (${fromCity})` },
+        { label: 'Date', value: sourceDate },
+        { label: 'Active Zones', value: `${selectedDestinations.length} zones` },
+      ],
+      summaryText: `Coordinating meeting between ${fromCity} (${sourceTime}) and ${selectedDestinations.length} international time zones on OrbitBoard.`,
+      queryParams: {
+        from: sourceZone,
+        date: sourceDate,
+        time: sourceTime,
+        to: selectedDestinations.join(','),
+      },
+    });
+  }, [sourceZone, sourceDate, sourceTime, selectedDestinations, updateSharePayload]);
 
   const handleCopyShareLink = useCallback(async () => {
     const params = new URLSearchParams();
@@ -239,23 +262,33 @@ export default function GlobalTimeZoneConverter() {
           <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">Live Time Zone Meeting Converter</h3>
           <p className="text-xs text-stone-500 dark:text-stone-400">Convert team times across IST, EST, PST, GMT, BST, JST, and AEDT with automatic DST adjustment.</p>
         </div>
-        <button
-          type="button"
-          onClick={handleCopyShareLink}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-accent-50 dark:bg-accent-950/50 text-accent-700 dark:text-accent-300 border border-accent-200 dark:border-accent-800 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer shrink-0"
-        >
-          {copiedLink ? (
-            <>
-              <Check size={14} className="text-emerald-500" />
-              <span>Link Copied!</span>
-            </>
-          ) : (
-            <>
-              <Share2 size={14} />
-              <span>Copy Shareable Link</span>
-            </>
-          )}
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleCopyShareLink}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-accent-50 dark:bg-accent-950/50 text-accent-700 dark:text-accent-300 border border-accent-200 dark:border-accent-800 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition cursor-pointer"
+          >
+            {copiedLink ? (
+              <>
+                <Check size={14} className="text-emerald-500" />
+                <span>Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={14} />
+                <span>Copy Shareable Link</span>
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => openShareModal()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-750 text-stone-800 dark:text-stone-200 border border-[var(--orbit-border)] transition cursor-pointer shadow-2xs"
+          >
+            <Sparkles size={14} className="text-amber-500" />
+            <span>Share Scorecard</span>
+          </button>
+        </div>
       </div>
 
       {/* Quick Presets / Conversion Examples */}

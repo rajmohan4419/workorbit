@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { Share2 } from 'lucide-react';
+import { useToolShareContext } from '../../lib/shareResults';
 
 const num = value => Math.max(0, Number(value) || 0);
 const money = value => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.max(0, value));
@@ -55,12 +57,51 @@ function oldRegimeTax(taxable, senior = false) {
 }
 
 export default function IndiaIncomeTaxCalculator() {
-  const [income, setIncome] = useState('1500000');
-  const [deductions, setDeductions] = useState('0');
-  const [regime, setRegime] = useState('new');
-  const [ageBand, setAgeBand] = useState('below60');
-  const [incomeType, setIncomeType] = useState('salary');
+  const { updateSharePayload, openShareModal } = useToolShareContext();
+
+  // URL state restoration on mount
+  const [income, setIncome] = useState(() => {
+    if (typeof window === 'undefined') return '1500000';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('income') || '1500000';
+  });
+  const [deductions, setDeductions] = useState(() => {
+    if (typeof window === 'undefined') return '0';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('deductions') || '0';
+  });
+  const [regime, setRegime] = useState(() => {
+    if (typeof window === 'undefined') return 'new';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('regime') || 'new';
+  });
+  const [ageBand, setAgeBand] = useState(() => {
+    if (typeof window === 'undefined') return 'below60';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('ageBand') || 'below60';
+  });
+  const [incomeType, setIncomeType] = useState(() => {
+    if (typeof window === 'undefined') return 'salary';
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get('incomeType') || 'salary';
+  });
   const [resident, setResident] = useState(true);
+
+  // Sync to URL state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set('income', income);
+      sp.set('deductions', deductions);
+      sp.set('regime', regime);
+      sp.set('ageBand', ageBand);
+      sp.set('incomeType', incomeType);
+      window.history.replaceState(null, '', `${window.location.pathname}?${sp.toString()}`);
+    } catch {
+      // ignore
+    }
+  }, [income, deductions, regime, ageBand, incomeType]);
 
   const result = useMemo(() => {
     const gross = num(income);
@@ -82,6 +123,21 @@ export default function IndiaIncomeTaxCalculator() {
 
     return { gross, standardDeduction, taxable, baseTax, rebate, surcharge, cess, total, monthly: total / 12 };
   }, [income, deductions, regime, ageBand, incomeType, resident]);
+
+  // Live Result Share Context Registration
+  useEffect(() => {
+    const effectiveRate = ((result.total / (result.gross || 1)) * 100).toFixed(1);
+    updateSharePayload({
+      headlineMetric: `₹ ${money(result.total)} Income Tax`,
+      subMetrics: [
+        { label: 'Taxable Income', value: `₹ ${money(result.taxable)}` },
+        { label: 'Tax Regime', value: regime === 'new' ? 'New (115BAC)' : 'Old Regime' },
+        { label: 'Effective Rate', value: `${effectiveRate}%` },
+      ],
+      summaryText: `Estimated total tax of ₹ ${money(result.total)} on ₹ ${money(result.gross)} under ${regime} regime (${effectiveRate}% effective)`,
+      queryParams: { income, deductions, regime, ageBand, incomeType },
+    });
+  }, [result, income, deductions, regime, ageBand, incomeType, updateSharePayload]);
 
   return (
     <div className="space-y-5">
@@ -131,6 +187,15 @@ export default function IndiaIncomeTaxCalculator() {
         <Result label="Surcharge" value={`₹ ${money(result.surcharge)}`} />
         <Result label="Health & education cess" value={`₹ ${money(result.cess)}`} />
       </div>
+
+      <button
+        type="button"
+        onClick={() => openShareModal()}
+        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[var(--orbit-border)] bg-slate-900 hover:bg-slate-850 text-xs sm:text-sm font-semibold text-slate-100 hover:text-accent-400 hover:border-accent-500/40 transition shadow-sm cursor-pointer active:scale-[0.98]"
+      >
+        <Share2 size={15} className="text-accent-400" />
+        <span>Share Tax Result Scorecard</span>
+      </button>
 
       <p className="text-xs text-slate-500">Uses AY 2026-27 individual slabs and a simplified calculation. Salary income gets a ₹75,000 standard deduction in the new regime or ₹50,000 in the old regime; enter only additional deductions here. Capital gains, special-rate income, detailed exemptions, payroll PF and every possible rebate/relief are not modelled.</p>
     </div>

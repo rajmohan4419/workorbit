@@ -1,15 +1,18 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useMatch } from 'react-router-dom';
 import { TOOLS } from './data/toolCatalog';
 import { AmbientBackground } from './components/layout/AmbientBackground';
 import { InstallPrompt } from './components/InstallPrompt';
-import { DiwaliCelebration } from './components/DiwaliCelebration';
 import { QuickQuiz } from './components/QuickQuiz';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
 import { loadGoogleAnalytics } from './lib/analytics';
 const WishesStudio = lazy(() => import('./pages/WishesStudio'));
+import { SHARED_MOMENT_PATH } from './lib/moments.js';
+const MomentsHome = lazy(() => import('./pages/Moments').then(m => ({ default: m.MomentsHome })));
+const MomentExperience = lazy(() => import('./pages/Moments').then(m => ({ default: m.MomentExperience })));
+const SharedMoment = lazy(() => import('./pages/Moments').then(m => ({ default: m.SharedMoment })));
 const ToolsCatalogue = lazy(() => import('./pages/ToolsCatalogue'));
 const ToolPageRoute = lazy(() => import('./pages/ToolPageRoute'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
@@ -22,11 +25,23 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 export default function App() {
   return (
     <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+function AppContent() {
+  const sharedMoment = useMatch(SHARED_MOMENT_PATH);
+  if (sharedMoment) {
+    return <Suspense fallback={<p role="status">Loading greeting…</p>}><SharedMoment /></Suspense>;
+  }
+
+  return (
+    <>
       <AppBackgroundShell />
       <Analytics />
       <Telemetry />
       <InstallPrompt />
-      <DiwaliCelebration />
       <QuickQuiz />
       <CookieConsentBanner />
       <GlobalPreviewModal />
@@ -35,6 +50,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<ToolsHome />} />
             <Route path="/tools" element={<ToolsCatalogue />} />
+            <Route path="/moments" element={<MomentsHome />} />
+            <Route path="/moments/:slug" element={<MomentExperience />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
@@ -46,7 +63,7 @@ export default function App() {
           </Routes>
         </Suspense>
       </div>
-    </BrowserRouter>
+    </>
   );
 }
 
