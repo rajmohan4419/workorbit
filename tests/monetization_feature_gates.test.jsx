@@ -33,7 +33,7 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
   });
 
   describe('GstInvoice feature gates', () => {
-    it('keeps on-screen calculations 100% free while gating PDF export for unentitled users', async () => {
+    it('validates invoice inputs without a pricing gate before preparing a signed-in download', async () => {
       vi.spyOn(usePlanModule, 'usePlan').mockReturnValue({
         plan: 'free',
         isPaid: false,
@@ -65,9 +65,8 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
         downloadBtn.click();
       });
 
-      // Triggers paywall prompt for advanced_exports:
-      expect(trackSpy).toHaveBeenCalledWith('advanced_exports');
-      expect(container.textContent).toContain('Professional PDF & Excel Exports');
+      expect(trackSpy).not.toHaveBeenCalledWith('advanced_exports');
+      expect(container.textContent).toContain('Seller name is required.');
     });
 
     it('gates save workspace for unentitled users and displays upgrade prompt', async () => {
@@ -103,7 +102,7 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
   });
 
   describe('BankReconciliation feature gates', () => {
-    it('gates XLSX report export while preserving free interactive reconciliation', async () => {
+    it('routes XLSX exports through the shared account coordinator while preserving free reconciliation', async () => {
       vi.spyOn(usePlanModule, 'usePlan').mockReturnValue({
         plan: 'free',
         isPaid: false,
@@ -135,6 +134,7 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
       expect(container.textContent).toContain('Reconciliation Statement');
       expect(container.textContent).toContain('Matched (5)');
 
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
       // Click export button:
       const exportBtn = Array.from(container.querySelectorAll('button')).find(
         (b) => b.textContent.includes('Export Reconciliation Statement')
@@ -145,9 +145,8 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
         exportBtn.click();
       });
 
-      // Triggers paywall prompt for advanced_exports:
-      expect(trackSpy).toHaveBeenCalledWith('advanced_exports');
-      expect(container.textContent).toContain('Professional PDF & Excel Exports');
+      expect(trackSpy).not.toHaveBeenCalledWith('advanced_exports');
+      expect(dispatchSpy.mock.calls.some(([event]) => event.type === 'orbitboard:preview-download' && event.detail.metered === true)).toBe(true);
     });
   });
 

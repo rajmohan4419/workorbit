@@ -11,7 +11,7 @@ OrbitBoard is a high-performance multi-tool web application and business utility
 
 ### Core Guarantees:
 1. **100% Client-Side Execution & Privacy:** Calculations, PDF transformations, spreadsheet parsing (XLSX/CSV), image conversions, JSON/JWT processing, and tax computations run entirely within the user's browser using WebAssembly, Web Workers, and local JavaScript engines. Sensitive payroll data, bank statements, invoice books, and passwords are never transmitted to external servers.
-2. **Zero Sign-Up & Zero Captchas:** Immediate, frictionless access to all primary tools. No mandatory registration, authentication gates, or human-verification friction.
+2. **Free On-Screen Use Without Sign-Up:** Core on-screen tools can be used anonymously. PDF/XLSX downloads require an OrbitBoard account for usage tracking. Weekly access and 10/100-download options are planned; pricing and checkout are not yet enabled for these options.
 3. **Deterministic Financial & Accounting Precision:** Finance and business tools implement rigorous standard accounting logic (e.g., dual-date tolerance bank reconciliation, Indian Budget 2025 income tax slabs, GSTR-2B vs. Books ITC cross-matching, SaaS NRR/GRR/CAC/LTV formulas).
 4. **Clean URLs & Shareable State:** Calculators and converters encode configuration state in URL search parameters (`?from=...&date=...`), facilitating one-click sharing across Slack, WhatsApp, and email without server storage.
 

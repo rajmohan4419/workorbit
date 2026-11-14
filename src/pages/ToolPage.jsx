@@ -852,7 +852,7 @@ export default function ToolPage() {
               <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100">Frequently Asked Questions</h3>
               <div className="border-t border-[var(--orbit-border)] divide-y divide-[var(--orbit-border)]">
                 {(info?.faq || [
-                  [`Is ${tool.name} free to use?`, `Yes, ${tool.name} is 100% free with no sign-up or registration required. All results are calculated instantly.`],
+                  [`Is ${tool.name} free to use?`, `On-screen use of ${tool.name} is free without sign-up. PDF/XLSX downloads require an account so you can track usage.`],
                   [`Is my data safe when using ${tool.name}?`, `Yes. All calculations and file transformations occur client-side in your browser. Your data is never uploaded, stored, or shared on external servers.`]
                 ]).map(([q, a], i) => (
                   <details

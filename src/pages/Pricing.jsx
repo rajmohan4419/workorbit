@@ -12,6 +12,8 @@ import { ToolsHomeHeader } from '../components/toolsHome/ToolsHomeHeader';
 import { ToolsHomeFooter } from '../components/toolsHome/ToolsHomeSections';
 import { QuickAccessLeftSidebar } from '../components/layout/QuickAccessLeftSidebar';
 import { PLAN_CATALOG } from '../lib/monetization/planCatalog';
+import { DownloadOffers } from '../components/monetization/DownloadOffers';
+import { Link } from 'react-router-dom';
 import { usePlan } from '../lib/monetization/usePlan';
 import { supabase } from '../lib/supabase';
 import { loadRazorpayScript } from '../lib/razorpay';
@@ -63,7 +65,7 @@ export default function Pricing() {
       if (!session || !session.access_token) {
         setStatusMessage({
           type: 'info',
-          text: 'Account registration is temporarily unavailable while we prepare the Business Portal launch.',
+          text: 'Create your download account or sign in before choosing a plan. No account is needed for on-screen tools.',
         });
         setLoadingPlan(null);
         return;
@@ -194,7 +196,7 @@ export default function Pricing() {
       features: [
         'Everything in Free, plus:',
         '100% Ad-free experience',
-        'Unrestricted PDF & XLSX report exports',
+        'PDF & XLSX report exports within your plan allowance',
         `${proPlan.limits.advanced_export.toLocaleString('en-IN')} advanced exports / period`,
         'Saved cloud workspaces & seller profiles',
         `${proPlan.limits.bulk_job.toLocaleString('en-IN')} bulk spreadsheet batch jobs`,
@@ -235,6 +237,7 @@ export default function Pricing() {
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <div>
           <ToolsHomeHeader />
+          <div className="mx-auto max-w-6xl px-4 pt-6"><p className="text-center text-sm">Use tools free without an account. <Link className="font-semibold text-indigo-700 underline" to="/account">Sign up to download and track usage</Link>.</p><DownloadOffers /></div>
 
           {/* Hero Section */}
           <section className="py-12 sm:py-16 text-center max-w-4xl mx-auto px-4 sm:px-6">

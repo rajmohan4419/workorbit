@@ -37,6 +37,11 @@ export function findRateReferences(rates, entry) {
       .match(/\b\d{2,8}\b/g) || []).some(code => entry.code.startsWith(code) || code.startsWith(entry.code)));
 }
 
+export function exactRateHeading(row, code) {
+  return (row.heading.replace(/\b(\d{4})\s+(\d{2})(?:\s+(\d{2}))?\b/g, (_, head, sub, item) => head + sub + (item || ''))
+    .match(/\b\d{2,8}\b/g) || []).includes(code);
+}
+
 export function applicableNumericRate(row) {
   const number = value => /^\d+(\.\d+)?%?$/.test(value.replace(/\s/g, '')) ? Number(value.replace(/[%\s]/g, '')) : null;
   const igst = number(row.igst), cgst = number(row.cgst), sgst = number(row.sgst);

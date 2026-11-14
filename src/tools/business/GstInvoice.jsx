@@ -384,10 +384,6 @@ export function GstInvoice() {
   };
 
   const handleDownloadPDF = useCallback(async () => {
-    if (!hasFeature('advanced_exports')) {
-      setGateFeature('advanced_exports');
-      return;
-    }
     const validation = validateInvoice({ seller, buyer, meta, items });
     setExportAttempted(true);
     setExportErrors([]);
@@ -402,7 +398,7 @@ export function GstInvoice() {
     } finally {
       setGenerating(false);
     }
-  }, [hasFeature, seller, buyer, meta, items, totals, notes, signatory, isInterState]);
+  }, [seller, buyer, meta, items, totals, notes, signatory, isInterState]);
 
   const handleSaveWorkspace = useCallback(() => {
     if (!hasFeature('saved_workspaces')) {
@@ -586,8 +582,8 @@ export function GstInvoice() {
       <SectionCard icon={FileText} title="Line Items">
         <div className="mb-3">
           <label className="text-sm">Apply lookup rate to row{' '}
-            <select aria-label="Invoice row for GST lookup" className="orbit-control" value={items.some(item => String(item.id) === lookupRow) ? lookupRow : String(items[0].id)} onChange={event => setLookupRow(event.target.value)}>
-              {items.map((item, index) => <option key={item.id} value={item.id}>{index + 1} — {item.description || 'New item'}</option>)}
+            <select aria-label="Invoice row for GST lookup" className="orbit-control max-w-full w-full min-w-0" value={items.some(item => String(item.id) === lookupRow) ? lookupRow : String(items[0].id)} onChange={event => setLookupRow(event.target.value)}>
+              {items.map((item, index) => <option key={item.id} value={item.id}>{index + 1} — {(item.description || 'New item').slice(0, 65)}{item.description?.length > 65 ? '…' : ''}</option>)}
             </select>
           </label>
           <GstLookup key={`${lookupRow}-${meta.invoiceDate}`} onApply={rate => applyReferenceRate(Number(items.some(item => String(item.id) === lookupRow) ? lookupRow : items[0].id), rate)} />

@@ -35,6 +35,22 @@ describe('GST lookup interaction', () => {
     expect(button.disabled).toBe(false);
     await act(async () => button.click());
     expect(apply).toHaveBeenCalledWith(18, row);
+    expect(container.querySelector('.gst-rate-reference')).toBeNull();
+    expect(container.textContent).toContain('18% selected');
+    await act(async () => container.querySelector('button').click());
+    expect(container.querySelector('input[type="checkbox"]').checked).toBe(false);
+  });
+  it('shows two best rate entries first and reveals additional choices on hover or click', async () => {
+    vi.mocked(reference.loadGstReference).mockResolvedValue({ codes: [entry], rates: [
+      { ...row, id: 'related', heading: '69' }, row, { ...row, id: 'exact-two' }, { ...row, id: 'exact-three' },
+    ], manifest: { capturedOn: '2026-11-14' } });
+    await act(async () => root.render(<GstRateReference entry={entry} onApply={vi.fn()} />));
+    expect(container.querySelectorAll('.gst-rate-card')).toHaveLength(2);
+    expect(container.textContent).not.toContain('Related heading —');
+    const showMore = [...container.querySelectorAll('button')].find(button => button.textContent.startsWith('Show more'));
+    await act(async () => showMore.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })));
+    expect(container.querySelectorAll('.gst-rate-card')).toHaveLength(4);
+    expect(container.textContent).toContain('Related heading —');
   });
   it('does not apply a base rate when a related cess entry exists', async () => {
     vi.mocked(reference.loadGstReference).mockResolvedValue({ codes: [entry], rates: [row, { ...row, id: 'cess', condition: '12% cess' }], manifest: { capturedOn: '2026-11-14' } });

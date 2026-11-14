@@ -68,10 +68,10 @@ export function ToolsHomeHeader({ visitorCount }) {
           {/* Announcements & Status Bar (Center & Right) */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link
-              to="/pricing"
+              to="/account"
               className="px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold text-stone-700 dark:text-stone-200 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-stone-100 dark:hover:bg-stone-800 border border-transparent hover:border-[var(--orbit-border)] transition shrink-0"
             >
-              Pricing
+              Sign up / Account
             </Link>
 
             {/* Primary Announcement Pill */}
@@ -79,7 +79,7 @@ export function ToolsHomeHeader({ visitorCount }) {
               <Sparkles size={13} className="shrink-0 text-accent-600 dark:text-accent-400" />
               <span className="truncate">
                 <span className="hidden sm:inline font-bold">Announcement: </span>
-                <span>100% Client-Side • No data leaves your device</span>
+                <span>Free tools · Sign up for PDF/XLSX downloads</span>
               </span>
             </div>
 
@@ -93,7 +93,7 @@ export function ToolsHomeHeader({ visitorCount }) {
             ) : (
               <div className="hidden lg:inline-flex items-center gap-1.5 rounded-full border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-2.5 py-1 text-[11px] font-medium text-stone-600 dark:text-stone-300 shrink-0">
                 <ShieldCheck size={13} className="text-emerald-600" />
-                <span>Zero Server Storage</span>
+                <span>Browser-based file processing</span>
               </div>
             )}
           </div>

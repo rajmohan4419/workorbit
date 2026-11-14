@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
-  CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check, X, Share2
+  CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check, Share2
 } from 'lucide-react';
 import { useToolShareContext } from '../../lib/shareResults';
 import { exportSpreadsheet, downloadSpreadsheetBlob } from '../../engines/excelEngine';
@@ -11,8 +11,6 @@ import {
 } from '../../engines/bankReconciliationEngine';
 import { FinanceFileImport } from '../../components/tools/FinanceFileImport.jsx';
 import { FINANCE_SCOPE } from '../../engines/financeImport.js';
-import { usePlan } from '../../lib/monetization/usePlan';
-import { PlanGate } from '../../components/monetization/PlanGate';
 import { trackExportClicked } from '../../lib/analytics';
 
 const BANK_FIELDS = [
@@ -32,9 +30,7 @@ function bankErrors(row, index, source) {
 const validateBank = (row, index) => bankErrors(row, index, 'bank');
 const validateLedger = (row, index) => bankErrors(row, index, 'ledger');
 export default function BankReconciliation() {
-  const { hasFeature } = usePlan();
   const { updateSharePayload, openShareModal } = useToolShareContext();
-  const [showGateModal, setShowGateModal] = useState(false);
   const [bankSource, setBankSource] = useState(null);
   const [ledgerSource, setLedgerSource] = useState(null);
   const [demo, setDemo] = useState(false);
@@ -126,10 +122,6 @@ export default function BankReconciliation() {
 
   const handleExportReport = () => {
     if (!reconciliation) return;
-    if (!hasFeature('advanced_exports')) {
-      setShowGateModal(true);
-      return;
-    }
 
     const statementSheet = [
       { 'Bank Reconciliation Statement': 'Bank Side Adjustments', 'Amount (₹)': '' },
@@ -668,22 +660,7 @@ export default function BankReconciliation() {
           )}
         </div>
       )}
-      {/* ── Upgrade Prompt Modal ── */}
-      {showGateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg">
-            <button
-              type="button"
-              onClick={() => setShowGateModal(false)}
-              className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition"
-              aria-label="Close upgrade prompt"
-            >
-              <X size={16} />
-            </button>
-            <PlanGate feature="advanced_exports" />
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

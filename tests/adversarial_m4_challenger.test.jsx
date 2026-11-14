@@ -98,7 +98,7 @@ describe('Adversarial M4 Challenger Test Suite', () => {
       expect(container.textContent).not.toContain('Feature Upgrade Required');
     });
 
-    it('1.2: GstInvoice gates PDF export and Save Workspace, correctly emitting paywall_viewed with specific feature', async () => {
+    it('1.2: Invoice validates before downloads while workspace entitlement remains separate', async () => {
       vi.spyOn(usePlanModule, 'usePlan').mockReturnValue({
         ...FREE_PLAN_STATE,
         hasFeature: vi.fn().mockReturnValue(false),
@@ -123,16 +123,8 @@ describe('Adversarial M4 Challenger Test Suite', () => {
         downloadBtn.click();
       });
 
-      expect(trackSpy).toHaveBeenCalledWith('advanced_exports');
-      expect(container.textContent).toContain('Professional PDF & Excel Exports');
-      expect(container.textContent).toContain('All on-screen calculations and tools remain 100% free');
-
-      // Dismiss modal by clicking close button
-      const closeBtn = container.querySelector('button[aria-label="Close upgrade prompt"]');
-      expect(closeBtn).toBeTruthy();
-      await act(async () => {
-        closeBtn.click();
-      });
+      expect(trackSpy).not.toHaveBeenCalledWith('advanced_exports');
+      expect(container.textContent).toContain('Seller name is required.');
 
       // Click Save Workspace -> triggers saved_workspaces paywall
       const saveBtn = Array.from(container.querySelectorAll('button')).find(
@@ -146,7 +138,7 @@ describe('Adversarial M4 Challenger Test Suite', () => {
       expect(container.textContent).toContain('Saved Cloud Workspaces');
     });
 
-    it('1.3: BankReconciliation allows free interactive reconciliation but gates XLSX report export', async () => {
+    it('1.3: BankReconciliation routes document exports through account metering', async () => {
       vi.spyOn(usePlanModule, 'usePlan').mockReturnValue({
         ...FREE_PLAN_STATE,
         hasFeature: vi.fn().mockReturnValue(false),
@@ -177,7 +169,8 @@ describe('Adversarial M4 Challenger Test Suite', () => {
       expect(container.textContent).toContain('Closing Balance per Bank Statement₹2,44,990');
       expect(container.textContent).toContain('Adjusted Bank Balance₹2,70,790');
 
-      // Click Export Reconciliation Statement -> blocked by gate
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+      // Export through shared download coordinator
       const exportBtn = Array.from(container.querySelectorAll('button')).find(
         (b) => b.textContent.includes('Export Reconciliation Statement')
       );
@@ -187,8 +180,8 @@ describe('Adversarial M4 Challenger Test Suite', () => {
         exportBtn.click();
       });
 
-      expect(trackSpy).toHaveBeenCalledWith('advanced_exports');
-      expect(container.textContent).toContain('Professional PDF & Excel Exports');
+      expect(trackSpy).not.toHaveBeenCalledWith('advanced_exports');
+      expect(dispatchSpy.mock.calls.some(([event]) => event.type === 'orbitboard:preview-download' && event.detail.metered === true)).toBe(true);
     });
 
     it('1.4: ExcelEngineWorkspace allows free demo loading & single file processing but gates Batch Process (Bulk)', async () => {

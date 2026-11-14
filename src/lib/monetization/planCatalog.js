@@ -25,6 +25,14 @@ export const ONE_TIME_PRODUCTS = Object.freeze({
   'premium-export-pack': Object.freeze({ code:'premium-export-pack', name:'Premium Export Pack', amountInr:99, currency:'INR', entitlement:'advanced_exports' }),
   'bulk-processing-pack': Object.freeze({ code:'bulk-processing-pack', name:'Bulk Processing Pack', amountInr:149, currency:'INR', entitlement:'bulk_processing' }),
 });
+
+// Prepared options only: owner has explicitly deferred prices and allowances.
+// Keep these separate from billable plans so clients cannot initiate checkout.
+export const DOWNLOAD_OFFERS = Object.freeze([
+  Object.freeze({ code: 'download_weekly', name: 'Weekly download access', kind: 'weekly', durationDays: 7, downloads: null, amountInr: null, enabled: false }),
+  Object.freeze({ code: 'download_topup_10', name: '10-download top-up', kind: 'top_up', durationDays: null, downloads: 10, amountInr: null, enabled: false }),
+  Object.freeze({ code: 'download_topup_100', name: '100-download top-up', kind: 'top_up', durationDays: null, downloads: 100, amountInr: null, enabled: false }),
+]);
 export function getPlan(planCode) {
   return Object.prototype.hasOwnProperty.call(PLAN_CATALOG, planCode) ? PLAN_CATALOG[planCode] : null;
 }

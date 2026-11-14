@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { downloadBlob } from '../lib/toolFormat.js';
 
 /**
  * Reusable Excel & Spreadsheet Engine for OrbitBoard
@@ -490,14 +491,7 @@ export function exportValidationErrorReport(errors, format = 'xlsx') {
  * Trigger browser file download from Blob
  */
 export function downloadSpreadsheetBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  return downloadBlob(blob, filename);
 }
 
 /**

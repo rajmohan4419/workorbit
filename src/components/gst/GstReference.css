@@ -22,3 +22,8 @@
 .gst-options [aria-selected="true"] { outline: 2px solid #6366f1; outline-offset: -2px; }
 .gst-rate-reference button:focus-visible, .gst-classification-input:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
 @media (pointer: coarse) { .gst-rate-reference button { min-height: 44px; } }
+.gst-more-glimpse { max-height: 300px; overflow-y: auto; margin-top: 8px; padding: 0 12px; border: 1px solid #c7d2fe; border-radius: 8px; background: white; }
+.gst-selection-summary { display: flex; gap: 12px; align-items: center; margin-block: 8px; font-size: 13px; color: #3730a3; }
+.gst-selection-summary button { min-height: 36px; text-decoration: underline; }
+.gst-title-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gst-show-more { min-height: 40px; padding: 8px 12px; font-size: 13px; color: #4338ca; text-decoration: underline; }

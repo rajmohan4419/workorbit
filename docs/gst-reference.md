@@ -20,3 +20,5 @@ Run the reference engine/UI tests and the normal build after updates. Do not mar
 ## Runtime
 
 Static datasets load on first search focus and are shared through one cached promise. User queries stay in memory and are not passed in network URLs. Invoice inputs and manual GST values retain their existing storage behaviour. The reference widget has no analytics calls. A fetch failure leaves manual entry available.
+
+The compact view shows two best matches, ranking exact code entries before related headings without labelling related results as exact. More results can be revealed by hover, keyboard or click. Selecting a classification closes autocomplete; applying a rate collapses its panel into a short summary with a Change action. Changing selection or invoice date resets rate acknowledgement.

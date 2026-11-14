@@ -72,7 +72,7 @@ export function InstallPrompt() {
         ) : (
           <>
             <strong>📱 Add OrbitBoard</strong> to your home screen for instant
-            access — free, no sign-up!
+            access — free on-screen use; sign up for PDF/XLSX downloads.
           </>
         )}
       </p>
