@@ -1,0 +1,24 @@
+.gst-classification-input { width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 8px; background: white; color: #1e293b; }
+.gst-options { z-index: 10000; overflow-y: auto; background: white; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 10px; box-shadow: 0 8px 28px #0003; font-size: 13px; white-space: normal; }
+.gst-options-heading, .gst-lookup-hint { padding: 8px 10px; font-size: 12px; color: #475569; }
+.gst-option { padding: 10px 12px; cursor: pointer; border-top: 1px solid #e2e8f0; }
+.gst-option span { color: #64748b; font-size: 11px; }
+.gst-option p { margin: 3px 0 0; overflow-wrap: anywhere; }
+.gst-option-active, .gst-option:hover { background: #eef2ff; }
+.gst-lookup { margin-bottom: 16px; padding: 14px; border: 1px solid #c7d2fe; border-radius: 12px; background: #f8fafc; color: #1e293b; }
+.gst-lookup > label > span { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+.gst-rate-reference { margin: 12px 0; padding: 14px; border: 1px solid #c7d2fe; border-radius: 10px; color: #1e293b; background: #f8fafc; font-size: 13px; overflow-wrap: anywhere; white-space: normal; }
+.gst-rate-reference h3 { font-weight: 600; }
+.gst-rate-reference p { margin: 8px 0; }
+.gst-reference-warning { padding: 10px; border-radius: 6px; background: #fffbeb; color: #854d0e; }
+.gst-rate-reference a { text-decoration: underline; color: #4338ca; }
+.gst-rate-ack { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; }
+.gst-rate-ack input { margin-top: 3px; flex-shrink: 0; }
+.gst-rate-card { padding: 12px 0; border-top: 1px solid #cbd5e1; }
+.gst-rate-card details { margin: 8px 0; }
+.gst-rate-card summary { cursor: pointer; }
+.gst-rate-reference button { min-height: 40px; padding: 8px 12px; background: #4338ca; color: white; border-radius: 6px; cursor: pointer; }
+.gst-rate-reference button:disabled { opacity: .5; cursor: not-allowed; }
+.gst-options [aria-selected="true"] { outline: 2px solid #6366f1; outline-offset: -2px; }
+.gst-rate-reference button:focus-visible, .gst-classification-input:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+@media (pointer: coarse) { .gst-rate-reference button { min-height: 44px; } }

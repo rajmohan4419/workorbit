@@ -7,6 +7,7 @@ import { amountToWords, calcItem, invoiceEditorTotals, resolveSupply, validateGs
 import { usePlan } from '../../lib/monetization/usePlan';
 import { PlanGate } from '../../components/monetization/PlanGate';
 import { trackExportClicked } from '../../lib/analytics';
+import { ClassificationInput, GstLookup, GstRateReference } from '../../components/gst/GstReference';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -21,7 +22,6 @@ const INDIAN_STATES = [
 ];
 
 const UNITS = ['Nos', 'Kg', 'Hr', 'Ltr', 'Mtr', 'Pcs', 'Set', 'Box', 'Day', 'Month'];
-const GST_RATES = [0, 5, 12, 18, 28];
 const SELLER_KEY = 'orbitboard:gst-seller';
 const INVOICE_NUM_KEY = 'orbitboard:gst-invoice-num';
 
@@ -310,6 +310,9 @@ export function GstInvoice() {
   const { hasFeature } = usePlan();
   const [gateFeature, setGateFeature] = useState(null);
   const [saveMessage, setSaveMessage] = useState(null);
+  const [classification, setClassification] = useState(null);
+  const [lookupRow, setLookupRow] = useState('1');
+  const [rateMessage, setRateMessage] = useState('');
 
   // Persist seller to localStorage on change
   useEffect(() => {
@@ -365,7 +368,20 @@ export function GstInvoice() {
 
   const updateItem = useCallback((id, key, val) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, [key]: val } : i));
+    if (key === 'hsn' || key === 'description') setClassification(null);
+    setRateMessage('');
   }, []);
+
+  const selectClassification = (id, entry) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, hsn: entry.code, description: item.description || entry.description } : item));
+    setClassification({ itemId: id, entry });
+    setRateMessage('');
+  };
+
+  const applyReferenceRate = (id, rate) => {
+    setItems(prev => prev.map(item => item.id === id ? { ...item, gstRate: rate } : item));
+    setRateMessage(`Reference ${rate}% applied to the selected row. Check applicability before issuing the invoice.`);
+  };
 
   const handleDownloadPDF = useCallback(async () => {
     if (!hasFeature('advanced_exports')) {
@@ -568,6 +584,19 @@ export function GstInvoice() {
 
       {/* ── Line Items ── */}
       <SectionCard icon={FileText} title="Line Items">
+        <div className="mb-3">
+          <label className="text-sm">Apply lookup rate to row{' '}
+            <select aria-label="Invoice row for GST lookup" className="orbit-control" value={items.some(item => String(item.id) === lookupRow) ? lookupRow : String(items[0].id)} onChange={event => setLookupRow(event.target.value)}>
+              {items.map((item, index) => <option key={item.id} value={item.id}>{index + 1} — {item.description || 'New item'}</option>)}
+            </select>
+          </label>
+          <GstLookup key={`${lookupRow}-${meta.invoiceDate}`} onApply={rate => applyReferenceRate(Number(items.some(item => String(item.id) === lookupRow) ? lookupRow : items[0].id), rate)} />
+          {classification && items.some(item => item.id === classification.itemId) && <GstRateReference key={`${classification.itemId}-${classification.entry.code}-${meta.invoiceDate}`} entry={classification.entry}
+            context={`Selected invoice row ${items.findIndex(item => item.id === classification.itemId) + 1}:`}
+            onApply={rate => applyReferenceRate(classification.itemId, rate)} />}
+          {rateMessage && <p role="status" className="text-sm text-indigo-700">{rateMessage}</p>}
+          <p className="text-xs text-gray-600">Type a product, service or code in either line-item field for suggestions. Selecting a classification preserves your description and current GST rate. Rate references appear above the table.</p>
+        </div>
         <div className="invoice-items-scroll" role="region" aria-label="Invoice line items, scroll horizontally for all columns" tabIndex={0}>
           <table className="invoice-items">
             <caption className="sr-only">Invoice line items with quantities, discounts and GST</caption>
@@ -606,10 +635,10 @@ export function GstInvoice() {
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                     <td className="py-1 px-2 text-gray-400">{idx + 1}</td>
                     <td className="py-1 px-2">
-                      <Textarea rows={2} aria-label={`Description, row ${idx + 1}`} value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Service / Product description" className="orbit-control--dense w-full" />
+                      <ClassificationInput multiline label={`Description, row ${idx + 1}`} value={item.description} onChange={value => updateItem(item.id, 'description', value)} onSelect={entry => selectClassification(item.id, entry)} placeholder="Service / Product description" />
                     </td>
                     <td className="py-1 px-2">
-                      <Input aria-label={`HSN/SAC, row ${idx + 1}`} value={item.hsn} onChange={e => updateItem(item.id, 'hsn', e.target.value)} placeholder="998314" className="orbit-control--dense w-full" />
+                      <ClassificationInput label={`HSN/SAC, row ${idx + 1}`} value={item.hsn} onChange={value => updateItem(item.id, 'hsn', value)} onSelect={entry => selectClassification(item.id, entry)} placeholder="Code / search" />
                     </td>
                     <td className="py-1 px-2">
                       <Input type="number" min="0" aria-label={`Quantity, row ${idx + 1}`} value={item.qty} onChange={e => updateItem(item.id, 'qty', e.target.value)} className="orbit-control--dense w-full text-right" />
@@ -627,9 +656,7 @@ export function GstInvoice() {
                     </td>
                     <td className="py-1 px-2 text-right font-medium text-gray-700">{formatAmount(calc.taxable)}</td>
                     <td className="py-1 px-2">
-                      <Select aria-label={`GST percentage, row ${idx + 1}`} value={item.gstRate} onChange={e => updateItem(item.id, 'gstRate', Number(e.target.value))} className="orbit-control--dense w-full">
-                        {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
-                      </Select>
+                      <Input type="number" min="0" max="100" step="0.01" aria-label={`GST percentage, row ${idx + 1}`} value={item.gstRate} onChange={e => updateItem(item.id, 'gstRate', e.target.value)} className="orbit-control--dense w-full" />
                     </td>
                     {isInterState
                       ? <td className="py-1 px-2 text-right text-gray-600">{formatAmount(calc.igst)}</td>
