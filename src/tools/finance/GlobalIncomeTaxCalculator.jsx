@@ -174,20 +174,20 @@ export default function GlobalIncomeTaxCalculator() {
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Country</span>
-          <select value={country} onChange={e => setCountry(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
+          <select value={country} onChange={e => setCountry(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950">
             {Object.entries(COUNTRIES).map(([key, item]) => <option key={key} value={key}>{item.name}</option>)}
           </select>
         </label>
         <label className="block">
           <span className="text-xs font-medium text-slate-400">Annual income / taxable income ({COUNTRIES[country].currency})</span>
-          <input type="number" min="0" value={income} onChange={e => setIncome(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-accent-500" />
+          <input type="number" min="0" value={income} onChange={e => setIncome(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 outline-none focus:border-accent-500" />
         </label>
       </div>
 
       {country === 'us' && (
         <label className="block">
           <span className="text-xs font-medium text-slate-400">US filing status</span>
-          <select value={status} onChange={e => setStatus(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm">
+          <select value={status} onChange={e => setStatus(e.target.value)} className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950">
             <option value="single">Single / Married filing separately</option>
             <option value="joint">Married filing jointly</option>
           </select>

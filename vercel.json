@@ -2,7 +2,8 @@
   "git": {
     "deploymentEnabled": {
       "feat/moments-greeting-experience": false,
-      "feat/moments-festival-films": false
+      "feat/moments-festival-films": false,
+      "feature/wishes-studio-mvp": false
     }
   },
   "buildCommand": "npm run build",

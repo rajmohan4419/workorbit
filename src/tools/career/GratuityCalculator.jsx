@@ -13,7 +13,7 @@ function Field({ label, value, onChange, type = 'number', min = 0, step = '1' })
         step={step}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-accent-500"
+        className="orbit-control mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 outline-none focus:border-accent-500"
       />
     </label>
   );

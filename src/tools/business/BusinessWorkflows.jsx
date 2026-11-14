@@ -166,7 +166,7 @@ export function InvoiceAging() {
             <label className="block">
               <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Group balances by</span>
               <select value={groupBy} onChange={e => setGroupBy(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base">
+                className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900">
                 <option value="">Nothing (overall only)</option>
                 {customColumns.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -204,13 +204,13 @@ export function InvoiceAging() {
               <tbody>
                 {invoices.map((inv, i) => (
                   <tr key={i} className="border-t border-[var(--orbit-border)]">
-                    <td className="p-2"><input aria-label="Invoice number" value={inv.id} onChange={e => update(i, 'id', e.target.value)} className="w-full min-w-[90px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
-                    <td className="p-2"><input aria-label="Customer" value={inv.customer} onChange={e => update(i, 'customer', e.target.value)} className="w-full min-w-[120px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
-                    <td className="p-2"><input aria-label="Amount" inputMode="decimal" value={inv.amount} onChange={e => update(i, 'amount', e.target.value)} className="w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
-                    <td className="p-2"><input aria-label="Amount paid" inputMode="decimal" value={inv.paid} onChange={e => update(i, 'paid', e.target.value)} className="w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
-                    <td className="p-2"><input aria-label="Due date" placeholder="DD/MM/YYYY" value={inv.dueDate} onChange={e => update(i, 'dueDate', e.target.value)} className="w-full min-w-[120px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
+                    <td className="p-2"><input aria-label="Invoice number" value={inv.id} onChange={e => update(i, 'id', e.target.value)} className="orbit-control w-full min-w-[90px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
+                    <td className="p-2"><input aria-label="Customer" value={inv.customer} onChange={e => update(i, 'customer', e.target.value)} className="orbit-control w-full min-w-[120px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
+                    <td className="p-2"><input aria-label="Amount" inputMode="decimal" value={inv.amount} onChange={e => update(i, 'amount', e.target.value)} className="orbit-control w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
+                    <td className="p-2"><input aria-label="Amount paid" inputMode="decimal" value={inv.paid} onChange={e => update(i, 'paid', e.target.value)} className="orbit-control w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
+                    <td className="p-2"><input aria-label="Due date" placeholder="DD/MM/YYYY" value={inv.dueDate} onChange={e => update(i, 'dueDate', e.target.value)} className="orbit-control w-full min-w-[120px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
                     {customColumns.map(c => (
-                      <td key={c} className="p-2"><input aria-label={`${c} for invoice ${i + 1}`} value={inv.extra?.[c] ?? ''} onChange={e => updateExtra(i, c, e.target.value)} className="w-full min-w-[110px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
+                      <td key={c} className="p-2"><input aria-label={`${c} for invoice ${i + 1}`} value={inv.extra?.[c] ?? ''} onChange={e => updateExtra(i, c, e.target.value)} className="orbit-control w-full min-w-[110px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
                     ))}
                     <td className="p-2 text-right"><button type="button" onClick={() => remove(i)} className="text-xs font-semibold text-rose-700 dark:text-rose-300 px-2 py-1">Remove</button></td>
                   </tr>
@@ -239,21 +239,21 @@ export function InvoiceAging() {
                 <label className="block">
                   <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Match invoices using</span>
                   <select value={lookupConfig.invoiceKey} onChange={e => setLookupConfig(c => ({ ...c, invoiceKey: e.target.value }))}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-3 py-2 text-sm">
+                    className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900">
                     {keyOptions.map(k => <option key={k} value={k}>{k === 'customer' ? 'Customer' : k}</option>)}
                   </select>
                 </label>
                 <label className="block">
                   <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Lookup table key column</span>
                   <select value={lookupConfig.lookupKey} onChange={e => setLookupConfig(c => ({ ...c, lookupKey: e.target.value }))}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-3 py-2 text-sm">
+                    className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900">
                     {lookupColumns.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
                 </label>
                 <label className="block">
                   <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Copy this column</span>
                   <select value={lookupConfig.returnCol} onChange={e => setLookupConfig(c => ({ ...c, returnCol: e.target.value }))}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-3 py-2 text-sm">
+                    className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900">
                     {lookupColumns.filter(h => h !== lookupConfig.lookupKey).map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
                 </label>
@@ -388,7 +388,7 @@ export function DecisionMatrix() {
                     <th key={oi} className="px-3 py-2 font-semibold">
                       <input aria-label={`Option ${oi + 1} name`} value={o}
                         onChange={e => setOptions(prev => prev.map((x, i) => (i === oi ? e.target.value : x)))}
-                        className="w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] px-2 py-1 bg-white dark:bg-stone-900 font-semibold" />
+                        className="orbit-control w-full min-w-[100px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900 font-semibold" />
                     </th>
                   ))}
                 </tr>
@@ -398,14 +398,14 @@ export function DecisionMatrix() {
                   <tr key={ci} className="border-t border-[var(--orbit-border)]">
                     <td className="p-2"><input aria-label="Criterion name" value={c.name}
                       onChange={e => setCriteria(prev => prev.map((x, i) => (i === ci ? { ...x, name: e.target.value } : x)))}
-                      className="w-full min-w-[120px] rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
+                      className="orbit-control w-full min-w-[120px] rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
                     <td className="p-2"><input aria-label="Weight" inputMode="decimal" value={c.weight}
                       onChange={e => setCriteria(prev => prev.map((x, i) => (i === ci ? { ...x, weight: e.target.value } : x)))}
-                      className="w-20 rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
+                      className="orbit-control w-20 rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
                     {options.map((_, oi) => (
                       <td key={oi} className="p-2"><input aria-label={`${c.name} score for option ${oi + 1}`} inputMode="decimal" value={c.scores[oi] ?? ''}
                         onChange={e => setScore(ci, oi, e.target.value)}
-                        className="w-20 rounded-lg border border-[var(--orbit-border)] px-2 py-1.5 bg-white dark:bg-stone-900" /></td>
+                        className="orbit-control w-20 rounded-lg border border-[var(--orbit-border)] bg-white dark:bg-stone-900" /></td>
                     ))}
                   </tr>
                 ))}

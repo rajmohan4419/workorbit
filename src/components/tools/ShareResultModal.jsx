@@ -416,7 +416,7 @@ function ShareResultModalDialog({
               type="text"
               readOnly
               value={deepLinkUrl}
-              className="flex-1 rounded-xl border border-stone-800 bg-stone-950 px-3.5 py-2.5 text-xs font-mono text-stone-300 select-all outline-none focus:border-accent-500"
+              className="orbit-control flex-1 rounded-xl border border-stone-800 bg-stone-950 font-mono text-stone-300 select-all outline-none focus:border-accent-500"
             />
             <button
               type="button"

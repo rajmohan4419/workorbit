@@ -5,7 +5,7 @@ import { ArrowRight, ChevronDown } from 'lucide-react';
 
 export function Field({ label, value, onChange, type = 'number', placeholder }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{label}</span>
       <input
         type={type}
@@ -13,7 +13,7 @@ export function Field({ label, value, onChange, type = 'number', placeholder }) 
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-200 dark:focus:ring-accent-900/50 min-h-[44px]"
+        className="orbit-control mt-1 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-200 dark:focus:ring-accent-900/50"
       />
     </label>
   );
@@ -50,13 +50,13 @@ export function ComingSoon({ tool }) {
 
 export function SelectField({ label, value, onChange, children }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{label}</span>
       <div className="relative mt-1.5">
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 pl-4 pr-11 py-3 text-base text-stone-900 dark:text-stone-100 min-h-[44px]"
+          className="orbit-control orbit-control--with-icon w-full appearance-none rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100"
         >
           {children}
         </select>

@@ -297,7 +297,7 @@ export default function ExcelEngineWorkspace() {
                   <select
                     value={selectedSheet}
                     onChange={e => handleSheetChange(e.target.value)}
-                    className="rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-2.5 py-1 font-semibold text-stone-800 dark:text-stone-200 text-xs"
+                    className="orbit-control rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 font-semibold text-stone-800 dark:text-stone-200"
                   >
                     {sheetNames.map(s => (
                       <option key={s} value={s}>{s}</option>
@@ -433,7 +433,7 @@ export default function ExcelEngineWorkspace() {
                 value={searchTerm}
                 onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
                 placeholder="Search across all columns..."
-                className="w-full max-w-xs rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-3 py-1.5 text-xs text-stone-900 dark:text-stone-100 outline-none"
+                className="orbit-control w-full max-w-xs rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 outline-none"
               />
               <span className="text-xs text-stone-400">
                 Page {page} of {totalPages}

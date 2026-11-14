@@ -180,7 +180,7 @@ export function SalarySheet() {
             type="text"
             value={companyName}
             onChange={e => setCompanyName(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+            className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
           />
         </div>
         <div>
@@ -191,7 +191,7 @@ export function SalarySheet() {
             type="text"
             value={monthYear}
             onChange={e => setMonthYear(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+            className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
           />
         </div>
         <div>
@@ -202,7 +202,7 @@ export function SalarySheet() {
             type="number"
             value={daysInMonth}
             onChange={e => setDaysInMonth(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 px-3.5 py-2 text-sm text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
+            className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:border-accent-500"
           />
         </div>
       </div>
@@ -283,7 +283,7 @@ export function SalarySheet() {
                       type="text"
                       value={employees[idx]?.id || ''}
                       onChange={e => handleUpdateEmployee(idx, 'id', e.target.value)}
-                      className="w-16 bg-transparent border-b border-transparent focus:border-accent-500 outline-none text-xs"
+                      className="orbit-control w-16 bg-transparent border-b border-transparent focus:border-accent-500 outline-none"
                     />
                   </td>
                   <td className="py-2 px-3 font-sans">
@@ -291,7 +291,7 @@ export function SalarySheet() {
                       type="text"
                       value={employees[idx]?.name || ''}
                       onChange={e => handleUpdateEmployee(idx, 'name', e.target.value)}
-                      className="w-28 bg-transparent border-b border-transparent focus:border-accent-500 outline-none text-xs font-medium"
+                      className="orbit-control w-28 bg-transparent border-b border-transparent focus:border-accent-500 outline-none font-medium"
                     />
                   </td>
                   <td className="py-2 px-3 font-sans text-stone-500 text-[11px]">
@@ -299,7 +299,7 @@ export function SalarySheet() {
                       type="text"
                       value={employees[idx]?.designation || ''}
                       onChange={e => handleUpdateEmployee(idx, 'designation', e.target.value)}
-                      className="w-28 bg-transparent border-b border-transparent focus:border-accent-500 outline-none text-xs"
+                      className="orbit-control w-28 bg-transparent border-b border-transparent focus:border-accent-500 outline-none"
                     />
                   </td>
                   <td className="py-2 px-3 text-right">
@@ -307,7 +307,7 @@ export function SalarySheet() {
                       type="number"
                       value={employees[idx]?.monthlyGross || ''}
                       onChange={e => handleUpdateEmployee(idx, 'monthlyGross', e.target.value)}
-                      className="w-20 text-right bg-transparent border-b border-stone-200 dark:border-stone-700 focus:border-accent-500 outline-none text-xs"
+                      className="orbit-control w-20 text-right bg-transparent border-b border-stone-200 dark:border-stone-700 focus:border-accent-500 outline-none"
                     />
                   </td>
                   <td className="py-2 px-3 text-center">
@@ -315,7 +315,7 @@ export function SalarySheet() {
                       type="number"
                       value={employees[idx]?.paidDays ?? ''}
                       onChange={e => handleUpdateEmployee(idx, 'paidDays', e.target.value)}
-                      className="w-12 text-center bg-transparent border-b border-stone-200 dark:border-stone-700 focus:border-accent-500 outline-none text-xs"
+                      className="orbit-control w-12 text-center bg-transparent border-b border-stone-200 dark:border-stone-700 focus:border-accent-500 outline-none"
                     />
                   </td>
                   <td className="py-2 px-3 text-right font-semibold text-stone-900 dark:text-stone-100">
@@ -336,7 +336,7 @@ export function SalarySheet() {
                       value={employees[idx]?.tds || ''}
                       onChange={e => handleUpdateEmployee(idx, 'tds', e.target.value)}
                       placeholder="0"
-                      className="w-16 text-right bg-transparent border-b border-stone-200 dark:border-stone-700 focus:border-accent-500 outline-none text-xs"
+                      className="orbit-control w-16 text-right bg-transparent border-b border-stone-200 dark:border-stone-700 focus:border-accent-500 outline-none"
                     />
                   </td>
                   <td className="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">

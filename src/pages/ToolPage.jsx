@@ -209,8 +209,8 @@ function ToolHeaderStrip({ tool, info, workspaceRef, onOpenShareModal }) {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
               {info?.h1 || (tool.slug === 'image-compressor' ? `${tool.name} - online compressor | size compressor | online mb reducer` : tool.name)}
             </h1>
@@ -223,7 +223,7 @@ function ToolHeaderStrip({ tool, info, workspaceRef, onOpenShareModal }) {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
             <button
               onClick={share}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-xs font-semibold text-stone-700 dark:text-stone-200 hover:border-accent-400 transition"

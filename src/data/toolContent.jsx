@@ -1,5 +1,19 @@
 
 export const TOOL_CONTENT = {
+  'wishes-studio': {
+    h1: 'Free Festive Wishes & Greeting Card Maker',
+    intro: 'Personalize Diwali, Ugadi, birthday, New Year and Christmas cards, then download your design as an image.',
+    keywords: 'festival greeting card maker, personalized wishes, Wishes Studio',
+    how: ['Choose an occasion and colour theme.', 'Enter the recipient, sender and greeting.', 'Download PNG or JPG, or share an image on a supported device.'],
+    faq: [
+      ['Which occasions does Wishes Studio support?', 'Choose Diwali, Ugadi, Birthday, New Year or Christmas. Each occasion provides a message that you can edit.'],
+      ['What image size does Wishes Studio produce?', 'The card is rendered as a square image measuring 1080 by 1080 pixels, suitable for sharing as an attachment.'],
+      ['Can I change the colours of my Wishes Studio card?', 'Select Royal Violet, Festive Sunrise, Midnight Gold or Minimal Ivory using the Card design dropdown.'],
+      ['How do I send my Wishes Studio card on WhatsApp?', 'Download the PNG or JPG and attach it in WhatsApp. The Share via WhatsApp button sends the greeting text.'],
+      ['Does Wishes Studio upload my card details?', 'The preview and image export run in your browser. Sharing sends the content to the destination you choose.'],
+      ['Can I remove the credit from my Wishes Studio card?', 'Clear the Include small OrbitBoard credit checkbox before downloading or sharing the generated image.'],
+    ],
+  },
   'ctc-to-inhand': {
     intro: 'Understand what your CTC could mean as monthly take-home pay.',
     keywords: 'CTC to in-hand salary calculator India, take home salary calculator, CTC calculator',

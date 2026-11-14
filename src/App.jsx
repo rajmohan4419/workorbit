@@ -8,6 +8,7 @@ import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
 import ToolsHome from './pages/ToolsHome';
 import { loadGoogleAnalytics } from './lib/analytics';
+const WishesStudio = lazy(() => import('./pages/WishesStudio'));
 import { SHARED_MOMENT_PATH } from './lib/moments.js';
 const MomentsHome = lazy(() => import('./pages/Moments').then(m => ({ default: m.MomentsHome })));
 const MomentExperience = lazy(() => import('./pages/Moments').then(m => ({ default: m.MomentExperience })));
@@ -56,6 +57,7 @@ function AppContent() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/tools/wishes-studio" element={<WishesStudio />} />
             <Route path="/tools/:slug" element={<ToolPageRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

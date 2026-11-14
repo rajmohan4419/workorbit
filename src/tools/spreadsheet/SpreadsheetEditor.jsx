@@ -270,7 +270,7 @@ export default function SpreadsheetEditor() {
                             onChange={(e) =>
                               handleCellChange(originalIndex, colIndex, e.target.value)
                             }
-                            className={`w-full px-3 py-2 bg-transparent text-gray-800 dark:text-gray-100 text-sm focus:outline-none ${
+                            className={`orbit-control orbit-control--dense w-full bg-transparent text-gray-800 dark:text-gray-100 focus:outline-none ${
                               isHeader ? 'font-semibold text-gray-900 dark:text-white' : ''
                             }`}
                           />

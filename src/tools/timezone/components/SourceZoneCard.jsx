@@ -33,7 +33,7 @@ export default function SourceZoneCard({
           <select
             value={sourceZone}
             onChange={e => setSourceZone(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-white outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
+            className="orbit-control w-full rounded-xl border border-slate-800 bg-slate-900 text-white outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
           >
             {timezones.map(tz => (
               <option key={tz.id} value={tz.id}>
@@ -50,7 +50,7 @@ export default function SourceZoneCard({
               type="date"
               value={sourceDate}
               onChange={e => setSourceDate(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-white outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
+              className="orbit-control w-full rounded-xl border border-slate-800 bg-slate-900 text-white outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
             />
             <Calendar size={15} className="absolute right-3 top-3 text-slate-500 pointer-events-none" />
           </div>
@@ -62,7 +62,7 @@ export default function SourceZoneCard({
             type="time"
             value={sourceTime}
             onChange={e => setSourceTime(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-sm text-white outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
+            className="orbit-control w-full rounded-xl border border-slate-800 bg-slate-900 text-white outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500"
           />
         </div>
       </div>

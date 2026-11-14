@@ -117,7 +117,7 @@ export function GifMaker() {
         <label className="block sm:col-span-2">
           <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">Image placement</span>
           <select value={mode} onChange={e => setMode(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-3 text-base">
+            className="orbit-control mt-1.5 w-full rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900">
             {FIT_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
         </label>
