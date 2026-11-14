@@ -18,7 +18,7 @@ describe('signup-first document download flow', () => {
   const request = async (filename = 'report.pdf', type = 'application/pdf') => {
     await act(async () => format.downloadBlob(new Blob(['private financial contents'], { type }), filename, 'gst-invoice-generator'));
   };
-  const confirm = async () => { await act(async () => [...container.querySelectorAll('button')].find(button => button.textContent.trim() === 'Download').click()); };
+  const confirm = async () => { await act(async () => [...document.body.querySelectorAll('button')].find(button => button.textContent.trim() === 'Download').click()); };
   beforeEach(() => {
     vi.mocked(useAccountSession).mockReturnValue({ session, loading: false });
     vi.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session } });
@@ -31,9 +31,9 @@ describe('signup-first document download flow', () => {
   it('asks guests to sign up rather than pay, preserves the file, then meters before downloading', async () => {
     vi.mocked(useAccountSession).mockReturnValue({ session: null, loading: false });
     await render(); await request();
-    expect(container.textContent).toContain('Sign up to download');
-    expect(container.textContent).not.toContain('View Pricing');
-    expect(container.querySelector('iframe')).toBeNull();
+    expect(document.body.textContent).toContain('Sign up to download');
+    expect(document.body.textContent).not.toContain('View Pricing');
+    expect(document.body.querySelector('iframe')).toBeNull();
     expect(fetch).not.toHaveBeenCalled(); expect(direct).not.toHaveBeenCalled();
     vi.mocked(useAccountSession).mockReturnValue({ session, loading: false });
     await render(); await confirm();
@@ -48,14 +48,14 @@ describe('signup-first document download flow', () => {
   it('retains the file after server failure and retries with the same request ID', async () => {
     fetch.mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({ error: 'metering_unavailable' }) });
     await render(); await request(); await confirm();
-    expect(direct).not.toHaveBeenCalled(); expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect(direct).not.toHaveBeenCalled(); expect(document.body.querySelector('[role="alert"]')).not.toBeNull();
     await confirm();
     expect(direct).toHaveBeenCalledTimes(1);
     expect(JSON.parse(fetch.mock.calls[0][1].body).requestId).toBe(JSON.parse(fetch.mock.calls[1][1].body).requestId);
   });
   it('queues multiple generated files and counts each separately', async () => {
     await render(); await request(); await request('report.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    expect(container.textContent).toContain('2 files queued');
+    expect(document.body.textContent).toContain('2 files queued');
     await confirm(); await confirm();
     expect(direct).toHaveBeenCalledTimes(2);
     const bodies = fetch.mock.calls.map(([, options]) => JSON.parse(options.body));
@@ -66,7 +66,7 @@ describe('signup-first document download flow', () => {
     let resolve;
     fetch.mockReturnValueOnce(new Promise(done => { resolve = done; }));
     await render(); await request();
-    const button = [...container.querySelectorAll('button')].find(element => element.textContent.trim() === 'Download');
+    const button = [...document.body.querySelectorAll('button')].find(element => element.textContent.trim() === 'Download');
     await act(async () => { button.click(); button.click(); });
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(direct).not.toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe('signup-first document download flow', () => {
   });
   it('does not meter cancellation, and leaves non-document downloads anonymous', async () => {
     await render(); await request();
-    await act(async () => [...container.querySelectorAll('button')].find(button => button.textContent === 'Cancel').click());
+    await act(async () => [...document.body.querySelectorAll('button')].find(button => button.textContent === 'Cancel').click());
     expect(fetch).not.toHaveBeenCalled();
     vi.mocked(useAccountSession).mockReturnValue({ session: null, loading: false });
     await render(); await request('image.png', 'image/png'); await confirm();
@@ -84,5 +84,20 @@ describe('signup-first document download flow', () => {
   it('does not fall through to anonymous PDF downloads when no coordinator is mounted', () => {
     expect(format.downloadBlob(new Blob(['x'], { type: 'application/pdf' }), 'file.pdf', null, true)).toBe(false);
     expect(direct).not.toHaveBeenCalled();
+  });
+  it('renders both preview and account dialogs inside the active fullscreen workspace', async () => {
+    const fullscreen = document.createElement('section'); document.body.append(fullscreen);
+    Object.defineProperty(document, 'fullscreenElement', { configurable: true, value: fullscreen });
+    try {
+      await render(); await request();
+      expect(fullscreen.querySelector('[role="dialog"]')).not.toBeNull();
+      vi.mocked(useAccountSession).mockReturnValue({ session: null, loading: false });
+      await render();
+      expect(fullscreen.textContent).toContain('Sign up to download');
+      Object.defineProperty(document, 'fullscreenElement', { configurable: true, value: null });
+      await act(async () => document.dispatchEvent(new Event('fullscreenchange')));
+      expect(fullscreen.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+    } finally { delete document.fullscreenElement; fullscreen.remove(); }
   });
 });

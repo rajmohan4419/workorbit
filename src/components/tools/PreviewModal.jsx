@@ -5,6 +5,7 @@ import { documentFormat, isMeteredDocument } from '../../lib/monetization/docume
 import { authorizeDocumentDownload } from '../../lib/monetization/downloads';
 import { useAccountSession } from '../../lib/monetization/useAccountSession';
 import { DownloadAccountForm } from '../monetization/DownloadAccountForm';
+import { OverlayPortal } from './OverlayPortal';
 
 /**
  * PreviewModal — shows a preview of a blob before the user downloads it.
@@ -78,7 +79,8 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
     : '';
 
   return (
-    /* Backdrop */
+    <OverlayPortal>
+    {/* Backdrop */}
     <div
       ref={overlayRef}
       role="dialog"
@@ -191,6 +193,7 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 
@@ -274,12 +277,12 @@ function DownloadAccountDialog({ loading, error, onCancel, onSignedIn }) {
     element.addEventListener('keydown', key);
     return () => { element.removeEventListener('keydown', key); document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus(); };
   }, [onCancel]);
-  return <div ref={panel} className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Account required for document download">
+  return <OverlayPortal><div ref={panel} className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Account required for document download">
     <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 text-stone-900 shadow-xl">
       <button type="button" onClick={onCancel} aria-label="Close download sign-up" className="float-right min-h-11 px-3">✕</button>
       {loading ? <p role="status">Checking account…</p> : <DownloadAccountForm onSignedIn={onSignedIn} />}
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       <button type="button" onClick={onCancel} className="mt-4 text-sm underline">Continue using tools without downloading</button>
     </div>
-  </div>;
+  </div></OverlayPortal>;
 }

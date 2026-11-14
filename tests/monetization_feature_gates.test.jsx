@@ -67,6 +67,8 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
 
       expect(trackSpy).not.toHaveBeenCalledWith('advanced_exports');
       expect(container.textContent).toContain('Seller name is required.');
+      expect(document.activeElement).toBe(container.querySelector('[role="alert"]'));
+      expect(document.activeElement.textContent).toContain('Download needs attention');
     });
 
     it('gates save workspace for unentitled users and displays upgrade prompt', async () => {
