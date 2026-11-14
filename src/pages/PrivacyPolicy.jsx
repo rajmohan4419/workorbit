@@ -61,6 +61,9 @@ export default function PrivacyPolicy() {
               <p>
                 <strong>3. Local Storage:</strong> OrbitBoard uses your browser’s local storage (<code>localStorage</code>) to save non-sensitive user preferences such as favorited tools and recently used workflows. This data is stored strictly on your device and can be cleared by you at any time.
               </p>
+              <p>
+                <strong>4. Download Accounts & Metering:</strong> On-screen tools can be used without an account. PDF/XLSX downloads require sign-in. We process your account email and authentication information, and store download initiation events linked to your account: tool identifier, format, time and a request identifier used to prevent duplicate counts on retries. Metering does not upload document contents, original filenames, passwords or invoice/bank details. Contact support@orbitboard.in for account or usage-data deletion requests.
+              </p>
             </div>
           </section>
 

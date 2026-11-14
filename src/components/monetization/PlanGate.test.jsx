@@ -75,7 +75,7 @@ describe('<PlanGate /> Component', () => {
     expect(trackSpy).toHaveBeenCalledWith('saved_workspaces');
   });
 
-  it('renders default upgrade prompt linking to /pricing with reassurance when unentitled', async () => {
+  it('renders account-first prompt without a pricing redirect when unentitled', async () => {
     vi.spyOn(usePlanModule, 'usePlan').mockReturnValue({
       hasFeature: vi.fn().mockReturnValue(false),
       loading: false,
@@ -93,9 +93,9 @@ describe('<PlanGate /> Component', () => {
     });
 
     expect(trackSpy).toHaveBeenCalledWith('advanced_exports');
-    expect(container.textContent).toContain('Professional PDF & Excel Exports');
-    expect(container.textContent).toContain('All on-screen calculations and tools remain 100% free');
-    const link = container.querySelector('a[href="/pricing"]');
+    expect(container.textContent).toContain('Sign up for PDF & Excel downloads');
+    expect(container.textContent).toContain('Free on-screen use · No sign-up required');
+    const link = container.querySelector('a[href="/account"]');
     expect(link).toBeTruthy();
   });
 

@@ -13,10 +13,10 @@ export function PrivacySection() {
               <LockKeyhole size={14} /> Your privacy matters
             </div>
             <h2 className="mt-2 text-lg font-bold text-stone-900 dark:text-stone-100 sm:text-xl">Private, secure and free by design.</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-300">No account is required for our core tools. Many file and data tools process content directly in your browser, helping keep files on your device.</p>
+            <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-300">Use on-screen tools free without an account. Sign up to download PDF/XLSX files and track your usage. Many file tools process document contents in your browser.</p>
           </div>
           <div className="grid grid-cols-1 gap-2 text-xs text-stone-700 dark:text-stone-300 sm:grid-cols-3 lg:min-w-[440px]">
-            {['No sign-up required', 'Browser-first processing', 'Free core utilities'].map(item => (
+            {['Free on-screen use, no sign-up', 'Sign up for PDF/XLSX downloads', 'Browser-first processing'].map(item => (
               <div key={item} className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-stone-900 px-3 py-3 font-medium min-h-[44px] flex items-center justify-center text-center">
                 {item}
               </div>
@@ -40,7 +40,7 @@ export function SupportCheckoutSection() {
             Keep these tools free
           </h2>
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-            Every tool is free, with no sign-up. If one saves you time, you can help cover hosting and development with a one-time contribution.
+            On-screen tools are free without sign-up. PDF/XLSX downloads require an account to track usage. If a tool saves you time, you can also support development with a one-time contribution.
           </p>
         </div>
         <div className="shrink-0 w-full lg:w-auto flex justify-center items-center">

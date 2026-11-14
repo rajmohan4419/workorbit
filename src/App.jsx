@@ -20,6 +20,7 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const ContactUs = lazy(() => import('./pages/ContactUs'));
 const Pricing = lazy(() => import('./pages/Pricing'));
+const DownloadAccount = lazy(() => import('./pages/DownloadAccount'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
@@ -53,6 +54,7 @@ function AppContent() {
             <Route path="/moments" element={<MomentsHome />} />
             <Route path="/moments/:slug" element={<MomentExperience />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/account" element={<DownloadAccount />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/about" element={<AboutUs />} />

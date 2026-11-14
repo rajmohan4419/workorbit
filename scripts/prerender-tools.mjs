@@ -131,7 +131,7 @@ const STATIC_ROUTES = [
 
 function headForTool(tool, content) {
   const url = `${SITE}/tools/${tool.slug}`;
-  const title = `${tool.name} (Free, No Sign-up) | OrbitBoard`;
+  const title = `${tool.name} (Free Online Tool) | OrbitBoard`;
   const description = tool.description;
   const keywords = content?.keywords || `${tool.name}, free online tool`;
   const faq = content?.faq || [];
@@ -183,7 +183,7 @@ function headForTool(tool, content) {
 
 function headForVariant(variant) {
   const url = `${SITE}/tools/${variant.slug}`;
-  const title = `${variant.name} (Free, No Sign-up) | OrbitBoard`;
+  const title = `${variant.name} (Free Online Tool) | OrbitBoard`;
   const description = variant.description;
   const keywords = `${variant.name}, free online calculator, ${variant.baseToolSlug}`;
   const canonicalUrl = variant.canonicalUrl || `${SITE}/tools/${variant.baseToolSlug}`;

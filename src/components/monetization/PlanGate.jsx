@@ -6,8 +6,8 @@ import { trackPaywallViewed } from '../../lib/analytics';
 
 const FEATURE_METADATA = {
   advanced_exports: {
-    title: 'Professional PDF & Excel Exports',
-    description: 'Export unwatermarked, high-resolution GST invoices and multi-sheet reconciliation workbooks directly to PDF and XLSX.',
+    title: 'Sign up for PDF & Excel downloads',
+    description: 'Create an account to download PDF/XLSX files and track your usage. On-screen tools remain free without an account.',
   },
   saved_workspaces: {
     title: 'Saved Cloud Workspaces',
@@ -58,7 +58,7 @@ export function PlanGate({
   return (
     <div
       role="region"
-      aria-label="Feature Upgrade Required"
+      aria-label="Account required"
       className="anim-fade-up rounded-2xl border border-violet-200 dark:border-violet-800/60 bg-gradient-to-b from-violet-50/70 via-white to-stone-50 dark:from-violet-950/40 dark:via-stone-900 dark:to-stone-900 p-6 sm:p-8 text-center max-w-lg mx-auto shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 card-spotlight"
     >
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-md mb-4">
@@ -67,7 +67,7 @@ export function PlanGate({
 
       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 dark:bg-violet-900/60 text-violet-800 dark:text-violet-300 text-xs font-semibold mb-3">
         <Sparkles size={13} className="text-violet-600 dark:text-violet-400" />
-        <span>OrbitBoard Pro Feature</span>
+        <span>Your OrbitBoard account</span>
       </div>
 
       <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">
@@ -80,15 +80,15 @@ export function PlanGate({
 
       <div className="p-3 rounded-xl bg-stone-100/80 dark:bg-stone-800/70 border border-stone-200 dark:border-stone-700/80 text-[11px] text-stone-600 dark:text-stone-400 flex items-center justify-center gap-2 mb-6">
         <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <span>All on-screen calculations and tools remain 100% free</span>
+        <span>Free on-screen use · No sign-up required</span>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
-          to="/pricing"
+          to="/account"
           className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs sm:text-sm font-semibold transition inline-flex items-center justify-center gap-2 shadow-xs"
         >
-          <span>View Pricing & Upgrade</span>
+          <span>Sign up / Sign in</span>
           <ArrowRight size={14} />
         </Link>
       </div>

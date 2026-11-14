@@ -1,4 +1,5 @@
 // Formatting and download helpers shared by tool modules.
+import { isMeteredDocument } from './monetization/documentFormat.js';
 
 export const money = n => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.max(0, Number(n) || 0));
 export const num = v => Math.max(0, Number(v) || 0);
@@ -69,7 +70,8 @@ export function directDownloadBlob(blob, filename, toolSlug) {
 }
 
 export function downloadBlob(blob, filename, toolSlug, bypassPreview = false) {
-  if (bypassPreview || typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+  const metered = isMeteredDocument(filename, blob?.type);
+  if ((bypassPreview && !metered) || typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
     return directDownloadBlob(blob, filename, toolSlug);
   }
 
@@ -83,11 +85,13 @@ export function downloadBlob(blob, filename, toolSlug, bypassPreview = false) {
 
   const event = new CustomEvent('orbitboard:preview-download', {
     cancelable: true,
-    detail: { blob, filename: finalName, toolSlug, mimeType: blob?.type }
+    detail: { blob, filename: finalName, toolSlug, mimeType: blob?.type, metered }
   });
 
   const notPrevented = window.dispatchEvent(event);
   if (notPrevented) {
+    // PDF/XLSX must go through the signed-in coordinator, even if preview was bypassed.
+    if (metered) return false;
     return directDownloadBlob(blob, filename, toolSlug);
   }
   return true;
