@@ -80,119 +80,119 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
 
   return (
     <OverlayPortal>
-    {/* Backdrop */}
-    <div
-      ref={overlayRef}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Preview ${filename}`}
-      onClick={(e) => { if (e.target === overlayRef.current && !busy) onCancel?.(); }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200"
-    >
-      {/* Modal card */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-[var(--orbit-surface,#fff)] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[var(--orbit-border,#e5e7eb)] modal-elastic-enter will-change-transform">
+      {/* Backdrop */}
+      <div
+        ref={overlayRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Preview ${filename}`}
+        onClick={(e) => { if (e.target === overlayRef.current && !busy) onCancel?.(); }}
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      >
+        {/* Modal card */}
+        <div className="relative w-full max-w-4xl max-h-[90vh] bg-[var(--orbit-surface,#fff)] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-[var(--orbit-border,#e5e7eb)] modal-elastic-enter will-change-transform">
 
-        {/* ── Header ── */}
-        <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--orbit-border,#e5e7eb)] shrink-0">
-          <Eye className="w-4 h-4 text-indigo-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-stone-800 truncate" title={filename}>{filename}</p>
-            {fileSizeLabel && (
-              <p className="text-xs text-stone-400">{fileSizeLabel}</p>
+          {/* ── Header ── */}
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--orbit-border,#e5e7eb)] shrink-0">
+            <Eye className="w-4 h-4 text-indigo-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-stone-800 truncate" title={filename}>{filename}</p>
+              {fileSizeLabel && (
+                <p className="text-xs text-stone-400">{fileSizeLabel}</p>
+              )}
+            </div>
+
+            {/* Zoom controls for images */}
+            {isImage && (
+              <div className="flex items-center gap-1 mr-2">
+                <button
+                  onClick={() => setZoom((z) => Math.max(0.25, +(z - 0.25).toFixed(2)))}
+                  aria-label="Zoom out"
+                  className="p-1 rounded-lg hover:bg-stone-100 text-stone-500 transition-colors"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-xs text-stone-500 w-10 text-center select-none">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <button
+                  onClick={() => setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)))}
+                  aria-label="Zoom in"
+                  className="p-1 rounded-lg hover:bg-stone-100 text-stone-500 transition-colors"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            <button
+              disabled={busy}
+              onClick={onCancel}
+              aria-label="Close preview"
+              className="p-1 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* ── Preview area ── */}
+          <div className="flex-1 overflow-auto flex items-center justify-center bg-stone-50 min-h-0">
+            {isImage && objectUrl && (
+              <div className="p-4" style={{ transform: `scale(${zoom})`, transformOrigin: 'center top', transition: 'transform 0.15s ease' }}>
+                <img
+                  src={objectUrl}
+                  alt={filename}
+                  className="max-w-full max-h-[60vh] object-contain rounded-lg shadow"
+                />
+              </div>
+            )}
+
+            {isPdf && objectUrl && (
+              <iframe
+                src={objectUrl}
+                title={filename}
+                className="w-full h-[60vh] border-0"
+              />
+            )}
+
+            {isText && (
+              <pre className="w-full h-[60vh] overflow-auto p-5 text-xs font-mono text-stone-700 whitespace-pre-wrap break-words bg-stone-50">
+                {textContent ?? 'Loading…'}
+              </pre>
+            )}
+
+            {!isImage && !isPdf && !isText && (
+              <div className="flex flex-col items-center gap-3 py-16 text-stone-400">
+                <FileText className="w-14 h-14" />
+                <p className="text-sm font-medium">{filename}</p>
+                <p className="text-xs">{fileSizeLabel} · {effectiveMime || 'unknown type'}</p>
+                <p className="text-xs text-stone-300">No preview available for this file type.</p>
+              </div>
             )}
           </div>
 
-          {/* Zoom controls for images */}
-          {isImage && (
-            <div className="flex items-center gap-1 mr-2">
-              <button
-                onClick={() => setZoom((z) => Math.max(0.25, +(z - 0.25).toFixed(2)))}
-                aria-label="Zoom out"
-                className="p-1 rounded-lg hover:bg-stone-100 text-stone-500 transition-colors"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-              <span className="text-xs text-stone-500 w-10 text-center select-none">
-                {Math.round(zoom * 100)}%
-              </span>
-              <button
-                onClick={() => setZoom((z) => Math.min(4, +(z + 0.25).toFixed(2)))}
-                aria-label="Zoom in"
-                className="p-1 rounded-lg hover:bg-stone-100 text-stone-500 transition-colors"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          <button
-            disabled={busy}
-            onClick={onCancel}
-            aria-label="Close preview"
-            className="p-1 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* ── Preview area ── */}
-        <div className="flex-1 overflow-auto flex items-center justify-center bg-stone-50 min-h-0">
-          {isImage && objectUrl && (
-            <div className="p-4" style={{ transform: `scale(${zoom})`, transformOrigin: 'center top', transition: 'transform 0.15s ease' }}>
-              <img
-                src={objectUrl}
-                alt={filename}
-                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow"
-              />
-            </div>
-          )}
-
-          {isPdf && objectUrl && (
-            <iframe
-              src={objectUrl}
-              title={filename}
-              className="w-full h-[60vh] border-0"
-            />
-          )}
-
-          {isText && (
-            <pre className="w-full h-[60vh] overflow-auto p-5 text-xs font-mono text-stone-700 whitespace-pre-wrap break-words bg-stone-50">
-              {textContent ?? 'Loading…'}
-            </pre>
-          )}
-
-          {!isImage && !isPdf && !isText && (
-            <div className="flex flex-col items-center gap-3 py-16 text-stone-400">
-              <FileText className="w-14 h-14" />
-              <p className="text-sm font-medium">{filename}</p>
-              <p className="text-xs">{fileSizeLabel} · {effectiveMime || 'unknown type'}</p>
-              <p className="text-xs text-stone-300">No preview available for this file type.</p>
-            </div>
-          )}
-        </div>
-
-        {/* ── Footer ── */}
-        {error && <p role="alert" className="px-5 py-2 text-sm text-red-700">{error}</p>}
-        {queueLength > 1 && <p className="px-5 py-2 text-xs text-stone-600">{queueLength} files queued. Each confirmed PDF/XLSX file counts as one download.</p>}
-        <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-[var(--orbit-border,#e5e7eb)] shrink-0 bg-[var(--orbit-surface,#fff)]">
-          <button
-            disabled={busy}
-            onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={busy}
-            onClick={onConfirm}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors shadow"
-          >
-            <Download className="w-4 h-4" />
-            {busy ? 'Recording download…' : 'Download'}
-          </button>
+          {/* ── Footer ── */}
+          {error && <p role="alert" className="px-5 py-2 text-sm text-red-700">{error}</p>}
+          {queueLength > 1 && <p className="px-5 py-2 text-xs text-stone-600">{queueLength} files queued. Each confirmed PDF/XLSX file counts as one download.</p>}
+          <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-[var(--orbit-border,#e5e7eb)] shrink-0 bg-[var(--orbit-surface,#fff)]">
+            <button
+              disabled={busy}
+              onClick={onCancel}
+              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={busy}
+              onClick={onConfirm}
+              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors shadow"
+            >
+              <Download className="w-4 h-4" />
+              {busy ? 'Downloading…' : 'Download'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
     </OverlayPortal>
   );
 }
