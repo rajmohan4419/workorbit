@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import {
   Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle, Layers, X, Sparkles
 } from 'lucide-react';
 import {
   parseSpreadsheet,
+  applyColumnMapping,
   detectColumnTypes,
   validateRows,
   exportSpreadsheet,
@@ -16,6 +17,12 @@ import { PlanGate } from '../../components/monetization/PlanGate';
 import { trackExportClicked } from '../../lib/analytics';
 
 export default function ExcelEngineWorkspace() {
+  const [busy, setBusy] = useState(false);
+  const revision = useRef(0);
+  const sheetCache = useRef(new Map());
+  const [history, setHistory] = useState([]);
+  const [exportNames, setExportNames] = useState({});
+  const [cleanColumn, setCleanColumn] = useState('');
   const [fileObj, setFileObj] = useState(null);
   const [fileName, setFileName] = useState('');
   const [sheetNames, setSheetNames] = useState([]);
@@ -40,9 +47,15 @@ export default function ExcelEngineWorkspace() {
   const [validationResults, setValidationResults] = useState(null);
 
   const processWorkbookSheet = async (fileOrBuffer, sheetTarget) => {
+    const ticket = ++revision.current; setBusy(true);
     try {
       setError(null);
       const parsed = await parseSpreadsheet(fileOrBuffer, { sheetName: sheetTarget });
+      if (ticket !== revision.current) return;
+      if (!parsed.rowCount) throw new Error('The selected worksheet has no data rows.');
+      if (fileOrBuffer !== fileObj) sheetCache.current.clear();
+      setFileObj(fileOrBuffer); setFileName(fileOrBuffer.name || 'Workbook.xlsx');
+      setHistory([]); setExportNames({}); setSearchTerm(''); setBulkSummary(null);
       setSheetNames(parsed.sheetNames);
       setSelectedSheet(parsed.selectedSheet);
       setHeaders(parsed.headers);
@@ -54,24 +67,25 @@ export default function ExcelEngineWorkspace() {
       setColTypes(detectedTypes);
 
       // Initialize default schema
-      const initialSchema = {};
+      const initialSchema = Object.create(null);
       parsed.headers.forEach(h => {
         initialSchema[h] = {
           required: false,
-          type: detectedTypes[h] || 'text',
+          type: detectedTypes[h] === 'boolean' ? 'text' : detectedTypes[h] || 'text',
         };
       });
       setValidationSchema(initialSchema);
       setValidationResults(null);
       setPage(1);
     } catch (err) {
-      setError(`Failed to process spreadsheet: ${err.message}`);
-    }
+      if (ticket === revision.current) setError(`Failed to process spreadsheet: ${err.message}`);
+    } finally { if (ticket === revision.current) setBusy(false); }
   };
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+    if (!files.length || busy) return;
+    e.target.value = "";
 
     if (files.length > 1) {
       if (!hasFeature('bulk_processing')) {
@@ -80,27 +94,42 @@ export default function ExcelEngineWorkspace() {
         return;
       }
       try {
-        setError(null);
+        setError(null); setBusy(true);
         const batchRes = await processSpreadsheetBatch(files);
-        setBulkSummary(batchRes);
-        setFileObj(files[0]);
-        setFileName(`Batch: ${files.length} workbooks (${batchRes.totalRows} total rows)`);
-        await processWorkbookSheet(files[0], null);
+        setBulkSummary(batchRes); sheetCache.current.clear();
+        const combinedHeaders = [...new Set(batchRes.allRows.flatMap(row => Object.keys(row)))];
+        let sourceColumn = 'Source workbook';
+        while (combinedHeaders.includes(sourceColumn)) sourceColumn += '_source';
+        const origins = batchRes.results.flatMap(result => Array(result.rowCount).fill(result.filename));
+        const combinedRows = batchRes.allRows.map((row,index)=>({...row,[sourceColumn]:origins[index]}));
+        combinedHeaders.push(sourceColumn);
+        setFileObj(null); setFileName('Combined_workbooks.xlsx');
+        setSheetNames(['Combined']); setSelectedSheet('Combined');
+        setHeaders(combinedHeaders); setRows(combinedRows);
+        setDuplicateHeaders([]); setEmptyHeaders([]); setHistory([]); setExportNames({});
+        setColTypes(detectColumnTypes(combinedRows,combinedHeaders));
+        setValidationSchema(Object.fromEntries(combinedHeaders.map(h=>[h,{type:'text',required:false}])));
+        setValidationResults(null); setSearchTerm(''); setPage(1);
       } catch (err) {
         setError(`Batch processing failed: ${err.message}`);
-      }
+      } finally { setBusy(false); }
       return;
     }
 
     const uploadedFile = files[0];
-    setFileObj(uploadedFile);
-    setFileName(uploadedFile.name);
     await processWorkbookSheet(uploadedFile, null);
   };
 
   const handleSheetChange = async (newSheet) => {
     if (!fileObj || newSheet === selectedSheet) return;
-    await processWorkbookSheet(fileObj, newSheet);
+    sheetCache.current.set(selectedSheet,{headers,rows,colTypes,validationSchema,exportNames,history,duplicateHeaders,emptyHeaders});
+    const cached = sheetCache.current.get(newSheet);
+    if (cached) {
+      setSelectedSheet(newSheet); setHeaders(cached.headers); setRows(cached.rows); setColTypes(cached.colTypes);
+      setValidationSchema(cached.validationSchema); setExportNames(cached.exportNames); setHistory(cached.history);
+      setDuplicateHeaders(cached.duplicateHeaders); setEmptyHeaders(cached.emptyHeaders);
+      setSearchTerm(''); setPage(1); setValidationResults(null); setError(null);
+    } else await processWorkbookSheet(fileObj, newSheet);
   };
 
   const handleValidate = () => {
@@ -129,10 +158,11 @@ export default function ExcelEngineWorkspace() {
         newVal = String(val ?? '').toLowerCase();
       } else if (transformType === 'num_clean') {
         const cleaned = String(val ?? '').replace(/[$€£₹,\s]/g, '');
-        newVal = isNaN(Number(cleaned)) ? val : Number(cleaned);
+        newVal = cleaned === '' || !Number.isFinite(Number(cleaned)) ? val : Number(cleaned);
       }
       return { ...r, [column]: newVal };
     });
+    setHistory(previous => [...previous.slice(-4), rows]);
     setRows(updated);
     if (validationResults) {
       setValidationResults(validateRows(updated, validationSchema));
@@ -141,11 +171,18 @@ export default function ExcelEngineWorkspace() {
 
   const handleExport = (format) => {
     if (!rows.length) return;
+    const validation = validateRows(rows, validationSchema);
+    setValidationResults(validation);
+    if (!validation.isValid) { setError('Correct the flagged rows before exporting. You can download the error report.'); return; }
+    const names = headers.map(h => (exportNames[h] ?? h).trim());
+    if (names.some(name=>!name) || new Set(names.map(name=>name.toLowerCase())).size !== names.length) { setError('Export column names must be non-empty and unique.'); return; }
+    const mapping = Object.fromEntries(names.map((name,i)=>[name,headers[i]]));
     const blob = exportSpreadsheet({
-      sheets: [{ name: selectedSheet || 'Processed Data', data: rows }],
+      sheets: [{ name: selectedSheet || 'Processed Data', data: applyColumnMapping(rows.map(row=>Object.fromEntries(headers.map(h=>[h,validationSchema[h]?.type === 'number' && String(row[h] ?? '').trim() !== '' ? Number(String(row[h]).replace(/[$€£₹,\s]/g,'')) : row[h]]))),mapping), columns:names }],
       format,
       sanitizeFormulaInjection: true,
     });
+    setError(null);
     const baseName = fileName.replace(/\.[^/.]+$/, '') || 'processed_spreadsheet';
     downloadSpreadsheetBlob(blob, `${baseName}_exported.${format}`);
     trackExportClicked(format);
@@ -160,7 +197,8 @@ export default function ExcelEngineWorkspace() {
   }, [rows, headers, searchTerm]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
-  const displayedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
+  const activePage = Math.min(page,totalPages);
+  const displayedRows = filteredRows.slice((activePage - 1) * pageSize, activePage * pageSize);
 
   const loadDemoData = () => {
     const demoHeaders = ['Order ID', 'Customer Email', 'Amount', 'Status', 'Date'];
@@ -171,9 +209,11 @@ export default function ExcelEngineWorkspace() {
       { 'Order ID': '', 'Customer Email': 'alex@cloud.co', 'Amount': 22500, 'Status': 'Paid', 'Date': '2025-03-05' },
       { 'Order ID': 'ORD-105', 'Customer Email': 'vikram@domain.com', 'Amount': -100, 'Status': 'Refunded', 'Date': '2025-03-07' },
     ];
+    setError(null); sheetCache.current.clear();
+    ++revision.current; setBusy(false); setHistory([]); setExportNames({}); setSearchTerm(''); setPage(1); setBulkSummary(null);
     setFileObj(null);
     setFileName('Ecommerce_Orders_Demo.xlsx');
-    setSheetNames(['Orders', 'Returns']);
+    setSheetNames(['Orders']);
     setSelectedSheet('Orders');
     setHeaders(demoHeaders);
     setDuplicateHeaders([]);
@@ -192,7 +232,10 @@ export default function ExcelEngineWorkspace() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" aria-busy={busy}>
+      <p className="text-sm text-stone-600">Clean and validate cell values locally. Formula recalculation, macros, formatting and charts are not preserved in this data-processing workspace.</p>
+      {busy && <p role="status">Reading workbook…</p>}
+      <fieldset disabled={busy} className="contents">
       {/* Workspace Action Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-[var(--orbit-border)] bg-stone-50/60 dark:bg-stone-900/60 shadow-xs">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -222,6 +265,7 @@ export default function ExcelEngineWorkspace() {
             <Layers size={14} />
             <span>Batch Process (Bulk)</span>
           </button>
+          <label className="cursor-pointer rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-stone-800">Upload workbook<input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="sr-only" disabled={busy}/></label>
           <button
             type="button"
             onClick={loadDemoData}
@@ -234,7 +278,7 @@ export default function ExcelEngineWorkspace() {
 
       {bulkSummary && (
         <div className="p-3.5 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 text-xs text-violet-800 dark:text-violet-300 flex items-center justify-between">
-          <span>Batch processed {bulkSummary.totalFiles} workbooks ({bulkSummary.totalRows} combined rows)</span>
+          <span>Combined first worksheets from {bulkSummary.totalFiles} files ({bulkSummary.totalRows} rows)</span>
           <button
             type="button"
             onClick={() => setBulkSummary(null)}
@@ -367,7 +411,7 @@ export default function ExcelEngineWorkspace() {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px]">
-                    {validationResults.validCount} valid / {validationResults.errorCount} invalid
+                    {validationResults.validCount} valid / {validationResults.invalidCount} invalid rows
                   </span>
                   {!validationResults.isValid && (
                     <button
@@ -398,31 +442,21 @@ export default function ExcelEngineWorkspace() {
             </div>
           )}
 
-          {/* Quick Transformations Bar */}
-          <div className="p-3.5 rounded-xl border border-[var(--orbit-border)] bg-stone-50/70 dark:bg-stone-850/60 text-xs flex flex-wrap items-center gap-3">
-            <span className="font-bold text-stone-600 dark:text-stone-300">Clean Column:</span>
-            {headers.slice(0, 4).map(h => (
-              <div key={h} className="flex items-center gap-1 bg-white dark:bg-stone-800 border border-[var(--orbit-border)] px-2 py-1 rounded-lg">
-                <span className="font-mono text-[11px] text-stone-500">{h}:</span>
-                <button
-                  type="button"
-                  onClick={() => handleTransform('trim', h)}
-                  className="hover:text-accent-600 text-[10px] px-1 font-semibold"
-                  title="Trim extra whitespace"
-                >
-                  Trim
-                </button>
-                <span className="text-stone-300">|</span>
-                <button
-                  type="button"
-                  onClick={() => handleTransform('upper', h)}
-                  className="hover:text-accent-600 text-[10px] px-1 font-semibold"
-                  title="To Uppercase"
-                >
-                  UPPER
-                </button>
-              </div>
-            ))}
+          <details className="rounded-xl border border-stone-300 p-4" open>
+            <summary className="font-semibold">Column mapping & validation rules</summary>
+            <p className="my-2 text-xs">Rename exported columns and choose the checks your data must pass. Search filters the preview only; exports contain all rows. Number columns export as numeric values; keep identifier columns as text.</p>
+            <div className="overflow-auto"><table className="w-full border-collapse text-xs"><thead><tr>{['Source column','Export column name','Type','Required','Minimum'].map(label=><th key={label} className="border border-stone-300 p-2 text-left">{label}</th>)}</tr></thead><tbody>{headers.map(h=><tr key={h}>
+              <td className="border border-stone-300 p-2">{h}</td>
+              <td className="border border-stone-300 p-2"><input aria-label={`Export name for ${h}`} value={exportNames[h] ?? h} onChange={e=>setExportNames(previous=>({...previous,[h]:e.target.value}))} className="w-full rounded border p-2"/></td>
+              <td className="border border-stone-300 p-2"><select aria-label={`Type for ${h}`} value={validationSchema[h]?.type || 'text'} onChange={e=>{const next={...validationSchema,[h]:{...validationSchema[h],type:e.target.value}};setValidationSchema(next);setValidationResults(validateRows(rows,next));}}>{['text','number','date','email'].map(type=><option key={type}>{type}</option>)}</select></td>
+              <td className="border border-stone-300 p-2"><input type="checkbox" aria-label={`Require ${h}`} checked={Boolean(validationSchema[h]?.required)} onChange={e=>{const next={...validationSchema,[h]:{...validationSchema[h],required:e.target.checked}};setValidationSchema(next);setValidationResults(validateRows(rows,next));}}/></td>
+              <td className="border border-stone-300 p-2"><input aria-label={`Minimum for ${h}`} type="number" disabled={validationSchema[h]?.type !== 'number'} value={validationSchema[h]?.min ?? ''} onChange={e=>{const next={...validationSchema,[h]:{...validationSchema[h],min:e.target.value===''?undefined:Number(e.target.value)}};setValidationSchema(next);setValidationResults(validateRows(rows,next));}} className="w-24 rounded border p-2"/></td>
+            </tr>)}</tbody></table></div>
+          </details>
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-stone-300 p-3 text-sm">
+            <label htmlFor="clean-column">Clean column</label><select id="clean-column" value={headers.includes(cleanColumn)?cleanColumn:''} onChange={e=>setCleanColumn(e.target.value)} className="max-w-64 rounded border p-2"><option value="">Choose column</option>{headers.map(h=><option key={h}>{h}</option>)}</select>
+            {['trim','upper','lower'].map(action=><button type="button" key={action} disabled={!headers.includes(cleanColumn)} onClick={()=>handleTransform(action,cleanColumn)} className="rounded border px-3 py-2 disabled:opacity-40">{action === 'trim' ? 'Trim spaces' : action === 'upper' ? 'UPPERCASE' : 'lowercase'}</button>)}
+            <button type="button" disabled={!history.length} onClick={()=>{const previous=history[history.length-1];setRows(previous);setHistory(items=>items.slice(0,-1));setValidationResults(validateRows(previous,validationSchema));}} className="rounded border px-3 py-2 disabled:opacity-40">Undo last change</button>
           </div>
 
           {/* Interactive Data Table Preview */}
@@ -436,12 +470,12 @@ export default function ExcelEngineWorkspace() {
                 className="orbit-control w-full max-w-xs rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 outline-none"
               />
               <span className="text-xs text-stone-400">
-                Page {page} of {totalPages}
+                Page {activePage} of {totalPages}
               </span>
             </div>
 
             <div className="overflow-x-auto rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 shadow-xs">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse [&_td]:border [&_th]:border [&_td]:border-stone-200 [&_th]:border-stone-300">
                 <thead>
                   <tr className="border-b border-[var(--orbit-border)] bg-stone-50/80 dark:bg-stone-850/80 text-stone-600 dark:text-stone-300 font-bold">
                     <th className="py-2.5 px-3 w-12 text-stone-400">#</th>
@@ -461,11 +495,11 @@ export default function ExcelEngineWorkspace() {
                   {displayedRows.map((row, i) => (
                     <tr key={i} className="hover:bg-stone-50/50 dark:hover:bg-stone-850/50">
                       <td className="py-2 px-3 text-stone-400 font-mono text-[11px]">
-                        {(page - 1) * pageSize + i + 1}
+                        {rows.indexOf(row) + 1}
                       </td>
                       {headers.map(h => (
                         <td key={h} className="py-2 px-3 text-stone-800 dark:text-stone-200 font-mono">
-                          {String(row[h] ?? '')}
+                          <input aria-label={`Row ${rows.indexOf(row)+1} ${h}`} value={String(row[h] ?? '')} onChange={event=>{const index=rows.indexOf(row);const updated=rows.map((value,n)=>n===index?{...value,[h]:event.target.value}:value);setHistory(previous=>[...previous.slice(-4),rows]);setRows(updated);setValidationResults(validateRows(updated,validationSchema));}} className="min-w-28 w-full rounded border border-transparent bg-transparent px-1 py-1 focus:border-indigo-400"/>
                         </td>
                       ))}
                     </tr>
@@ -479,19 +513,19 @@ export default function ExcelEngineWorkspace() {
               <div className="flex items-center justify-between pt-2">
                 <button
                   type="button"
-                  disabled={page <= 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={activePage <= 1}
+                  onClick={() => setPage(Math.max(1,activePage-1))}
                   className="px-3 py-1 rounded-lg border border-[var(--orbit-border)] text-xs disabled:opacity-40"
                 >
                   Previous
                 </button>
                 <span className="text-xs text-stone-500">
-                  Showing {(page - 1) * pageSize + 1} to {Math.min(filteredRows.length, page * pageSize)} of {filteredRows.length} rows
+                  Showing {(activePage - 1) * pageSize + 1} to {Math.min(filteredRows.length, activePage * pageSize)} of {filteredRows.length} rows
                 </span>
                 <button
                   type="button"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={activePage >= totalPages}
+                  onClick={() => setPage(Math.min(totalPages,activePage+1))}
                   className="px-3 py-1 rounded-lg border border-[var(--orbit-border)] text-xs disabled:opacity-40"
                 >
                   Next
@@ -501,6 +535,7 @@ export default function ExcelEngineWorkspace() {
           </div>
         </div>
       )}
+      </fieldset>
       {/* ── Upgrade Prompt Modal ── */}
       {showBulkGate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
