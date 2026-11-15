@@ -215,3 +215,33 @@ it('preserves ordinary monetary amounts in the Excel date-serial range', async (
   const result = await parseSpreadsheet(XLSX.write(wb, { type:'array', bookType:'xlsx' }));
   expect(result.rows[0]).toEqual({ Date:'2025-01-01', 'Taxable value':45000, Amount:65000 });
 });
+
+describe('Excel data preservation regressions',()=>{
+  function buffer(data) {
+    const workbook=XLSX.utils.book_new();XLSX.utils.book_append_sheet(workbook,XLSX.utils.aoa_to_sheet(data),'Data');return new Uint8Array(XLSX.write(workbook,{type:'array',bookType:'xlsx'}));
+  }
+  it('reads only the uploaded typed-array slice',async()=>{
+    const bytes=buffer([['Name'],['Synthetic']]);const padded=new Uint8Array(bytes.length+20);padded.set(bytes,10);
+    expect((await parseSpreadsheet(padded.subarray(10,10+bytes.length))).rows[0].Name).toBe('Synthetic');
+  });
+  it('keeps generated and literal suffix headers unique and retains extra columns',async()=>{
+    const parsed=await parseSpreadsheet(buffer([['Amount','Amount','Amount_2'],[1,2,3,'extra']]));
+    expect(new Set(parsed.headers.map(h=>h.toLowerCase())).size).toBe(4);
+    expect(parsed.rows[0][parsed.headers[2]]).toBe(3);expect(parsed.rows[0].Column_4).toBe('extra');
+  });
+  it('preserves leading-zero CSV identifiers',async()=>{
+    const parsed=await parseSpreadsheet(new TextEncoder().encode('Code,Amount\n001234,100\n'));
+    expect(parsed.rows[0].Code).toBe('001234');
+  });
+  it('rejects nonexistent worksheets, excessive columns and non-finite numbers',async()=>{
+    await expect(parseSpreadsheet(buffer([['A','B'],[1,2]]),{sheetName:'Missing'})).rejects.toThrow('could not be found');
+    await expect(parseSpreadsheet(buffer([['A','B'],[1,2]]),{maxColumns:1})).rejects.toThrow('column limit');
+    const result=validateRows([{Amount:Infinity},{Amount:'₹'},{Amount:0}],{Amount:{type:'number',required:true}});
+    expect(result.invalidCount).toBe(2);expect(result.validCount).toBe(1);
+  });
+  it('protects CSV headers as well as values and refuses silent multi-sheet loss',async()=>{
+    const blob=exportSpreadsheet({sheets:[{name:'Data',data:[{'=1+1':'=2+2'}]}],format:'csv'});
+    expect(await blob.text()).toContain("'=1+1");expect(await blob.text()).toContain("'=2+2");
+    expect(()=>exportSpreadsheet({sheets:[{name:'A',data:[]},{name:'B',data:[]}],format:'csv'})).toThrow('one worksheet');
+  });
+});

@@ -31,6 +31,7 @@ import { downloadBlob } from '../lib/toolFormat.js';
 export async function parseSpreadsheet(fileOrBuffer, options = {}) {
   const {
     sheetName = null,
+    maxColumns = 256,
     maxFileSizeMB = 25,
     maxRows = 50000,
   } = options;
@@ -54,7 +55,7 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
     if (size > maxFileSizeMB * 1024 * 1024) {
       throw new Error(`File size (${(size / (1024 * 1024)).toFixed(1)} MB) exceeds the maximum limit of ${maxFileSizeMB} MB.`);
     }
-    buffer = fileOrBuffer.buffer;
+    buffer = fileOrBuffer.buffer.slice(fileOrBuffer.byteOffset || 0, (fileOrBuffer.byteOffset || 0) + fileOrBuffer.byteLength);
   } else {
     buffer = fileOrBuffer;
   }
@@ -66,6 +67,8 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
       cellDates: true,
       cellNF: false,
       cellText: false,
+      raw: true,
+      sheetRows: maxRows + 12,
     });
   } catch (err) {
     throw new Error(`Malformed or unsupported spreadsheet file: ${err.message}`, { cause: err });
@@ -77,6 +80,7 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
   }
 
   // Select target sheet
+  if (sheetName && !sheetNames.includes(sheetName)) throw new Error(`Worksheet "${sheetName}" could not be found.`);
   const selectedSheet = (sheetName && sheetNames.includes(sheetName))
     ? sheetName
     : sheetNames[0];
@@ -86,6 +90,10 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
     throw new Error(`Worksheet "${selectedSheet}" could not be found in the workbook.`);
   }
 
+  const range = worksheet['!ref'] ? XLSX.utils.decode_range(worksheet['!ref']) : null;
+  if (range && range.e.c >= maxColumns) throw new Error(`Worksheet exceeds maximum column limit of ${maxColumns}.`);
+  const originalRange = worksheet['!fullref'] || worksheet['!ref'];
+  if (originalRange && XLSX.utils.decode_range(originalRange).e.r > maxRows + 10) throw new Error(`Worksheet exceeds maximum row limit of ${maxRows} rows.`);
   // Extract raw 2D array (header + rows)
   const rawData = XLSX.utils.sheet_to_json(worksheet, {
     header: 1,
@@ -129,7 +137,8 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
     };
   }
 
-  const headerRow = rawData[headerIndex] || [];
+  const width = Math.max(...rawData.map(row => row.length));
+  const headerRow = Array.from({length:width}, (_,i) => rawData[headerIndex]?.[i] ?? "");
   const duplicateHeaders = [];
   const emptyHeaders = [];
 
@@ -144,18 +153,13 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
 
   // Ensure unique header names and detect duplicates
   const headers = [];
-  const seenHeaders = new Map();
+  const usedHeaders = new Set();
   rawHeaders.forEach(h => {
-    const lower = h.toLowerCase();
-    if (seenHeaders.has(lower)) {
-      const count = seenHeaders.get(lower) + 1;
-      seenHeaders.set(lower, count);
-      duplicateHeaders.push(h);
-      headers.push(`${h}_${count}`);
-    } else {
-      seenHeaders.set(lower, 1);
-      headers.push(h);
-    }
+    let candidate = h, suffix = 2;
+    while (usedHeaders.has(candidate.toLowerCase())) candidate = `${h}_${suffix++}`;
+    if (candidate !== h) duplicateHeaders.push(h);
+    usedHeaders.add(candidate.toLowerCase());
+    headers.push(candidate);
   });
 
   // Convert subsequent rows into key-value objects
@@ -166,7 +170,7 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
       continue; // Skip blank rows
     }
 
-    const rowObj = {};
+    const rowObj = Object.create(null);
     headers.forEach((header, colIdx) => {
       let val = rowArray[colIdx];
       if (val instanceof Date) {
@@ -220,7 +224,7 @@ function formatSerialDate(serial) {
  * Types: 'number' | 'currency' | 'date' | 'email' | 'boolean' | 'text'
  */
 export function detectColumnTypes(rows, headers) {
-  const types = {};
+  const types = Object.create(null);
 
   headers.forEach(header => {
     let numCount = 0;
@@ -244,7 +248,7 @@ export function detectColumnTypes(rows, headers) {
 
       // Check Number / Currency
       const cleanNum = str.replace(/[$€£₹,\s]/g, '');
-      if (!isNaN(Number(cleanNum)) && cleanNum !== '') {
+      if (Number.isFinite(Number(cleanNum)) && cleanNum !== '' && !/^0\d+$/.test(str) && !/^\d{16,}$/.test(str)) {
         numCount++;
       }
 
@@ -282,7 +286,7 @@ export function detectColumnTypes(rows, headers) {
  */
 export function applyColumnMapping(rows, mapping) {
   return rows.map(row => {
-    const mapped = {};
+    const mapped = Object.create(null);
     Object.entries(mapping).forEach(([targetKey, sourceHeader]) => {
       if (sourceHeader && row[sourceHeader] !== undefined) {
         mapped[targetKey] = row[sourceHeader];
@@ -323,7 +327,7 @@ export function validateRows(rows, schema) {
       if (!isEmpty) {
         if (rules.type === 'number') {
           const num = Number(strVal.replace(/[$€£₹,\s]/g, ''));
-          if (isNaN(num)) {
+          if (!Number.isFinite(num) || strVal.replace(/[$€£₹,\s]/g, '') === '') {
             errors.push({
               row: rowIndex + 1,
               field,
@@ -408,6 +412,7 @@ export function validateRows(rows, schema) {
     validRows,
     errors,
     errorCount: errors.length,
+    invalidCount: rows.length - validRows.length,
     validCount: validRows.length,
     totalCount: rows.length,
   };
@@ -436,6 +441,8 @@ export function sanitizeCsvCell(val) {
  * }} options
  */
 export function exportSpreadsheet({ sheets, format = 'xlsx', sanitizeFormulaInjection = true }) {
+  if (!['xlsx','csv'].includes(format) || !sheets?.length) throw new Error('Choose XLSX or CSV and at least one sheet.');
+  if (format === 'csv' && sheets.length !== 1) throw new Error('CSV export supports one worksheet at a time.');
   const wb = XLSX.utils.book_new();
 
   sheets.forEach(sheetDef => {
@@ -444,7 +451,7 @@ export function exportSpreadsheet({ sheets, format = 'xlsx', sanitizeFormulaInje
     // Apply formula injection protection for CSV or when enabled
     if (sanitizeFormulaInjection && format === 'csv') {
       exportData = sheetDef.data.map(row => {
-        const sanitizedRow = {};
+        const sanitizedRow = Object.create(null);
         Object.entries(row).forEach(([k, v]) => {
           sanitizedRow[k] = sanitizeCsvCell(v);
         });
@@ -455,7 +462,17 @@ export function exportSpreadsheet({ sheets, format = 'xlsx', sanitizeFormulaInje
     const ws = XLSX.utils.json_to_sheet(exportData, {
       header: sheetDef.columns,
     });
-    XLSX.utils.book_append_sheet(wb, ws, sheetDef.name.slice(0, 31) || 'Sheet1');
+    if (format === 'csv' && sanitizeFormulaInjection && ws['!ref']) {
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cell = ws[XLSX.utils.encode_cell({r:range.s.r,c:col})];
+        if (cell) cell.v = sanitizeCsvCell(cell.v);
+      }
+    }
+    let name = String(sheetDef.name || 'Sheet1').replace(/[\\/?*[\]:]/g, '_').slice(0,31) || 'Sheet1';
+    const base = name; let suffix = 2;
+    while (wb.SheetNames.some(existing=>existing.toLowerCase()===name.toLowerCase())) { const ending = `_${suffix++}`; name=base.slice(0,31-ending.length)+ending; }
+    XLSX.utils.book_append_sheet(wb, ws, name);
   });
 
   if (format === 'csv') {
@@ -502,6 +519,8 @@ export async function processSpreadsheetBatch(files, options = {}) {
   if (!Array.isArray(files) || files.length === 0) {
     throw new Error('At least one file is required for batch processing.');
   }
+  if (files.length > 10) throw new Error('Batch limit is 10 files.');
+  if (files.reduce((sum,file)=>sum+(file?.size || file?.byteLength || 0),0) > 50*1024*1024) throw new Error('Combined batch size exceeds 50 MB.');
   const results = [];
   const allRows = [];
   for (let i = 0; i < files.length; i++) {
@@ -518,6 +537,7 @@ export async function processSpreadsheetBatch(files, options = {}) {
       errors: validation?.errors || [],
       sheetNames: parsed.sheetNames,
     });
+    if (allRows.length + parsed.rows.length > (options.maxRows || 50000)) throw new Error('Combined batch exceeds maximum row limit.');
     allRows.push(...parsed.rows);
   }
   return {
