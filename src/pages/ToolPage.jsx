@@ -774,7 +774,7 @@ export default function ToolPage() {
   const related = LISTED_TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
 
   return (
-    <div className="orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex">
+    <div className={`${slug === 'gst-invoice-generator' ? 'orbit-invoice-page ' : ''}orbit-light orbit-tool min-h-screen bg-[var(--orbit-canvas)] text-stone-800 dark:text-stone-100 transition-colors flex`}>
       <SEO
         title={pageTitle}
         description={pageDescription}
@@ -814,9 +814,9 @@ export default function ToolPage() {
             </div>
           </div>
 
-          {adEligible && <SampleAd category={tool?.category} />}
+          {adEligible && slug !== 'gst-invoice-generator' && <SampleAd category={tool?.category} />}
 
-          {adEligible && <AdSenseUnit slot="" />}
+          {adEligible && slug !== 'gst-invoice-generator' && <AdSenseUnit slot="" />}
 
           <div className="space-y-6 pt-8 border-t border-[var(--orbit-border)]">
             <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Tool Guide & Publisher Information</h2>
