@@ -1,10 +1,10 @@
 /* global process, Buffer */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import crypto from 'crypto';
-import createOrderHandler from './create-order.js';
-import verifyPaymentHandler from './verify-payment.js';
-import { parseOrderRequest, PRODUCTS } from './_lib/products.js';
-import { checkPaymentAgainstOrder } from './_lib/paymentRules.js';
+import createOrderHandler from '../../api/create-order.js';
+import verifyPaymentHandler from '../../api/verify-payment.js';
+import { parseOrderRequest, PRODUCTS } from '../../api/_lib/products.js';
+import { checkPaymentAgainstOrder } from '../../api/_lib/paymentRules.js';
 
 vi.mock('razorpay', () => ({
   default: class MockRazorpay {

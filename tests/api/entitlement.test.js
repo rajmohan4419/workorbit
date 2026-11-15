@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import handler from './entitlement';
-import { requireAdmin } from './_lib/payments';
-vi.mock('./_lib/payments', () => ({ requireAdmin: vi.fn() }));
+import handler from '../../api/entitlement';
+import { requireAdmin } from '../../api/_lib/payments';
+vi.mock('../../api/_lib/payments', () => ({ requireAdmin: vi.fn() }));
 
 describe('entitlement read for download accounts', () => {
   let admin, query;
