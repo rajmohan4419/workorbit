@@ -296,7 +296,7 @@ function InvoicePreview({ seller, buyer, meta, items, totals, notes, signatory, 
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function GstInvoice() {
+export function LegacyGstInvoice() {
   const feedback = useExportFeedback('document');
   const [seller, setSeller] = useState(defaultSeller);
   const [buyer, setBuyer] = useState(defaultBuyer);
@@ -790,3 +790,5 @@ export function GstInvoice() {
     </div>
   );
 }
+
+export {InvoiceWorkspace as GstInvoice} from './InvoiceWorkspace.jsx';

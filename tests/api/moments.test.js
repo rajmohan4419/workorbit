@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { checkRateLimit, getAdminClient } from './_lib/supabaseClient.js';
-import share from './moment-shares.js';
-import translate from './translate.js';
+import { checkRateLimit, getAdminClient } from '../../api/_lib/supabaseClient.js';
+import share from '../../api/moment-shares.js';
+import translate from '../../api/translate.js';
 
-vi.mock('./_lib/supabaseClient.js', () => ({
+vi.mock('../../api/_lib/supabaseClient.js', () => ({
   checkRateLimit: vi.fn(),
   getAdminClient: vi.fn(),
 }));

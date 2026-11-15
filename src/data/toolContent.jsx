@@ -1325,26 +1325,21 @@ export const TOOL_CONTENT = {
     ]
   },
   'gst-invoice-generator': {
-    title: 'GST Invoice Generator | Local Preview and PDF Export',
-    h1: 'GST Invoice Generator with Local Validation and PDF',
-    metaDescription: 'Create ordinary domestic supply invoices with explicit place of supply, local GSTIN format/checksum validation, shared totals and multipage PDF export.',
-    intro: 'Prepare an invoice using manually entered details for the supported ordinary domestic supply workflow. Review the assumptions and local validation results before exporting.',
-    keywords: 'GST invoice generator, local invoice PDF, ordinary domestic supply, GSTIN checksum validation, CGST SGST IGST invoice',
-    how: [
-      'Enter seller and buyer details. GSTIN format and checksum checks run locally; they are not government verification.',
-      'Set the explicit place of supply. It is compared with seller state to select IGST or CGST/SGST; buyer state does not override it.',
-      'Add descriptions, HSN/SAC, positive quantities, finite rates, discounts and a supported GST rate.',
-      'Review state/GSTIN contradictions and any difference between buyer state and place of supply.',
-      'Preview the shared totals and export the multipage PDF. Latin/WinAnsi text is supported by the PDF font; use browser printing with a suitable local font for other scripts.'
-    ],
+    title: 'OrbitBoard Invoice Generator | Five Templates, GST & Export Review',
+    h1: 'Invoice Generator for Registered Indian Businesses',
+    metaDescription: 'Prepare B2B, B2C and reviewed export invoices with five original templates. Preview free; sign in to finalize and save an invoice snapshot with PDF download.',
+    intro: 'Choose invoice type and template separately. Draft locally, review particulars and tax treatment, then explicitly save a finalized account invoice.',
+    keywords: 'GST invoice, B2B invoice, B2C invoice, export invoice, invoice templates, LUT invoice',
+    how: ['Enter seller, recipient and delivery details; choose an explicit place of supply.', 'Choose B2B, B2C or export goods/services and review the applicable legal treatment.', 'Add classified items, discounts and reviewed charges; inspect totals and validation.', 'Preview any of the five templates without signing in.', 'Sign in to finalize: five lifetime invoices are the configurable launch allowance. Re-download saved invoices without another invoice credit.'],
     faq: [
-      ['What supply workflow is supported?', 'Ordinary domestic supply using manually entered seller state and explicit place of supply. Exports, SEZ, reverse charge and other special supply rules are outside this workflow.'],
-      ['Is a GSTIN government verified?', 'No. Only local format, state code and checksum validation is performed. No government or GST portal request is made.'],
-      ['Does the tool establish statutory compliance?', 'No. It prepares an invoice from your entries within a limited workflow. Review the details and applicable requirements for your transaction.'],
-      ['How are totals calculated?', 'Editor, preview and PDF use the same line and aggregate calculations. Line amounts are rounded to paise and the final invoice rounds to whole rupees with a visible round-off adjustment.'],
-      ['Can descriptions and notes span pages?', 'Yes. Descriptions and notes wrap in full. Item tables repeat their headers on continuation pages and totals and signatures have reserved space.'],
-      ['Which PDF text is supported?', 'The bundled standard PDF font supports Latin/WinAnsi. Unsupported characters cause an actionable error instead of being silently removed. Browser preview printing can use suitable fonts installed on your device.'],
-      ['Where are seller details saved?', 'Seller details and explicitly saved workspaces are stored in this browser. These invoice generation steps do not upload document contents, bank details or invoice identifiers to analytics or logs.']
+      ['Is this a registered e-invoice?', 'No. IRN registration and statutory dynamic QR integrations are unavailable. Applicable or uncertain cases are blocked from finalization.'],
+      ['Which supplies are supported?', 'Ordinary domestic forward-charge B2B/B2C and explicitly reviewed exports under LUT/bond or legally available IGST payment. SEZ, reverse charge, bills of supply, specific/unit cess and pure-agent reimbursements are unsupported.'],
+      ['Are GSTINs government verified?', 'No. Checks are local format, state-code consistency and checksum validation.'],
+      ['What is saved?', 'Drafts remain in this browser. Finalization explicitly sends invoice particulars and the generated PDF to account storage, with immutable snapshots and audit events. Default templates are saved per user and invoice type.'],
+      ['What consumes allowance?', 'Only successful finalization consumes an invoice credit. Previews, edits, default selection, retries of the same request and re-downloads do not. Five lifetime invoices are a configurable launch assumption; a later monthly policy can be configured.'],
+      ['Can I change a finalized invoice?', 'Saved particulars are immutable. Download the same snapshot with another template for free, or create a new invoice with a new number.'],
+      ['Which currencies and conversion are supported?', 'INR and a limited set of two-decimal currencies. Foreign-currency exports require separate reviewed INR reporting rates under Rule 34; no live rate or export eligibility is inferred.'],
+      ['Which fonts are supported?', 'Bundled Inter Latin glyphs. Unsupported text is rejected explicitly and retained in the draft. Full multilingual PDF fonts are not provided.']
     ]
   },
   'bank-reconciliation': {

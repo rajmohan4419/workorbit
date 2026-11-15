@@ -265,5 +265,11 @@
       "destination": "/tools/excel-engine",
       "permanent": true
     }
-  ]
+  ],
+  "functions": {
+    "api/invoices.js": {
+      "includeFiles": "src/assets/invoice-fonts/*.woff",
+      "maxDuration": 60
+    }
+  }
 }

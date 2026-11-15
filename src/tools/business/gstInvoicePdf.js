@@ -1,8 +1,9 @@
+import { generateUpgradedPDF } from '../../lib/invoices/pdf.js';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { amountToWords, calcItem, validateInvoice } from './gstInvoiceEngine.js';
 const money = n => Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 /** PDF uses the same validated totals and supply decision as the editor. Fonts are bundled with the application. */
-export async function generateInvoicePDF(input, options = {}) {
+async function generateLegacyInvoicePDF(input, options = {}) {
   const { seller, buyer, meta, items, notes = '', signatory = '' } = input;
   const validation = validateInvoice(input);
   if (validation.errors.length) throw new Error(validation.errors.join('\n'));
@@ -119,3 +120,5 @@ export async function generateInvoicePDF(input, options = {}) {
   for (const line of wrap(`Authorised signatory: ${signatory || '-'}`, 230, 8)) { ensure(12); text(line,330,y,8); y -= 12; }
   return new Blob([await doc.save()], { type:'application/pdf' });
 }
+
+export async function generateInvoicePDF(input,options={}) { return input.schemaVersion===2 ? generateUpgradedPDF(input,{...options,fonts:options.fonts||await (await import('../../lib/invoiceFonts.js')).loadInvoiceFonts()}) : generateLegacyInvoicePDF(input,options); }

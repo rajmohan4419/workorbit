@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import handler, { downloadPeriod, validateDownload } from './downloads';
-import { requireAdmin } from './_lib/payments';
-vi.mock('./_lib/payments', () => ({ requireAdmin: vi.fn() }));
+import handler, { downloadPeriod, validateDownload } from '../../api/downloads';
+import { requireAdmin } from '../../api/_lib/payments';
+vi.mock('../../api/_lib/payments', () => ({ requireAdmin: vi.fn() }));
 
 const requestId = 'c6118427-10ca-409d-a315-98499b392200';
 const call = async (req) => {
