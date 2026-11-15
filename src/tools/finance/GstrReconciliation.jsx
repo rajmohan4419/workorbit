@@ -12,7 +12,10 @@ const FIELDS = [
 ];
 function validate(row, index) {
   const r = normalizeInvoiceRecord(row, {}, 'preview', index);
-  return r.errors.map(message => ({ rowNumber: r.rowNumber, message }));
+  const errors = [...r.errors];
+  if (!String(row.gstin ?? '').trim()) errors.push('Supplier GSTIN is required.');
+  if (!String(row.invoiceNumber ?? '').trim()) errors.push('Invoice number is required.');
+  return errors.map(message => ({ rowNumber: r.rowNumber, message }));
 }
 export function GstrReconciliation() {
   const feedback = useExportFeedback('spreadsheet');
@@ -22,7 +25,11 @@ export function GstrReconciliation() {
   const [importEpoch, setImportEpoch] = useState(0);
   const [tolerance, setTolerance] = useState(1);
   const ready = Boolean(sources.gstr && sources.books);
-  const recon = useMemo(() => ready ? reconcileGstrData(sources.gstr.rows, sources.books.rows, tolerance) : null, [sources, ready, tolerance]);
+  const {recon,processingError} = useMemo(() => {
+    if (!ready) return {recon:null,processingError:''};
+    try { return {recon:reconcileGstrData(sources.gstr.rows,sources.books.rows,tolerance),processingError:''}; }
+    catch (error) { return {recon:null,processingError:error.message}; }
+  }, [sources, ready, tolerance]);
   useEffect(() => {
     updateSharePayload(recon ? {
       headlineMetric: `${recon.summary.matchedCount} matched invoices`,
@@ -44,11 +51,12 @@ export function GstrReconciliation() {
     ...recon.invalidRows.map(r => ({ ...r, status: `Rejected: ${r.errors.join(' ')}` })),
   ] : [];
   return <div className="space-y-5 min-w-0">
+    {processingError && <p role="alert">{processingError} Your sources remain available. Reset or replace a source to retry.</p>}
     <div className="flex flex-wrap gap-3 items-center">
       <button className="orbit-control border rounded-lg" onClick={() => { setImportEpoch(n => n + 1); setDemo(true); setSources({ gstr: { rows: SAMPLE_GSTR_DATA, label: 'Synthetic GSTR-2B demo' }, books: { rows: SAMPLE_PURCHASE_DATA, label: 'Synthetic books demo' } }); }}>Load demo</button>
       <button className="orbit-control border rounded-lg" onClick={() => { setSources({ gstr: null, books: null }); setDemo(false); setImportEpoch(n => n + 1); }}>Reset workspace</button>
-      <button className="orbit-control border rounded-lg" disabled={!ready || feedback.busy} onClick={() => feedback.run(() => downloadBlob(exportGstrReport(recon, { gstr: sources.gstr.label, books: sources.books.label }), 'gstr-reconciliation.xlsx'), 'xlsx')}>Export Excel report</button>
-      <button className="orbit-control border rounded-lg" disabled={!ready} onClick={() => openShareModal()}>Share scorecard</button>
+      <button className="orbit-control border rounded-lg" disabled={!recon || feedback.busy} onClick={() => feedback.run(() => downloadBlob(exportGstrReport(recon, { gstr: sources.gstr.label, books: sources.books.label }), 'gstr-reconciliation.xlsx'), 'xlsx')}>Export Excel report</button>
+      <button className="orbit-control border rounded-lg" disabled={!recon} onClick={() => openShareModal()}>Share scorecard</button>
     </div>
     <p role="status">{demo ? 'Demo mode — synthetic data. Activating a real file clears both demo sources.' : ready ? 'Ready — both sources supplied.' : 'Awaiting both sources. Confirm each import to enable a report.'}</p>
     <p className="text-sm">File matching does not determine ITC eligibility. Missing tax fields are distinct from explicit zero; only mutually available components are compared. Missing identifiers require review.</p>

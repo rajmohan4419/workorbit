@@ -1,3 +1,4 @@
+import { readWorkbook } from './workbookReader.js';
 import * as XLSX from 'xlsx';
 
 export function ensureRows(value) {
@@ -19,14 +20,16 @@ export function jsonToXlsx(jsonText) {
   return XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
 }
 
-export function csvToXlsx(csvText) {
-  const workbook = XLSX.read(csvText, { type: 'string' });
+export async function csvToXlsx(csvText) {
+  if (new Blob([csvText]).size > 10 * 1024 * 1024) throw new Error('Maximum CSV size is 10 MB.');
+  const workbook = await readWorkbook(csvText, { type: 'string', raw: true, maxRows: 10000, headerAllowance: 1 });
   const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
   return output;
 }
 
 export async function xlsxToCsv(file) {
-  const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+  if (file.size > 10 * 1024 * 1024) throw new Error('Maximum spreadsheet size is 10 MB.');
+  const workbook = await readWorkbook(await file.arrayBuffer(), { maxRows: 10000, headerAllowance: 1 });
   const sheets = workbook.SheetNames;
   if (!sheets.length) throw new Error('No worksheets found.');
 

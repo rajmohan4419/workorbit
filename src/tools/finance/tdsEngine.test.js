@@ -14,7 +14,7 @@ describe('tdsEngine', () => {
   });
 
   describe('Section 194A: Interest other than Securities', () => {
-    it('applies 10% TDS above ₹40,000 general threshold', () => {
+    it('applies 10% TDS above ₹50,000 bank-interest threshold', () => {
       const below = calculateTds({ section: '194A', amount: 35000, isSenior: false });
       expect(below.isExempt).toBe(true);
       expect(below.tdsAmount).toBe(0);
@@ -30,19 +30,19 @@ describe('tdsEngine', () => {
       expect(above.netPayable).toBe(54000);
     });
 
-    it('applies higher ₹50,000 threshold for Senior Citizens', () => {
+    it('applies higher ₹1,00,000 threshold for Senior Citizens', () => {
       const at50k = calculateTds({ section: '194A', amount: 50000, isSenior: true });
       expect(at50k.isExempt).toBe(true);
       expect(at50k.tdsAmount).toBe(0);
 
-      const above50k = calculateTds({ section: '194A', amount: 50001, isSenior: true });
+      const above50k = calculateTds({ section: '194A', amount: 100001, isSenior: true });
       expect(above50k.isExempt).toBe(false);
-      expect(above50k.tdsAmount).toBe(5000);
+      expect(above50k.tdsAmount).toBe(10000);
     });
   });
 
   describe('Section 194C: Contractors & Sub-contractors', () => {
-    it('applies 1% for individuals and 2% for companies above ₹30,000 threshold', () => {
+    it('applies 1% for individuals and 2% for companies above ₹50,000 threshold', () => {
       const at30k = calculateTds({ section: '194C', amount: 30000 });
       expect(at30k.isExempt).toBe(true);
 
@@ -59,20 +59,20 @@ describe('tdsEngine', () => {
   });
 
   describe('Section 194H: Commission & Brokerage', () => {
-    it('applies 5% TDS above ₹15,000 threshold', () => {
+    it('applies 2% TDS above ₹20,000 threshold', () => {
       const below = calculateTds({ section: '194H', amount: 15000 });
       expect(below.isExempt).toBe(true);
 
-      const above = calculateTds({ section: '194H', amount: 20000 });
+      const above = calculateTds({ section: '194H', amount: 25000 });
       expect(above.isExempt).toBe(false);
-      expect(above.rate).toBe(0.05);
-      expect(above.tdsAmount).toBe(1000); // 5%
+      expect(above.rate).toBe(0.02);
+      expect(above.tdsAmount).toBe(500); // 2%
     });
   });
 
   describe('Section 194I: Rent on Property & Machinery', () => {
-    it('applies 2% on plant/machinery and 10% on land/building above ₹2,40,000 threshold', () => {
-      const at240k = calculateTds({ section: '194I', amount: 240000, subType: 'building' });
+    it('applies 2% on plant/machinery and 10% on land/building above ₹50,000 monthly threshold', () => {
+      const at240k = calculateTds({ section: '194I', amount: 50000, subType: 'building' });
       expect(at240k.isExempt).toBe(true);
 
       const machinery = calculateTds({ section: '194I', amount: 300000, subType: 'machinery' });
@@ -86,10 +86,10 @@ describe('tdsEngine', () => {
   });
 
   describe('Section 194J: Professional & Technical Fees', () => {
-    it('applies 2% on technical fees and 10% on professional services above ₹30,000 threshold', () => {
-      const tech = calculateTds({ section: '194J', amount: 50000, subType: 'technical' });
+    it('applies 2% on technical fees and 10% on professional services above ₹50,000 threshold', () => {
+      const tech = calculateTds({ section: '194J', amount: 60000, subType: 'technical' });
       expect(tech.rate).toBe(0.02);
-      expect(tech.tdsAmount).toBe(1000); // 2%
+      expect(tech.tdsAmount).toBe(1200); // 2%
 
       const prof = calculateTds({ section: '194J', amount: 150000, subType: 'professional' });
       expect(prof.rate).toBe(0.10);
@@ -113,9 +113,9 @@ describe('tdsEngine', () => {
       expect(noPan.rate).toBe(0.20);
       expect(noPan.tdsAmount).toBe(10000); // 20% on 50,000
       expect(noPan.reason).toContain('Section 206AA');
-      const badPan = calculateTds({ section: '194J', amount: 40000, pan: 'INVALID', panProvided: true });
+      const badPan = calculateTds({ section: '194J', amount: 60000, pan: 'INVALID', panProvided: true });
       expect(badPan.rate).toBe(0.20);
-      expect(badPan.tdsAmount).toBe(8000);
+      expect(badPan.tdsAmount).toBe(12000);
       expect(badPan.isPenal).toBe(true);
     });
   });

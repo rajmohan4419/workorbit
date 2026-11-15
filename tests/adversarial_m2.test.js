@@ -179,9 +179,9 @@ describe('Adversarial Verification Suite for Milestone 2', () => {
       expect(slip.professionalTax).toBe(200);
       // TDS is substantial (top slab 30% + cess)
       expect(slip.tds).toBeGreaterThan(2000000);
-      // Net salary is positive and correctly formatted: ~₹57.68 Lakh/month
+      // Net salary is positive and correctly formatted: ~₹51.28 Lakh/month including surcharge
       expect(slip.netSalary).toBeGreaterThan(5000000);
-      expect(slip.netSalaryInWords).toContain('Fifty Seven Lakh');
+      expect(slip.netSalaryInWords).toContain('Fifty One Lakh');
 
       // Now test with monthly gross of ₹2 Crore (yields monthly net salary > ₹1 Crore)
       const slip2CrMonthly = calculatePayslip({
@@ -305,17 +305,17 @@ describe('Adversarial Verification Suite for Milestone 2', () => {
   // 5. Section 206AA: Missing / Invalid PAN in TDS
   // =========================================================================
   describe('Section 206AA Penal Rate on Missing or Invalid PAN', () => {
-    it('enforces flat 20% penal rate when panProvided is false regardless of section threshold', () => {
+    it('does not impose TDS on below-threshold payments solely for absent PAN', () => {
       // 194C contractor amount ₹20,000 is below the ₹30,000 threshold, but without PAN 206AA applies
       const noPanBelowThreshold = calculateTds({
         section: '194C',
         amount: 20000,
         panProvided: false,
       });
-      expect(noPanBelowThreshold.isPenal).toBe(true);
-      expect(noPanBelowThreshold.rate).toBe(0.20);
-      expect(noPanBelowThreshold.tdsAmount).toBe(4000); // 20% of 20,000
-      expect(noPanBelowThreshold.reason).toContain('Section 206AA');
+      expect(noPanBelowThreshold.isPenal).toBe(false);
+      expect(noPanBelowThreshold.rate).toBe(0);
+      expect(noPanBelowThreshold.tdsAmount).toBe(0); // 20% of 20,000
+      expect(noPanBelowThreshold.isExempt).toBe(true);
     });
 
     it('enforces flat 20% penal rate when an invalid PAN format is entered', () => {
@@ -323,13 +323,13 @@ describe('Adversarial Verification Suite for Milestone 2', () => {
       for (const badPan of invalidPans) {
         const res = calculateTds({
           section: '194J',
-          amount: 50000,
+          amount: 60000,
           panProvided: true,
           pan: badPan,
         });
         expect(res.isPenal).toBe(true);
         expect(res.rate).toBe(0.20);
-        expect(res.tdsAmount).toBe(10000); // 20% of 50,000
+        expect(res.tdsAmount).toBe(12000); // 20% of 50,000
       }
     });
 
@@ -617,34 +617,34 @@ describe('Adversarial Verification Suite for Milestone 2', () => {
       expect(aboveBoundary.tdsAmount).toBe(300); // 1% of 30,001 = 300.01 rounded to 300
     });
 
-    it('Section 194H: strictly transitions at ₹15,000 boundary', () => {
-      const atBoundary = calculateTds({ section: '194H', amount: 15000 });
+    it('Section 194H: strictly transitions at ₹20,000 boundary', () => {
+      const atBoundary = calculateTds({ section: '194H', amount: 20000 });
       expect(atBoundary.isExempt).toBe(true);
       expect(atBoundary.tdsAmount).toBe(0);
 
-      const aboveBoundary = calculateTds({ section: '194H', amount: 15001 });
+      const aboveBoundary = calculateTds({ section: '194H', amount: 20001 });
       expect(aboveBoundary.isExempt).toBe(false);
-      expect(aboveBoundary.tdsAmount).toBe(750); // 5% of 15,001 = 750
+      expect(aboveBoundary.tdsAmount).toBe(400); // 5% of 15,001 = 750
     });
 
-    it('Section 194I: strictly transitions at ₹2,40,000 boundary', () => {
-      const atBoundary = calculateTds({ section: '194I', amount: 240000, subType: 'building' });
+    it('Section 194I: strictly transitions at ₹50,000 monthly boundary', () => {
+      const atBoundary = calculateTds({ section: '194I', amount: 50000, subType: 'building' });
       expect(atBoundary.isExempt).toBe(true);
       expect(atBoundary.tdsAmount).toBe(0);
 
-      const aboveBoundary = calculateTds({ section: '194I', amount: 240001, subType: 'building' });
+      const aboveBoundary = calculateTds({ section: '194I', amount: 50001, subType: 'building' });
       expect(aboveBoundary.isExempt).toBe(false);
-      expect(aboveBoundary.tdsAmount).toBe(24000); // 10% of 240,001 = 24,000
+      expect(aboveBoundary.tdsAmount).toBe(5000); // 10% of 240,001 = 24,000
     });
 
-    it('Section 194J: strictly transitions at ₹30,000 boundary', () => {
-      const atBoundary = calculateTds({ section: '194J', amount: 30000, subType: 'professional' });
+    it('Section 194J: strictly transitions at ₹50,000 boundary', () => {
+      const atBoundary = calculateTds({ section: '194J', amount: 50000, subType: 'professional' });
       expect(atBoundary.isExempt).toBe(true);
       expect(atBoundary.tdsAmount).toBe(0);
 
-      const aboveBoundary = calculateTds({ section: '194J', amount: 30001, subType: 'professional' });
+      const aboveBoundary = calculateTds({ section: '194J', amount: 50001, subType: 'professional' });
       expect(aboveBoundary.isExempt).toBe(false);
-      expect(aboveBoundary.tdsAmount).toBe(3000); // 10% of 30,001 = 3,000
+      expect(aboveBoundary.tdsAmount).toBe(5000); // 10% of 30,001 = 3,000
     });
   });
 });

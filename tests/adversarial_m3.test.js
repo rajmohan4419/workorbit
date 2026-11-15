@@ -1,3 +1,4 @@
+import internalPlannedTools from '../docs/planning/unreleased-tools.json';
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -513,7 +514,7 @@ describe('Milestone 3 Adversarial Verification & Mathematical Oracle Suite', () 
     it('M3.20: Planned tools from TOOLS are strictly excluded from sitemap.xml', () => {
       if (!DIST_EXISTS) return; // requires npm run build
       const sitemap = fs.readFileSync(path.join(distDir, 'sitemap.xml'), 'utf8');
-      const plannedTools = TOOLS.filter((t) => t.status === 'planned');
+      const plannedTools = internalPlannedTools;
 
       expect(plannedTools.length).toBeGreaterThan(0);
       for (const p of plannedTools) {

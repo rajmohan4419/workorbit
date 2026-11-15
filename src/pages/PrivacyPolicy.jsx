@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
               Privacy Policy
             </h1>
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-              Last updated: October 2026 • Effective for all OrbitBoard tools and services.
+              Last updated: 15 November 2026 • Effective for all OrbitBoard tools and services.
             </p>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function PrivacyPolicy() {
               Privacy-First Philosophy
             </h2>
             <p className="text-sm leading-6 text-stone-700 dark:text-stone-300">
-              OrbitBoard is designed with a strict browser-first architecture. The core online tools (including calculators, JSON formatters, PDF processing, unit converters, and diff tools) execute client-side in your web browser. Your inputs, uploaded files, documents, and calculation parameters remain on your local device and are not uploaded or stored on our servers.
+              OrbitBoard is designed with a strict browser-first architecture. The core online tools (including calculators, JSON formatters, PDF processing, unit converters, and diff tools) execute client-side in your web browser. Spreadsheet and reconciliation files are parsed locally; this workflow does not transmit file contents. Some calculators put values in the page address to restore or share results. Explicit sharing and connected-file features have their own data flows.
             </p>
           </section>
 
@@ -53,10 +53,10 @@ export default function PrivacyPolicy() {
             </h2>
             <div className="space-y-3 text-sm text-stone-600 dark:text-stone-300 leading-7">
               <p>
-                <strong>1. Client-Side Tool Data:</strong> Data processed within interactive tools (such as financial amounts, salary CTC figures, JSON strings, PDF files, image uploads, and text) is processed entirely within WebAssembly / JavaScript in your web browser. We do not transmit or store this data on our servers.
+                <strong>1. Client-Side Tool Data:</strong> Local calculators and spreadsheet processing run in browser JavaScript. Imported finance workbooks stay in the browser. Account and download metadata are processed separately. Sharing a result URL can disclose the values encoded in it to recipients; review the address before sharing.
               </p>
               <p>
-                <strong>2. Anonymous Usage Analytics & Telemetry:</strong> We collect aggregate, privacy-preserving telemetry (e.g. tool open events and visitor counts) to monitor site availability, performance, and general utility popularity. This data does not contain personally identifiable information (PII).
+                <strong>2. Usage Analytics & Telemetry:</strong> We record page paths and a pseudonymous visitor identifier stored on your device to measure visits. Google Analytics and advertising vendors receive request metadata such as IP address and browser information. They are separate from local workbook processing.
               </p>
               <p>
                 <strong>3. Local Storage:</strong> OrbitBoard uses your browser’s local storage (<code>localStorage</code>) to save non-sensitive user preferences such as favorited tools and recently used workflows. This data is stored strictly on your device and can be cleared by you at any time.

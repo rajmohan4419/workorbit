@@ -13,7 +13,9 @@ export default function NotFound() {
       robots.name = 'robots';
       document.head.appendChild(robots);
     }
+    const previous = robots.content;
     robots.content = 'noindex, follow';
+    return () => { robots.content = previous; };
   }, []);
 
   return (

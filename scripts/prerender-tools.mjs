@@ -94,13 +94,13 @@ const STATIC_ROUTES = [
     distFile: path.join('privacy', 'index.html'),
     title: 'Privacy Policy | OrbitBoard',
     description:
-      'OrbitBoard is designed with a strict browser-first architecture. Tools execute client-side and your data is never uploaded to our servers.',
+      'Learn how local tool processing, accounts, download metadata, analytics and explicit sharing handle data on OrbitBoard.',
     canonicalUrl: `${SITE}/privacy`,
     keywords: 'privacy policy, client side privacy, browser first, data security',
     changefreq: 'monthly',
     priority: '0.5',
     noscript:
-      '<noscript><main><h1>Privacy Policy</h1><p>OrbitBoard is designed with a strict browser-first architecture. Tools execute client-side and your data is never uploaded to our servers.</p><p><a href="/tools">Browse tools</a></p></main></noscript>',
+      '<noscript><main><h1>Privacy Policy</h1><p>Learn how local tool processing, accounts, download metadata, analytics and explicit sharing handle data on OrbitBoard.</p><p><a href="/tools">Browse tools</a></p></main></noscript>',
   },
   {
     path: '/terms',

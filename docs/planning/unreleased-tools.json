@@ -1,0 +1,2178 @@
+[
+  {
+    "slug": "image-cropper",
+    "name": "Image Cropper",
+    "description": "Image Cropper utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-format-converter",
+    "name": "Image Format Converter",
+    "description": "Image Format Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-rotator",
+    "name": "Image Rotator",
+    "description": "Image Rotator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-flipper",
+    "name": "Image Flipper",
+    "description": "Image Flipper utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-watermark-tool",
+    "name": "Image Watermark Tool",
+    "description": "Image Watermark Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-metadata-viewer",
+    "name": "Image Metadata Viewer",
+    "description": "Image Metadata Viewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-exif-remover",
+    "name": "Image EXIF Remover",
+    "description": "Image EXIF Remover utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-color-picker",
+    "name": "Image Color Picker",
+    "description": "Image Color Picker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-palette-extractor",
+    "name": "Image Palette Extractor",
+    "description": "Image Palette Extractor utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-grayscale-converter",
+    "name": "Image Grayscale Converter",
+    "description": "Image Grayscale Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-blur-tool",
+    "name": "Image Blur Tool",
+    "description": "Image Blur Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-brightness-adjuster",
+    "name": "Image Brightness Adjuster",
+    "description": "Image Brightness Adjuster utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-contrast-adjuster",
+    "name": "Image Contrast Adjuster",
+    "description": "Image Contrast Adjuster utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-aspect-ratio-calculator",
+    "name": "Image Aspect Ratio Calculator",
+    "description": "Image Aspect Ratio Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-to-base64",
+    "name": "Image to Base64",
+    "description": "Image to Base64 utility directly in your browser.",
+    "category": "Developer",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "base64-to-image",
+    "name": "Base64 to Image",
+    "description": "Base64 to Image utility directly in your browser.",
+    "category": "Developer",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "svg-optimizer",
+    "name": "SVG Optimizer",
+    "description": "SVG Optimizer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-ocr",
+    "name": "Image OCR",
+    "description": "Image OCR utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "gif-frame-extractor",
+    "name": "GIF Frame Extractor",
+    "description": "GIF Frame Extractor utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "qr-code-image-scanner",
+    "name": "QR Code Image Scanner",
+    "description": "QR Code Image Scanner utility directly in your browser.",
+    "category": "Developer",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "thumbnail-generator",
+    "name": "Thumbnail Generator",
+    "description": "Thumbnail Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-batch-converter",
+    "name": "Image Batch Converter",
+    "description": "Image Batch Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-batch-resizer",
+    "name": "Image Batch Resizer",
+    "description": "Image Batch Resizer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-difference-checker",
+    "name": "Image Difference Checker",
+    "description": "Image Difference Checker utility directly in your browser.",
+    "category": "Developer",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-histogram-viewer",
+    "name": "Image Histogram Viewer",
+    "description": "Image Histogram Viewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "image-color-contrast-checker",
+    "name": "Image Color Contrast Checker",
+    "description": "Image Color Contrast Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-merger",
+    "name": "PDF Merger",
+    "description": "PDF Merger utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-splitter",
+    "name": "PDF Splitter",
+    "description": "PDF Splitter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "jpg-to-pdf",
+    "name": "JPG to PDF",
+    "description": "JPG to PDF utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-page-extractor",
+    "name": "PDF Page Extractor",
+    "description": "PDF Page Extractor utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-page-reorderer",
+    "name": "PDF Page Reorderer",
+    "description": "PDF Page Reorderer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-page-rotator",
+    "name": "PDF Page Rotator",
+    "description": "PDF Page Rotator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-page-numbering-tool",
+    "name": "PDF Page Numbering Tool",
+    "description": "PDF Page Numbering Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-watermark-tool",
+    "name": "PDF Watermark Tool",
+    "description": "PDF Watermark Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-metadata-viewer",
+    "name": "PDF Metadata Viewer",
+    "description": "PDF Metadata Viewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-text-extractor",
+    "name": "PDF Text Extractor",
+    "description": "PDF Text Extractor utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-ocr",
+    "name": "PDF OCR",
+    "description": "PDF OCR utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-to-word",
+    "name": "PDF to Word",
+    "description": "PDF to Word utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "word-to-pdf",
+    "name": "Word to PDF",
+    "description": "Word to PDF utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-to-excel",
+    "name": "PDF to Excel",
+    "description": "PDF to Excel utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-form-filler",
+    "name": "PDF Form Filler",
+    "description": "PDF Form Filler utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-annotation-tool",
+    "name": "PDF Annotation Tool",
+    "description": "PDF Annotation Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-redaction-tool",
+    "name": "PDF Redaction Tool",
+    "description": "PDF Redaction Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-protect-tool",
+    "name": "PDF Protect Tool",
+    "description": "PDF Protect Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-page-size-checker",
+    "name": "PDF Page Size Checker",
+    "description": "PDF Page Size Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-compare-tool",
+    "name": "PDF Compare Tool",
+    "description": "PDF Compare Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "pdf-image-extractor",
+    "name": "PDF Image Extractor",
+    "description": "PDF Image Extractor utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "docx-to-txt",
+    "name": "DOCX to TXT",
+    "description": "DOCX to TXT utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "docx-to-markdown",
+    "name": "DOCX to Markdown",
+    "description": "DOCX to Markdown utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "markdown-to-pdf",
+    "name": "Markdown to PDF",
+    "description": "Markdown to PDF utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "html-to-pdf",
+    "name": "HTML to PDF",
+    "description": "HTML to PDF utility directly in your browser.",
+    "category": "Developer",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "document-word-counter",
+    "name": "Document Word Counter",
+    "description": "Document Word Counter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "invoice-pdf-generator",
+    "name": "Invoice PDF Generator",
+    "description": "Invoice PDF Generator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "PDF",
+    "status": "planned"
+  },
+  {
+    "slug": "word-counter",
+    "name": "Word Counter",
+    "description": "Word Counter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "character-counter",
+    "name": "Character Counter",
+    "description": "Character Counter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "sentence-counter",
+    "name": "Sentence Counter",
+    "description": "Sentence Counter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "reading-time-calculator",
+    "name": "Reading Time Calculator",
+    "description": "Reading Time Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "text-case-converter",
+    "name": "Text Case Converter",
+    "description": "Text Case Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "whitespace-remover",
+    "name": "Whitespace Remover",
+    "description": "Whitespace Remover utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "line-sorter",
+    "name": "Line Sorter",
+    "description": "Line Sorter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "duplicate-line-remover",
+    "name": "Duplicate Line Remover",
+    "description": "Duplicate Line Remover utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "text-reverser",
+    "name": "Text Reverser",
+    "description": "Text Reverser utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "find-and-replace-tool",
+    "name": "Find and Replace Tool",
+    "description": "Find and Replace Tool utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "markdown-previewer",
+    "name": "Markdown Previewer",
+    "description": "Markdown Previewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "markdown-table-generator",
+    "name": "Markdown Table Generator",
+    "description": "Markdown Table Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "lorem-ipsum-generator",
+    "name": "Lorem Ipsum Generator",
+    "description": "Lorem Ipsum Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "slug-generator",
+    "name": "Slug Generator",
+    "description": "Slug Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "text-to-base64",
+    "name": "Text-to-Base64",
+    "description": "Text-to-Base64 utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "base64-to-text",
+    "name": "Base64-to-Text",
+    "description": "Base64-to-Text utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "url-decoder",
+    "name": "URL Decoder",
+    "description": "URL Decoder utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "regex-tester",
+    "name": "Regex Tester",
+    "description": "Regex Tester utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "text-cleaner",
+    "name": "Text Cleaner",
+    "description": "Text Cleaner utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "word-frequency-counter",
+    "name": "Word Frequency Counter",
+    "description": "Word Frequency Counter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "keyword-density-checker",
+    "name": "Keyword Density Checker",
+    "description": "Keyword Density Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "text-deduplicator",
+    "name": "Text Deduplicator",
+    "description": "Text Deduplicator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "csv-text-previewer",
+    "name": "CSV Text Previewer",
+    "description": "CSV Text Previewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "text-to-ascii-art",
+    "name": "Text to ASCII Art",
+    "description": "Text to ASCII Art utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "palindrome-checker",
+    "name": "Palindrome Checker",
+    "description": "Palindrome Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "anagram-checker",
+    "name": "Anagram Checker",
+    "description": "Anagram Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "unicode-inspector",
+    "name": "Unicode Inspector",
+    "description": "Unicode Inspector utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "text-encoding-inspector",
+    "name": "Text Encoding Inspector",
+    "description": "Text Encoding Inspector utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "json-validator",
+    "name": "JSON Validator",
+    "description": "JSON Validator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "json-minifier",
+    "name": "JSON Minifier",
+    "description": "JSON Minifier utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "xml-formatter",
+    "name": "XML Formatter",
+    "description": "XML Formatter utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "xml-validator",
+    "name": "XML Validator",
+    "description": "XML Validator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "yaml-to-json",
+    "name": "YAML to JSON",
+    "description": "YAML to JSON utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "json-to-yaml",
+    "name": "JSON to YAML",
+    "description": "JSON to YAML utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "json-schema-validator",
+    "name": "JSON Schema Validator",
+    "description": "JSON Schema Validator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "json-diff-checker",
+    "name": "JSON Diff Checker",
+    "description": "JSON Diff Checker utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "json-path-tester",
+    "name": "JSON Path Tester",
+    "description": "JSON Path Tester utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "jwt-inspector",
+    "name": "JWT Inspector",
+    "description": "JWT Inspector utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "ulid-generator",
+    "name": "ULID Generator",
+    "description": "ULID Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "hash-generator",
+    "name": "Hash Generator",
+    "description": "Hash Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "base64-encoder",
+    "name": "Base64 Encoder",
+    "description": "Base64 Encoder utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "base64-decoder",
+    "name": "Base64 Decoder",
+    "description": "Base64 Decoder utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "url-parser",
+    "name": "URL Parser",
+    "description": "URL Parser utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "url-builder",
+    "name": "URL Builder",
+    "description": "URL Builder utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "cron-expression-parser",
+    "name": "Cron Expression Parser",
+    "description": "Cron Expression Parser utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "regex-library-tester",
+    "name": "Regex Library Tester",
+    "description": "Regex Library Tester utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "sql-formatter",
+    "name": "SQL Formatter",
+    "description": "SQL Formatter utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "sql-minifier",
+    "name": "SQL Minifier",
+    "description": "SQL Minifier utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "html-formatter",
+    "name": "HTML Formatter",
+    "description": "HTML Formatter utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "css-formatter",
+    "name": "CSS Formatter",
+    "description": "CSS Formatter utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "javascript-formatter",
+    "name": "JavaScript Formatter",
+    "description": "JavaScript Formatter utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "xlsx-to-json",
+    "name": "XLSX to JSON",
+    "description": "XLSX to JSON utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "tsv-to-csv",
+    "name": "TSV to CSV",
+    "description": "TSV to CSV utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "csv-to-tsv",
+    "name": "CSV to TSV",
+    "description": "CSV to TSV utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "yaml-to-toml",
+    "name": "YAML to TOML",
+    "description": "YAML to TOML utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "toml-to-json",
+    "name": "TOML to JSON",
+    "description": "TOML to JSON utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "html-to-markdown",
+    "name": "HTML to Markdown",
+    "description": "HTML to Markdown utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "html-entities-encoder",
+    "name": "HTML Entities Encoder",
+    "description": "HTML Entities Encoder utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "html-entities-decoder",
+    "name": "HTML Entities Decoder",
+    "description": "HTML Entities Decoder utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "hex-to-rgb",
+    "name": "Hex to RGB",
+    "description": "Hex to RGB utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "rgb-to-hex",
+    "name": "RGB to HEX",
+    "description": "RGB to HEX utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "rgb-to-hsl",
+    "name": "RGB to HSL",
+    "description": "RGB to HSL utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "hsl-to-rgb",
+    "name": "HSL to RGB",
+    "description": "HSL to RGB utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "px-to-rem",
+    "name": "PX to REM",
+    "description": "PX to REM utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "rem-to-px",
+    "name": "REM to PX",
+    "description": "REM to PX utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "bytes-to-kb-mb-gb",
+    "name": "Bytes to KB MB GB",
+    "description": "Bytes to KB MB GB utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "seconds-to-hours",
+    "name": "Seconds to Hours",
+    "description": "Seconds to Hours utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "celsius-to-fahrenheit",
+    "name": "Celsius to Fahrenheit",
+    "description": "Celsius to Fahrenheit utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "kilometers-to-miles",
+    "name": "Kilometers to Miles",
+    "description": "Kilometers to Miles utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "kilograms-to-pounds",
+    "name": "Kilograms to Pounds",
+    "description": "Kilograms to Pounds utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "date-format-converter",
+    "name": "Date Format Converter",
+    "description": "Date Format Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "number-to-words",
+    "name": "Number to Words",
+    "description": "Number to Words utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "roman-numeral-converter",
+    "name": "Roman Numeral Converter",
+    "description": "Roman Numeral Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "color-format-converter",
+    "name": "Color Format Converter",
+    "description": "Color Format Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "salary-take-home-calculator-india",
+    "name": "Salary Take-Home Calculator India",
+    "description": "Salary Take-Home Calculator India utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "ctc-to-in-hand-calculator",
+    "name": "CTC to In-Hand Calculator",
+    "description": "CTC to In-Hand Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "gratuity-calculator-india",
+    "name": "Gratuity Calculator India",
+    "description": "Gratuity Calculator India utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "pf-calculator-india",
+    "name": "PF Calculator India",
+    "description": "PF Calculator India utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "simple-interest-calculator",
+    "name": "Simple Interest Calculator",
+    "description": "Simple Interest Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "inflation-calculator",
+    "name": "Inflation Calculator",
+    "description": "Inflation Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "currency-converter",
+    "name": "Currency Converter",
+    "description": "Currency Converter utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "discount-calculator",
+    "name": "Discount Calculator",
+    "description": "Discount Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "markup-and-margin-calculator",
+    "name": "Markup and Margin Calculator",
+    "description": "Markup and Margin Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "break-even-calculator",
+    "name": "Break-Even Calculator",
+    "description": "Break-Even Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "profit-margin-calculator",
+    "name": "Profit Margin Calculator",
+    "description": "Profit Margin Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "invoice-generator",
+    "name": "Invoice Generator",
+    "description": "Invoice Generator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "₹",
+    "status": "planned"
+  },
+  {
+    "slug": "quotation-generator",
+    "name": "Quotation Generator",
+    "description": "Quotation Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "purchase-order-generator",
+    "name": "Purchase Order Generator",
+    "description": "Purchase Order Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "cash-flow-forecast",
+    "name": "Cash Flow Forecast",
+    "description": "Cash Flow Forecast utility directly in your browser.",
+    "category": "Finance",
+    "icon": "₹",
+    "status": "planned"
+  },
+  {
+    "slug": "runway-calculator",
+    "name": "Runway Calculator",
+    "description": "Runway Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "business-loan-emi-calculator",
+    "name": "Business Loan EMI Calculator",
+    "description": "Business Loan EMI Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "home-loan-affordability-calculator",
+    "name": "Home Loan Affordability Calculator",
+    "description": "Home Loan Affordability Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "rent-vs-buy-calculator",
+    "name": "Rent vs Buy Calculator",
+    "description": "Rent vs Buy Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "cagr-calculator",
+    "name": "CAGR Calculator",
+    "description": "CAGR Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "roi-calculator",
+    "name": "ROI Calculator",
+    "description": "ROI Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "fraction-calculator",
+    "name": "Fraction Calculator",
+    "description": "Fraction Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "scientific-calculator",
+    "name": "Scientific Calculator",
+    "description": "Scientific Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "average-calculator",
+    "name": "Average Calculator",
+    "description": "Average Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "median-calculator",
+    "name": "Median Calculator",
+    "description": "Median Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "standard-deviation-calculator",
+    "name": "Standard Deviation Calculator",
+    "description": "Standard Deviation Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "random-number-generator",
+    "name": "Random Number Generator",
+    "description": "Random Number Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "prime-number-checker",
+    "name": "Prime Number Checker",
+    "description": "Prime Number Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "gcd-and-lcm-calculator",
+    "name": "GCD and LCM Calculator",
+    "description": "GCD and LCM Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "factorial-calculator",
+    "name": "Factorial Calculator",
+    "description": "Factorial Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "equation-solver",
+    "name": "Equation Solver",
+    "description": "Equation Solver utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "quadratic-equation-solver",
+    "name": "Quadratic Equation Solver",
+    "description": "Quadratic Equation Solver utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "triangle-calculator",
+    "name": "Triangle Calculator",
+    "description": "Triangle Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "circle-calculator",
+    "name": "Circle Calculator",
+    "description": "Circle Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "area-calculator",
+    "name": "Area Calculator",
+    "description": "Area Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "volume-calculator",
+    "name": "Volume Calculator",
+    "description": "Volume Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "speed-distance-time-calculator",
+    "name": "Speed Distance Time Calculator",
+    "description": "Speed Distance Time Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "density-calculator",
+    "name": "Density Calculator",
+    "description": "Density Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "bmi-calculator",
+    "name": "BMI Calculator",
+    "description": "BMI Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "calorie-estimate-calculator",
+    "name": "Calorie Estimate Calculator",
+    "description": "Calorie Estimate Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "age-calculator",
+    "name": "Age Calculator",
+    "description": "Age Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "date-difference-calculator",
+    "name": "Date Difference Calculator",
+    "description": "Date Difference Calculator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "time-duration-calculator",
+    "name": "Time Duration Calculator",
+    "description": "Time Duration Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "grade-calculator",
+    "name": "Grade Calculator",
+    "description": "Grade Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "gpa-calculator",
+    "name": "GPA Calculator",
+    "description": "GPA Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "study-planner",
+    "name": "Study Planner",
+    "description": "Study Planner utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "unit-conversion-calculator",
+    "name": "Unit Conversion Calculator",
+    "description": "Unit Conversion Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "scientific-notation-converter",
+    "name": "Scientific Notation Converter",
+    "description": "Scientific Notation Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "significant-figures-calculator",
+    "name": "Significant Figures Calculator",
+    "description": "Significant Figures Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "probability-calculator",
+    "name": "Probability Calculator",
+    "description": "Probability Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "meta-tag-generator",
+    "name": "Meta Tag Generator",
+    "description": "Meta Tag Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "meta-tag-checker",
+    "name": "Meta Tag Checker",
+    "description": "Meta Tag Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "open-graph-previewer",
+    "name": "Open Graph Previewer",
+    "description": "Open Graph Previewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "twitter-card-previewer",
+    "name": "Twitter Card Previewer",
+    "description": "Twitter Card Previewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "xml-sitemap-generator",
+    "name": "XML Sitemap Generator",
+    "description": "XML Sitemap Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "sitemap-validator",
+    "name": "Sitemap Validator",
+    "description": "Sitemap Validator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "canonical-url-checker",
+    "name": "Canonical URL Checker",
+    "description": "Canonical URL Checker utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "redirect-checker",
+    "name": "Redirect Checker",
+    "description": "Redirect Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "http-header-checker",
+    "name": "HTTP Header Checker",
+    "description": "HTTP Header Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "broken-link-checker",
+    "name": "Broken Link Checker",
+    "description": "Broken Link Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "url-status-checker",
+    "name": "URL Status Checker",
+    "description": "URL Status Checker utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "page-title-length-checker",
+    "name": "Page Title Length Checker",
+    "description": "Page Title Length Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "meta-description-length-checker",
+    "name": "Meta Description Length Checker",
+    "description": "Meta Description Length Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "heading-structure-checker",
+    "name": "Heading Structure Checker",
+    "description": "Heading Structure Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "image-alt-text-checker",
+    "name": "Image Alt Text Checker",
+    "description": "Image Alt Text Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "utm-builder",
+    "name": "UTM Builder",
+    "description": "UTM Builder utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "utm-link-cleaner",
+    "name": "UTM Link Cleaner",
+    "description": "UTM Link Cleaner utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "schema-markup-generator",
+    "name": "Schema Markup Generator",
+    "description": "Schema Markup Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "schema-markup-validator",
+    "name": "Schema Markup Validator",
+    "description": "Schema Markup Validator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "hreflang-tag-generator",
+    "name": "Hreflang Tag Generator",
+    "description": "Hreflang Tag Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "url-slug-generator",
+    "name": "URL Slug Generator",
+    "description": "URL Slug Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "serp-snippet-previewer",
+    "name": "SERP Snippet Previewer",
+    "description": "SERP Snippet Previewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "page-size-checker",
+    "name": "Page Size Checker",
+    "description": "Page Size Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "link-extractor",
+    "name": "Link Extractor",
+    "description": "Link Extractor utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "favicon-checker",
+    "name": "Favicon Checker",
+    "description": "Favicon Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "website-privacy-checklist",
+    "name": "Website Privacy Checklist",
+    "description": "Website Privacy Checklist utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "qr-code-generator",
+    "name": "QR Code Generator",
+    "description": "QR Code Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "📱",
+    "status": "planned"
+  },
+  {
+    "slug": "barcode-generator",
+    "name": "Barcode Generator",
+    "description": "Barcode Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "📱",
+    "status": "planned"
+  },
+  {
+    "slug": "qr-code-reader",
+    "name": "QR Code Reader",
+    "description": "QR Code Reader utility directly in your browser.",
+    "category": "Developer",
+    "icon": "📱",
+    "status": "planned"
+  },
+  {
+    "slug": "checksum-calculator",
+    "name": "Checksum Calculator",
+    "description": "Checksum Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "sha-256-hash-generator",
+    "name": "SHA-256 Hash Generator",
+    "description": "SHA-256 Hash Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "password-strength-checker",
+    "name": "Password Strength Checker",
+    "description": "Password Strength Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "secure-password-generator",
+    "name": "Secure Password Generator",
+    "description": "Secure Password Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "uuid-validator",
+    "name": "UUID Validator",
+    "description": "UUID Validator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "email-syntax-checker",
+    "name": "Email Syntax Checker",
+    "description": "Email Syntax Checker utility directly in your browser.",
+    "category": "Finance",
+    "icon": "₹",
+    "status": "planned"
+  },
+  {
+    "slug": "phone-number-formatter",
+    "name": "Phone Number Formatter",
+    "description": "Phone Number Formatter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "iban-validator",
+    "name": "IBAN Validator",
+    "description": "IBAN Validator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "ifsc-format-checker",
+    "name": "IFSC Format Checker",
+    "description": "IFSC Format Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "micr-format-checker",
+    "name": "MICR Format Checker",
+    "description": "MICR Format Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "gstin-format-validator",
+    "name": "GSTIN Format Validator",
+    "description": "GSTIN Format Validator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "₹",
+    "status": "planned"
+  },
+  {
+    "slug": "pan-format-checker",
+    "name": "PAN Format Checker",
+    "description": "PAN Format Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "aadhaar-masking-helper",
+    "name": "Aadhaar Masking Helper",
+    "description": "Aadhaar Masking Helper utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "credit-card-number-validator",
+    "name": "Credit Card Number Validator",
+    "description": "Credit Card Number Validator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "ipv4-subnet-calculator",
+    "name": "IPv4 Subnet Calculator",
+    "description": "IPv4 Subnet Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "ipv6-validator",
+    "name": "IPv6 Validator",
+    "description": "IPv6 Validator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "mac-address-formatter",
+    "name": "MAC Address Formatter",
+    "description": "MAC Address Formatter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "user-agent-parser",
+    "name": "User Agent Parser",
+    "description": "User Agent Parser utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "mime-type-lookup",
+    "name": "MIME Type Lookup",
+    "description": "MIME Type Lookup utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "file-extension-lookup",
+    "name": "File Extension Lookup",
+    "description": "File Extension Lookup utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "file-signature-inspector",
+    "name": "File Signature Inspector",
+    "description": "File Signature Inspector utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "duplicate-file-finder",
+    "name": "Duplicate File Finder",
+    "description": "Duplicate File Finder utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "text-extractor-from-html",
+    "name": "Text Extractor from HTML",
+    "description": "Text Extractor from HTML utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "email-header-analyzer",
+    "name": "Email Header Analyzer",
+    "description": "Email Header Analyzer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "csv-data-profiler",
+    "name": "CSV Data Profiler",
+    "description": "CSV Data Profiler utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "json-data-profiler",
+    "name": "JSON Data Profiler",
+    "description": "JSON Data Profiler utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "xml-path-extractor",
+    "name": "XML Path Extractor",
+    "description": "XML Path Extractor utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "indian-date-format-converter",
+    "name": "Indian Date Format Converter",
+    "description": "Indian Date Format Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "pin-code-format-checker",
+    "name": "PIN Code Format Checker",
+    "description": "PIN Code Format Checker utility directly in your browser.",
+    "category": "Developer",
+    "icon": "{}",
+    "status": "planned"
+  },
+  {
+    "slug": "vehicle-number-format-checker",
+    "name": "Vehicle Number Format Checker",
+    "description": "Vehicle Number Format Checker utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "indian-number-to-words",
+    "name": "Indian Number to Words",
+    "description": "Indian Number to Words utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "rupees-to-paise-converter",
+    "name": "Rupees to Paise Converter",
+    "description": "Rupees to Paise Converter utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "electricity-bill-estimator",
+    "name": "Electricity Bill Estimator",
+    "description": "Electricity Bill Estimator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "fuel-cost-calculator",
+    "name": "Fuel Cost Calculator",
+    "description": "Fuel Cost Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "trip-cost-splitter",
+    "name": "Trip Cost Splitter",
+    "description": "Trip Cost Splitter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "tip-calculator",
+    "name": "Tip Calculator",
+    "description": "Tip Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "discount-and-gst-calculator",
+    "name": "Discount and GST Calculator",
+    "description": "Discount and GST Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "leave-days-calculator",
+    "name": "Leave Days Calculator",
+    "description": "Leave Days Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "business-days-calculator",
+    "name": "Business Days Calculator",
+    "description": "Business Days Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "meeting-time-zone-planner",
+    "name": "Meeting Time Zone Planner",
+    "description": "Meeting Time Zone Planner utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "world-clock-converter",
+    "name": "World Clock Converter",
+    "description": "World Clock Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "age-on-a-date-calculator",
+    "name": "Age on a Date Calculator",
+    "description": "Age on a Date Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "wedding-budget-calculator",
+    "name": "Wedding Budget Calculator",
+    "description": "Wedding Budget Calculator utility directly in your browser.",
+    "category": "Finance",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "household-budget-planner",
+    "name": "Household Budget Planner",
+    "description": "Household Budget Planner utility directly in your browser.",
+    "category": "Finance",
+    "icon": "₹",
+    "status": "planned"
+  },
+  {
+    "slug": "savings-goal-calculator",
+    "name": "Savings Goal Calculator",
+    "description": "Savings Goal Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "emergency-fund-calculator",
+    "name": "Emergency Fund Calculator",
+    "description": "Emergency Fund Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "split-bill-calculator-india",
+    "name": "Split Bill Calculator India",
+    "description": "Split Bill Calculator India utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "cooking-unit-converter",
+    "name": "Cooking Unit Converter",
+    "description": "Cooking Unit Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "clothing-size-converter",
+    "name": "Clothing Size Converter",
+    "description": "Clothing Size Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "paper-size-calculator",
+    "name": "Paper Size Calculator",
+    "description": "Paper Size Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "data-usage-calculator",
+    "name": "Data Usage Calculator",
+    "description": "Data Usage Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "download-time-calculator",
+    "name": "Download Time Calculator",
+    "description": "Download Time Calculator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "internet-speed-unit-converter",
+    "name": "Internet Speed Unit Converter",
+    "description": "Internet Speed Unit Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "electricity-unit-converter",
+    "name": "Electricity Unit Converter",
+    "description": "Electricity Unit Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "fuel-economy-converter",
+    "name": "Fuel Economy Converter",
+    "description": "Fuel Economy Converter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-timestamp-link-generator",
+    "name": "YouTube Timestamp Link Generator",
+    "description": "YouTube Timestamp Link Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "▶️",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-embed-code-generator",
+    "name": "YouTube Embed Code Generator",
+    "description": "YouTube Embed Code Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "▶️",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-title-description-character-counter",
+    "name": "YouTube Title & Description Character Counter",
+    "description": "YouTube Title & Description Character Counter utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "▶️",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-hashtag-generator",
+    "name": "YouTube Hashtag Generator",
+    "description": "YouTube Hashtag Generator utility directly in your browser.",
+    "category": "Developer",
+    "icon": "▶️",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-thumbnail-previewer",
+    "name": "YouTube Thumbnail Previewer",
+    "description": "YouTube Thumbnail Previewer utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-ab-thumbnail-tester",
+    "name": "YouTube A/B Thumbnail Tester",
+    "description": "YouTube A/B Thumbnail Tester utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "IMG",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-description-template-generator",
+    "name": "YouTube Description Template Generator",
+    "description": "YouTube Description Template Generator utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "▶️",
+    "status": "planned"
+  },
+  {
+    "slug": "youtube-channel-id-finder",
+    "name": "YouTube Channel ID Finder",
+    "description": "YouTube Channel ID Finder utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "▶️",
+    "status": "planned"
+  },
+  {
+    "slug": "robots-txt-generator",
+    "name": "Robots.txt Generator",
+    "description": "Generate robots.txt rules utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "robots-txt-tester",
+    "name": "Robots.txt Tester",
+    "description": "Check URL paths against rules utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "🛠️",
+    "status": "planned"
+  },
+  {
+    "slug": "date-add-subtract-tool",
+    "name": "Date Add/Subtract Tool",
+    "description": "Add days, weeks or months to a date utility directly in your browser.",
+    "category": "Everyday",
+    "icon": "Σ",
+    "status": "planned"
+  }
+]

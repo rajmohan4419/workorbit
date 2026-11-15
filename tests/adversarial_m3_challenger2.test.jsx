@@ -1,3 +1,4 @@
+import internalPlannedTools from '../docs/planning/unreleased-tools.json';
 /**
  * @vitest-environment jsdom
  */
@@ -162,59 +163,16 @@ describe('Adversarial M3 Verification Suite — Challenger 2', () => {
   // 2. Planned Tools Handling & Sitemap Exclusion
   // =========================================================================
   describe('2. Planned Tools Handling, Coming Soon & Sitemap Exclusion', () => {
-    it('renders Coming Soon state with robots noindex for planned tool "image-cropper"', async () => {
-      const plannedTool = TOOLS.find((t) => t.slug === 'image-cropper');
-      expect(plannedTool).toBeDefined();
-      expect(plannedTool.status).toBe('planned');
-
-      await act(async () => {
-        root.render(
-          <MemoryRouter initialEntries={['/tools/image-cropper']}>
-            <Routes>
-              <Route path="/tools/:slug" element={<ToolPageRoute />} />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
-
-      // Allow lazy loading / suspense
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      });
-
-      expect(container.textContent).toContain('Image Cropper is coming soon');
-      expect(container.textContent).toContain("This tool isn't available yet. Explore the tools that work today.");
-      expect(container.querySelector('a[href="/tools"]')).not.toBeNull();
-
-      // Check robots meta
-      const robotsMeta = document.querySelector('meta[name="robots"]');
-      expect(robotsMeta).not.toBeNull();
-      expect(robotsMeta.getAttribute('content')).toBe('noindex, follow');
+    it('renders NotFound with robots noindex for unreleased "image-cropper"', async () => {
+      expect(TOOLS.find(t => t.slug === 'image-cropper')).toBeUndefined();
+      await act(async () => { root.render(<MemoryRouter initialEntries={['/tools/image-cropper']}><Routes><Route path="/tools/:slug" element={<ToolPageRoute />} /></Routes></MemoryRouter>); });
+      expect(container.textContent).toContain('Page Not Found');
+      expect(document.querySelector('meta[name="robots"]').content).toBe('noindex, follow');
     });
 
-    it('renders Coming Soon state with robots noindex for planned tool "pdf-merger"', async () => {
-      const plannedTool = TOOLS.find((t) => t.slug === 'pdf-merger');
-      expect(plannedTool).toBeDefined();
-      expect(plannedTool.status).toBe('planned');
-
-      await act(async () => {
-        root.render(
-          <MemoryRouter initialEntries={['/tools/pdf-merger']}>
-            <Routes>
-              <Route path="/tools/:slug" element={<ToolPageRoute />} />
-            </Routes>
-          </MemoryRouter>
-        );
-      });
-
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      });
-
-      expect(container.textContent).toContain('PDF Merger is coming soon');
-      const robotsMeta = document.querySelector('meta[name="robots"]');
-      expect(robotsMeta).not.toBeNull();
-      expect(robotsMeta.getAttribute('content')).toBe('noindex, follow');
+    it('redirects the verified pdf-merger alias to the working pdf-merge tool', async () => {
+      await act(async () => { root.render(<MemoryRouter initialEntries={['/tools/pdf-merger']}><Routes><Route path="/tools/:slug" element={<ToolPageRoute />} /><Route path="/tools/pdf-merge" element={<div>Canonical PDF merge</div>} /></Routes></MemoryRouter>); });
+      expect(container.textContent).toContain('Canonical PDF merge');
     });
 
     it('strictly confirms 100% absence of EVERY planned tool in public/sitemap.xml and dist/sitemap.xml', () => {
@@ -222,7 +180,7 @@ describe('Adversarial M3 Verification Suite — Challenger 2', () => {
       const publicSitemap = fs.readFileSync(path.join(PUBLIC_DIR, 'sitemap.xml'), 'utf8');
       const distSitemap = fs.readFileSync(path.join(DIST_DIR, 'sitemap.xml'), 'utf8');
 
-      const plannedTools = TOOLS.filter((t) => t.status === 'planned');
+      const plannedTools = internalPlannedTools;
       expect(plannedTools.length).toBeGreaterThan(200);
 
       const foundInPublic = [];
@@ -242,7 +200,7 @@ describe('Adversarial M3 Verification Suite — Challenger 2', () => {
     });
 
     it('strictly confirms NO planned tool is prerendered to dist/tools/<slug>', () => {
-      const plannedTools = TOOLS.filter((t) => t.status === 'planned');
+      const plannedTools = internalPlannedTools;
       const leakedPrerenderedDirs = [];
 
       for (const t of plannedTools) {

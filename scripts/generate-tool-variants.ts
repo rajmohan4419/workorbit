@@ -1,3 +1,4 @@
+import { calculateTaxSlabs } from '../src/tools/finance/payslipEngine.js';
 // scripts/generate-tool-variants.ts
 // Programmatically generates parameterized variants for EMI and CTC-to-In-Hand calculators.
 // Output: src/data/toolVariants.json (capped <= 150 pages)
@@ -54,50 +55,8 @@ function calculateEmi(principal: number, interestRateAnnual: number, tenureYears
   };
 }
 
-function calculateNewTax(taxable: number): number {
-  const slabs: [number, number][] = [
-    [400000, 0],
-    [400000, 0.05],
-    [400000, 0.10],
-    [400000, 0.15],
-    [400000, 0.20],
-    [400000, 0.25],
-    [Infinity, 0.30],
-  ];
-  let remaining = taxable;
-  let tax = 0;
-  for (const [limit, rate] of slabs) {
-    const amount = Math.min(remaining, limit);
-    if (amount <= 0) break;
-    tax += amount * rate;
-    remaining -= amount;
-  }
-  if (taxable <= 1200000) {
-    tax = Math.max(0, tax - 60000);
-  }
-  return tax * 1.04;
-}
-
-function calculateOldTax(taxable: number): number {
-  const slabs: [number, number][] = [
-    [250000, 0],
-    [250000, 0.05],
-    [500000, 0.20],
-    [Infinity, 0.30],
-  ];
-  let remaining = taxable;
-  let tax = 0;
-  for (const [limit, rate] of slabs) {
-    const amount = Math.min(remaining, limit);
-    if (amount <= 0) break;
-    tax += amount * rate;
-    remaining -= amount;
-  }
-  if (taxable <= 500000) {
-    tax = Math.max(0, tax - 12500);
-  }
-  return tax * 1.04;
-}
+const calculateNewTax = (taxable: number): number => calculateTaxSlabs(taxable, 'new');
+const calculateOldTax = (taxable: number): number => calculateTaxSlabs(taxable, 'old');
 
 function calculateCtcToInHand(annualCtc: number, regime: 'new' | 'old', basicPct: number = 40) {
   const basic = (annualCtc * basicPct) / 100;

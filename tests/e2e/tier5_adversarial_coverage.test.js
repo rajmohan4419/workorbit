@@ -1,3 +1,4 @@
+import internalPlannedTools from '../../docs/planning/unreleased-tools.json';
 /**
  * @vitest-environment jsdom
  */
@@ -284,16 +285,16 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite', () => {
         expect(validPan.tdsAmount).toBe(2000);
       });
 
-      it('T5.2.13: Section 194A threshold strictly distinguishes normal (₹40,000) and senior citizen (₹50,000)', () => {
+      it('T5.2.13: Section 194A threshold strictly distinguishes bank-interest normal (₹50,000) and senior citizen (₹1,00,000)', () => {
         // Normal non-senior at ₹40,000 is exempt
-        expect(tdsEngine.calculateTds({ section: '194A', amount: 40000, isSenior: false }).isExempt).toBe(true);
+        expect(tdsEngine.calculateTds({ section: '194A', amount: 50000, isSenior: false }).isExempt).toBe(true);
         // Normal non-senior at ₹40,001 is taxable
-        expect(tdsEngine.calculateTds({ section: '194A', amount: 40001, isSenior: false }).isExempt).toBe(false);
+        expect(tdsEngine.calculateTds({ section: '194A', amount: 50001, isSenior: false }).isExempt).toBe(false);
 
         // Senior citizen at ₹50,000 is exempt
-        expect(tdsEngine.calculateTds({ section: '194A', amount: 50000, isSenior: true }).isExempt).toBe(true);
+        expect(tdsEngine.calculateTds({ section: '194A', amount: 100000, isSenior: true }).isExempt).toBe(true);
         // Senior citizen at ₹50,001 is taxable
-        expect(tdsEngine.calculateTds({ section: '194A', amount: 50001, isSenior: true }).isExempt).toBe(false);
+        expect(tdsEngine.calculateTds({ section: '194A', amount: 100001, isSenior: true }).isExempt).toBe(false);
       });
 
       it('T5.2.14: Section 194C recipient type differentiates individual (1%) vs company (2%)', () => {
@@ -617,7 +618,7 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite', () => {
       const sitemap = fs.readFileSync(sitemapPath, 'utf8');
 
       // Check planned tools exclusion
-      const plannedTools = toolCatalogModule.TOOLS.filter((t) => t.status === 'planned');
+      const plannedTools = internalPlannedTools;
       expect(plannedTools.length).toBeGreaterThan(0);
       for (const planned of plannedTools) {
         expect(sitemap).not.toContain(`/tools/${planned.slug}</loc>`);

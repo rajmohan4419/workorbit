@@ -1,24 +1,12 @@
+import { calculateTaxSlabs } from '../finance/payslipEngine.js';
 import { useState, useMemo, useEffect } from 'react';
 import { Field, Result } from '../../components/tools/ToolFields';
 import { money, num } from '../../lib/toolFormat';
 import { getToolParams } from '../../data/toolParams';
 import { CopyResultLink } from '../../components/tools/CopyResultLink';
 
-function calculateNewTax(taxable) {
-  const slabs = [[400000, 0], [400000, .05], [400000, .10], [400000, .15], [400000, .20], [400000, .25], [Infinity, .30]];
-  let remaining = taxable, tax = 0;
-  for (const [limit, rate] of slabs) { const amount = Math.min(remaining, limit); if (amount <= 0) break; tax += amount * rate; remaining -= amount; }
-  if (taxable <= 1200000) tax = Math.max(0, tax - 60000);
-  return tax * 1.04;
-}
-
-function calculateOldTax(taxable) {
-  const slabs = [[250000, 0], [250000, .05], [500000, .20], [Infinity, .30]];
-  let remaining = taxable, tax = 0;
-  for (const [limit, rate] of slabs) { const amount = Math.min(remaining, limit); if (amount <= 0) break; tax += amount * rate; remaining -= amount; }
-  if (taxable <= 500000) tax = Math.max(0, tax - 12500);
-  return tax * 1.04;
-}
+const calculateNewTax = taxable => calculateTaxSlabs(taxable, 'new');
+const calculateOldTax = taxable => calculateTaxSlabs(taxable, 'old');
 
 export function SalaryCalculator() {
   const init = () => getToolParams('ctc-to-inhand');
@@ -113,7 +101,7 @@ export function SalaryCalculator() {
           <div className="flex justify-between"><span>Standard deduction</span><span className="font-semibold text-stone-900 dark:text-stone-100">₹ {money(regime === 'new' ? 75000 : 50000)}</span></div>
           <div className="flex justify-between"><span>Taxable salary used</span><span className="font-semibold text-stone-900 dark:text-stone-100">₹ {money(result.taxable)}</span></div>
         </div>
-        <p className="text-xs text-stone-500 dark:text-stone-400">Estimate only. Actual payslips can differ based on PF structure, tax declarations, and employer policy.</p>
+        <p className="text-xs text-stone-500 dark:text-stone-400">FY 2025-26 / AY 2026-27 estimate for ordinary salary income. Actual payslips can differ based on PF structure, tax declarations, and employer policy.</p>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { strictAmount } from '../../engines/financeValidation.js';
 import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState, useMemo, useRef } from 'react';
 import {
@@ -180,7 +181,7 @@ export default function ExcelEngineWorkspace() {
     if (names.some(name=>!name) || new Set(names.map(name=>name.toLowerCase())).size !== names.length) { setError('Export column names must be non-empty and unique.'); return false; }
     const mapping = Object.fromEntries(names.map((name,i)=>[name,headers[i]]));
     const blob = exportSpreadsheet({
-      sheets: [{ name: selectedSheet || 'Processed Data', data: applyColumnMapping(rows.map(row=>Object.fromEntries(headers.map(h=>[h,validationSchema[h]?.type === 'number' && String(row[h] ?? '').trim() !== '' ? Number(String(row[h]).replace(/[$€£₹,\s]/g,'')) : row[h]]))),mapping), columns:names }],
+      sheets: [{ name: selectedSheet || 'Processed Data', data: applyColumnMapping(rows.map(row=>Object.fromEntries(headers.map(h=>[h,validationSchema[h]?.type === 'number' && String(row[h] ?? '').trim() !== '' ? strictAmount(row[h]) : row[h]]))),mapping), columns:names }],
       format,
       sanitizeFormulaInjection: true,
     });
@@ -446,7 +447,7 @@ export default function ExcelEngineWorkspace() {
 
           <details className="rounded-xl border border-stone-300 p-4" open>
             <summary className="font-semibold">Column mapping & validation rules</summary>
-            <p className="my-2 text-xs">Rename exported columns and choose the checks your data must pass. Search filters the preview only; exports contain all rows. Number columns export as numeric values; keep identifier columns as text.</p>
+            <p className="my-2 text-xs">Rename exported columns and choose the checks your data must pass. Search filters the preview only; exports contain all rows. Number columns export as numeric values; keep identifier columns as text. Dates use YYYY-MM-DD or day-first DD/MM/YYYY; verify ambiguous source dates before export.</p>
             <div className="overflow-auto"><table className="w-full border-collapse text-xs"><thead><tr>{['Source column','Export column name','Type','Required','Minimum'].map(label=><th key={label} className="border border-stone-300 p-2 text-left">{label}</th>)}</tr></thead><tbody>{headers.map(h=><tr key={h}>
               <td className="border border-stone-300 p-2">{h}</td>
               <td className="border border-stone-300 p-2"><input aria-label={`Export name for ${h}`} value={exportNames[h] ?? h} onChange={e=>setExportNames(previous=>({...previous,[h]:e.target.value}))} className="w-full rounded border p-2"/></td>

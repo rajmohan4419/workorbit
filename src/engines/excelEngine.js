@@ -1,3 +1,5 @@
+import { strictAmount, strictDate } from './financeValidation.js';
+import { readWorkbook, formattedCellValue } from './workbookReader.js';
 import * as XLSX from 'xlsx';
 import { downloadBlob } from '../lib/toolFormat.js';
 
@@ -62,14 +64,7 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
 
   let workbook;
   try {
-    workbook = XLSX.read(buffer, {
-      type: 'array',
-      cellDates: true,
-      cellNF: false,
-      cellText: false,
-      raw: true,
-      sheetRows: maxRows + 12,
-    });
+    workbook = await readWorkbook(buffer, { maxRows, maxColumns, cellNF: true });
   } catch (err) {
     throw new Error(`Malformed or unsupported spreadsheet file: ${err.message}`, { cause: err });
   }
@@ -94,6 +89,11 @@ export async function parseSpreadsheet(fileOrBuffer, options = {}) {
   if (range && range.e.c >= maxColumns) throw new Error(`Worksheet exceeds maximum column limit of ${maxColumns}.`);
   const originalRange = worksheet['!fullref'] || worksheet['!ref'];
   if (originalRange && XLSX.utils.decode_range(originalRange).e.r > maxRows + 10) throw new Error(`Worksheet exceeds maximum row limit of ${maxRows} rows.`);
+  for (const [address, cell] of Object.entries(worksheet)) {
+    if (!address.startsWith('!') && cell?.t === 'n' && /^0{2,}$/.test(cell.z || '')) {
+      worksheet[address] = { ...cell, t: 's', v: formattedCellValue(cell) };
+    }
+  }
   // Extract raw 2D array (header + rows)
   const rawData = XLSX.utils.sheet_to_json(worksheet, {
     header: 1,
@@ -326,8 +326,8 @@ export function validateRows(rows, schema) {
 
       if (!isEmpty) {
         if (rules.type === 'number') {
-          const num = Number(strVal.replace(/[$€£₹,\s]/g, ''));
-          if (!Number.isFinite(num) || strVal.replace(/[$€£₹,\s]/g, '') === '') {
+          const num = strictAmount(strVal);
+          if (!Number.isFinite(num)) {
             errors.push({
               row: rowIndex + 1,
               field,
@@ -356,12 +356,12 @@ export function validateRows(rows, schema) {
             }
           }
         } else if (rules.type === 'date') {
-          if (isNaN(Date.parse(strVal))) {
+          if (!strictDate(strVal)) {
             errors.push({
               row: rowIndex + 1,
               field,
               value: val,
-              message: `Must be a valid date.`,
+              message: `Use a valid YYYY-MM-DD or DD/MM/YYYY date (day first).`,
             });
             rowHasError = true;
           }

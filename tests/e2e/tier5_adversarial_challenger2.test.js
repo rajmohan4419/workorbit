@@ -1,3 +1,4 @@
+import internalPlannedTools from '../../docs/planning/unreleased-tools.json';
 /**
  * @vitest-environment jsdom
  */
@@ -299,7 +300,7 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite (Challenger 2)'
 
     it('T5.2.4: Planned tools in toolCatalog are 100% strictly excluded from sitemap.xml', () => {
       const sitemap = readProjectFile('public/sitemap.xml');
-      const plannedTools = TOOLS.filter((t) => t.status === 'planned');
+      const plannedTools = internalPlannedTools;
       expect(plannedTools.length).toBeGreaterThan(0);
 
       for (const p of plannedTools) {
@@ -408,7 +409,7 @@ describe('Tier 5: White-Box Adversarial Coverage Hardening Suite (Challenger 2)'
       }
 
       // Planned tools MUST NOT exist as prerendered static directory on disk
-      const plannedTools = TOOLS.filter((t) => t.status === 'planned');
+      const plannedTools = internalPlannedTools;
       for (const planned of plannedTools) {
         const plannedPath = path.join(distToolsDir, planned.slug, 'index.html');
         expect(

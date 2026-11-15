@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   AlertTriangle, ShieldAlert, Calendar
 } from 'lucide-react';
-import { calculateTds, TDS_CONFIG, isValidPan } from './tdsEngine.js';
+import { calculateTds, TDS_CONFIG, isValidPan, TDS_RULE_SOURCE, TDS_VERIFIED_ON } from './tdsEngine.js';
 import { formatINR } from '../../lib/toolFormat.js';
 
 export function TdsCalculator() {
@@ -34,6 +34,8 @@ export function TdsCalculator() {
 
   return (
     <div className="space-y-6">
+      <p className="text-sm">FY 2025-26 only · Income-tax Act, 1961. <a href={TDS_RULE_SOURCE} target="_blank" rel="noreferrer">Official threshold changes</a> · verified {TDS_VERIFIED_ON}. TY 2026-27 section mapping is not supported. This estimate does not decide payer eligibility, certificates, annual contractor aggregation, or treaty treatment.</p>
+      <p className="text-sm">{section === '194I' ? 'Enter total rent for one month or part of a month.' : section === '194C' ? 'Single-payment test only; the ₹1 lakh annual aggregate trigger must be checked separately.' : section === '192' ? 'Ordinary salary estimate with valid PAN; no-PAN salary cases need separate review.' : 'Enter cumulative payments to this resident payee for FY 2025-26.'}</p>
       {/* Main Grid: Form (Left) & Results Summary (Right) */}
       <div className="grid lg:grid-cols-12 gap-6 sm:gap-8">
         {/* Left: Input Configuration */}

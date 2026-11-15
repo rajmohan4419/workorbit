@@ -1,3 +1,4 @@
+import { strictAmount } from '../../engines/financeValidation.js';
 import { useState, useMemo, useEffect } from 'react';
 import {
   CheckCircle2, AlertTriangle, Download, Sparkles, HelpCircle, Check, Share2
@@ -42,7 +43,7 @@ export default function BankReconciliation() {
   const [dateToleranceDays, setDateToleranceDays] = useState(3);
   const [activeTab, setActiveTab] = useState('matched');
   const [searchTerm, setSearchTerm] = useState('');
-  const error = !Number.isFinite(Number(closingBankBalance)) || !Number.isFinite(Number(closingLedgerBalance)) || closingBankBalance === '' || closingLedgerBalance === '' ? 'Enter finite closing balances.' : null;
+  const error = !Number.isFinite(strictAmount(closingBankBalance)) || !Number.isFinite(strictAmount(closingLedgerBalance)) || closingBankBalance === '' || closingLedgerBalance === '' ? 'Enter finite closing balances.' : null;
   function reset() {
     setBankSource(null); setLedgerSource(null); setDemo(false); setClosingBankBalance('0'); setClosingLedgerBalance('0'); setImportEpoch(n => n + 1);
   }
@@ -86,16 +87,16 @@ export default function BankReconciliation() {
 
       const rec = reconcileTransactions(bankNormalized, ledgerNormalized, {
         dateToleranceDays: Number(dateToleranceDays),
-        closingBankBalance: Number(closingBankBalance),
-        closingLedgerBalance: Number(closingLedgerBalance),
+        closingBankBalance: strictAmount(closingBankBalance),
+        closingLedgerBalance: strictAmount(closingLedgerBalance),
       });
 
       return {
         reconciliation: rec,
         rowErrors: { bank: bankErrList, ledger: ledgerErrList },
       };
-    } catch {
-      return { reconciliation: null, rowErrors: { bank: [], ledger: [] } };
+    } catch (cause) {
+      return { reconciliation: null, rowErrors: { bank: [cause.message], ledger: [] } };
     }
   }, [bankData, ledgerData, bankMapping, ledgerMapping, dateToleranceDays, closingBankBalance, closingLedgerBalance, error]);
 
@@ -137,10 +138,10 @@ export default function BankReconciliation() {
       { 'Bank Reconciliation Statement': '(=) Adjusted Book Balance', 'Amount (₹)': reconciliation.summary.adjustedBookBalance },
       { 'Bank Reconciliation Statement': '', 'Amount (₹)': '' },
       { 'Bank Reconciliation Statement': 'Reconciliation Difference (Should be 0.00)', 'Amount (₹)': reconciliation.summary.reconciliationDifference },
-      { 'Bank Reconciliation Statement': 'Status', 'Amount (₹)': reconciliation.summary.isStatementReconciled ? 'RECONCILED (AGREED)' : 'VARIANCE DETECTED' },
+      { 'Bank Reconciliation Statement': 'Status', 'Amount (₹)': reviewRequired ? 'REQUIRES REVIEW — ambiguous or rejected rows' : reconciliation.summary.isStatementReconciled ? 'ADJUSTED BALANCES AGREE' : 'VARIANCE DETECTED' },
     ];
 
-    const matchedSheet = reconciliation.matches.map(m => ({
+    const matchedSheet = reconciliation.matches.filter(m=>!m.isAmbiguous).map(m => ({
       'Match ID': m.id,
       'Match Confidence': `${m.confidence}%`,
       'Match Type': m.type,
@@ -179,8 +180,8 @@ export default function BankReconciliation() {
       sheets: [
         { name: 'Import and settings', data: [
           { Setting: 'Bank source', Value: bankSource.label }, { Setting: 'Ledger source', Value: ledgerSource.label },
-          { Setting: 'Date tolerance (days)', Value: dateToleranceDays }, { Setting: 'Amount tolerance', Value: 'Difference < 0.005 before rounded normalization' },
-          { Setting: 'Matching scope', Value: 'Exact reference + amount; nearest date for duplicates. Otherwise date window OR description similarity >= 0.5. Ambiguities require review.' },
+          { Setting: 'Date tolerance (days)', Value: dateToleranceDays }, { Setting: 'Amount tolerance', Value: 'Exact integer paise after decimal half-away-from-zero rounding' },
+          { Setting: 'Matching scope', Value: 'One-to-one reference/amount or date/description candidates. Ties and competing claims stay unmatched; review required.' },
           { Setting: 'Supported import', Value: FINANCE_SCOPE },
           { Setting: 'Bank accepted', Value: reconciliation.summary.bankTotalTxns }, { Setting: 'Bank rejected', Value: rowErrors.bank.length },
           { Setting: 'Ledger accepted', Value: reconciliation.summary.ledgerTotalTxns }, { Setting: 'Ledger rejected', Value: rowErrors.ledger.length },
@@ -191,6 +192,7 @@ export default function BankReconciliation() {
         })) },
         { name: 'Reconciliation Statement', data: statementSheet },
         { name: 'Matched Items', data: matchedSheet },
+        { name: 'Ambiguous candidates', data: reconciliation.matches.filter(m=>m.isAmbiguous).map(m=>({ 'Bank source row':m.bank.rowNumber, 'Bank reference':m.bank.reference, 'Amount':m.bank.amount, 'Reason':m.bank.matchReason, 'Ledger candidates':JSON.stringify(m.candidates) })) },
         { name: 'Bank Unreconciled', data: bankUnmatchedSheet },
         { name: 'Ledger Unreconciled', data: ledgerUnmatchedSheet },
       ],
@@ -203,7 +205,7 @@ export default function BankReconciliation() {
 
   const filteredMatches = useMemo(() => {
     if (!reconciliation) return [];
-    let list = reconciliation.matches;
+    let list = reconciliation.matches.filter(m => activeTab === 'ambiguous' || !m.isAmbiguous);
     if (activeTab === 'ambiguous') {
       list = list.filter(m => m.isAmbiguous);
     }
@@ -262,15 +264,15 @@ export default function BankReconciliation() {
       )}
 
       <p role="status">{demo ? 'Demo mode — synthetic data. Activating a real file clears both demo sources and balances.' : bankData && ledgerData ? 'Ready — both sources supplied.' : 'Awaiting both sources. Confirm each import to enable reports.'}</p>
-      <p className="text-sm">Bank statement: CR/deposit = money in; DR/withdrawal = money out. Ledger: DR/receipt = money in; CR/payment = money out. Explicit indicators take precedence over amount signs. Matching and balance agreement require review. Adjustment buckets assume unmatched ledger outflows are outstanding payments and inflows are deposits in transit; verify each classification.</p>
+      <p className="text-sm">Up to 2,000 rows per source and 5 lakh candidate comparisons per run. Split large periods. Bank statement: CR/deposit = money in; DR/withdrawal = money out. Ledger: DR/receipt = money in; CR/payment = money out. Explicit indicators take precedence over amount signs. Matching and balance agreement require review. Adjustment buckets assume unmatched ledger outflows are outstanding payments and inflows are deposits in transit; verify each classification.</p>
       <button className="orbit-control border rounded-lg" onClick={reset}>Reset workspace</button>
       <div className="grid md:grid-cols-2 gap-4">
         <FinanceFileImport key={`bank-${importEpoch}`} title="Bank statement" fields={BANK_FIELDS} detect={detectBankColumns} validate={validateBank} sample={SAMPLE_RECONCILIATION_DATA.bankRows} activeRows={bankData} activeLabel={bankSource?.label} onCommit={data => commit('bank', data)} onClear={() => setBankSource(null)} />
         <FinanceFileImport key={`ledger-${importEpoch}`} title="Accounting ledger" fields={BANK_FIELDS} detect={detectBankColumns} validate={validateLedger} sample={SAMPLE_RECONCILIATION_DATA.ledgerRows} activeRows={ledgerData} activeLabel={ledgerSource?.label} onCommit={data => commit('ledger', data)} onClear={() => setLedgerSource(null)} />
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
-        <label>Closing bank balance (₹)<input aria-label="Closing bank balance" type="number" className="orbit-control w-full" value={closingBankBalance} onChange={e => setClosingBankBalance(e.target.value)} /></label>
-        <label>Closing ledger balance (₹)<input aria-label="Closing ledger balance" type="number" className="orbit-control w-full" value={closingLedgerBalance} onChange={e => setClosingLedgerBalance(e.target.value)} /></label>
+        <label>Closing bank balance (₹)<input aria-label="Closing bank balance" type="text" inputMode="decimal" className="orbit-control w-full" value={closingBankBalance} onChange={e => setClosingBankBalance(e.target.value)} /></label>
+        <label>Closing ledger balance (₹)<input aria-label="Closing ledger balance" type="text" inputMode="decimal" className="orbit-control w-full" value={closingLedgerBalance} onChange={e => setClosingLedgerBalance(e.target.value)} /></label>
       </div>
       {reconciliation && <p role="status">Bank: {reconciliation.summary.bankTotalTxns} accepted / {rowErrors.bank.length} rejected. Ledger: {reconciliation.summary.ledgerTotalTxns} accepted / {rowErrors.ledger.length} rejected.</p>}
 
@@ -455,7 +457,7 @@ export default function BankReconciliation() {
                     : 'text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'
                 }`}
               >
-                Matched ({reconciliation.matches.length})
+                Matched ({reconciliation.summary.matchedPairsCount})
               </button>
 
               {reconciliation.summary.ambiguousMatchesCount > 0 && (
