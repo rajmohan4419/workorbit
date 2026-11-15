@@ -5,8 +5,8 @@
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // Monetization modules
 import {

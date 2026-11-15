@@ -51,27 +51,17 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
         );
       });
 
-      // Free on-screen calculation is accessible:
-      expect(container.textContent).toContain('GST Invoice Generator');
-      expect(container.textContent).toContain('Your Company / Seller Details');
-
-      // Click Download PDF:
-      const downloadBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('Download PDF')
-      );
-      expect(downloadBtn).toBeTruthy();
-
-      await act(async () => {
-        downloadBtn.click();
-      });
-
-      expect(trackSpy).not.toHaveBeenCalledWith('advanced_exports');
-      expect(container.textContent).toContain('Seller name is required.');
-      expect(document.activeElement).toBe(container.querySelector('[role="alert"]'));
-      expect(document.activeElement.textContent).toContain('Download needs attention');
+      expect(container.textContent).toContain('Choose a template');
+      expect(container.textContent).toContain('Seller Business name');
+      const finalize=Array.from(container.querySelectorAll('button')).find(b=>b.textContent==='Finalize and download');
+      await act(async()=>finalize.click());
+      expect(trackSpy).not.toHaveBeenCalled();
+      expect(container.textContent).toContain('Seller business name is required.');
+      expect(container.textContent).toContain('Sign in');
     });
 
-    it('gates save workspace for unentitled users and displays upgrade prompt', async () => {
+
+    it('requires authentication for account template defaults without a pricing gate', async () => {
       vi.spyOn(usePlanModule, 'usePlan').mockReturnValue({
         plan: 'free',
         isPaid: false,
@@ -89,18 +79,11 @@ describe('Monetization Feature Gates & Unrestricted Calculations', () => {
         );
       });
 
-      const saveBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('Save Workspace')
-      );
-      expect(saveBtn).toBeTruthy();
-
-      await act(async () => {
-        saveBtn.click();
-      });
-
-      expect(trackSpy).toHaveBeenCalledWith('saved_workspaces');
-      expect(container.textContent).toContain('Saved Cloud Workspaces');
+      const saveBtn=Array.from(container.querySelectorAll('button')).find(b=>b.textContent==='Set as default');
+      expect(saveBtn).toBeTruthy();await act(async()=>saveBtn.click());
+      expect(trackSpy).not.toHaveBeenCalled();expect(container.textContent).toContain('Sign in');
     });
+
   });
 
   describe('BankReconciliation feature gates', () => {

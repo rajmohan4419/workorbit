@@ -79,12 +79,12 @@ describe('Adversarial M4 Challenger Test Suite', () => {
       });
 
       // Verify initial UI elements exist and are interactive
-      expect(container.textContent).toContain('GST Invoice Generator');
-      expect(container.textContent).toContain('Add Item');
+      expect(container.textContent).toContain('Choose a template');
+      expect(container.textContent).toContain('Add line');
 
       // Add item via button
       const addItemBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('Add Item')
+        (b) => b.textContent.includes('Add line')
       );
       expect(addItemBtn).toBeTruthy();
 
@@ -115,27 +115,11 @@ describe('Adversarial M4 Challenger Test Suite', () => {
         );
       });
 
-      // Click Download PDF -> triggers advanced_exports paywall
-      const downloadBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('Download PDF')
-      );
-      await act(async () => {
-        downloadBtn.click();
-      });
-
-      expect(trackSpy).not.toHaveBeenCalledWith('advanced_exports');
-      expect(container.textContent).toContain('Seller name is required.');
-
-      // Click Save Workspace -> triggers saved_workspaces paywall
-      const saveBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent.includes('Save Workspace')
-      );
-      await act(async () => {
-        saveBtn.click();
-      });
-
-      expect(trackSpy).toHaveBeenCalledWith('saved_workspaces');
-      expect(container.textContent).toContain('Saved Cloud Workspaces');
+      const finalize=Array.from(container.querySelectorAll('button')).find(b=>b.textContent==='Finalize and download');
+      await act(async()=>finalize.click());expect(trackSpy).not.toHaveBeenCalled();
+      expect(container.textContent).toContain('Seller business name is required.');
+      const save=Array.from(container.querySelectorAll('button')).find(b=>b.textContent==='Set as default');
+      await act(async()=>save.click());expect(trackSpy).not.toHaveBeenCalledWith('saved_workspaces');
     });
 
     it('1.3: BankReconciliation routes document exports through account metering', async () => {
