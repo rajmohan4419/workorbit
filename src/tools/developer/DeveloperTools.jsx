@@ -1,14 +1,16 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
+import { directDownloadBlob } from '../../lib/toolFormat';
 import { useState } from 'react';
 import { Field, Result } from '../../components/tools/ToolFields';
 import { num } from '../../lib/toolFormat';
 
 export function ExportActions({ content, filename = 'orbitboard-result.txt' }) {
+  const feedback = useExportFeedback('document');
   const [copied, setCopied] = useState(false);
   const copy = async () => { try { await navigator.clipboard.writeText(content); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { void 0; } };
   const download = () => {
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+    return directDownloadBlob(blob, filename);
   };
 
   return (
@@ -16,7 +18,7 @@ export function ExportActions({ content, filename = 'orbitboard-result.txt' }) {
       <button type="button" onClick={copy} className="rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2.5 text-sm font-semibold hover:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500 min-h-[44px]">
         {copied ? 'Copied!' : 'Copy result'}
       </button>
-      <button type="button" onClick={download} className="rounded-xl bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-300 min-h-[44px]">
+      <button type="button" disabled={feedback.busy} onClick={() => feedback.run(download, 'txt', 'Download started.')} className="rounded-xl bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-300 min-h-[44px]">
         Export .txt
       </button>
     </div>

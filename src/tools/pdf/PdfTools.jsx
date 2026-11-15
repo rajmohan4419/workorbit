@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState } from 'react';
 import {
   ArrowRight, ArrowLeft, RotateCcw, RotateCw, Trash2, Download,
@@ -17,7 +18,7 @@ function createTextPdf(lines) {
   const encoder = new TextEncoder();
   const pageChunks = [];
   for (let i = 0; i < (lines.length ? lines.length : 1); i += 48) pageChunks.push((lines.length ? lines : [['OrbitBoard']]).slice(i, i + 48));
-  const objects = [null];
+  const objects = [null, ''];
   const addObj = s => { objects.push(s); return objects.length - 1; };
   const pagesId = 2;
   addObj('<< /Type /Pages /Kids [PAGE_KIDS] /Count PAGE_COUNT >>');
@@ -48,6 +49,7 @@ function createTextPdf(lines) {
 }
 
 export function CsvToPdf() {
+  const feedback = useExportFeedback('document');
   const [input, setInput] = useState('Name,Role,Status\nJohn Doe,Developer,Active\nMitra,Assistant,Active'), [status, setStatus] = useState('');
   const parseCsv = text => text.split(/\r?\n/).filter(Boolean).map(line => {
     const out = []; let cell = '', quoted = false;
@@ -64,29 +66,30 @@ export function CsvToPdf() {
     try {
       const rows = parseCsv(input); const lines = rows.map(r => r.map(v => v.trim()).join(' | '));
       downloadBlob(createTextPdf(lines), 'orbitboard-csv-to-pdf.pdf', 'csv-to-pdf'); setStatus('Done — CSV data exported to PDF.');
-    } catch { setStatus('Could not convert CSV.'); }
+    } catch { setStatus('Could not convert CSV.'); throw new Error('PDF processing failed'); }
   };
 
   return (
     <div className="space-y-4">
       <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-52 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert CSV to PDF</button>
+      <button disabled={feedback.busy} onClick={() => feedback.run(convert, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert CSV to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
 }
 
 export function XlsxToPdf() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [status, setStatus] = useState('');
   const convert = async () => {
-    if (!file) { setStatus('Choose an XLSX file first.'); return; }
+    if (!file) { setStatus('Choose an XLSX file first.'); return false; }
     setStatus('Reading workbook...');
     try {
       const bytes = await file.arrayBuffer();
       const lines = ['XLSX Export', 'File: ' + file.name];
       if (bytes.byteLength === 0) throw new Error('File is empty');
       downloadBlob(createTextPdf(lines), 'orbitboard-xlsx-to-pdf.pdf', 'xlsx-to-pdf'); setStatus('Done — PDF generated.');
-    } catch (e) { setStatus(e.message || 'Could not convert XLSX.'); }
+    } catch (e) { setStatus(e.message || 'Could not convert XLSX.'); throw new Error('PDF processing failed'); }
   };
 
   return (
@@ -98,7 +101,7 @@ export function XlsxToPdf() {
         onFileSelect={f => { setFile(f); setStatus(''); }}
         onClear={() => { setFile(null); setStatus(''); }}
       />
-      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert XLSX to PDF</button>
+      <button disabled={feedback.busy} onClick={() => feedback.run(convert, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert XLSX to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
@@ -126,9 +129,10 @@ function createPdfFromJpeg(jpegBytes, width, height) {
 }
 
 export function ImageToPdf() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [preview, setPreview] = useState(''), [status, setStatus] = useState('');
   const convert = async () => {
-    if (!file) { setStatus('Choose an image first.'); return; }
+    if (!file) { setStatus('Choose an image first.'); return false; }
     setStatus('Generating PDF...');
     const url = URL.createObjectURL(file);
     try {
@@ -141,7 +145,7 @@ export function ImageToPdf() {
       const pdf = createPdfFromJpeg(bytes, image.naturalWidth, image.naturalHeight);
       downloadBlob(pdf, 'orbitboard-image-to-pdf.pdf', 'image-to-pdf');
       setStatus('Done — your PDF is ready.');
-    } catch { setStatus('Could not generate PDF.'); }
+    } catch { setStatus('Could not generate PDF.'); throw new Error('PDF processing failed'); }
     finally { URL.revokeObjectURL(url); }
   };
 
@@ -155,22 +159,23 @@ export function ImageToPdf() {
         onClear={() => { setFile(null); setStatus(''); }}
       />
       {preview && <img src={preview} alt="PDF preview" className="max-h-72 max-w-full rounded-2xl border border-[var(--orbit-border)] object-contain" />}
-      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
+      <button disabled={feedback.busy} onClick={() => feedback.run(convert, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
 }
 
 export function TextToPdf() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [text, setText] = useState(''), [status, setStatus] = useState('');
   const convert = async () => {
-    if (!file && !text) { setStatus('Choose a text file or paste text first.'); return; }
+    if (!file && !text) { setStatus('Choose a text file or paste text first.'); return false; }
     try {
-      const bytes = await createTextPdf(text);
+      const bytes = createTextPdf(text.split(/\r?\n/));
       downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-text-to-pdf.pdf', 'text-to-pdf');
-      setStatus('Done — PDF downloaded.');
+      setStatus('Your PDF is ready.');
     } catch {
-      setStatus('Could not create the PDF.');
+      setStatus('Could not create the PDF.'); throw new Error('PDF processing failed');
     }
   };
 
@@ -190,15 +195,16 @@ export function TextToPdf() {
         onClear={() => { setFile(null); setText(''); }}
       />
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Or paste text here…" className="w-full h-64 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
-      <button onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
+      <button disabled={feedback.busy} onClick={() => feedback.run(convert, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Convert to PDF</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
 }
 
 export function PdfToText() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [text, setText] = useState(''), [status, setStatus] = useState(''), [busy, setBusy] = useState(false);
-  const extract = async () => { if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true); try { const value = await extractPdfText(file); setText(value); setStatus('Text extracted locally.'); } catch { setStatus('Could not extract text.'); } finally { setBusy(false); } };
+  const extract = async () => { if (!file) { setStatus('Choose a PDF first.'); return false; } setBusy(true); try { const value = await extractPdfText(file); setText(value); setStatus('Text extracted locally.'); } catch { setStatus('Could not extract text.'); throw new Error('PDF processing failed'); } finally { setBusy(false); } };
 
   return (
     <div className="space-y-4">
@@ -209,7 +215,7 @@ export function PdfToText() {
         onFileSelect={f => { setFile(f); setText(''); setStatus('') }}
         onClear={() => { setFile(null); setText(''); setStatus('') }}
       />
-      <button disabled={busy} onClick={extract} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Text'}</button>
+      <button disabled={feedback.busy || (busy)} onClick={() => feedback.run(extract, 'pdf', 'Text extracted.')} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Text'}</button>
       <textarea readOnly value={text} placeholder="Extracted text will appear here…" className="w-full h-72 rounded-xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900 p-4 font-mono text-base" />
       {text && <ExportActions content={text} filename="orbitboard-extracted.txt" />}
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
@@ -218,15 +224,16 @@ export function PdfToText() {
 }
 
 export function PdfMerge() {
+  const feedback = useExportFeedback('document');
   const [files, setFiles] = useState([]), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
   const merge = async () => {
-    if (files.length < 2) { setStatus('Choose at least two PDFs.'); return; } setBusy(true); setStatus('Merging PDFs locally…');
+    if (files.length < 2) { setStatus('Choose at least two PDFs.'); return false; } setBusy(true); setStatus('Merging PDFs locally…');
     try {
       const bytes = await mergePdfFiles(files);
       downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-pdf-merge.pdf', 'pdf-merge');
-      setStatus('Done — merged PDF downloaded.');
+      setStatus('Done — merged PDF is ready.');
     } catch {
-      setStatus('Could not merge these PDFs.');
+      setStatus('Could not merge these PDFs.'); throw new Error('PDF processing failed');
     } finally {
       setBusy(false);
     }
@@ -274,24 +281,25 @@ export function PdfMerge() {
           </ol>
         </div>
       )}
-      <button disabled={busy || files.length < 2} onClick={merge} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Merging…' : 'Merge PDFs'}</button>
+      <button disabled={feedback.busy || (busy || files.length < 2)} onClick={() => feedback.run(merge, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Merging…' : 'Merge PDFs'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
 }
 
 export function PdfExtract() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [pages, setPages] = useState(''), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
   const extract = async () => {
-    if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true);
+    if (!file) { setStatus('Choose a PDF first.'); return false; } setBusy(true);
     try {
       const src = await loadPdf(file); const max = src.getPageCount();
       const indexes = pages.split(',').flatMap(part => { const [a, b] = part.trim().split('-').map(Number); if (Number.isFinite(a) && Number.isFinite(b)) { const s = Math.min(a, b), e = Math.max(a, b); return Array.from({ length: e - s + 1 }, (_, i) => s + i - 1); } if (Number.isFinite(a)) return [a - 1]; return []; }).filter(i => i >= 0 && i < max);
-      if (!indexes.length) { setStatus('Enter page numbers such as 1,3,5-7.'); return; }
+      if (!indexes.length) { setStatus('Enter page numbers such as 1,3,5-7.'); return false; }
       const bytes = await extractPdfPages(file, indexes.map(i => i + 1));
       downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-pdf-extract.pdf', 'pdf-extract');
-      setStatus('Done — extracted PDF downloaded.');
-    } catch { setStatus('Could not extract pages.'); } finally { setBusy(false); }
+      setStatus('Done — extracted PDF is ready.');
+    } catch { setStatus('Could not extract pages.'); throw new Error('PDF processing failed'); } finally { setBusy(false); }
   };
 
   return (
@@ -304,21 +312,22 @@ export function PdfExtract() {
         onClear={() => { setFile(null); setStatus('') }}
       />
       <Field label="Pages to extract" value={pages} onChange={setPages} type="text" placeholder="Example: 1,3,5-7" />
-      <button disabled={busy} onClick={extract} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Pages'}</button>
+      <button disabled={feedback.busy || (busy)} onClick={() => feedback.run(extract, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Extracting…' : 'Extract Pages'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
 }
 
 export function PdfSplit() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [status, setStatus] = useState('');
   const split = async () => {
-    if (!file) { setStatus('Choose a PDF first.'); return; }
+    if (!file) { setStatus('Choose a PDF first.'); return false; }
     try {
       const bytesList = await splitPdfPages(file);
       bytesList.forEach((bytes, i) => downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `orbitboard-pdf-split-page-${i + 1}.pdf`, 'pdf-split'));
-      setStatus('Done — individual pages downloaded.');
-    } catch { setStatus('Could not split this PDF.'); }
+      setStatus('Done — individual PDF pages are ready.');
+    } catch { setStatus('Could not split this PDF.'); throw new Error('PDF processing failed'); }
   };
 
   return (
@@ -330,17 +339,18 @@ export function PdfSplit() {
         onFileSelect={f => { setFile(f); setStatus('') }}
         onClear={() => { setFile(null); setStatus('') }}
       />
-      <button onClick={split} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Split into Pages</button>
+      <button disabled={feedback.busy} onClick={() => feedback.run(split, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px]">Split into Pages</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );
 }
 
 export function PdfToImages({ format = 'image/png' }) {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [pages, setPages] = useState([]), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
-  const load = async () => {
-    if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true); setStatus('Rendering pages…');
-    try { const rendered = await renderPdfPages(file, { scale: 1.25, format, quality: 0.92 }); setPages(rendered); setStatus(rendered.length + ' page(s) rendered.'); } catch { setStatus('Could not render PDF.'); } finally { setBusy(false); }
+  const load = async task => {
+    if (!file) { setStatus('Choose a PDF first.'); return false; } setBusy(true); setStatus('Rendering pages…');
+    try { const rendered = await renderPdfPages(file, { scale: 1.25, format, quality: 0.92, onProgress: (completed, total) => task.progress(completed, total, `Rendering page ${completed} of ${total}`) }); setPages(rendered); setStatus(rendered.length + ' page(s) rendered.'); } catch { setStatus('Could not render PDF.'); throw new Error('PDF processing failed'); } finally { setBusy(false); }
   };
 
   return (
@@ -352,7 +362,7 @@ export function PdfToImages({ format = 'image/png' }) {
         onFileSelect={f => { setFile(f); setPages([]); setStatus('') }}
         onClear={() => { setFile(null); setPages([]); setStatus('') }}
       />
-      <button disabled={busy} onClick={load} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Rendering…' : 'Render PDF Pages'}</button>
+      <button disabled={feedback.busy || (busy)} onClick={() => feedback.run(load, 'pdf', 'Your page previews are ready.')} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Rendering…' : 'Render PDF Pages'}</button>
       {pages.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {pages.map(p => <div key={p.number} className="rounded-2xl border border-[var(--orbit-border)] p-3"><img src={p.data} alt={'Page ' + p.number} className="w-full rounded-lg bg-white" /><p className="mt-2 text-xs text-stone-600 dark:text-stone-400">Page {p.number}</p></div>)}
@@ -364,16 +374,17 @@ export function PdfToImages({ format = 'image/png' }) {
 }
 
 export function PdfCompressor() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [busy, setBusy] = useState(false), [status, setStatus] = useState(''), [stats, setStats] = useState(null);
   const compress = async () => {
-    if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true); setStatus('Optimizing PDF structure…');
+    if (!file) { setStatus('Choose a PDF first.'); return false; } setBusy(true); setStatus('Optimizing PDF structure…');
     try {
       const bytes = await optimizePdf(file);
       const blob = new Blob([bytes], { type: 'application/pdf' });
       downloadBlob(blob, 'orbitboard-pdf-compressor.pdf', 'pdf-compressor');
       setStats({ before: file.size, after: blob.size });
-      setStatus('Done — optimized PDF downloaded.');
-    } catch { setStatus('Could not optimize this PDF.'); } finally { setBusy(false); }
+      setStatus('Done — optimized PDF is ready.');
+    } catch { setStatus('Could not optimize this PDF.'); throw new Error('PDF processing failed'); } finally { setBusy(false); }
   };
 
   return (
@@ -385,7 +396,7 @@ export function PdfCompressor() {
         onFileSelect={f => { setFile(f); setStats(null); setStatus('') }}
         onClear={() => { setFile(null); setStats(null); setStatus('') }}
       />
-      <button disabled={busy} onClick={compress} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Optimizing…' : 'Optimize & Download'}</button>
+      <button disabled={feedback.busy || (busy)} onClick={() => feedback.run(compress, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Optimizing…' : 'Optimize & Download'}</button>
       {stats && (
         <div className="grid sm:grid-cols-2 gap-3">
           <Result label="Original Size" value={(stats.before / 1024).toFixed(1) + ' KB'} />
@@ -398,6 +409,7 @@ export function PdfCompressor() {
 }
 
 export function PdfWorkspace() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null);
   const [pages, setPages] = useState([]);
   const [originalPages, setOriginalPages] = useState([]);
@@ -406,7 +418,7 @@ export function PdfWorkspace() {
   const [status, setStatus] = useState('');
   const [progress, setProgress] = useState('');
 
-  const loadAndRenderPdf = async (selectedFile) => {
+  const loadAndRenderPdf = async (selectedFile, task) => {
     if (!selectedFile) return;
     setFile(selectedFile);
     setPages([]);
@@ -423,6 +435,7 @@ export function PdfWorkspace() {
         quality: 0.8,
         onProgress: (current, total) => {
           setProgress(`Rendering page ${current} of ${total}…`);
+          task.progress(current, total, `Rendering page ${current} of ${total}`);
         }
       });
       const mapped = rendered.map((p, index) => ({
@@ -439,6 +452,7 @@ export function PdfWorkspace() {
       console.error(err);
       setStatus('Could not read or render PDF file. Please ensure it is a valid PDF.');
       setProgress('');
+      throw new Error('PDF rendering failed');
     } finally {
       setBusy(false);
     }
@@ -525,7 +539,7 @@ export function PdfWorkspace() {
 
     if (pagesToExport.length === 0) {
       setStatus('At least 1 page must be present to export.');
-      return;
+      return false;
     }
 
     setBusy(true);
@@ -536,10 +550,11 @@ export function PdfWorkspace() {
         ? `orbitboard-extracted-${pagesToExport.length}-pages.pdf`
         : 'orbitboard-edited-workspace.pdf';
       downloadBlob(new Blob([bytes], { type: 'application/pdf' }), filename, 'pdf-workspace');
-      setStatus(`Successfully exported ${pagesToExport.length} page${pagesToExport.length > 1 ? 's' : ''}. Download started.`);
+      setStatus(`Successfully exported ${pagesToExport.length} page${pagesToExport.length > 1 ? 's' : ''}. Your PDF is ready.`);
     } catch (err) {
       console.error(err);
       setStatus('Could not export PDF. Please try again.');
+      throw new Error('PDF export failed');
     } finally {
       setBusy(false);
     }
@@ -551,7 +566,7 @@ export function PdfWorkspace() {
         label="Select PDF File to Edit"
         accept="application/pdf"
         file={file}
-        onFileSelect={loadAndRenderPdf}
+        onFileSelect={file => { if (file) void feedback.run(task => loadAndRenderPdf(file, task), 'pdf', 'Your page previews are ready.'); }}
         onClear={handleClear}
       />
 
@@ -614,9 +629,8 @@ export function PdfWorkspace() {
               {selectedIds.size > 0 && (
                 <button
                   type="button"
-                  disabled={busy}
-                  onClick={() => exportPdf(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition shadow-xs disabled:opacity-50"
+                  disabled={feedback.busy || (busy)}
+                  onClick={() => feedback.run(() => exportPdf(true), 'pdf')} className="orbit-feedback-button inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition shadow-xs disabled:opacity-50"
                 >
                   <Download size={14} />
                   <span>Export Selected ({selectedIds.size})</span>
@@ -625,9 +639,8 @@ export function PdfWorkspace() {
 
               <button
                 type="button"
-                disabled={busy || pages.length === 0}
-                onClick={() => exportPdf(false)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-white text-xs font-bold transition shadow-xs disabled:opacity-50"
+                disabled={feedback.busy || (busy || pages.length === 0)}
+                onClick={() => feedback.run(() => exportPdf(false), 'pdf')} className="orbit-feedback-button inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-white text-xs font-bold transition shadow-xs disabled:opacity-50"
               >
                 <Download size={14} />
                 <span>Save & Download PDF</span>
@@ -752,17 +765,18 @@ export function PdfWorkspace() {
 }
 
 export function PdfReorder() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null), [order, setOrder] = useState(''), [busy, setBusy] = useState(false), [status, setStatus] = useState('');
   const reorder = async () => {
-    if (!file) { setStatus('Choose a PDF first.'); return; } setBusy(true);
+    if (!file) { setStatus('Choose a PDF first.'); return false; } setBusy(true);
     try {
       const src = await loadPdf(file);
       const nums = order.split(',').map(v => Number(v.trim())).filter(Number.isInteger);
-      if (nums.length !== src.getPageCount()) { setStatus('Enter every page number.'); return; }
+      if (nums.length !== src.getPageCount()) { setStatus('Enter every page number.'); return false; }
       const bytes = await reorderPdfPages(file, nums);
       downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'orbitboard-pdf-workspace.pdf', 'pdf-workspace');
-      setStatus('Done — reordered PDF downloaded.');
-    } catch { setStatus('Could not reorder PDF.'); } finally { setBusy(false); }
+      setStatus('Done — reordered PDF is ready.');
+    } catch { setStatus('Could not reorder PDF.'); throw new Error('PDF processing failed'); } finally { setBusy(false); }
   };
 
   return (
@@ -775,7 +789,7 @@ export function PdfReorder() {
         onClear={() => { setFile(null); setStatus('') }}
       />
       <Field label="Page order" value={order} onChange={setOrder} type="text" placeholder="Example: 3,1,2,4" />
-      <button disabled={busy} onClick={reorder} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Saving…' : 'Reorder & Download'}</button>
+      <button disabled={feedback.busy || (busy)} onClick={() => feedback.run(reorder, 'pdf')} className="orbit-feedback-button rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">{busy ? 'Saving…' : 'Reorder & Download'}</button>
       {status && <p aria-live="polite" className="text-sm font-medium text-stone-700 dark:text-stone-300">{status}</p>}
     </div>
   );

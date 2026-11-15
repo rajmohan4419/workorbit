@@ -1,8 +1,10 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState } from 'react';
 import { downloadBlob } from '../../lib/toolFormat';
 import { FileUploadWithDrive } from '../../components/tools/FileUploadWithDrive';
 
 export default function PdfESign() {
+  const feedback = useExportFeedback('document');
   const [file, setFile] = useState(null);
   const [signature, setSignature] = useState('John Doe');
   const [page, setPage] = useState('1');
@@ -13,7 +15,7 @@ export default function PdfESign() {
   const sign = async () => {
     if (!file) {
       setStatus('Choose a PDF first.');
-      return;
+      return false;
     }
 
     setStatus('Adding signature...');
@@ -45,10 +47,11 @@ export default function PdfESign() {
 
       const output = await pdf.save();
       downloadBlob(new Blob([output], { type: 'application/pdf' }), 'orbitboard-pdf-e-sign.pdf', 'pdf-e-sign');
-      setStatus('Done — the signed PDF was downloaded.');
+      setStatus('Your PDF is ready.');
     } catch (error) {
       console.error(error);
       setStatus('Could not sign this PDF. Try another document.');
+      throw new Error('PDF signing failed');
     }
   };
 
@@ -81,7 +84,7 @@ export default function PdfESign() {
         </label>
       </div>
 
-      <button type="button" onClick={sign} className="rounded-xl bg-accent-600 px-4 py-2.5 text-sm font-semibold hover:bg-accent-500">Add signature & download</button>
+      <button type="button" disabled={feedback.busy} onClick={() => feedback.run(sign, 'pdf')} className="rounded-xl bg-accent-600 px-4 py-2.5 text-sm font-semibold hover:bg-accent-500">Add signature & download</button>
       {status && <p aria-live="polite" className="text-sm text-slate-400">{status}</p>}
 
       <p className="text-xs text-slate-500">This adds a visible signature mark to the PDF locally in your browser. It is not a cryptographic digital signature or a certificate-based signature.</p>

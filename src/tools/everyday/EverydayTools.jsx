@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState } from 'react';
 import { Field, Result } from '../../components/tools/ToolFields';
 import { FileUploadWithDrive } from '../../components/tools/FileUploadWithDrive';
@@ -286,11 +287,12 @@ export function ImageCompressor() {
 }
 
 export function SpreadsheetFileTool({ type }) {
+  const feedback = useExportFeedback('spreadsheet');
   const [file, setFile] = useState(null), [text, setText] = useState(''), [status, setStatus] = useState(''), [busy, setBusy] = useState(false);
   const isJson = type === 'json-to-xlsx', isCsv = type === 'csv-to-xlsx';
 
   const convert = async () => {
-    if (!file && !text.trim()) { setStatus(isJson ? 'Paste a JSON array first.' : 'Paste CSV or choose a file first.'); return; }
+    if (!file && !text.trim()) { setStatus(isJson ? 'Paste a JSON array first.' : 'Paste CSV or choose a file first.'); return false; }
     setBusy(true); setStatus('Converting locally…');
     try {
       if (type === 'xlsx-to-csv') {
@@ -301,8 +303,8 @@ export function SpreadsheetFileTool({ type }) {
       const finalSlug = isCsv ? 'csv-to-excel' : 'json-to-excel';
       const filename = `orbitboard-${finalSlug}.xlsx`;
       downloadBlob(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename, finalSlug);
-      setStatus('Done — XLSX downloaded.');
-    } catch (e) { setStatus(e.message || 'Could not convert this spreadsheet.'); }
+      setStatus('Your spreadsheet is ready.');
+    } catch (e) { setStatus(e.message || 'Could not convert this spreadsheet.'); throw e; }
     finally { setBusy(false); }
   };
 
@@ -330,7 +332,7 @@ export function SpreadsheetFileTool({ type }) {
           <textarea value={text} onChange={e => { setText(e.target.value); if (isCsv) setFile(null) }} placeholder={isJson ? 'Paste a JSON array of objects…' : 'Paste CSV data or choose a file…'} className="w-full h-64 rounded-xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-4 font-mono text-base min-h-[44px]" />
         </>
       )}
-      <button disabled={busy} onClick={convert} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">
+      <button disabled={busy || feedback.busy} onClick={() => feedback.run(convert, type === 'xlsx-to-csv' ? 'csv' : 'xlsx')} className="rounded-xl bg-accent-600 text-white px-5 py-3 text-sm font-semibold min-h-[44px] disabled:opacity-50">
         {busy ? 'Converting…' : type === 'xlsx-to-csv' ? 'Convert to CSV' : 'Convert to XLSX'}
       </button>
       {type === 'xlsx-to-csv' && text && (

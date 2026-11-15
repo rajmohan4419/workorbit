@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState, useMemo, useRef } from 'react';
 import {
   Upload, FileSpreadsheet, Download, Check, AlertCircle, ShieldCheck, AlertTriangle, Layers, X, Sparkles
@@ -23,6 +24,7 @@ export default function ExcelEngineWorkspace() {
   const [history, setHistory] = useState([]);
   const [exportNames, setExportNames] = useState({});
   const [cleanColumn, setCleanColumn] = useState('');
+  const feedback = useExportFeedback('spreadsheet');
   const [fileObj, setFileObj] = useState(null);
   const [fileName, setFileName] = useState('');
   const [sheetNames, setSheetNames] = useState([]);
@@ -170,12 +172,12 @@ export default function ExcelEngineWorkspace() {
   };
 
   const handleExport = (format) => {
-    if (!rows.length) return;
+    if (!rows.length) return false;
     const validation = validateRows(rows, validationSchema);
     setValidationResults(validation);
-    if (!validation.isValid) { setError('Correct the flagged rows before exporting. You can download the error report.'); return; }
+    if (!validation.isValid) { setError('Correct the flagged rows before exporting. You can download the error report.'); return false; }
     const names = headers.map(h => (exportNames[h] ?? h).trim());
-    if (names.some(name=>!name) || new Set(names.map(name=>name.toLowerCase())).size !== names.length) { setError('Export column names must be non-empty and unique.'); return; }
+    if (names.some(name=>!name) || new Set(names.map(name=>name.toLowerCase())).size !== names.length) { setError('Export column names must be non-empty and unique.'); return false; }
     const mapping = Object.fromEntries(names.map((name,i)=>[name,headers[i]]));
     const blob = exportSpreadsheet({
       sheets: [{ name: selectedSheet || 'Processed Data', data: applyColumnMapping(rows.map(row=>Object.fromEntries(headers.map(h=>[h,validationSchema[h]?.type === 'number' && String(row[h] ?? '').trim() !== '' ? Number(String(row[h]).replace(/[$€£₹,\s]/g,'')) : row[h]]))),mapping), columns:names }],
@@ -362,7 +364,7 @@ export default function ExcelEngineWorkspace() {
               </button>
               <button
                 type="button"
-                onClick={() => handleExport('xlsx')}
+                disabled={feedback.busy} onClick={() => feedback.run(() => handleExport('xlsx'), 'xlsx')}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs transition"
               >
                 <Download size={14} />
@@ -370,7 +372,7 @@ export default function ExcelEngineWorkspace() {
               </button>
               <button
                 type="button"
-                onClick={() => handleExport('csv')}
+                disabled={feedback.busy} onClick={() => feedback.run(() => handleExport('csv'), 'csv')}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-medium text-xs transition"
                 title="Protected against CSV formula injection"
               >
@@ -416,7 +418,7 @@ export default function ExcelEngineWorkspace() {
                   {!validationResults.isValid && (
                     <button
                       type="button"
-                      onClick={() => handleDownloadErrorReport('xlsx')}
+                      disabled={feedback.busy} onClick={() => feedback.run(() => handleDownloadErrorReport('xlsx'), 'xlsx')}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-bold hover:bg-amber-300 transition"
                     >
                       <Download size={12} />

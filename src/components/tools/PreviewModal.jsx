@@ -1,3 +1,6 @@
+import { useTaskFeedback } from '../../lib/feedback/useTaskFeedback';
+import { createFeedbackTask, fileReadyLabel, getFeedbackSnapshot } from '../../lib/feedback/taskFeedback';
+import { unlockSound } from '../../lib/feedback/sound';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Download, X, ZoomIn, ZoomOut, Eye, FileText } from 'lucide-react';
 import { directDownloadBlob } from '../../lib/toolFormat';
@@ -67,6 +70,23 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onCancel, busy]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.activeElement;
+    const panel = overlayRef.current;
+    panel?.querySelector('button')?.focus();
+    const trap = event => {
+      if (event.key !== 'Tab') return;
+      const buttons = [...panel.querySelectorAll('button, a[href], input, [tabindex="0"]')].filter(element => !element.disabled);
+      const first = buttons[0], last = buttons.at(-1);
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    panel?.addEventListener('keydown', trap);
+    return () => { panel?.removeEventListener('keydown', trap); if (previous?.isConnected) previous.focus(); };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -186,7 +206,7 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
             <button
               disabled={busy}
               onClick={onConfirm}
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors shadow"
+              className="orbit-feedback-button inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors shadow"
             >
               <Download className="w-4 h-4" />
               {busy ? 'Downloading…' : 'Download'}
@@ -199,6 +219,7 @@ export function PreviewModal({ blob, filename, mimeType, onConfirm, onCancel, is
 }
 
 export function GlobalPreviewModal() {
+  const feedback = useTaskFeedback('document');
   const [queue, setQueue] = useState([]);
   const { session, loading } = useAccountSession();
   const [busy, setBusy] = useState(false);
@@ -210,6 +231,10 @@ export function GlobalPreviewModal() {
   useEffect(() => {
     const handleEvent = (e) => {
       e.preventDefault();
+      if (!getFeedbackSnapshot().tasks.some(task => task.state === 'processing')) {
+        const ready = createFeedbackTask('document').begin();
+        ready.success(fileReadyLabel(documentFormat(e.detail.filename, e.detail.mimeType || '')));
+      }
       const { blob, filename, mimeType, toolSlug } = e.detail;
       const routeSlug = window.location.pathname.startsWith('/tools/') ? window.location.pathname.split('/')[2] : null;
       setQueue(items => [...items, { blob, filename, mimeType, toolSlug: toolSlug || routeSlug, requestId: crypto.randomUUID() }]);
@@ -220,15 +245,21 @@ export function GlobalPreviewModal() {
 
   const handleConfirm = async () => {
     if (!data?.blob || inFlight.current) return;
+    unlockSound();
+    const task = feedback.begin({ label: 'Starting your download', stage: 'Checking download access' });
+    if (!task) return;
     inFlight.current = true; setBusy(true); setError('');
     try {
       if (isMeteredDocument(data.filename, data.mimeType)) {
         await authorizeDocumentDownload({ requestId: data.requestId, format: documentFormat(data.filename, data.mimeType || ''), toolSlug: data.toolSlug });
       }
+      task.stage('Starting browser download');
       directDownloadBlob(data.blob, data.filename, null);
+      task.success('Download started.');
       setQueue(items => items.slice(1));
       window.dispatchEvent(new CustomEvent('orbitboard:download-recorded'));
     } catch (err) {
+      task.error('Could not start the download. Your file remains in this tab. Please retry.');
       setError(err.message);
       if (err.code === 'sign_in_required') setAuthRequired(true);
     } finally { inFlight.current = false; setBusy(false); }
@@ -236,6 +267,8 @@ export function GlobalPreviewModal() {
 
   const handleCancel = useCallback(() => {
     if (inFlight.current) return;
+    const cancelled = createFeedbackTask('document').begin();
+    cancelled.cancel('Download cancelled. You can generate it again from your inputs.');
     setQueue([]); setError(''); setAuthRequired(false);
   }, []);
 

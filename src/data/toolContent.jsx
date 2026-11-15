@@ -30,6 +30,12 @@ export const TOOL_CONTENT = {
     ],
   },
   'ctc-to-inhand': {
+    article: [
+        "Cost to Company (CTC) vs. Net Take-Home Salary: In Indian corporate compensation, the headline Cost to Company (CTC) figure rarely reflects the liquid cash deposited into your bank account each month. CTC represents the total financial burden borne by an enterprise to maintain an employee. It aggregates direct cash disbursements, statutory social security contributions, deferred retirement gratuity, non-monetary health insurance premiums, and contingent performance incentives.",
+        "Anatomy of a Modern Indian Pay Structure: An employment package is structurally divided into distinct buckets: 1) Fixed Gross Salary: Basic Salary (typically 40% to 50% of total CTC), House Rent Allowance (HRA, often 40% or 50% of basic depending on metro status), Special Allowance, and Conveyance; 2) Statutory Retirals & Deductions: Employee Provident Fund (12% of basic, where the employer match is also deducted from CTC), Professional Tax (capped at ₹2,500 annually per state mandates), and statutory bonus provisions; 3) Deferred Benefits & Variable Components: Gratuity accrual (calculated as 15/26 of basic wage under the Payment of Gratuity Act, 1972) and quarterly/annual performance bonus pools.",
+        "Tax Regime Comparison (Union Budget Guidelines): For Financial Year 2025–26 (AY 2026–27), salaried taxpayers choose between two distinct tax regimes. The New Tax Regime (Section 115BAC) functions as the default framework, featuring lower slab tariffs, an enhanced standard deduction of ₹75,000, and a full tax rebate under Section 87A for ordinary taxable incomes up to ₹12,00,000 for resident individuals (making salary income up to ₹12.75 Lakh tax-free with the standard deduction; special-rate income is excluded). The Old Tax Regime retains itemized deductions under Chapter VI-A—including ₹1,50,000 under Section 80C, ₹50,000 NPS under 80CCD(1B), ₹25,000 to ₹50,000 under 80D medical insurance, and actual rent exemption under Section 10(13A). Employees paying high house rent or servicing residential home loan interest often benefit from retaining the Old Regime.",
+        "Mathematical Formula for Net Take-Home Calculation: Net Monthly In-Hand = [Gross Monthly Fixed Pay] − [Employee EPF (12% of basic)] − [Professional Tax] − [Monthly TDS (Tax Deducted at Source)]. Note that Employer EPF and Gratuity are deducted prior to gross salary computation because they represent employer-side overhead bundled into total CTC."
+    ],
     intro: 'Understand what your CTC could mean as monthly take-home pay.',
     keywords: 'CTC to in-hand salary calculator India, take home salary calculator, CTC calculator',
     how: [
@@ -48,6 +54,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'salary-hike': {
+    article: [
+        "Measuring Career Trajectory & Compensation Increases: When evaluating an annual performance appraisal, internal promotion, or competing lateral employment offers, calculating the exact percentage hike and nominal rupee increment provides essential clarity. While headline percentage hikes reflect your market value progression, analyzing the post-tax net take-home realization determines actual lifestyle purchasing power.",
+        "Mathematical Increment Formulation: The percentage increment is calculated using the formula: Percentage Hike = [((Revised CTC − Current CTC) ÷ Current CTC) × 100]. The absolute annual increase is [Revised CTC − Current CTC], while the incremental gross monthly earning equals [Absolute Annual Increase ÷ 12].",
+        "Marginal Tax Drag on High Percentage Hikes: A frequent oversight during salary negotiations is assuming that a 30% hike in total CTC delivers a proportional 30% increase in net take-home pay. Because Indian income taxation is progressive, incremental earnings above slab thresholds (such as crossing into the 20% or 30% marginal brackets) incur higher marginal tax liabilities and increased EPF contributions. Evaluating net in-hand realization ensures realistic financial expectations.",
+        "Lateral Switch Standards & Negotiation Benchmarks: In India’s competitive technology, financial services, and consulting sectors, standard lateral job switches historically yield 20% to 35% hikes for regular roles, and 40% to 70% for niche specializations or counter-offers. When negotiating, request a formal salary breakdown to verify whether the increment is concentrated in guaranteed fixed basic wages or heavily weighted toward discretionary variable bonuses."
+    ],
     intro: 'See the percentage increase between your current and revised salary.',
     keywords: 'salary hike calculator, appraisal hike percentage calculator India',
     how: [
@@ -807,6 +819,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'emi': {
+    article: [
+        "The Mechanics of Equated Monthly Installments (EMI): An Equated Monthly Installment is an equal, uninterrupted monthly payment made by a debtor to a lending institution on a designated date each month. Every EMI installment is divided into two distinct components: servicing the accrued monthly interest on the outstanding loan balance and amortizing a portion of the original borrowed principal, thereby liquidating the entire debt by the end of the term.",
+        "The Standard Reducing-Balance Mathematical Formula: Retail banking institutions, housing finance companies (HFCs), and NBFCs calculate loan amortization using the standard annuity formula: EMI = [P × r × (1 + r)^n] ÷ [(1 + r)^n − 1]. In this formula, P denotes the principal debt amount, r denotes the monthly periodic interest rate (computed as the nominal annual percentage rate divided by 1200), and n represents the total duration expressed in months (tenure in years multiplied by 12).",
+        "Understanding the Front-Loaded Amortization Curve: Reducing-balance loans are inherently front-loaded in interest charges. In the initial third of your loan tenure, because the outstanding principal balance remains high, accrued monthly interest constitutes up to 70% to 80% of every EMI installment. As monthly installments gradually reduce the remaining principal, the interest fraction shrinks, and the principal repayment fraction expands exponentially toward tenure completion.",
+        "Prepayment Advantages & Statutory RBI Consumer Protections: Under guidelines issued by the Reserve Bank of India, scheduled commercial banks and regulated housing finance corporations cannot levy prepayment penalties or foreclosure charges on floating-rate home loans sanctioned to individual retail borrowers. Making an annual prepayment equivalent to just one additional EMI payment per year can shorten a 20-year home loan by over 3 to 4 years and save hundreds of thousands of rupees in cumulative interest."
+    ],
     intro: 'Estimate monthly EMI, total interest and total repayment for a loan.',
     keywords: 'EMI calculator India, loan EMI calculator',
     how: [
@@ -824,6 +842,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'gst': {
+    article: [
+        "India’s Goods and Services Tax (GST) Architecture: Implemented on July 1, 2017, the Goods and Services Tax is an indirect, multi-stage, destination-based tax levied on the supply of goods and services across India. Replacing a fragmented system of Central Excise, State VAT, Service Tax, and Entry Levies, GST creates a unified single national market governed by the GST Council under the Central Goods and Services Tax Act, 2017.",
+        "Inclusive vs. Exclusive Tax Mathematics: Commercial transactions and invoices utilize two standard calculation methods. In GST-Exclusive computation (adding tax onto a net base quote): Tax Amount = Net Base × (GST Rate ÷ 100), and Gross Total = Net Base + Tax Amount. In GST-Inclusive computation (extracting embedded tax from a gross consumer retail price): Net Base = Gross Total × [100 ÷ (100 + GST Rate)], and Embedded Tax = Gross Total − Net Base.",
+        "Overview of the Four Primary Tax Slabs: The GST tariff structure classifies commodities into four primary rate tiers: 5% (essential foodstuffs, mass transit, domestic LPG, and apparel under threshold limits), 12% (processed foods, business class air tickets, and standard manufactured goods), 18% (most commercial services, industrial inputs, banking, telecom, and IT software), and 28% (luxury automobiles, tobacco, carbonated beverages, and high-end consumer appliances). Fresh unprocessed agricultural produce is zero-rated (0% GST).",
+        "Input Tax Credit (ITC) Elimination of Cascading Taxes: The cornerstone of the GST regime is the seamless availability of Input Tax Credit. Registered businesses pay GST on business inputs, capital machinery, and professional services, and subsequently offset these payments against the output GST collected from end clients. This mechanism prevents the historical cascading tax-on-tax burden, ensuring tax liability is restricted exclusively to net added economic value."
+    ],
     intro: 'Calculate GST on an amount or extract GST from an inclusive price.',
     keywords: 'GST calculator India, GST inclusive calculator',
     how: [
@@ -1031,6 +1055,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'sip': {
+    article: [
+        "Principles of Systematic Investment Plans (SIP) in Wealth Accumulation: A Systematic Investment Plan is a disciplined investment strategy that allows individuals to allocate a fixed sum of money into mutual funds at regular intervals (typically monthly or quarterly) rather than deploying an irregular lump sum. SIPs enable retail investors to harness the twin benefits of rupee cost averaging and exponential compound interest over extended multi-year investment horizons.",
+        "The Future Value of Annuity Formula: Financial projections for periodic mutual fund contributions are governed by the compound interest annuity formula: M = P × [((1 + i)^n − 1) ÷ i] × (1 + i). In this equation, M represents the expected maturity valuation, P is the recurring periodic installment amount, i is the periodic rate of return (annual expected return percentage divided by 1200), and n corresponds to the total number of monthly contributions made.",
+        "Mechanics of Rupee Cost Averaging: Rupee cost averaging eliminates the stress and risks associated with market timing. When equity markets experience downward corrections or volatility, your fixed monthly allocation automatically purchases a higher number of mutual fund units at lower Net Asset Values (NAV). Conversely, when markets rally, fewer units are purchased. Over full multi-year macroeconomic market cycles, this brings down your average acquisition cost per unit and optimizes long-term capital compounding.",
+        "Indian Capital Gains Taxation on Mutual Fund Redemptions: Following updated Finance Act regulations, capital gains derived from the redemption of equity-oriented mutual fund units held for longer than 12 months are classified as Long-Term Capital Gains (LTCG) and taxed at a flat rate of 12.5% on aggregate gains exceeding ₹1,25,000 per financial year. Units redeemed within 12 months incur Short-Term Capital Gains (STCG) tax at a flat rate of 20%."
+    ],
     intro: 'Estimate how regular monthly SIP contributions could grow at an assumed annual return.',
     keywords: 'SIP calculator India, mutual fund SIP calculator',
     how: [
@@ -1048,6 +1078,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'json-formatter': {
+    article: [
+        "JavaScript Object Notation (JSON) Standards & RFC 8259: Defined under IETF RFC 8259 and ECMA-404, JSON is a lightweight, language-independent, text-based data interchange format. It relies on two universal structural patterns: collections of name/value pairs (objects represented with curly braces `{}`) and ordered lists of values (arrays represented with square brackets `[]`). Because of its minimal syntax, JSON serves as the universal standard for modern RESTful Web APIs, microservices telemetry, and cloud configurations.",
+        "Syntax Validation and Parser Diagnostics: Malformed JSON is one of the most frequent sources of runtime application errors, broken webhook deliveries, and API integration failures. Common pitfalls include unescaped control characters, unquoted property keys, the illegal use of single quotes instead of standard double quotes, and trailing commas after final array or object items. Our client-side validator detects syntax errors instantly, identifying the precise line and column location of parsing exceptions.",
+        "Beautification vs. Minification in Production Engineering: While pretty-printed JSON with 2-space or 4-space indentation is critical for developer code reviews, debugging, and human readability, production systems require minification. Minifying JSON strips all redundant whitespace characters, carriage returns, and indentation tabs, reducing payload byte sizes by 25% to 40% to conserve network bandwidth and improve HTTP/2 transfer speeds.",
+        "Browser Sandbox Security & Zero-Leakage Guarantee: Many online developer utilities transmit user-supplied JSON to backend servers for server-side parsing, exposing sensitive database connection strings, JWT bearer tokens, customer credentials, and private internal architecture. OrbitBoard executes all formatting, validation, tree analysis, and key-sorting algorithms locally inside your browser memory using native V8 engine APIs without any remote network telemetry."
+    ],
     intro: 'Format and validate JSON directly in your browser.',
     keywords: 'JSON formatter, JSON validator, JSON beautifier online',
     how: [
@@ -1082,6 +1118,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'base64': {
+    article: [
+        "Understanding Base64 Binary-to-Text Encoding (RFC 4648): Base64 is a binary-to-text encoding scheme defined under IETF RFC 4648 that represents arbitrary binary data using an alphabet of 64 printable ASCII characters (A–Z, a–z, 0–9, `+`, and `/`). It was engineered to ensure that binary assets—such as images, cryptographic keys, and compiled byte arrays—can be reliably transferred across legacy text-only network protocols like SMTP email and HTTP headers without modification or data corruption.",
+        "The Mathematical Transformation Process: Base64 works by grouping binary input data into chunks of 24 bits (3 bytes of 8 bits each). These 24 bits are subsequently subdivided into 4 groups of 6 bits each. Each 6-bit value (which can represent an integer from 0 to 63) is mapped to its corresponding ASCII character in the Base64 index table. When input data does not divide evenly into 3 bytes, padding characters (`=`) are appended to complete the 4-character block.",
+        "Standard Base64 vs. URL-Safe Base64: Standard Base64 utilizes the plus (`+`) and forward slash (`/`) characters, which have reserved semantic meanings in URL query strings and URI path routing. URL-safe Base64 substitutes the plus sign with a hyphen (`-`), the forward slash with an underscore (`_`), and frequently omits trailing equals padding to prevent transmission breakage when tokens or serialized state are included in web URLs.",
+        "Client-Side Encoding & Unicode Handling: Standard JavaScript functions like `btoa()` and `atob()` were originally designed for ASCII Latin-1 strings and throw errors when handling multi-byte Unicode characters or emojis. OrbitBoard’s client-side implementation properly trans助des UTF-8 byte sequences prior to Base64 mapping, ensuring 100% data fidelity when encoding international alphabets, mathematical symbols, and emojis directly in your browser."
+    ],
     intro: 'Encode text to Base64 or decode Base64 back into readable text.',
     keywords: 'Base64 encoder decoder online',
     how: [
@@ -1099,6 +1141,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'jwt-decoder': {
+    article: [
+        "The JSON Web Token (JWT) Standard (RFC 7519): A JSON Web Token is a compact, URL-safe container format utilized to transmit cryptographically verifiable claims between two parties. Defined in IETF RFC 7519, JWTs are universally adopted for stateless user authentication, OAuth 2.0 authorization flows, and single-sign-on (SSO) identity federation across modern web applications.",
+        "Structural Anatomy: Header, Payload, and Signature: A standard JWT comprises three distinct segments concatenated by periods (`.`): 1) Header: A Base64URL-encoded JSON block identifying the token type (`typ: \"JWT\"`) and the cryptographic signing algorithm (`alg`, such as HS256, RS256, or ES256); 2) Payload: A Base64URL-encoded JSON object containing registered claims (`sub` for subject ID, `iss` for token issuer, `aud` for audience, `iat` for issued-at timestamp, and `exp` for expiration timestamp), public claims, and custom tenant roles; 3) Signature: A cryptographic hash generated by signing the encoded header and payload using a shared symmetric secret or private key.",
+        "Decoding vs. Cryptographic Verification: It is essential to distinguish between inspecting claims and verifying token authenticity. Decoding a JWT simply reverses the Base64URL encoding to read human-readable JSON; it does not require a secret key and proves nothing about whether the token has been tampered with. True verification requires the recipient server to recompute the cryptographic signature against the token header and payload using the authoritative secret or public key.",
+        "Security Warnings: Sensitive Data & Expiration Auditing: Because the payload of a standard JWT is merely encoded and not encrypted, any entity in possession of the token can read all claims. Never store plain-text passwords, encryption keys, credit card numbers, or personally identifiable medical details in a JWT payload. Use this browser decoder to verify token expiration windows (`exp`), validate issuer domains (`iss`), and troubleshoot claims mismatches during API development."
+    ],
     intro: 'Inspect the header and payload of a JWT without sending the token to a server.',
     keywords: 'JWT decoder, decode JWT online',
     how: [
@@ -1116,6 +1164,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'unix-timestamp': {
+    article: [
+        "The Unix Epoch Standard & POSIX Time: The Unix timestamp (also referred to as Epoch time or POSIX time) is a standardized computing convention that measures the total number of elapsed seconds since 00:00:00 Coordinated Universal Time (UTC) on Thursday, January 1, 1970, excluding leap seconds. It is the dominant timestamp representation across operating systems, relational databases (PostgreSQL, MySQL), and cloud logging frameworks.",
+        "Overcoming Timezone Ambiguity in Distributed Systems: Storing human-readable calendar strings in databases often introduces bugs due to localized daylight saving time (DST) shifts, regional timezone offsets, and differing international calendar formatting conventions. Unix timestamps represent a single, universally synchronized integer value that remains constant across all geographical locations, allowing distributed servers to sequence transactional records without ambiguity.",
+        "Seconds vs. Milliseconds in Modern Web Environments: Unix systems and standard C/Python libraries traditionally express timestamps in 10-digit integers representing seconds. In contrast, modern JavaScript (`Date.now()`), Java, and MongoDB record timestamps in 13-digit integers representing milliseconds. This converter automatically detects input bit-depth, converting seamlessly between seconds, milliseconds, ISO 8601 strings, UTC, and your local browser timezone.",
+        "The Year 2038 Problem (Y2038): Legacy 32-bit computing systems store Unix timestamps as signed 32-bit integers, which can only count up to 2,147,483,647 seconds. On January 19, 2038, at 03:14:07 UTC, 32-bit counters will overflow, wrapping to negative numbers and misinterpreting the date as December 13, 1901. Modern 64-bit architectures have expanded this ceiling to over 292 billion years, safely future-proofing contemporary software."
+    ],
     intro: 'Convert Unix timestamps to UTC dates and convert date/time values back to Unix seconds.',
     keywords: 'Unix timestamp converter, epoch converter',
     how: [
@@ -1167,6 +1221,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'gratuity-calculator': {
+    article: [
+        "Statutory Background of the Payment of Gratuity Act, 1972: Gratuity is a statutory terminal retirement benefit mandated by the Indian Parliament under the Payment of Gratuity Act, 1972. It represents a lump-sum monetary payment made by an employer to an employee in appreciation of prolonged, loyal, and continuous service upon separation, resignation, superannuation, retirement, or permanent incapacitation.",
+        "Eligibility Thresholds & the Five-Year Continuous Service Rule: To legally qualify for statutory gratuity in an establishment employing 10 or more individuals, an employee must have rendered continuous service of at least five full years with the employer (Section 4(1)). The five-year continuity condition is explicitly waived if termination occurs due to employee death, permanent total disablement resulting from accident or disease, or for fixed-term contract employees under the newer Social Security Code provisions.",
+        "The Statutory 15/26 Formula for Covered Establishments: For organizations governed under the Gratuity Act, gratuity calculation uses the formula: Gratuity = [15 × Last Drawn Basic Salary & Dearness Allowance × Completed Years of Service] ÷ 26. In this statutory formula, 26 represents the legally recognized working days in a calendar month (excluding four Sundays), and 15 represents half a month’s statutory wages. If the service duration in the final year exceeds six months (e.g. 6 years and 7 months), it is legally rounded up to 7 completed years.",
+        "Taxation Exemptions under Section 10(10): Under Section 10(10) of the Income Tax Act, 1961, statutory gratuity received by private sector employees covered under the Act is exempt from personal income tax up to a maximum lifetime statutory ceiling of ₹20,00,000 (Twenty Lakh Rupees). Any gratuity payout exceeding this statutory limit is aggregated with taxable salary earnings in the year of receipt and taxed at applicable slab rates."
+    ],
     intro: 'Estimate gratuity from last drawn wages and service duration using the common 15/26 formula.',
     keywords: 'gratuity calculator India, gratuity calculation, gratuity amount calculator',
     how: [
@@ -1185,6 +1245,12 @@ export const TOOL_CONTENT = {
     ]
   },
   'income-tax-india': {
+    article: [
+        "Statutory Framework for Indian Personal Taxation (AY 2026–27 / FY 2025–26): Individual income taxation in India is administered under the Income Tax Act, 1961, by the Central Board of Direct Taxes (CBDT). Annual tax liabilities depend on the taxpayer’s residential status, total composite taxable earnings, applicable statutory deductions, and the election of either the default New Tax Regime (Section 115BAC) or the traditional Old Tax Regime.",
+        "The New Tax Regime (Section 115BAC) Detailed Slabs: Following amendments under recent Union Budgets, the New Tax Regime provides streamlined progressive brackets: Nil tax up to ₹4,00,000; 5% from ₹4,00,001 to ₹8,00,000; 10% from ₹8,00,001 to ₹12,00,000; 15% from ₹12,00,001 to ₹16,00,000; 20% from ₹16,00,001 to ₹20,00,000; 25% from ₹20,00,001 to ₹24,00,000; and 30% on income exceeding ₹24,00,000. For salaried employees, a standard deduction of ₹75,000 applies automatically, and a Section 87A rebate of up to ₹60,000 applies to resident individuals with ordinary taxable income up to ₹12,00,000 (salary up to ₹12.75 Lakh after the standard deduction). Special-rate income is excluded and marginal relief may apply just above the threshold.",
+        "The Old Tax Regime & Chapter VI-A Deductions: The Old Tax Regime maintains traditional brackets (Nil up to ₹2.5L, 5% up to ₹5L, 20% up to ₹10L, and 30% above ₹10L) with a standard deduction of ₹50,000. However, it permits extensive itemized deductions: Section 80C (up to ₹1.5L across EPF, PPF, ELSS, life insurance), Section 80D (health insurance premiums up to ₹25,000 for self/family and ₹50,000 for senior citizen parents), Section 24(b) (home loan interest up to ₹2,00,000 on self-occupied property), and Section 10(13A) HRA exemption. Salaried employees claiming total annual deductions exceeding ₹3.75 Lakh to ₹4.0 Lakh frequently find the Old Regime mathematically advantageous.",
+        "Surcharge and Mandatory Health & Education Cess: On the total calculated basic income tax, a mandatory 4% Health and Education Cess is levied across all taxpayer brackets. For high-net-worth individuals earning total income above ₹50 Lakh, graduated surcharges apply (10% for income between ₹50L–₹1Cr, 15% for ₹1Cr–₹2Cr, and 25% above ₹2Cr under the New Regime), subject to statutory marginal relief protections."
+    ],
     intro: 'Estimate Indian individual income tax for AY 2026-27 using the current slabs, standard deduction, rebate and health & education cess.',
     keywords: 'income tax calculator India FY 2026-27, AY 2026-27 tax calculator, new tax regime calculator',
     how: [

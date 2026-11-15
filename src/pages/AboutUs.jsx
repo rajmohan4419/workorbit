@@ -83,6 +83,27 @@ export default function AboutUs() {
 
           <section className="space-y-4 border-t border-[var(--orbit-border)] pt-8">
             <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
+              <Globe size={18} className="text-accent-600" />
+              Author & Publisher Transparency
+            </h2>
+            <div className="rounded-2xl border border-[var(--orbit-border)] bg-stone-50 dark:bg-stone-900/50 p-5 space-y-3 text-sm text-stone-600 dark:text-stone-300 leading-7">
+              <p>
+                OrbitBoard is an independent digital utility platform created and maintained by <strong>Rajmohan</strong> and a dedicated team of software developers and finance enthusiasts based in India.
+              </p>
+              <p>
+                Our mission is to build zero-bloat, privacy-respecting calculators and developer utilities that process information 100% locally on your device. We verify our financial calculations against official statutory frameworks:
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-xs text-stone-600 dark:text-stone-400">
+                <li><strong>Indian Taxation:</strong> Central Board of Direct Taxes (CBDT) guidelines & Income Tax Act, 1961 (FY 2024–25 & FY 2025–26).</li>
+                <li><strong>Banking & Amortization:</strong> Reserve Bank of India (RBI) master circulars on loan disclosures and reducing-balance calculations.</li>
+                <li><strong>Retirement Benefits:</strong> Employees' Provident Fund and Miscellaneous Provisions Act, 1952, and the Payment of Gratuity Act, 1972.</li>
+                <li><strong>Developer Standards:</strong> IETF RFC specifications (including RFC 7519 for JWT, RFC 4648 for Base64) and ECMA International standards.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-[var(--orbit-border)] pt-8">
+            <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
               <HeartHandshake size={18} className="text-accent-600" />
               How OrbitBoard Remains Free
             </h2>

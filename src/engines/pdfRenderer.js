@@ -17,6 +17,7 @@ export async function extractPdfText(file) {
 export async function renderPdfPages(file, { scale = 1.25, format = 'image/jpeg', quality = 0.9, onProgress } = {}) {
   const pdfDocument = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
   const pages = [];
+  onProgress?.(0, pdfDocument.numPages);
   for (let number = 1; number <= pdfDocument.numPages; number += 1) {
     const page = await pdfDocument.getPage(number);
     const viewport = page.getViewport({ scale });
