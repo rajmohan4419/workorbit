@@ -771,6 +771,7 @@ export default function ToolPage() {
     return <NotFound />;
   }
 
+  const GuideContainer = slug === 'gst-invoice-generator' ? 'details' : 'div';
   const related = LISTED_TOOLS.filter(t => t.category === tool.category && t.slug !== tool.slug).slice(0, 4);
 
   return (
@@ -781,17 +782,17 @@ export default function ToolPage() {
         canonical={canonicalUrl}
         schema={structuredData}
       />
-      <QuickAccessLeftSidebar />
+      {slug === 'gst-invoice-generator' ? <aside className="invoice-app-nav"><Link to="/" className="invoice-app-brand">Orbit<span>Board</span></Link><nav aria-label="Invoicing navigation"><a href="#tool-workspace" aria-current="page">▤ Invoicing</a><Link to="/account">Business settings</Link><a href="mailto:support@orbitboard.in">Support</a></nav><Link className="invoice-back" to="/tools">← Back to tools</Link></aside> : <QuickAccessLeftSidebar />}
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <a href="#tool-workspace" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-xl focus:bg-accent-600 focus:text-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold">Skip to tool</a>
         <div>
-          <ToolsHomeHeader />
+          {slug !== 'gst-invoice-generator' && <><ToolsHomeHeader />
           <ToolHeaderStrip
             tool={tool}
             info={info}
             workspaceRef={workspaceRef}
             onOpenShareModal={() => setIsShareModalOpen(true)}
-          />
+          /></>}
 
           <ToolShareContext.Provider value={shareContextValue}>
             <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-6">
@@ -818,7 +819,7 @@ export default function ToolPage() {
 
           {adEligible && slug !== 'gst-invoice-generator' && <AdSenseUnit slot="" />}
 
-          <div className="space-y-6 pt-8 border-t border-[var(--orbit-border)]">
+          <GuideContainer className="invoice-help">{slug === 'gst-invoice-generator' && <summary>Invoice help & supported features</summary>}<div className="space-y-6 pt-8 border-t border-[var(--orbit-border)]">
             <h2 className="text-xl font-black text-stone-900 dark:text-stone-100">Tool Guide & Publisher Information</h2>
 
             <section className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-6 space-y-4">
@@ -880,6 +881,7 @@ export default function ToolPage() {
             </section>
           </div>
 
+          </GuideContainer>
           <div className="pt-8 border-t border-[var(--orbit-border)]">
             <p className="text-xs font-bold uppercase tracking-wider text-accent-700 dark:text-accent-400 mb-4">
               More {tool.category} Tools
@@ -919,7 +921,7 @@ export default function ToolPage() {
       </ToolShareContext.Provider>
       </div>
 
-      <ToolsHomeFooter />
+      {slug !== 'gst-invoice-generator' && <ToolsHomeFooter />}
       </div>
     </div>
   );
