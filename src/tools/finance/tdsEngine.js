@@ -2,12 +2,15 @@
  * TDS Calculation Engine (India)
  * Table-driven statutory configuration for Sections 192, 194A, 194C, 194H, 194I, 194J.
  * Incorporates Section 206AA higher penal rate (20%) when valid PAN is not provided.
- * Complies with FY 2025-26 / FY 2026-27 statutory provisions.
+ * FY 2025-26 only (Income-tax Act, 1961). TY 2026-27 section migration is not modelled.
  */
 
 import { formatINR, money } from '../../lib/toolFormat.js';
 import { calculateTaxSlabs } from './payslipEngine.js';
 
+export const TDS_RULE_SOURCE = 'https://incometaxindia.gov.in/news/highlights-to-finance-act-2025.pdf';
+export const TDS_RATE_SOURCE = 'https://www.incometaxindia.gov.in/w/tds-rates-1';
+export const TDS_VERIFIED_ON = '2026-11-15';
 export const TDS_CONFIG = Object.freeze({
   '192': {
     section: '192',
@@ -20,9 +23,9 @@ export const TDS_CONFIG = Object.freeze({
   '194A': {
     section: '194A',
     title: 'Interest other than Securities',
-    description: 'Interest on bank fixed deposits, recurring deposits, or private loans.',
-    threshold: 40000,
-    seniorThreshold: 50000,
+    description: 'Interest from banks/co-operative banks/post office time deposits. Other payer thresholds are outside this estimator.',
+    threshold: 50000,
+    seniorThreshold: 100000,
     defaultRate: 0.10,
     challan: 'ITNS 281 (Form 26Q)',
   },
@@ -40,15 +43,15 @@ export const TDS_CONFIG = Object.freeze({
     section: '194H',
     title: 'Commission or Brokerage',
     description: 'Commission or brokerage paid to agents or brokers.',
-    threshold: 15000,
-    defaultRate: 0.05,
+    threshold: 20000,
+    defaultRate: 0.02,
     challan: 'ITNS 281 (Form 26Q)',
   },
   '194I': {
     section: '194I',
     title: 'Rent on Property / Equipment',
-    description: 'Rent paid for land, building, furniture, or plant & machinery.',
-    threshold: 240000,
+    description: 'Rent for one month or part month (not annual rent): land, building, furniture, plant or machinery.',
+    threshold: 50000,
     rateMachinery: 0.02,
     rateBuilding: 0.10,
     challan: 'ITNS 281 (Form 26Q)',
@@ -57,7 +60,7 @@ export const TDS_CONFIG = Object.freeze({
     section: '194J',
     title: 'Fees for Professional or Technical Services',
     description: 'Professional fees (legal, medical, engineering, CA), technical services (FTS), or royalty.',
-    threshold: 30000,
+    threshold: 50000,
     rateTechnical: 0.02,
     rateProfessional: 0.10,
     challan: 'ITNS 281 (Form 26Q)',
@@ -86,29 +89,6 @@ export function calculateTds({
   const cfg = TDS_CONFIG[section];
   if (!cfg) {
     throw new Error(`Unknown TDS section: ${section}`);
-  }
-
-  // Section 206AA: Higher penal rate of 20% strictly applies when valid PAN is not provided
-  const hasValidPan = panProvided !== false && (pan === '' || isValidPan(pan));
-  if (!hasValidPan) {
-    const penalRate = 0.20;
-    const tdsAmount = Math.round(amt * penalRate);
-    return {
-      section,
-      amount: amt,
-      rate: penalRate,
-      ratePct: '20%',
-      threshold: cfg.threshold || 0,
-      tdsAmount,
-      netPayable: Math.max(0, amt - tdsAmount),
-      reason: 'Section 206AA: Higher rate applied due to missing or invalid PAN',
-      isExempt: false,
-      isPenal: true,
-      challan: cfg.challan,
-      formattedAmount: formatINR(amt),
-      formattedTds: formatINR(tdsAmount),
-      formattedNetPayable: formatINR(Math.max(0, amt - tdsAmount)),
-    };
   }
 
   // Section 192 (Salaries)
@@ -176,6 +156,30 @@ export function calculateTds({
       formattedNetPayable: formatINR(amt),
     };
   }
+
+  // Section 206AA: Higher penal rate of 20% strictly applies when valid PAN is not provided
+  const hasValidPan = panProvided !== false && (pan === '' || isValidPan(pan));
+  if (!hasValidPan) {
+    const penalRate = Math.max(0.20, rate);
+    const tdsAmount = Math.round(amt * penalRate);
+    return {
+      section,
+      amount: amt,
+      rate: penalRate,
+      ratePct: '20%',
+      threshold,
+      tdsAmount,
+      netPayable: Math.max(0, amt - tdsAmount),
+      reason: 'Section 206AA: Higher rate applied due to missing or invalid PAN',
+      isExempt: false,
+      isPenal: true,
+      challan: cfg.challan,
+      formattedAmount: formatINR(amt),
+      formattedTds: formatINR(tdsAmount),
+      formattedNetPayable: formatINR(Math.max(0, amt - tdsAmount)),
+    };
+  }
+
 
   const tds = Math.round(amt * rate);
   const net = amt - tds;

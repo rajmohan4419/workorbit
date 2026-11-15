@@ -299,7 +299,7 @@ export function SpreadsheetFileTool({ type }) {
         const csv = await xlsxToCsv(file); setText(csv); setStatus('CSV generated locally.'); return;
       }
       const input = isCsv && file ? await file.text() : text;
-      const bytes = isJson ? jsonToXlsx(text) : csvToXlsx(input);
+      const bytes = isJson ? jsonToXlsx(text) : await csvToXlsx(input);
       const finalSlug = isCsv ? 'csv-to-excel' : 'json-to-excel';
       const filename = `orbitboard-${finalSlug}.xlsx`;
       downloadBlob(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename, finalSlug);

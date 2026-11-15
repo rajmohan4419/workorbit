@@ -1,4 +1,4 @@
-import { strictAmount, strictDate } from './financeValidation.js';
+import { moneyPaise, sumMoney, strictDate } from './financeValidation.js';
 /**
  * Bank Reconciliation Engine
  * High-precision reconciliation between Bank Statements and Accounting Ledgers.
@@ -36,7 +36,9 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
     };
   }
 
-  const ref = String(row[mapping.reference] || '').trim();
+  if (String(row[mapping.description] ?? '').length > 1000 || String(row[mapping.reference] ?? '').length > 256) return { transaction:null,error:`Row ${rowNum}: Reference exceeds 256 characters or description exceeds 1,000 characters. Shorten it before matching.` };
+
+  const ref = String(row[mapping.reference] ?? '').trim();
   const desc = String(row[mapping.description] || '').trim();
 
   let amount;
@@ -151,8 +153,8 @@ export function normalizeTransaction(row, mapping, source = 'bank', rowIndex = 0
       dateObj,
       description: desc,
       reference: ref,
-      amount: Math.round(amount * 100) / 100, // Two decimals precision
-      absAmount: Math.round(Math.abs(amount) * 100) / 100,
+      amount, // Already rounded once to integer paise by parseAmount
+      absAmount: Math.abs(amount),
       isMoneyIn: amount >= 0,
       reconciled: false,
       matchedId: null,
@@ -173,7 +175,7 @@ export function parseValidDate(value) {
   const date = strictDate(value);
   return date ? new Date(`${date}T00:00:00Z`) : null;
 }
-export function parseAmount(value) { return strictAmount(value, 0); }
+export function parseAmount(value) { return moneyPaise(value, 0) / 100; }
 
 function hashDeterministic(str) {
   let hash = 0;
@@ -198,168 +200,52 @@ function hashDeterministic(str) {
  * @param {number} [options.openingLedgerBalance=0]
  */
 export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
+  if (bankTxns.length > 2000 || ledgerTxns.length > 2000) throw new Error('Bank reconciliation supports up to 2,000 rows per source. Split the period and retry.');
+  if (bankTxns.length * ledgerTxns.length > 500000) throw new Error('This bank/ledger combination exceeds 5 lakh candidate comparisons. Split both files into smaller matching periods.');
   const dateToleranceDays = options.dateToleranceDays ?? 3;
-  const closingBankBalance = round2(Number(options.closingBankBalance) || 0);
-  const closingLedgerBalance = round2(Number(options.closingLedgerBalance) || 0);
+  if (!Number.isInteger(dateToleranceDays) || dateToleranceDays < 0 || dateToleranceDays > 30) throw new Error('Date tolerance must be a whole number from 0 to 30 days.');
+  const closingBankBalance = moneyPaise(options.closingBankBalance ?? 0) / 100;
+  const closingLedgerBalance = moneyPaise(options.closingLedgerBalance ?? 0) / 100;
+  if (![closingBankBalance, closingLedgerBalance].every(Number.isFinite)) throw new Error('Enter valid closing balances.');
 
-  const bank = bankTxns.map(t => ({ ...t, reconciled: false, matchedId: null }));
-  const ledger = ledgerTxns.map(t => ({ ...t, reconciled: false, matchedId: null }));
+  const bank = bankTxns.map(t => ({ ...t, reconciled: false, matchedId: null, isAmbiguous:false, matchConfidence:0, matchReason:'', competingCandidateCount:0 }));
+  const ledger = ledgerTxns.map(t => ({ ...t, reconciled: false, matchedId: null, isAmbiguous:false, matchConfidence:0, matchReason:'', competingCandidateCount:0 }));
 
   const matches = [];
 
-  // Pass 1: Exact Reference + Exact Amount (Highest priority)
-  bank.forEach(b => {
-    if (b.reconciled || !b.reference) return;
-
-    // Find all matching candidates in ledger
-    const candidates = ledger.filter(
-      l =>
-        !l.reconciled &&
-        l.isMoneyIn === b.isMoneyIn &&
-        Math.abs(l.absAmount - b.absAmount) < 0.005 &&
-        l.reference &&
-        l.reference.toLowerCase() === b.reference.toLowerCase()
-    );
-
-    if (candidates.length === 1) {
-      const candidate = candidates[0];
-      b.reconciled = true;
-      b.matchedId = candidate.id;
-      b.matchConfidence = 100;
-      b.matchReason = 'Exact Reference & Amount Match';
-
-      candidate.reconciled = true;
-      candidate.matchedId = b.id;
-      candidate.matchConfidence = 100;
-      candidate.matchReason = 'Exact Reference & Amount Match';
-
-      matches.push({
-        id: `match-${b.id}-${candidate.id}`,
-        bank: b,
-        ledger: candidate,
-        type: 'exact_ref',
-        confidence: 100,
-        isAmbiguous: false,
-        difference: 0,
-      });
-    } else if (candidates.length > 1) {
-      // Multiple candidates with same reference and amount: Rank by date
-      candidates.sort((c1, c2) => Math.abs(c1.dateObj - b.dateObj) - Math.abs(c2.dateObj - b.dateObj));
-      const best = candidates[0];
-      const secondBest = candidates[1];
-      const isTie = Math.abs(best.dateObj - b.dateObj) === Math.abs(secondBest.dateObj - b.dateObj);
-
-      b.reconciled = true;
-      b.matchedId = best.id;
-      b.matchConfidence = isTie ? 75 : 90;
-      b.matchReason = isTie
-        ? `Ambiguous: ${candidates.length} identical ledger entries with Ref "${b.reference}"`
-        : 'Exact Reference & Nearest Date';
-      b.isAmbiguous = isTie;
-      b.competingCandidateCount = candidates.length;
-
-      best.reconciled = true;
-      best.matchedId = b.id;
-      best.matchConfidence = b.matchConfidence;
-      best.matchReason = b.matchReason;
-      best.isAmbiguous = isTie;
-
-      matches.push({
-        id: `match-${b.id}-${best.id}`,
-        bank: b,
-        ledger: best,
-        type: 'exact_ref',
-        confidence: b.matchConfidence,
-        isAmbiguous: isTie,
-        candidateCount: candidates.length,
-        difference: 0,
-      });
+  // Proposals are calculated against the complete candidate set. A proposal is
+  // confirmed only if it is unique in BOTH directions. Ties never consume rows.
+  const proposals = bank.map(b => {
+    const equal = ledger.filter(l => l.isMoneyIn === b.isMoneyIn && moneyPaise(l.amount) === moneyPaise(b.amount));
+    const exact = equal.filter(l => b.reference && l.reference && l.reference.toLowerCase() === b.reference.toLowerCase());
+    const ranked = (exact.length ? exact : equal).map(candidate => {
+      const days = Math.abs(candidate.dateObj - b.dateObj) / 86400000;
+      const similarity = calculateTokenSimilarity(b.description, candidate.description).score;
+      return { candidate, days, score: exact.length ? 1000 - days : (days <= dateToleranceDays ? 100 - days * 40 / Math.max(1,dateToleranceDays) : 0) + (similarity >= .5 ? similarity * 50 : 0) };
+    }).filter(c => exact.length || c.days <= dateToleranceDays || c.score > 0).sort((a,c) => c.score - a.score || a.candidate.id.localeCompare(c.candidate.id));
+    if (!ranked.length) return null;
+    const top = ranked[0];
+    return { b, ranked, top, exact: Boolean(exact.length), tied: ranked.length > 1 && Math.abs(top.score - ranked[1].score) < (exact.length ? .001 : 5) };
+  }).filter(Boolean);
+  const claims = new Map();
+  for (const p of proposals) for (const c of p.ranked.filter(c => p.top.score - c.score < (p.exact ? .001 : 5))) {
+    claims.set(c.candidate.id, (claims.get(c.candidate.id) || 0) + 1);
+  }
+  for (const {b, ranked, top, tied, exact} of proposals) {
+    const l = top.candidate;
+    const ambiguous = tied || claims.get(l.id) > 1;
+    const reason = ambiguous ? 'Ambiguous candidates: no pair confirmed; review both sources.' : exact ? 'Exact Reference & Amount Match' : 'Exact Amount & Date/Description Candidate';
+    b.isAmbiguous = ambiguous; b.competingCandidateCount = ranked.length;
+    b.matchReason = reason; b.matchConfidence = ambiguous ? 0 : exact ? 100 : 90;
+    if (!ambiguous) {
+      b.reconciled = l.reconciled = true; b.matchedId = l.id; l.matchedId = b.id;
+      l.matchReason = reason; l.matchConfidence = b.matchConfidence;
     }
-  });
-
-  // Pass 2: Exact Amount + Scored Date & Similarity Ranking
-  bank.forEach(b => {
-    if (b.reconciled) return;
-
-    // Find all un-reconciled ledger items with identical amount & direction
-    const eligible = ledger.filter(
-      l => !l.reconciled && l.isMoneyIn === b.isMoneyIn && Math.abs(l.absAmount - b.absAmount) < 0.005
-    );
-
-    if (eligible.length === 0) return;
-
-    // Score each eligible candidate
-    const scored = eligible.map(candidate => {
-      const dayDiff = Math.abs(b.dateObj - candidate.dateObj) / (1000 * 60 * 60 * 24);
-      const similarity = calculateTokenSimilarity(b.description, candidate.description);
-
-      // Criteria: Must be within date tolerance OR have high description similarity
-      const isDateValid = dayDiff <= dateToleranceDays;
-      const isDescSimilar = similarity.score >= 0.5;
-
-      let score = 0;
-      if (isDateValid) {
-        // Date score: 100 on same day, down to 60 at tolerance limit
-        score += Math.max(0, 100 - (dayDiff / Math.max(1, dateToleranceDays)) * 40);
-      }
-      if (isDescSimilar) {
-        score += similarity.score * 50;
-      }
-
-      return {
-        candidate,
-        dayDiff,
-        similarity,
-        score,
-        isEligible: isDateValid || isDescSimilar,
-      };
-    }).filter(s => s.isEligible);
-
-    if (scored.length === 0) return;
-
-    // Rank candidates by highest score
-    scored.sort((a, bScore) => bScore.score - a.score);
-
-    const winner = scored[0];
-    const runnerUp = scored.length > 1 ? scored[1] : null;
-
-    // Detect ties or ambiguous duplicates
-    const isAmbiguous = runnerUp && Math.abs(winner.score - runnerUp.score) < 5;
-
-    const confidence = isAmbiguous
-      ? 65
-      : winner.dayDiff === 0
-      ? 95
-      : Math.max(70, Math.round(95 - winner.dayDiff * 4));
-
-    b.reconciled = true;
-    b.matchedId = winner.candidate.id;
-    b.matchConfidence = confidence;
-    b.isAmbiguous = isAmbiguous;
-    b.competingCandidateCount = scored.length;
-    b.matchReason = isAmbiguous
-      ? `Ambiguous Match: ${scored.length} similar transactions (Day diff: ${Math.round(winner.dayDiff)})`
-      : winner.dayDiff === 0
-      ? 'Exact Amount & Same Day'
-      : `Exact Amount (Within ${Math.round(winner.dayDiff)} days)`;
-
-    winner.candidate.reconciled = true;
-    winner.candidate.matchedId = b.id;
-    winner.candidate.matchConfidence = confidence;
-    winner.candidate.isAmbiguous = isAmbiguous;
-    winner.candidate.matchReason = b.matchReason;
-
-    matches.push({
-      id: `match-${b.id}-${winner.candidate.id}`,
-      bank: b,
-      ledger: winner.candidate,
-      type: winner.similarity.score >= 0.5 ? 'fuzzy_desc' : 'date_amount',
-      confidence,
-      isAmbiguous,
-      candidateCount: scored.length,
-      difference: 0,
-    });
-  });
+    matches.push({ id:`match-${b.id}-${l.id}`, bank:b, ledger:l,
+      type:exact ? 'exact_ref' : 'date_amount', confidence:b.matchConfidence,
+      isAmbiguous:ambiguous, candidateCount:ranked.length,
+      candidates:ranked.map(c=>({id:c.candidate.id,rowNumber:c.candidate.rowNumber,date:c.candidate.date,reference:c.candidate.reference})), difference:0 });
+  }
 
   // Financial Figures & Standard Accounting Bank Reconciliation Statement
   const bankMatched = bank.filter(t => t.reconciled);
@@ -367,37 +253,29 @@ export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
   const ledgerMatched = ledger.filter(t => t.reconciled);
   const ledgerUnmatched = ledger.filter(t => !t.reconciled);
 
-  const bankTotalTxnAmt = round2(bank.reduce((sum, t) => sum + t.amount, 0));
-  const ledgerTotalTxnAmt = round2(ledger.reduce((sum, t) => sum + t.amount, 0));
+  const bankTotalTxnAmt = sumMoney(bank.map(t => t.amount));
+  const ledgerTotalTxnAmt = sumMoney(ledger.map(t => t.amount));
 
   // Bank entries not recorded in Books
-  const bankChargesOrDebits = round2(
-    bankUnmatched.filter(t => !t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
-  );
-  const bankDirectDeposits = round2(
-    bankUnmatched.filter(t => t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
-  );
+  const bankChargesOrDebits = sumMoney(bankUnmatched.filter(t => !t.isMoneyIn).map(t => t.absAmount));
+  const bankDirectDeposits = sumMoney(bankUnmatched.filter(t => t.isMoneyIn).map(t => t.absAmount));
 
   // Book entries not cleared by Bank
-  const unpresentedChecks = round2(
-    ledgerUnmatched.filter(t => !t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
-  );
-  const uncreditedDeposits = round2(
-    ledgerUnmatched.filter(t => t.isMoneyIn).reduce((sum, t) => sum + t.absAmount, 0)
-  );
+  const unpresentedChecks = sumMoney(ledgerUnmatched.filter(t => !t.isMoneyIn).map(t => t.absAmount));
+  const uncreditedDeposits = sumMoney(ledgerUnmatched.filter(t => t.isMoneyIn).map(t => t.absAmount));
 
   // Formal Bank Reconciliation Statement:
   // 1. Adjusted Bank Balance = Closing Bank Balance + Deposits in Transit - Outstanding Cheques
-  const adjustedBankBalance = round2(closingBankBalance + uncreditedDeposits - unpresentedChecks);
+  const adjustedBankBalance = sumMoney([closingBankBalance, uncreditedDeposits, -unpresentedChecks]);
 
   // 2. Adjusted Book Balance = Closing Book Balance + Direct Bank Deposits - Direct Bank Charges
-  const adjustedBookBalance = round2(closingLedgerBalance + bankDirectDeposits - bankChargesOrDebits);
+  const adjustedBookBalance = sumMoney([closingLedgerBalance, bankDirectDeposits, -bankChargesOrDebits]);
 
   // True reconciliation difference (Adjusted Bank Balance vs Adjusted Book Balance)
-  const reconciliationDifference = round2(adjustedBankBalance - adjustedBookBalance);
-  const isStatementReconciled = Math.abs(reconciliationDifference) < 0.01;
+  const reconciliationDifference = sumMoney([adjustedBankBalance, -adjustedBookBalance]);
+  const isStatementReconciled = reconciliationDifference === 0 && !matches.some(m => m.isAmbiguous);
 
-  const netTxnVariance = round2(bankTotalTxnAmt - ledgerTotalTxnAmt);
+  const netTxnVariance = sumMoney([bankTotalTxnAmt, -ledgerTotalTxnAmt]);
   const matchRate = (bank.length + ledger.length) > 0
     ? Math.round(((bankMatched.length + ledgerMatched.length) / (bank.length + ledger.length)) * 100)
     : 0;
@@ -413,7 +291,7 @@ export function reconcileTransactions(bankTxns, ledgerTxns, options = {}) {
     summary: {
       bankTotalTxns: bank.length,
       ledgerTotalTxns: ledger.length,
-      matchedPairsCount: matches.length,
+      matchedPairsCount: matches.filter(m => !m.isAmbiguous).length,
       bankUnmatchedCount: bankUnmatched.length,
       ledgerUnmatchedCount: ledgerUnmatched.length,
       ambiguousMatchesCount: ambiguousCount,
@@ -483,9 +361,6 @@ function extractSignificantWords(str) {
     .filter(w => w.length > 2 && !STOP_WORDS.has(w));
 }
 
-function round2(num) {
-  return Math.round(num * 100) / 100;
-}
 
 /**
  * Built-in Sample Datasets for 1-click Demo

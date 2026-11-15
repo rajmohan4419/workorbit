@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { readFinanceFile, financeSheetRows, mapFinanceRows, FINANCE_SCOPE } from '../../engines/financeImport.js';
 import { exportSpreadsheet, downloadSpreadsheetBlob } from '../../engines/excelEngine.js';
 
@@ -7,10 +7,13 @@ export function FinanceFileImport({ title, fields, detect, validate, onCommit, o
   const [loaded, setLoaded] = useState(null);
   const [sheet, setSheet] = useState('');
   const [header, setHeader] = useState(1);
+  const [dateOrder, setDateOrder] = useState('reject');
   const [mapping, setMapping] = useState({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const request = useRef(0);
+  const committed = useRef(false);
+  useEffect(() => () => { request.current++; }, []);
   const activeStats = useMemo(() => {
     if (!activeRows) return null;
     const errors = activeRows.flatMap((row, index) => validate(row, index));
@@ -25,17 +28,24 @@ export function FinanceFileImport({ title, fields, detect, validate, onCommit, o
     if (!staged || staged.error) return null;
     try {
       if (fields.some(f => f.required && !mapping[f.key])) throw new Error('Map all required fields before confirming.');
-      const rows = mapFinanceRows(staged.rows, mapping, sheet);
+      const rows = mapFinanceRows(staged.rows, mapping, sheet, dateOrder);
       const errors = rows.flatMap((row, index) => validate(row, index));
+      const signatures = new Map();
+      for (const row of rows) {
+        const signature = JSON.stringify(Object.entries(row).filter(([key]) => !key.startsWith('__')));
+        const numbers = signatures.get(signature) || []; numbers.push(row.__sourceRow); signatures.set(signature, numbers);
+      }
+      for (const numbers of signatures.values()) if (numbers.length > 1) for (const rowNumber of numbers) errors.push({rowNumber, message:`Duplicate mapped row (source rows ${numbers.join(', ')}). Correct the file; no row is silently discarded.`});
       const rejected = new Set(errors.map(e => e.rowNumber)).size;
       return { rows, errors, accepted: rows.length - rejected, rejected };
     } catch (e) { return { error: e.message }; }
-  }, [staged, mapping, fields, validate, sheet]);
+  }, [staged, mapping, fields, validate, sheet, dateOrder]);
   async function upload(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     const id = ++request.current;
+    setLoaded(null); setDateOrder('reject'); committed.current = false;
     setBusy(true); setError('');
     try {
       const data = await readFinanceFile(file, allowJson);
@@ -70,15 +80,23 @@ export function FinanceFileImport({ title, fields, detect, validate, onCommit, o
       <label className="block text-sm">Worksheet <select aria-label={`${title} worksheet`} value={sheet} onChange={e => choose(e.target.value, 1)} className="orbit-control max-w-full">{loaded.sheetNames.map(s => <option key={s}>{s}</option>)}</select></label>
       {!loaded.jsonRows && <label className="block text-sm">Header row <input aria-label={`${title} header row`} type="number" min="1" max="100" value={header} onChange={e => choose(sheet, Math.max(1, Math.min(100, Number(e.target.value) || 1)))} className="orbit-control w-24" /></label>}
       {staged?.error ? <p role="alert">{staged.error}</p> : <>
+        <label className="block text-sm">Source date convention
+          <select aria-label={`${title} date convention`} value={dateOrder} onChange={e => setDateOrder(e.target.value)} className="orbit-control w-full">
+            <option value="reject">Require unambiguous dates (YYYY-MM-DD recommended)</option>
+            <option value="dmy">Day first — DD/MM/YYYY (India)</option>
+            <option value="mdy">Month first — MM/DD/YYYY</option>
+          </select>
+        </label>
+        <p className="text-xs">Amounts accept Indian or western comma grouping, ₹ and parentheses for negatives. Money rounds to paise, halves away from zero. Keep identifiers as text in the source; digits already lost by Excel cannot be recovered.</p>
         <div className="grid sm:grid-cols-2 gap-2">{fields.map(field => <label key={field.key} className="min-w-0 text-xs">{field.label}{field.required ? ' *' : ''}
           <select aria-label={`${title} ${field.label}`} className="orbit-control w-full" value={mapping[field.key] || ''} onChange={e => setMapping(m => ({ ...m, [field.key]: e.target.value }))}>
             <option value="">Not supplied</option>{staged.headers.map(h => <option key={h}>{h}</option>)}
           </select>
         </label>)}</div>
         <div className="overflow-x-auto max-h-44"><table className="text-xs"><caption>First five source rows</caption><thead><tr>{staged.headers.map(h => <th key={h} className="p-2">{h}</th>)}</tr></thead><tbody>{staged.rows.slice(0, 5).map((r, i) => <tr key={i}>{staged.headers.map(h => <td key={h} className="p-2 whitespace-nowrap">{r[h] instanceof Date ? r[h].toISOString().slice(0, 10) : String(r[h] ?? '')}</td>)}</tr>)}</tbody></table></div>
-        {preview?.error ? <p role="alert">{preview.error}</p> : <p role="status">{preview?.accepted} accepted / {preview?.rejected} rejected of {staged.rows.length} rows. Rejected rows remain in the report.</p>}
+        {preview?.error ? <p role="alert">{preview.error}</p> : <p role="status">{preview?.accepted} accepted / {preview?.rejected} rejected of {staged.rows.length} rows. Correct rejected or duplicate rows in the source and retry before confirming.</p>}
         <div className="max-h-40 overflow-y-auto text-xs" role="status">{preview?.errors?.slice(0, 100).map((e, i) => <p key={i}>Row {e.rowNumber}: {e.message}</p>)}</div>
-        <button type="button" className="orbit-control border rounded-lg" disabled={!preview?.accepted || busy} onClick={() => { onCommit({ rows: preview.rows, label: `${loaded.name} / ${sheet}`, scope: FINANCE_SCOPE }); setLoaded(null); }}>Confirm mapping and use source</button>
+        <button type="button" className="orbit-control border rounded-lg" disabled={!preview?.accepted || preview?.rejected > 0 || busy} onClick={() => { if (committed.current || !preview?.accepted || preview.rejected || busy) return; committed.current = true; request.current++; onCommit({ rows: preview.rows, label: `${loaded.name} / ${sheet}`, scope: FINANCE_SCOPE }); setLoaded(null); }}>Confirm mapping and use source</button>
       </>}
       <button type="button" onClick={() => setLoaded(null)}>Cancel replacement</button>
     </div>}

@@ -1,3 +1,4 @@
+import { moneyPaise, sumMoney } from '../../engines/financeValidation.js';
 /** Local uploaded GSTR-2B / purchase register matching. No eligibility determination. */
 
 import { formatINR } from '../../lib/toolFormat.js';
@@ -11,7 +12,7 @@ export function normalizeInvoiceNumber(inv) {
 }
 
 export { strictAmount as parseAmount, strictDate as parseDate } from '../../engines/financeValidation.js';
-import { strictAmount as parseAmount, strictDate as parseDate } from '../../engines/financeValidation.js';
+import { strictDate as parseDate } from '../../engines/financeValidation.js';
 
 /**
  * Intelligent column mapping for diverse CSV/XLSX headers.
@@ -117,18 +118,18 @@ export function normalizeInvoiceRecord(row, mapping = {}, source = 'gstr', index
     ? r[mapping.sgst]
     : (r.sgst ?? r.SGST ?? r['State/UT Tax'] ?? r['State/UT Tax (₹)'] ?? r['State Tax'] ?? r['SGST Amount'] ?? null);
 
-  const taxableValue = parseAmount(rawTaxable);
-  const igst = parseAmount(rawIgst);
-  const cgst = parseAmount(rawCgst);
-  const sgst = parseAmount(rawSgst);
+  const taxableValue = moneyPaise(rawTaxable) / 100;
+  const igst = moneyPaise(rawIgst) / 100;
+  const cgst = moneyPaise(rawCgst) / 100;
+  const sgst = moneyPaise(rawSgst) / 100;
   const rawCess = mapping.cess ? r[mapping.cess] : (r.cess ?? r.Cess ?? r['Cess (₹)'] ?? null);
-  const cess = parseAmount(rawCess);
+  const cess = moneyPaise(rawCess) / 100;
   const taxPresent = Object.fromEntries(Object.entries({ igst: rawIgst, cgst: rawCgst, sgst: rawSgst, cess: rawCess }).map(([k, v]) => [k, v != null && String(v).trim() !== '']));
   const errors = [];
   if (!Number.isFinite(taxableValue)) errors.push('Taxable value must be a finite amount.');
   for (const [key, value] of Object.entries({ igst, cgst, sgst, cess })) if (taxPresent[key] && !Number.isFinite(value)) errors.push(`${key.toUpperCase()} must be a finite amount.`);
   if (rawDate != null && String(rawDate).trim() !== '' && !parseDate(rawDate)) errors.push('Invalid calendar date; use YYYY-MM-DD or DD/MM/YYYY.');
-  const totalTax = [igst, cgst, sgst, cess].reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0);
+  const totalTax = sumMoney([igst, cgst, sgst, cess].filter(Number.isFinite));
 
   if ([taxableValue, igst, cgst, sgst, cess].some(v => Number.isFinite(v) && Math.abs(v) > 1e12)) errors.push('Amount exceeds supported per-field limit of 1 trillion. Split or correct this record.');
   const normGstin = normalizeGstin(rawGstin);
@@ -155,7 +156,7 @@ export function normalizeInvoiceRecord(row, mapping = {}, source = 'gstr', index
     cgst: taxPresent.cgst ? cgst : null,
     sgst: taxPresent.sgst ? sgst : null,
     totalTax,
-    totalInvoiceValue: taxableValue + totalTax,
+    totalInvoiceValue: Number.isFinite(taxableValue) ? sumMoney([taxableValue,totalTax]) : NaN,
     isUnmatchable,
     matchKey,
     raw: row,
@@ -218,15 +219,15 @@ export function reconcileGstrData(gstrInvoices = [], prInvoices = [], tolerance 
     const componentDiffs = {};
     let missingComponent = false;
     for (const key of ['igst', 'cgst', 'sgst', 'cess']) {
-      componentDiffs[key] = g2b.taxPresent[key] && book.taxPresent[key] ? Math.abs(g2b[key] - book[key]) : null;
+      componentDiffs[key] = g2b.taxPresent[key] && book.taxPresent[key] ? Math.abs(moneyPaise(g2b[key]) - moneyPaise(book[key])) / 100 : null;
       if (g2b.taxPresent[key] !== book.taxPresent[key]) missingComponent = true;
     }
     if (missingComponent) {
       [g2b, book].forEach(r => reviewRecords.push({ ...r, reviewReason: 'Tax component missing in one source; explicit zero differs from missing.' }));
       continue;
     }
-    const diff = Math.abs(g2b.taxableValue - book.taxableValue);
-    const taxDiff = Math.abs(g2b.totalTax - book.totalTax);
+    const diff = Math.abs(moneyPaise(g2b.taxableValue) - moneyPaise(book.taxableValue)) / 100;
+    const taxDiff = Math.abs(moneyPaise(g2b.totalTax) - moneyPaise(book.totalTax)) / 100;
     const matched = diff <= tolerance && Object.values(componentDiffs).every(d => d === null || d <= tolerance);
     const result = { gstr: g2b, pr: book, diff, taxableDiff: diff, taxDiff, componentDiffs,
       gstrValue: g2b.taxableValue, prValue: book.taxableValue,
@@ -237,16 +238,16 @@ export function reconcileGstrData(gstrInvoices = [], prInvoices = [], tolerance 
   }
 
   // Calculate Aggregates
-  const totalGstrTaxable = validGstr.reduce((sum, r) => sum + r.taxableValue, 0);
-  const totalPrTaxable = validPr.reduce((sum, r) => sum + r.taxableValue, 0);
-  const matchedTaxable = matches.reduce((sum, m) => sum + m.gstr.taxableValue, 0);
-  const mismatchTaxable = mismatches.reduce((sum, m) => sum + m.gstr.taxableValue, 0);
-  const missingIn2BTaxable = missingIn2B.reduce((sum, r) => sum + r.taxableValue, 0);
-  const missingInPrTaxable = missingInPr.reduce((sum, r) => sum + r.taxableValue, 0);
+  const totalGstrTaxable = sumMoney(validGstr.map(r => r.taxableValue));
+  const totalPrTaxable = sumMoney(validPr.map(r => r.taxableValue));
+  const matchedTaxable = sumMoney(matches.map(m => m.gstr.taxableValue));
+  const mismatchTaxable = sumMoney(mismatches.map(m => m.gstr.taxableValue));
+  const missingIn2BTaxable = sumMoney(missingIn2B.map(r => r.taxableValue));
+  const missingInPrTaxable = sumMoney(missingInPr.map(r => r.taxableValue));
 
-  const matchedTax = matches.reduce((sum, m) => sum + m.gstr.totalTax, 0);
-  const atRiskTax = missingIn2B.reduce((sum, r) => sum + r.totalTax, 0);
-  const unclaimedTax = missingInPr.reduce((sum, r) => sum + r.totalTax, 0);
+  const matchedTax = sumMoney(matches.map(m => m.gstr.totalTax));
+  const atRiskTax = sumMoney(missingIn2B.map(r => r.totalTax));
+  const unclaimedTax = sumMoney(missingInPr.map(r => r.totalTax));
 
   return {
     tolerance,

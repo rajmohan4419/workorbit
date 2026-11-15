@@ -96,6 +96,7 @@ export function GstRateReference({ entry, onApply, context = '' }) {
     <h3 className="gst-title-clamp">{context} {entry.kind === 'goods' ? 'HSN' : 'SAC'} {entry.code} — {entry.description}</h3>
     <p className="gst-reference-warning">Reference only · captured {reference?.manifest.capturedOn || '…'} · current effective dates unverified.</p>
     <p><a href="/tools/hsn-sac-search">Open full HSN / SAC search →</a></p>
+    <p className="gst-lookup-hint">Rates depend on the supply date. The September 2025 reform primarily introduced 5% / 18% and a special 40% rate; historical rates and exceptions remain relevant. <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2163560&lang=1&reg=6" target="_blank" rel="noreferrer">Official reform FAQ (22 September 2025)</a>. Snapshot entries below are not an effective-date rate engine.</p>
     <details><summary>Sources & applicability</summary><p>Match the full description and conditions to your invoice date. Selecting a code does not select a tax rate.</p><p><a href={RATE_SOURCE} target="_blank" rel="noreferrer">CBIC goods & services rates ↗</a> · <a href={ICEGATE_SOURCE} target="_blank" rel="noreferrer">ICEGATE customs codes / UQC ↗</a></p></details>
     {onApply && <label className="gst-rate-ack"><input type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)} /> I have checked the current notification, description and conditions for this invoice date.</label>}
     {error && <p role="alert">{error}</p>}

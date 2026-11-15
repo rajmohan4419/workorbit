@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { TOOLS, LISTED_TOOLS } from './toolCatalog.js';
+import plannedTools from '../../docs/planning/unreleased-tools.json';
 import toolVariants from './toolVariants.json';
 
 const PUBLIC_SITEMAP = path.resolve('public/sitemap.xml');
@@ -74,7 +75,7 @@ describe('Sitemap Automation & Catalog Consistency Suite', () => {
 
   it('strictly excludes all planned tools (status === "planned")', () => {
     const sitemap = fs.readFileSync(PUBLIC_SITEMAP, 'utf8');
-    const plannedTools = TOOLS.filter((t) => t.status === 'planned');
+    expect(TOOLS.every(t => t.status === 'live')).toBe(true);
 
     expect(plannedTools.length).toBeGreaterThan(0);
 

@@ -518,9 +518,9 @@ describe('Tier 1: Feature Coverage (F1 to F18)', () => {
       expect(catchAll.source).toContain('(?!api/)');
     });
 
-    it('T1.F10.5: Client routing resolves known routes while displaying Coming Soon for planned tools', () => {
+    it('T1.F10.5: Client routing resolves known routes with unreleased ideas excluded from public routes', () => {
       const allTools = toolCatalogModule.TOOLS;
-      expect(allTools.length).toBeGreaterThan(toolCatalogModule.LISTED_TOOLS.length);
+      expect(allTools.length).toBe(toolCatalogModule.LISTED_TOOLS.length);
     });
   });
 

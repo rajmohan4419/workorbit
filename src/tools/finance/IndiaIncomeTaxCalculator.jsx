@@ -1,8 +1,9 @@
+import { indiaTax, INDIA_TAX_PERIODS, TAX_VERIFIED_ON } from '../../lib/tax/india.js';
 import { useMemo, useState, useEffect } from 'react';
 import { Share2 } from 'lucide-react';
 import { useToolShareContext } from '../../lib/shareResults';
 
-const num = value => Math.max(0, Number(value) || 0);
+const num = value => Number.isFinite(Number(value)) ? Math.max(0,Number(value)) : 0;
 const money = value => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.max(0, value));
 
 function Field({ label, value, onChange }) {
@@ -21,39 +22,6 @@ function Result({ label, value, highlight = false }) {
       <strong className={highlight ? 'text-lg text-accent-300' : 'text-sm text-white'}>{value}</strong>
     </div>
   );
-}
-
-function newRegimeTax(taxable) {
-  const slabs = [[400000, 0], [400000, .05], [400000, .10], [400000, .15], [400000, .20], [400000, .25], [Infinity, .30]];
-  let remaining = taxable;
-  let tax = 0;
-  for (const [limit, rate] of slabs) {
-    const amount = Math.min(remaining, limit);
-    if (amount <= 0) break;
-    tax += amount * rate;
-    remaining -= amount;
-  }
-  return tax;
-}
-
-function oldRegimeTax(taxable, senior = false) {
-  const firstThreshold = senior === 'super' ? 500000 : senior === 'senior' ? 300000 : 250000;
-  const slabs = senior === 'super'
-    ? [[500000, 0], [1000000, .20], [Infinity, .30]]
-    : [[firstThreshold, 0], [500000, .05], [1000000, .20], [Infinity, .30]];
-  let remaining = taxable;
-  let tax = 0;
-  let previous = 0;
-  for (const [limit, rate] of slabs) {
-    const width = Math.max(0, limit - previous);
-    const amount = Math.min(remaining, width);
-    if (amount <= 0) break;
-    tax += amount * rate;
-    remaining -= amount;
-    previous = limit;
-  }
-  if (taxable <= 500000) tax = Math.max(0, tax - 12500);
-  return tax;
 }
 
 export default function IndiaIncomeTaxCalculator() {
@@ -85,7 +53,8 @@ export default function IndiaIncomeTaxCalculator() {
     const sp = new URLSearchParams(window.location.search);
     return sp.get('incomeType') || 'salary';
   });
-  const [resident, setResident] = useState(true);
+  const [period, setPeriod] = useState(() => { const value = new URLSearchParams(window.location.search).get('period'); return INDIA_TAX_PERIODS[value] ? value : 'ay2026-27'; });
+  const [resident, setResident] = useState(() => new URLSearchParams(window.location.search).get('resident') !== 'false');
 
   // Sync to URL state
   useEffect(() => {
@@ -97,32 +66,21 @@ export default function IndiaIncomeTaxCalculator() {
       sp.set('regime', regime);
       sp.set('ageBand', ageBand);
       sp.set('incomeType', incomeType);
+      sp.set('period', period);
+      sp.set('resident', String(resident));
       window.history.replaceState(null, '', `${window.location.pathname}?${sp.toString()}`);
     } catch {
       // ignore
     }
-  }, [income, deductions, regime, ageBand, incomeType]);
+  }, [income, deductions, regime, ageBand, incomeType, period, resident]);
 
   const result = useMemo(() => {
     const gross = num(income);
     const standardDeduction = incomeType === 'salary' ? Math.min(regime === 'new' ? 75000 : 50000, gross) : 0;
-    const taxable = Math.max(0, gross - standardDeduction - num(deductions));
-    let baseTax = regime === 'new' ? newRegimeTax(taxable) : oldRegimeTax(taxable, ageBand);
-    let rebate = 0;
-
-    if (resident && regime === 'new' && taxable <= 1200000) rebate = Math.min(baseTax, 60000);
-    if (resident && regime === 'old' && taxable <= 500000) rebate = Math.min(baseTax, 12500);
-
-    const taxAfterRebate = Math.max(0, baseTax - rebate);
-    const surchargeRate = regime === 'new'
-      ? taxable > 20000000 ? .25 : taxable > 10000000 ? .15 : taxable > 5000000 ? .10 : 0
-      : taxable > 50000000 ? .37 : taxable > 20000000 ? .25 : taxable > 10000000 ? .15 : taxable > 5000000 ? .10 : 0;
-    const surcharge = taxAfterRebate * surchargeRate;
-    const cess = (taxAfterRebate + surcharge) * .04;
-    const total = taxAfterRebate + surcharge + cess;
-
-    return { gross, standardDeduction, taxable, baseTax, rebate, surcharge, cess, total, monthly: total / 12 };
-  }, [income, deductions, regime, ageBand, incomeType, resident]);
+    const taxable = Math.max(0, gross - standardDeduction - (regime === 'old' ? num(deductions) : 0));
+    const taxes = indiaTax(taxable, { regime, ageBand, resident, period });
+    return {gross,standardDeduction,taxable,...taxes,monthly:taxes.total/12};
+  }, [income, deductions, regime, ageBand, incomeType, resident, period]);
 
   // Live Result Share Context Registration
   useEffect(() => {
@@ -131,16 +89,21 @@ export default function IndiaIncomeTaxCalculator() {
       headlineMetric: `₹ ${money(result.total)} Income Tax`,
       subMetrics: [
         { label: 'Taxable Income', value: `₹ ${money(result.taxable)}` },
-        { label: 'Tax Regime', value: regime === 'new' ? 'New (115BAC)' : 'Old Regime' },
+        { label: 'Tax Regime', value: `${regime === 'new' ? 'New' : 'Old'} · ${INDIA_TAX_PERIODS[period].label}` },
         { label: 'Effective Rate', value: `${effectiveRate}%` },
       ],
       summaryText: `Estimated total tax of ₹ ${money(result.total)} on ₹ ${money(result.gross)} under ${regime} regime (${effectiveRate}% effective)`,
-      queryParams: { income, deductions, regime, ageBand, incomeType },
+      queryParams: { income, deductions, regime, ageBand, incomeType, period, resident },
     });
-  }, [result, income, deductions, regime, ageBand, incomeType, updateSharePayload]);
+  }, [result, income, deductions, regime, ageBand, incomeType, period, resident, updateSharePayload]);
 
   return (
     <div className="space-y-5">
+      <label className="block text-sm">Income period
+        <select aria-label="Income period" className="orbit-control w-full" value={period} onChange={e=>setPeriod(e.target.value)}>{Object.entries(INDIA_TAX_PERIODS).map(([key,rule])=><option key={key} value={key}>{rule.label}</option>)}</select>
+      </label>
+      <p className="text-xs">Income-tax Act, {INDIA_TAX_PERIODS[period].act}. Rebate section {INDIA_TAX_PERIODS[period].rebateSection}. <a href={INDIA_TAX_PERIODS[period].source} target="_blank" rel="noreferrer">Official rules</a> · verified {TAX_VERIFIED_ON}.</p>
+
       <div className="grid sm:grid-cols-2 gap-4">
         <Field label="Annual gross income (₹)" value={income} onChange={setIncome} />
         <Field label="Additional deductions (₹)" value={deductions} onChange={setDeductions} />
@@ -174,7 +137,7 @@ export default function IndiaIncomeTaxCalculator() {
       <label className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 flex items-center justify-between gap-4">
         <span>
           <span className="block text-sm font-semibold text-slate-200">Resident individual</span>
-          <span className="block mt-1 text-[11px] text-slate-500">Used for the Section 87A rebate eligibility check.</span>
+          <span className="block mt-1 text-[11px] text-slate-500">Used for the ordinary-income rebate eligibility check.</span>
         </span>
         <input type="checkbox" checked={resident} onChange={e => setResident(e.target.checked)} />
       </label>
@@ -183,7 +146,7 @@ export default function IndiaIncomeTaxCalculator() {
         <Result label="Estimated annual income tax" value={`₹ ${money(result.total)}`} highlight />
         <Result label="Estimated monthly tax" value={`₹ ${money(result.monthly)}`} />
         <Result label="Taxable income used" value={`₹ ${money(result.taxable)}`} />
-        <Result label="Section 87A rebate" value={`₹ ${money(result.rebate)}`} />
+        <Result label="Rebate including marginal relief" value={`₹ ${money(result.rebate)}`} />
         <Result label="Surcharge" value={`₹ ${money(result.surcharge)}`} />
         <Result label="Health & education cess" value={`₹ ${money(result.cess)}`} />
       </div>
@@ -197,7 +160,7 @@ export default function IndiaIncomeTaxCalculator() {
         <span>Share Tax Result Scorecard</span>
       </button>
 
-      <p className="text-xs text-slate-500">Uses AY 2026-27 individual slabs and a simplified calculation. Salary income gets a ₹75,000 standard deduction in the new regime or ₹50,000 in the old regime; enter only additional deductions here. Capital gains, special-rate income, detailed exemptions, payroll PF and every possible rebate/relief are not modelled.</p>
+      <p className="text-xs text-slate-500">Uses the selected period’s individual slabs. Ordinary salary and other slab-rate income only. Salary income gets a ₹75,000 standard deduction in the new regime or ₹50,000 in the old regime; additional deductions apply in the old regime only. Eligible employer NPS deductions in the new regime are not modelled. Capital gains, special-rate income, detailed exemptions, payroll PF and every possible rebate/relief are not modelled.</p>
     </div>
   );
 }

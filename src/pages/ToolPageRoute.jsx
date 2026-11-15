@@ -127,7 +127,7 @@ export default function ToolPageRoute() {
     return <Navigate to={`/tools/${SLUG_REDIRECTS[slug]}`} replace />;
   }
 
-  if (!tool) {
+  if (!tool || tool.status !== 'live') {
     return <NotFound />;
   }
 

@@ -1,7 +1,8 @@
+import { indiaTax } from '../../lib/tax/india.js';
 /**
  * Payslip Calculation Engine
  * Indian Payroll: Basic, HRA, Allowances, EPF, ESI, Professional Tax, TDS.
- * Complies with FY 2025-26 / FY 2026-27 Income Tax slabs and statutory wage ceilings.
+ * Uses FY 2025-26 / AY 2026-27 ordinary-income estimates and statutory wage ceilings.
  */
 
 import { formatINR, money } from '../../lib/toolFormat.js';
@@ -30,47 +31,7 @@ export const STATUTORY_LIMITS = Object.freeze({
  * and Old Tax Regime (with ₹50k standard deduction).
  */
 export function calculateTaxSlabs(taxable, regime = 'new') {
-  if (taxable <= 0) return 0;
-  if (regime === 'new') {
-    const slabs = [
-      [400000, 0],
-      [400000, 0.05],
-      [400000, 0.10],
-      [400000, 0.15],
-      [400000, 0.20],
-      [400000, 0.25],
-      [Infinity, 0.30],
-    ];
-    let remaining = taxable;
-    let tax = 0;
-    for (const [limit, rate] of slabs) {
-      const amount = Math.min(remaining, limit);
-      if (amount <= 0) break;
-      tax += amount * rate;
-      remaining -= amount;
-    }
-    // Section 87A rebate for new regime up to 12L taxable
-    if (taxable <= 1200000) tax = Math.max(0, tax - 60000);
-    return tax * 1.04;
-  } else {
-    const slabs = [
-      [250000, 0],
-      [250000, 0.05],
-      [500000, 0.20],
-      [Infinity, 0.30],
-    ];
-    let remaining = taxable;
-    let tax = 0;
-    for (const [limit, rate] of slabs) {
-      const amount = Math.min(remaining, limit);
-      if (amount <= 0) break;
-      tax += amount * rate;
-      remaining -= amount;
-    }
-    // Section 87A rebate for old regime up to 5L taxable
-    if (taxable <= 500000) tax = Math.max(0, tax - 12500);
-    return tax * 1.04;
-  }
+  return indiaTax(Math.max(0,taxable), {regime,period:'ay2026-27'}).total;
 }
 
 const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
