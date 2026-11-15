@@ -7,7 +7,8 @@ function store({product='pdf-download-topup',grantError=null}={}) {
 describe('captured PDF payment fulfilment',()=>{
  it('retries credit grants even when the payment was already recorded',async()=>{
    const admin=store();
-   await fulfilPayment(admin,{orderId:'order1',paymentId:'pay1',amountPaise:10000,currency:'INR',source:'webhook'});
+   const result = await fulfilPayment(admin,{orderId:'order1',paymentId:'pay1',amountPaise:10000,currency:'INR',source:'webhook'});
+   expect(result.creditsGranted).toBe(true);
    expect(admin.rpc).toHaveBeenCalledWith('grant_pdf_topup',{p_order_id:'order1',p_payment_id:'pay1'});
  });
  it('surfaces failed grants so webhook delivery can retry',async()=>{
@@ -15,7 +16,8 @@ describe('captured PDF payment fulfilment',()=>{
  });
  it('does not grant PDF credits to donation orders',async()=>{
    const admin=store({product:'support-orbitboard'});
-   await fulfilPayment(admin,{orderId:'o',paymentId:'p'});
+   const result = await fulfilPayment(admin,{orderId:'o',paymentId:'p'});
+   expect(result.creditsGranted).toBe(false);
    expect(admin.rpc).not.toHaveBeenCalled();
  });
 });

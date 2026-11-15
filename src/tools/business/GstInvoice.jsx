@@ -1,3 +1,4 @@
+import { useExportFeedback } from '../../lib/feedback/useTaskFeedback';
 import { useState, useCallback, useMemo, useRef, useEffect, useLayoutEffect, cloneElement } from 'react';
 import { Plus, Trash2, Download, Building2, FileText, Save, X, CheckCircle2 } from 'lucide-react';
 import { downloadBlob } from '../../lib/toolFormat';
@@ -296,6 +297,7 @@ function InvoicePreview({ seller, buyer, meta, items, totals, notes, signatory, 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function GstInvoice() {
+  const feedback = useExportFeedback('document');
   const [seller, setSeller] = useState(defaultSeller);
   const [buyer, setBuyer] = useState(defaultBuyer);
   const [meta, setMeta] = useState(defaultMeta);
@@ -394,7 +396,7 @@ export function GstInvoice() {
     const validation = validateInvoice({ seller, buyer, meta, items });
     setExportAttempts(count => count + 1);
     setExportErrors([]);
-    if (validation.errors.length) return;
+    if (validation.errors.length) return false;
     setGenerating(true);
     try {
       const blob = await generateInvoicePDF({ seller, buyer, meta, items, totals, notes, signatory, isInterState });
@@ -402,6 +404,7 @@ export function GstInvoice() {
       trackExportClicked('pdf');
     } catch (err) {
       setExportErrors([err.message || 'Could not generate PDF. Review the invoice inputs.']);
+      throw err;
     } finally {
       setGenerating(false);
     }
@@ -446,8 +449,8 @@ export function GstInvoice() {
             Save Workspace
           </button>
           <button
-            onClick={handleDownloadPDF}
-            disabled={generating}
+            onClick={() => feedback.run(handleDownloadPDF, 'pdf')}
+            disabled={generating || feedback.busy}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60"
           >
             <Download size={15} />
@@ -742,8 +745,8 @@ export function GstInvoice() {
           Save Workspace
         </button>
         <button
-          onClick={handleDownloadPDF}
-          disabled={generating}
+          onClick={() => feedback.run(handleDownloadPDF, 'pdf')}
+          disabled={generating || feedback.busy}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60"
         >
           <Download size={15} />
