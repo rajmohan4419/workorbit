@@ -78,6 +78,7 @@ export function isValidPan(pan) {
 export function calculateTds({
   section,
   amount,
+  aggregateAmount = 0,
   panProvided = true,
   pan = '',
   recipientType = 'individual', // 'individual' | 'company'
@@ -123,22 +124,35 @@ export function calculateTds({
   // Section 194A to 194J
   let threshold = cfg.threshold || 0;
   let rate = cfg.defaultRate || 0;
+  let isExempt = false;
 
   if (section === '194A') {
     threshold = isSenior ? cfg.seniorThreshold : cfg.threshold;
     rate = cfg.defaultRate;
+    isExempt = amt <= threshold;
   } else if (section === '194C') {
     threshold = cfg.singleThreshold;
     rate = recipientType === 'company' ? cfg.rateCompany : cfg.rateIndividual;
+    const agg = Math.max(0, Number(aggregateAmount) || 0);
+    if (agg > cfg.aggregateThreshold) {
+      isExempt = false;
+      threshold = cfg.aggregateThreshold;
+    } else {
+      isExempt = amt <= cfg.singleThreshold;
+    }
   } else if (section === '194I') {
     threshold = cfg.threshold;
     rate = subType === 'machinery' ? cfg.rateMachinery : cfg.rateBuilding;
+    isExempt = amt <= threshold;
   } else if (section === '194J') {
     threshold = cfg.threshold;
     rate = subType === 'technical' ? cfg.rateTechnical : cfg.rateProfessional;
+    isExempt = amt <= threshold;
+  } else {
+    isExempt = amt <= threshold;
   }
 
-  if (amt <= threshold) {
+  if (isExempt) {
     return {
       section,
       amount: amt,

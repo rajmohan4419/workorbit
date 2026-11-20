@@ -181,12 +181,12 @@ function Telemetry() {
     const scheduleAfterLoad = () => { timer = window.setTimeout(runTelemetry, 8000); };
 
     if (document.readyState === 'complete') scheduleAfterLoad();
-    else window.addEventListener('load', scheduleAfterLoad);
+    else window.addEventListener('load', scheduleAfterLoad, { once: true });
 
     return () => {
       cancelled = true;
       window.removeEventListener('load', scheduleAfterLoad);
-      window.clearTimeout(timer);
+      if (timer !== null) window.clearTimeout(timer);
     };
   }, [location.pathname]);
 

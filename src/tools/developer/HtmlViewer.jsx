@@ -44,7 +44,7 @@ export function HtmlViewer() {
             className="block h-80 w-full resize-y rounded-xl border border-[var(--orbit-border)] bg-white p-3 font-mono text-sm text-stone-900 focus:border-accent-500 dark:bg-stone-900 dark:text-stone-100"
           />
         </label>
-        <div className="min-w-0 space-y-1.5">
+        <div className="min-w-0 space-y-1.5" role="region" aria-label="Live HTML preview">
           <h2 className="text-sm font-semibold">Live preview</h2>
           {preview ? (
             <iframe

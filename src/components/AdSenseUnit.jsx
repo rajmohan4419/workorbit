@@ -13,16 +13,33 @@ export default function AdSenseUnit({
 
   useEffect(() => {
     if (pushedRef.current) return;
-    try {
-      if (window.adsbygoogle) {
-        window.adsbygoogle.push({});
-        pushedRef.current = true;
+    let timer = null;
+    let attempts = 0;
+
+    const tryPush = () => {
+      if (pushedRef.current) return;
+      try {
+        if (window.adsbygoogle) {
+          window.adsbygoogle.push({});
+          pushedRef.current = true;
+          return;
+        }
+      } catch (err) {
+        console.warn('[AdSenseUnit] Could not push ad unit', err);
+        setTimeout(() => setAdBlocked(true), 0);
+        return;
       }
-    } catch (err) {
-      console.warn('[AdSenseUnit] Could not push ad unit', err);
-      // Schedule state update outside synchronous effect execution to prevent cascading renders
-      setTimeout(() => setAdBlocked(true), 0);
-    }
+      attempts++;
+      if (attempts < 15) {
+        timer = setTimeout(tryPush, 1000);
+      }
+    };
+
+    tryPush();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   if (!slot || adBlocked) return null;

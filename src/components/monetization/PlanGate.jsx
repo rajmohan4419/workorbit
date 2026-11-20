@@ -42,6 +42,14 @@ export function PlanGate({
     }
   }, [feature, isEntitled, loading]);
 
+  if (loading) {
+    return (
+      <div role="status" aria-label="Checking account access" className="rounded-2xl border border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-stone-900/50 p-6 min-h-[160px] flex items-center justify-center animate-pulse">
+        <div className="h-6 w-32 rounded-lg bg-stone-200 dark:bg-stone-800" />
+      </div>
+    );
+  }
+
   if (isEntitled) {
     return <>{children}</>;
   }

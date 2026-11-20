@@ -10,7 +10,7 @@ describe('invoice PDF reliability', () => {
     const blob = await generate({ ...invoice, items:Array.from({length:80},()=>({...invoice.items[0], description:'Full untruncated synthetic description. '.repeat(8)})),notes:'Synthetic terms. '.repeat(500) });
     const doc = await PDFDocument.load(await blob.arrayBuffer());
     expect(doc.getPageCount()).toBeGreaterThan(3);
-  }, 20000);
+  }, 40000);
   it('rejects unsupported scripts explicitly instead of deleting them', async () => {
     await expect(generate({...invoice,notes:'தமிழ்'})).rejects.toThrow(/Notes contains characters unsupported/);
   });

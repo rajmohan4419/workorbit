@@ -144,12 +144,15 @@ export function calculatePayslip({
   const monthlyHra = fullMonthlyHra * proration;
   const monthlyAllowances = Math.max(0, monthlyGross - monthlyBasic - monthlyHra);
 
-  // Prorated EPF
+  // Prorated EPF & EPS (Employer breakdown)
   const proratedPf = optPf
     ? (capPf
       ? Math.min(monthlyBasic, STATUTORY_LIMITS.EPF.statutoryCeilingMonthly) * STATUTORY_LIMITS.EPF.employeeRate
       : monthlyBasic * STATUTORY_LIMITS.EPF.employeeRate)
     : 0;
+  const epsWages = Math.min(monthlyBasic, STATUTORY_LIMITS.EPF.statutoryCeilingMonthly);
+  const proratedEps = optPf ? Math.min(Math.round(epsWages * STATUTORY_LIMITS.EPF.epsRate), STATUTORY_LIMITS.EPF.maxCappedEpsMonthly) : 0;
+  const proratedEmployerDiff = optPf ? Math.max(0, Math.round(proratedPf) - proratedEps) : 0;
 
   // ESI: applies when monthly gross is <= 21,000 (or 25,000 for disability)
   const esiCeiling = hasDisability
@@ -191,6 +194,8 @@ export function calculatePayslip({
     allowances: Math.round(monthlyAllowances),
     employeePf: Math.round(proratedPf),
     employerPf: Math.round(proratedPf),
+    employerEpfDiff: proratedEmployerDiff,
+    eps: proratedEps,
     employeeEsi: monthlyEsi,
     employerEsi: monthlyEmployerEsi,
     professionalTax: monthlyPt,

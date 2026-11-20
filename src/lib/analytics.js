@@ -2,14 +2,28 @@ import { getConsentStatus } from './cookieConsent';
 
 const MEASUREMENT_ID = 'G-SLWFZLY8SC';
 
-let loadPromise;
+let loadPromise = null;
+
+export function resetGoogleAnalytics() {
+  loadPromise = null;
+  if (typeof document !== 'undefined') {
+    const existing = document.querySelector('script[data-orbitboard-ga]');
+    if (existing) existing.remove();
+  }
+}
 
 export function loadGoogleAnalytics() {
   if (loadPromise) return loadPromise;
 
   loadPromise = new Promise((resolve) => {
     if (typeof window === 'undefined') {
-      resolve();
+      resolve(false);
+      return;
+    }
+
+    // Never inject script tag or configure tracking if consent is denied/not granted
+    if (getConsentStatus() !== 'granted') {
+      resolve(false);
       return;
     }
 
@@ -22,13 +36,13 @@ export function loadGoogleAnalytics() {
     window.gtag('config', MEASUREMENT_ID);
 
     if (typeof document === 'undefined') {
-      resolve();
+      resolve(true);
       return;
     }
 
     const existing = document.querySelector('script[data-orbitboard-ga]');
     if (existing) {
-      resolve();
+      resolve(true);
       return;
     }
 
@@ -36,8 +50,8 @@ export function loadGoogleAnalytics() {
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
     script.dataset.orbitboardGa = 'true';
-    script.onload = resolve;
-    script.onerror = resolve;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
     document.head.appendChild(script);
   });
 

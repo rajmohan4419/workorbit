@@ -27,7 +27,7 @@ const BLOCKED_PARAM_KEYS = new Set([
 // Sensitive tools must opt in to aggregate-only URL parameters.
 const SENSITIVE_TOOL_SLUG = /(?:bank-reconciliation|gstr|gst-invoice|payslip|salary-sheet)/i;
 const SAFE_AGGREGATE_KEYS = new Set(['matchrate', 'matchratepercent', 'matchedcount', 'reconciledcount', 'totalreconciledcount', 'totalcount']);
-const SENSITIVE_VALUE_PATTERN = /(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z][Z][0-9A-Z]|\\b\\d{9,18}\\b)/i;
+const SENSITIVE_VALUE_PATTERN = /(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z][Z][0-9A-Z]|\b\d{9,18}\b)/i;
 
 /**
  * Serializes safe calculator parameters into a shareable URL.
@@ -250,10 +250,16 @@ export function generateResultScorecardBlob({
     ctx.letterSpacing = '1px';
     ctx.fillText('LIVE CALCULATION RESULT', 80, 235);
 
-    // Big Headline Typography
-    ctx.font = 'bold 64px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#FFFFFF';
+    // Big Headline Typography with dynamic scaling
     const cleanHeadline = String(headlineMetric || 'Verified Output');
+    let headlineFontSize = 64;
+    ctx.font = `bold ${headlineFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const maxHeadlineWidth = 1000;
+    while (ctx.measureText(cleanHeadline).width > maxHeadlineWidth && headlineFontSize > 32) {
+      headlineFontSize -= 4;
+      ctx.font = `bold ${headlineFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    }
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillText(cleanHeadline, 80, 310);
 
     // 6. Bento Sub-metrics Row (up to 3 pills)
