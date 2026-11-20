@@ -45,6 +45,8 @@ export function computeLoanAmortization({ principal, annualRatePct, years, month
     }
   }
 
-  const totalPayment = emi * N;
-  return { emi, totalPayment, totalInterest: totalPayment - P, months: N, yearly };
+  const totalPrincipal = yearly.reduce((s, y) => s + y.principalPaid, 0);
+  const totalInterest = yearly.reduce((s, y) => s + y.interestPaid, 0);
+  const totalPayment = totalPrincipal + totalInterest;
+  return { emi, totalPayment, totalInterest, months: N, yearly };
 }

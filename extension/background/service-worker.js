@@ -169,22 +169,33 @@ function injectToastIntoPage(title, message, copyText) {
   }, 7000);
 }
 
-// Flash extension badge text and clear after 3 seconds
+// Flash extension badge text and clear after ~3 seconds
 async function flashBadge(text, color = '#6366F1') {
   try {
     await chrome.action.setBadgeText({ text });
     await chrome.action.setBadgeBackgroundColor({ color });
-    // Use alarm or temporary timeout
-    setTimeout(async () => {
-      try {
-        await chrome.action.setBadgeText({ text: '' });
-      } catch {
-        // Ignore errors clearing badge
-      }
-    }, 2800);
+    if (chrome.alarms?.create) {
+      chrome.alarms.create('orbitboard-clear-badge', { when: Date.now() + 2800 });
+    } else {
+      setTimeout(async () => {
+        try {
+          await chrome.action.setBadgeText({ text: '' });
+        } catch {
+          // Ignore errors clearing badge
+        }
+      }, 2800);
+    }
   } catch (err) {
     console.error('Badge flash error:', err);
   }
+}
+
+if (chrome.alarms?.onAlarm) {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'orbitboard-clear-badge') {
+      chrome.action.setBadgeText({ text: '' }).catch(() => {});
+    }
+  });
 }
 
 // Show feedback toast and copy text in tab

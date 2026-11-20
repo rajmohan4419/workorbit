@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../supabase';
 import { PLAN_CATALOG } from './planCatalog';
 import { resolveEntitlements, hasFeature as checkFeature, getFeatureLimit } from './entitlements';
@@ -27,6 +27,7 @@ export function usePlan() {
   const [entitlements, setEntitlements] = useState(FREE_PLAN_STATE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const inFlightRef = useRef(null);
 
   const fetchEntitlement = useCallback(async (token) => {
     if (!token) {
@@ -34,6 +35,8 @@ export function usePlan() {
       setLoading(false);
       return;
     }
+    if (inFlightRef.current === token) return;
+    inFlightRef.current = token;
     setLoading(true);
     setError(null);
     try {
@@ -74,6 +77,7 @@ export function usePlan() {
       setError(err);
       setEntitlements(FREE_PLAN_STATE);
     } finally {
+      inFlightRef.current = null;
       setLoading(false);
     }
   }, []);

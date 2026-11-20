@@ -23,6 +23,13 @@ export function previewDocument(html) {
       form.removeAttribute('action');
       form.removeAttribute('method');
     }
+    for (const el of doc.querySelectorAll('*')) {
+      for (const attr of Array.from(el.attributes)) {
+        if (/^on/i.test(attr.name)) {
+          el.removeAttribute(attr.name);
+        }
+      }
+    }
 
     const head = doc.head || doc.createElement('head');
     if (!doc.head && doc.documentElement) {
