@@ -82,9 +82,9 @@ export function QuickQuiz() {
   };
 
   return (
-    <aside aria-label="OrbitBoard quick quiz" className="fixed bottom-4 right-4 z-[90] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-violet-200 bg-white p-5 text-stone-900 shadow-2xl dark:border-violet-800 dark:bg-stone-900 dark:text-stone-100">
+    <aside aria-label="OrbitBoard quick quiz" className="fixed bottom-4 right-4 z-[90] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-[var(--orbit-border)] bg-white p-5 text-stone-900 shadow-xl dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 text-violet-700 dark:text-violet-300">
+        <div className="flex items-center gap-2 text-accent-700 dark:text-accent-300">
           <Sparkles size={19} aria-hidden="true" />
           <strong className="text-sm">OrbitBoard Quick Challenge</strong>
         </div>
@@ -95,19 +95,19 @@ export function QuickQuiz() {
           <h2 className="text-xl font-bold">Got a minute? 🧠</h2>
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">Three quick questions: general knowledge, business and technology. No sign-in required.</p>
           <div className="mt-4 flex gap-2">
-            <button type="button" onClick={start} className="rounded-xl bg-violet-700 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-800">Play now</button>
-            <button type="button" onClick={close} className="rounded-xl border px-4 py-2 text-sm">Not now</button>
+            <button type="button" onClick={start} className="rounded-xl bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700">Play now</button>
+            <button type="button" onClick={close} className="rounded-xl border border-[var(--orbit-border)] px-4 py-2 text-sm">Not now</button>
           </div>
         </div>
       )}
       {mode === 'playing' && (
         <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">{current.category} · Question {index + 1} of {questions.length}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent-700 dark:text-accent-300">{current.category} · Question {index + 1} of {questions.length}</p>
           <h2 className="mt-2 text-base font-bold">{current.question}</h2>
           <div className="mt-3 grid gap-2">
             {current.options.map((option, choice) => (
               <button key={option} type="button" disabled={answered} onClick={() => choose(choice)}
-                className={`rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:outline-violet-500 ${answered && choice === current.answer ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : answered && choice === selected ? 'border-rose-400 bg-rose-50 text-rose-900' : 'border-stone-200 hover:border-violet-400 dark:border-stone-700 dark:hover:border-violet-400'}`}>
+                className={`rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent-500 ${answered && choice === current.answer ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : answered && choice === selected ? 'border-rose-400 bg-rose-50 text-rose-900' : 'border-stone-200 hover:border-accent-400 dark:border-stone-700 dark:hover:border-accent-400'}`}>
                 {option}
               </button>
             ))}
@@ -116,7 +116,7 @@ export function QuickQuiz() {
             <div aria-live="polite" className="mt-3">
               <p className="text-sm font-semibold">{selected === current.answer ? 'Correct! 🎉' : 'Good try!'}</p>
               <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">{current.explanation}</p>
-              <button type="button" onClick={next} className="mt-3 flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2 text-sm font-semibold text-white">
+              <button type="button" onClick={next} className="mt-3 flex items-center gap-2 rounded-xl bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700">
                 {index === questions.length - 1 ? 'See results' : 'Next question'} <ArrowRight size={15} />
               </button>
             </div>
@@ -129,7 +129,7 @@ export function QuickQuiz() {
           <p className="mt-2 text-sm">You scored <strong>{score} out of {questions.length}</strong>.</p>
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">Put your skills to work with a free OrbitBoard tool.</p>
           <Link to={questions[1].tool.href} onClick={() => { trackEvent('quick_quiz_tool_clicked', { destination: questions[1].tool.href }); close(); }}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-2 text-sm font-semibold text-white">
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700">
             {questions[1].tool.label} <ArrowRight size={15} />
           </Link>
         </div>

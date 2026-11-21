@@ -30,7 +30,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
         style={{ '--stagger-index': 0 }}
         className="anim-fade-up inline-block"
       >
-        <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-950/60 px-3.5 py-1.5 text-xs font-semibold text-accent-800 dark:text-accent-300 shadow-xs hover:border-accent-400 dark:hover:border-accent-600 transition-all duration-300 hover:scale-105 select-none anim-zero-g">
+        <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-950/60 px-3.5 py-1.5 text-xs font-semibold text-accent-800 dark:text-accent-300 shadow-2xs hover:border-accent-400 dark:hover:border-accent-600 transition-colors select-none">
           <Sparkles size={14} aria-hidden="true" className="text-accent-600 dark:text-accent-400" /> Private • Fast • Client-Side
         </div>
       </div>
@@ -39,7 +39,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
         style={{ '--stagger-index': 1 }}
         className="anim-fade-up mt-4 text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl lg:text-5xl"
       >
-        Free browser-based tools for <span className="text-accent-600 dark:text-accent-400 bg-gradient-to-r from-accent-600 to-indigo-500 bg-clip-text text-transparent">modern work.</span>
+        Free browser-based tools for <span className="text-accent-600 dark:text-accent-400 font-bold">modern work.</span>
       </h1>
 
       <p 
@@ -54,7 +54,7 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
         style={{ '--stagger-index': 3 }}
         className="anim-fade-up relative mx-auto mt-6 sm:mt-8 max-w-2xl"
       >
-        <div className="flex min-h-[56px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2 shadow-md transition-all duration-300 focus-within:border-accent-500 focus-within:ring-4 focus-within:ring-accent-500/15 focus-within:shadow-xl focus-within:shadow-indigo-500/10 focus-within:scale-[1.01]">
+        <div className="flex min-h-[56px] items-center gap-3 rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 px-4 py-2 shadow-xs transition-all duration-200 focus-within:border-accent-500 focus-within:ring-2 focus-within:ring-accent-500/20 focus-within:shadow-md">
           <Search size={22} className="shrink-0 text-stone-500 dark:text-stone-400" aria-hidden="true" />
           <label htmlFor="tool-search" className="sr-only">Search online tools</label>
           <input
@@ -121,10 +121,10 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
                   onMouseLeave={() => {
                     window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: category ? category.toLowerCase() : null }));
                   }}
-                  className={`min-h-[44px] min-w-[44px] shrink-0 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center border ${
+                  className={`min-h-[44px] min-w-[44px] shrink-0 rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 active:scale-[0.98] flex items-center justify-center border ${
                     isActive
-                      ? 'bg-accent-600 text-white border-accent-600 shadow-md shadow-indigo-500/20'
-                      : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 border-[var(--orbit-border)] hover:border-accent-400 hover:bg-accent-50 dark:hover:bg-stone-800'
+                      ? 'bg-accent-600 text-white border-accent-600 shadow-sm'
+                      : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 border-[var(--orbit-border)] hover:border-accent-300 hover:bg-stone-50 dark:hover:bg-stone-800'
                   }`}
                 >
                   {chip.label}

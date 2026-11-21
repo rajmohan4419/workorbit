@@ -59,41 +59,17 @@ export function MicroCard({ tool, onUse }) {
 }
 
 export function ToolCard({ tool, favorite, onFavorite, onUse }) {
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
-    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
-
-    // Gentle 3D perspective tilt capped at ±4deg
-    const rotX = -(((y / rect.height) * 8 - 4)).toFixed(2);
-    const rotY = (((x / rect.width) * 8 - 4)).toFixed(2);
-    e.currentTarget.style.setProperty('--card-rot-x', `${rotX}deg`);
-    e.currentTarget.style.setProperty('--card-rot-y', `${rotY}deg`);
-  };
-
-  const handleMouseLeave = (e) => {
-    e.currentTarget.style.setProperty('--card-rot-x', '0deg');
-    e.currentTarget.style.setProperty('--card-rot-y', '0deg');
-  };
-
   return (
     <Link 
       to={`/tools/${tool.slug}`} 
       onMouseEnter={() => preloadToolPage(tool.slug)} 
       onFocus={() => preloadToolPage(tool.slug)} 
       onTouchStart={() => preloadToolPage(tool.slug)} 
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
       onClick={() => onUse(tool.slug)} 
-      style={{
-        transform: 'perspective(900px) rotateX(var(--card-rot-x, 0deg)) rotateY(var(--card-rot-y, 0deg)) translateZ(0)',
-      }}
-      className="tool-card card-spotlight group overflow-hidden rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-accent-400 dark:hover:border-accent-500 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1.5 focus:outline-none focus:ring-2 focus:ring-accent-500 flex flex-col justify-between will-change-transform"
+      className="tool-card group overflow-hidden rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 hover:border-accent-400 dark:hover:border-accent-500 hover:shadow-md transition-all duration-200 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-accent-500 flex flex-col justify-between"
     >
       <div>
-        <div className="overflow-hidden transition-transform duration-300 ease-out group-hover:scale-[1.04] group-hover:-translate-y-0.5">
+        <div className="overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.02]">
           <ToolVisual tool={tool} />
         </div>
         <div className="p-5">
@@ -112,7 +88,7 @@ export function ToolCard({ tool, favorite, onFavorite, onUse }) {
         </div>
       </div>
       <div className="px-5 pb-5">
-        <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent-700 dark:text-accent-400 group-hover:translate-x-1.5 transition-transform duration-200">Use tool <ArrowRight size={15} /></span>
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent-700 dark:text-accent-400 group-hover:translate-x-1 transition-transform duration-200">Use tool <ArrowRight size={15} /></span>
       </div>
     </Link>
   );
