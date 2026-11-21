@@ -167,7 +167,7 @@ export default function Pricing() {
             setStatusMessage({ type: 'info', text: 'Checkout was cancelled.' });
           },
         },
-        theme: { color: '#7c3aed' },
+        theme: { color: '#2563eb' },
       };
 
       if (typeof window !== 'undefined' && window.Razorpay) {
@@ -277,8 +277,8 @@ export default function Pricing() {
 
           {/* Hero Section */}
           <section className="py-12 sm:py-16 text-center max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/60 px-3.5 py-1 text-xs font-semibold text-violet-800 dark:text-violet-300 shadow-2xs mb-4">
-              <Sparkles size={14} className="text-violet-600 dark:text-violet-400" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 dark:border-accent-800 bg-accent-50 dark:bg-accent-950/60 px-3.5 py-1 text-xs font-semibold text-accent-800 dark:text-accent-300 shadow-2xs mb-4">
+              <Sparkles size={14} className="text-accent-600 dark:text-accent-400" />
               <span>Transparent Pricing • Cancel Anytime</span>
             </div>
 
@@ -319,7 +319,7 @@ export default function Pricing() {
               </button>
             </div>
 
-            {confirmationPending && <button type="button" disabled={Boolean(loadingPlan)} onClick={() => retryVerification.current?.()} className="mt-4 min-h-11 text-sm text-violet-700 underline">Retry subscription confirmation</button>}
+            {confirmationPending && <button type="button" disabled={Boolean(loadingPlan)} onClick={() => retryVerification.current?.()} className="mt-4 min-h-11 text-sm text-accent-700 underline">Retry subscription confirmation</button>}
             {/* Status notification */}
             {statusMessage && (
               <div
@@ -328,12 +328,12 @@ export default function Pricing() {
                     ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
                     : statusMessage.type === 'error'
                     ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200'
-                    : 'bg-violet-50 dark:bg-violet-950/60 border-violet-300 dark:border-violet-800 text-violet-800 dark:text-violet-200'
+                    : 'bg-accent-50 dark:bg-accent-950/60 border-accent-300 dark:border-accent-800 text-accent-800 dark:text-accent-200'
                 }`}
               >
                 {statusMessage.type === 'success' && <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />}
                 {statusMessage.type === 'error' && <AlertCircle size={16} className="text-rose-600 shrink-0" />}
-                {statusMessage.type === 'info' && <Sparkles size={16} className="text-violet-600 shrink-0" />}
+                {statusMessage.type === 'info' && <Sparkles size={16} className="text-accent-600 shrink-0" />}
                 <span>{statusMessage.text}</span>
               </div>
             )}
@@ -346,15 +346,15 @@ export default function Pricing() {
               {tiers.map((tier) => (
                 <div
                   key={tier.key}
-                  className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 ${
+                  className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 ${
                     tier.highlighted
-                      ? 'border-2 border-violet-600 dark:border-violet-500 bg-white dark:bg-stone-900 shadow-xl relative scale-100 sm:scale-105 z-10 ring-2 ring-violet-500/20 hover:shadow-2xl hover:shadow-indigo-500/15 card-spotlight shimmer-border'
-                      : 'border border-[var(--orbit-border)] bg-stone-50/70 dark:bg-stone-900/60 shadow-xs hover:border-accent-300 dark:hover:border-accent-700 hover:shadow-lg hover:shadow-stone-900/5'
+                      ? 'border-2 border-accent-600 dark:border-accent-500 bg-white dark:bg-stone-900 shadow-xl relative scale-100 sm:scale-105 z-10 ring-4 ring-accent-500/10'
+                      : 'border border-[var(--orbit-border)] bg-stone-50/70 dark:bg-stone-900/60 shadow-xs hover:border-accent-300 dark:hover:border-accent-700 hover:shadow-md'
                   }`}
                 >
                   <div>
                     {tier.badge && (
-                      <div className="inline-block px-3 py-1 rounded-full bg-violet-600 text-white text-[11px] font-bold uppercase tracking-wider mb-4">
+                      <div className="inline-block px-3 py-1 rounded-full bg-accent-600 text-white text-[11px] font-bold uppercase tracking-wider mb-4">
                         {tier.badge}
                       </div>
                     )}
@@ -412,7 +412,7 @@ export default function Pricing() {
                       onClick={() => handleSubscribe(tier.key)}
                       className={`w-full py-3 px-4 rounded-2xl font-bold text-xs sm:text-sm transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2 shadow-xs hover:shadow-md ${
                         tier.highlighted
-                          ? 'bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50'
+                          ? 'bg-accent-600 hover:bg-accent-500 text-white disabled:opacity-50'
                           : 'border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50'
                       }`}
                     >
@@ -457,7 +457,7 @@ export default function Pricing() {
             <div className="space-y-4">
               <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5">
                 <h4 className="font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                  <HelpCircle size={16} className="text-violet-600" />
+                  <HelpCircle size={16} className="text-accent-600 dark:text-accent-400" />
                   What payment methods are supported?
                 </h4>
                 <p className="mt-2 text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
@@ -467,7 +467,7 @@ export default function Pricing() {
 
               <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5">
                 <h4 className="font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                  <HelpCircle size={16} className="text-violet-600" />
+                  <HelpCircle size={16} className="text-accent-600 dark:text-accent-400" />
                   Can I cancel my subscription anytime?
                 </h4>
                 <p className="mt-2 text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
@@ -477,7 +477,7 @@ export default function Pricing() {
 
               <div className="rounded-2xl border border-[var(--orbit-border)] bg-white dark:bg-stone-900 p-5">
                 <h4 className="font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                  <HelpCircle size={16} className="text-violet-600" />
+                  <HelpCircle size={16} className="text-accent-600 dark:text-accent-400" />
                   Do free calculations require an account?
                 </h4>
                 <p className="mt-2 text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">

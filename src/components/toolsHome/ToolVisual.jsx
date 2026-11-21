@@ -15,8 +15,8 @@ export function ToolVisual({ tool, compact = false }) {
   const label = tool.icon;
 
   return (
-    <div className={`relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-accent-950/40 ${height}`} aria-hidden="true">
-      <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,.35),transparent_35%)]" />
+    <div className={`relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-stone-800/60 ${height}`} aria-hidden="true">
+      <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,.25),transparent_40%)]" />
       <svg viewBox="0 0 320 150" className="relative h-full w-full" fill="none">
         {kind === 'career' && <>
           <rect x="35" y="28" width="150" height="96" rx="12" fill="rgba(15,23,42,.9)" stroke="rgba(167,139,250,.45)" />

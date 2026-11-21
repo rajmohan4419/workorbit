@@ -70,14 +70,14 @@ export function PlanGate({
     <div
       role="region"
       aria-label="Account required"
-      className="anim-fade-up rounded-2xl border border-violet-200 dark:border-violet-800/60 bg-gradient-to-b from-violet-50/70 via-white to-stone-50 dark:from-violet-950/40 dark:via-stone-900 dark:to-stone-900 p-6 sm:p-8 text-center max-w-lg mx-auto shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 card-spotlight"
+      className="anim-fade-up rounded-2xl border border-accent-200 dark:border-accent-800/60 bg-gradient-to-b from-accent-50/50 via-white to-stone-50 dark:from-accent-950/20 dark:via-stone-900 dark:to-stone-900 p-6 sm:p-8 text-center max-w-lg mx-auto shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
     >
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-md mb-4">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-600 text-white shadow-sm mb-4">
         <Lock size={22} />
       </div>
 
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-100 dark:bg-violet-900/60 text-violet-800 dark:text-violet-300 text-xs font-semibold mb-3">
-        <Sparkles size={13} className="text-violet-600 dark:text-violet-400" />
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-100 dark:bg-accent-900/60 text-accent-800 dark:text-accent-300 text-xs font-semibold mb-3">
+        <Sparkles size={13} className="text-accent-600 dark:text-accent-400" />
         <span>Your OrbitBoard account</span>
       </div>
 
@@ -97,7 +97,7 @@ export function PlanGate({
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
           to="/account"
-          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs sm:text-sm font-semibold transition inline-flex items-center justify-center gap-2 shadow-xs"
+          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-white text-xs sm:text-sm font-semibold transition inline-flex items-center justify-center gap-2 shadow-xs"
         >
           <span>{signedIn ? 'View account & usage' : 'Sign up / Sign in'}</span>
           <ArrowRight size={14} />

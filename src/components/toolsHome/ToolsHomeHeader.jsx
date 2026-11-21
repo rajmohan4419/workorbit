@@ -59,11 +59,11 @@ export function ToolsHomeHeader({ visitorCount }) {
             <Link
               to="/"
               aria-label="OrbitBoard home"
-              className="text-lg sm:text-xl font-black tracking-tight text-stone-900 dark:text-stone-100 flex items-center gap-2 sm:gap-2.5 shrink-0 group"
+              className="text-lg sm:text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100 flex items-center gap-2 sm:gap-2.5 shrink-0 group"
             >
               <OrbitBoardIcon size={28} className="sm:w-8 sm:h-8 brand-icon-orbit" />
               <span className="tracking-tight">
-                Orbit<span className="bg-gradient-to-r from-sky-500 via-purple-500 to-orange-500 bg-clip-text text-transparent">Board</span>
+                Orbit<span className="text-accent-600 dark:text-accent-400">Board</span>
               </span>
             </Link>
           </div>

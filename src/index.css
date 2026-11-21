@@ -1,32 +1,30 @@
 @import "tailwindcss";
 
 /* ─── Fonts ─────────────────────────────────────────────────────────────── */
-@import "@fontsource/space-grotesk/latin-400.css";
-@import "@fontsource/space-grotesk/latin-500.css";
-@import "@fontsource/space-grotesk/latin-600.css";
-@import "@fontsource/space-grotesk/latin-700.css";
 @import "@fontsource/inter/latin-400.css";
 @import "@fontsource/inter/latin-500.css";
 @import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
 @import "@fontsource/jetbrains-mono/latin-400.css";
 @import "@fontsource/jetbrains-mono/latin-500.css";
+@import "@fontsource/jetbrains-mono/latin-600.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ─── Orbit Indigo-Amber Design System ───────────────────────────────────── */
+/* ─── Global Standard Design System ─────────────────────────────────────── */
 @theme {
-  /* Primary accent: Indigo */
-  --color-accent-50:  #EEF2FF;
-  --color-accent-100: #E0E7FF;
-  --color-accent-200: #C7D2FE;
-  --color-accent-300: #A5B4FC;
-  --color-accent-400: #818CF8;
-  --color-accent-500: #6366F1;
-  --color-accent-600: #4F46E5;
-  --color-accent-700: #4338CA;
-  --color-accent-800: #3730A3;
-  --color-accent-900: #312E81;
-  --color-accent-950: #1E1B4B;
+  /* Primary accent: Enterprise Sapphire Blue */
+  --color-accent-50:  #EFF6FF;
+  --color-accent-100: #DBEAFE;
+  --color-accent-200: #BFDBFE;
+  --color-accent-300: #93C5FD;
+  --color-accent-400: #60A5FA;
+  --color-accent-500: #3B82F6;
+  --color-accent-600: #2563EB;
+  --color-accent-700: #1D4ED8;
+  --color-accent-800: #1E40AF;
+  --color-accent-900: #1E3A8A;
+  --color-accent-950: #172554;
 
   /* Warm amber highlight */
   --color-amber-50:  #FFFBEB;
@@ -41,18 +39,18 @@
   --color-amber-900: #78350F;
   --color-amber-950: #451A03;
 
-  /* Extended indigo palette */
-  --color-indigo-50:  #EEF2FF;
-  --color-indigo-100: #E0E7FF;
-  --color-indigo-200: #C7D2FE;
-  --color-indigo-300: #A5B4FC;
-  --color-indigo-400: #818CF8;
-  --color-indigo-500: #6366F1;
-  --color-indigo-600: #4F46E5;
-  --color-indigo-700: #4338CA;
-  --color-indigo-800: #3730A3;
-  --color-indigo-900: #312E81;
-  --color-indigo-950: #1E1B4B;
+  /* Indigo alias mapped to precision sapphire blue */
+  --color-indigo-50:  #EFF6FF;
+  --color-indigo-100: #DBEAFE;
+  --color-indigo-200: #BFDBFE;
+  --color-indigo-300: #93C5FD;
+  --color-indigo-400: #60A5FA;
+  --color-indigo-500: #3B82F6;
+  --color-indigo-600: #2563EB;
+  --color-indigo-700: #1D4ED8;
+  --color-indigo-800: #1E40AF;
+  --color-indigo-900: #1E3A8A;
+  --color-indigo-950: #172554;
 }
 
 /* ─── Base reset ─────────────────────────────────────────────────────────── */
@@ -60,7 +58,7 @@
   box-sizing: border-box;
 }
 
-/* ─── OrbitBoard design tokens ───────────────────────────────────────────── */
+/* ─── Global Standard Design Tokens ──────────────────────────────────────── */
 :root {
   color-scheme: light;
   /* ── Timing Curves & Durations ── */
@@ -70,152 +68,152 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* Canvas & surfaces */
-  --orbit-canvas:       #F8F7FF;
+  /* Canvas & surfaces: Crisp, clean, neutral modern palette */
+  --orbit-canvas:       #F8FAFC;
   --orbit-surface:      #FFFFFF;
-  --orbit-surface-soft: #EEEDF8;
+  --orbit-surface-soft: #F1F5F9;
   /* Borders */
-  --orbit-border:       #D4D1F0;
-  /* Text */
-  --orbit-ink:          #0F0E1A;
-  --orbit-ink-soft:     #2D2B3F;
-  --orbit-muted:        #6E6B8A;
-  /* Brand colors */
-  --orbit-accent:       #4F46E5;
-  --orbit-accent-soft:  rgba(79, 70, 229, 0.10);
+  --orbit-border:       #E2E8F0;
+  /* Text: High-contrast authoritative slate */
+  --orbit-ink:          #0F172A;
+  --orbit-ink-soft:     #334155;
+  --orbit-muted:        #64748B;
+  /* Brand colors: Precision Enterprise Sapphire Blue */
+  --orbit-accent:       #2563EB;
+  --orbit-accent-soft:  rgba(37, 99, 235, 0.08);
   --orbit-amber:        #F59E0B;
-  --orbit-amber-soft:   rgba(245, 158, 11, 0.12);
+  --orbit-amber-soft:   rgba(245, 158, 11, 0.10);
   /* Sidebar */
   --sidebar-width-expanded: 240px;
   --sidebar-width-collapsed: 60px;
 
-  /* Default Category Theme Tokens */
-  --bg-glow-1: rgba(79, 70, 229, 0.20);
-  --bg-glow-2: rgba(6, 182, 212, 0.18);
-  --bg-accent-grid: rgba(79, 70, 229, 0.09);
+  /* Subtle, calm ambient lighting tokens */
+  --bg-glow-1: rgba(37, 99, 235, 0.05);
+  --bg-glow-2: rgba(14, 165, 233, 0.03);
+  --bg-accent-grid: rgba(15, 23, 42, 0.04);
 }
 
 /* ─── Ambient Background & Category Theme Tokens ─────────────────────────── */
 [data-category-theme="orbit"],
 [data-category-theme="default"] {
-  --bg-glow-1: rgba(79, 70, 229, 0.20);
-  --bg-glow-2: rgba(6, 182, 212, 0.18);
-  --bg-accent-grid: rgba(79, 70, 229, 0.09);
+  --bg-glow-1: rgba(37, 99, 235, 0.05);
+  --bg-glow-2: rgba(14, 165, 233, 0.03);
+  --bg-accent-grid: rgba(15, 23, 42, 0.04);
 }
 
 [data-category-theme="finance"] {
-  --bg-glow-1: rgba(16, 185, 129, 0.20);
-  --bg-glow-2: rgba(13, 148, 136, 0.18);
-  --bg-accent-grid: rgba(16, 185, 129, 0.09);
+  --bg-glow-1: rgba(16, 185, 129, 0.06);
+  --bg-glow-2: rgba(13, 148, 136, 0.04);
+  --bg-accent-grid: rgba(16, 185, 129, 0.04);
 }
 
 [data-category-theme="business"] {
-  --bg-glow-1: rgba(37, 99, 235, 0.21);
-  --bg-glow-2: rgba(245, 158, 11, 0.16);
-  --bg-accent-grid: rgba(37, 99, 235, 0.09);
+  --bg-glow-1: rgba(37, 99, 235, 0.06);
+  --bg-glow-2: rgba(245, 158, 11, 0.04);
+  --bg-accent-grid: rgba(37, 99, 235, 0.04);
 }
 
 [data-category-theme="developer"] {
-  --bg-glow-1: rgba(139, 92, 246, 0.21);
-  --bg-glow-2: rgba(34, 211, 238, 0.17);
-  --bg-accent-grid: rgba(139, 92, 246, 0.09);
+  --bg-glow-1: rgba(79, 70, 229, 0.05);
+  --bg-glow-2: rgba(14, 165, 233, 0.04);
+  --bg-accent-grid: rgba(79, 70, 229, 0.04);
 }
 
 [data-category-theme="career"] {
-  --bg-glow-1: rgba(14, 165, 233, 0.20);
-  --bg-glow-2: rgba(168, 85, 247, 0.17);
-  --bg-accent-grid: rgba(14, 165, 233, 0.09);
+  --bg-glow-1: rgba(14, 165, 233, 0.05);
+  --bg-glow-2: rgba(99, 102, 241, 0.04);
+  --bg-accent-grid: rgba(14, 165, 233, 0.04);
 }
 
 [data-category-theme="pdf"],
 [data-category-theme="spreadsheet"] {
-  --bg-glow-1: rgba(244, 63, 94, 0.19);
-  --bg-glow-2: rgba(99, 102, 241, 0.17);
-  --bg-accent-grid: rgba(244, 63, 94, 0.08);
+  --bg-glow-1: rgba(225, 29, 72, 0.05);
+  --bg-glow-2: rgba(37, 99, 235, 0.04);
+  --bg-accent-grid: rgba(225, 29, 72, 0.04);
 }
 
 [data-category-theme="everyday"],
 [data-category-theme="media"] {
-  --bg-glow-1: rgba(249, 115, 22, 0.20);
-  --bg-glow-2: rgba(236, 72, 153, 0.17);
-  --bg-accent-grid: rgba(249, 115, 22, 0.09);
+  --bg-glow-1: rgba(234, 88, 12, 0.05);
+  --bg-glow-2: rgba(219, 39, 119, 0.04);
+  --bg-accent-grid: rgba(234, 88, 12, 0.04);
 }
 
 .dark {
   color-scheme: dark;
-  --orbit-canvas:       #0F0E1A;
-  --orbit-surface:      #1A1926;
-  --orbit-surface-soft: #211F33;
-  --orbit-border:       #2D2B45;
-  --orbit-ink:          #F0EFFE;
-  --orbit-ink-soft:     #C8C4F0;
-  --orbit-muted:        #8B87AF;
-  --orbit-accent:       #818CF8;
-  --orbit-accent-soft:  rgba(129, 140, 248, 0.15);
+  --orbit-canvas:       #09090B;
+  --orbit-surface:      #121215;
+  --orbit-surface-soft: #18181B;
+  --orbit-border:       #27272A;
+  --orbit-ink:          #F8FAFC;
+  --orbit-ink-soft:     #CBD5E1;
+  --orbit-muted:        #94A3B8;
+  --orbit-accent:       #3B82F6;
+  --orbit-accent-soft:  rgba(59, 130, 246, 0.12);
   --orbit-amber:        #FBBF24;
-  --orbit-amber-soft:   rgba(251, 191, 36, 0.13);
+  --orbit-amber-soft:   rgba(251, 191, 36, 0.12);
 
-  --bg-glow-1: rgba(99, 102, 241, 0.16);
-  --bg-glow-2: rgba(6, 182, 212, 0.14);
-  --bg-accent-grid: rgba(129, 140, 248, 0.08);
+  --bg-glow-1: rgba(59, 130, 246, 0.06);
+  --bg-glow-2: rgba(14, 165, 233, 0.04);
+  --bg-accent-grid: rgba(255, 255, 255, 0.03);
 }
 
 .dark[data-category-theme="orbit"],
 .dark[data-category-theme="default"],
 .dark [data-category-theme="orbit"],
 .dark [data-category-theme="default"] {
-  --bg-glow-1: rgba(99, 102, 241, 0.16);
-  --bg-glow-2: rgba(6, 182, 212, 0.14);
-  --bg-accent-grid: rgba(129, 140, 248, 0.08);
+  --bg-glow-1: rgba(59, 130, 246, 0.06);
+  --bg-glow-2: rgba(14, 165, 233, 0.04);
+  --bg-accent-grid: rgba(255, 255, 255, 0.03);
 }
 
 .dark[data-category-theme="finance"],
 .dark [data-category-theme="finance"] {
-  --bg-glow-1: rgba(16, 185, 129, 0.17);
-  --bg-glow-2: rgba(20, 184, 166, 0.14);
-  --bg-accent-grid: rgba(52, 211, 153, 0.08);
+  --bg-glow-1: rgba(16, 185, 129, 0.06);
+  --bg-glow-2: rgba(20, 184, 166, 0.04);
+  --bg-accent-grid: rgba(52, 211, 153, 0.03);
 }
 
 .dark[data-category-theme="business"],
 .dark [data-category-theme="business"] {
-  --bg-glow-1: rgba(59, 130, 246, 0.17);
-  --bg-glow-2: rgba(245, 158, 11, 0.13);
-  --bg-accent-grid: rgba(96, 165, 250, 0.08);
+  --bg-glow-1: rgba(59, 130, 246, 0.06);
+  --bg-glow-2: rgba(245, 158, 11, 0.04);
+  --bg-accent-grid: rgba(96, 165, 250, 0.03);
 }
 
 .dark[data-category-theme="developer"],
 .dark [data-category-theme="developer"] {
-  --bg-glow-1: rgba(167, 139, 250, 0.18);
-  --bg-glow-2: rgba(56, 189, 248, 0.14);
-  --bg-accent-grid: rgba(167, 139, 250, 0.09);
+  --bg-glow-1: rgba(99, 102, 241, 0.06);
+  --bg-glow-2: rgba(56, 189, 248, 0.04);
+  --bg-accent-grid: rgba(129, 140, 248, 0.03);
 }
 
 .dark[data-category-theme="career"],
 .dark [data-category-theme="career"] {
-  --bg-glow-1: rgba(56, 189, 248, 0.17);
-  --bg-glow-2: rgba(192, 132, 252, 0.14);
-  --bg-accent-grid: rgba(56, 189, 248, 0.08);
+  --bg-glow-1: rgba(56, 189, 248, 0.06);
+  --bg-glow-2: rgba(129, 140, 248, 0.04);
+  --bg-accent-grid: rgba(56, 189, 248, 0.03);
 }
 
 .dark[data-category-theme="pdf"],
 .dark[data-category-theme="spreadsheet"],
 .dark [data-category-theme="pdf"],
 .dark [data-category-theme="spreadsheet"] {
-  --bg-glow-1: rgba(251, 113, 133, 0.16);
-  --bg-glow-2: rgba(129, 140, 248, 0.14);
-  --bg-accent-grid: rgba(251, 113, 133, 0.07);
+  --bg-glow-1: rgba(244, 63, 94, 0.06);
+  --bg-glow-2: rgba(59, 130, 246, 0.04);
+  --bg-accent-grid: rgba(244, 63, 94, 0.03);
 }
 
 .dark[data-category-theme="everyday"],
 .dark[data-category-theme="media"],
 .dark [data-category-theme="everyday"],
 .dark [data-category-theme="media"] {
-  --bg-glow-1: rgba(251, 146, 60, 0.16);
-  --bg-glow-2: rgba(244, 114, 182, 0.14);
-  --bg-accent-grid: rgba(251, 146, 60, 0.08);
+  --bg-glow-1: rgba(249, 115, 22, 0.06);
+  --bg-glow-2: rgba(236, 72, 153, 0.04);
+  --bg-accent-grid: rgba(249, 115, 22, 0.03);
 }
 
-/* ─── Typography ─────────────────────────────────────────────────────────── */
+/* ─── Typography: Clean Global Standard ─────────────────────────────────── */
 html {
   font-size: 15px;
   background: var(--orbit-canvas);
@@ -226,7 +224,8 @@ body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'kern', 'liga', 'calt';
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   background: transparent;
   color: var(--orbit-ink);
   font-size: 0.9375rem;
@@ -235,12 +234,18 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  color: var(--orbit-ink);
+}
+
+h1 {
+  letter-spacing: -0.03em;
 }
 
 code, pre, kbd, .mono {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
   font-feature-settings: 'liga' 1, 'calt' 1;
 }
 
@@ -268,11 +273,11 @@ code, pre, kbd, .mono {
 }
 
 @keyframes anim-zero-g-kf {
-  0% {
-    transform: translateY(0) rotate(0deg);
+  0%, 100% {
+    transform: translateY(0);
   }
-  100% {
-    transform: translateY(-10px) rotate(1.5deg);
+  50% {
+    transform: translateY(-2px);
   }
 }
 
@@ -397,47 +402,14 @@ code, pre, kbd, .mono {
   background-size: 200% 100%;
 }
 
-/* 3D Spotlight tracking card */
+/* Standard refined card elevation */
 .card-spotlight {
   position: relative;
-  isolation: isolate;
 }
 
-.card-spotlight::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(
-    320px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(99, 102, 241, 0.25),
-    transparent 70%
-  );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1;
-}
-
-.card-spotlight:hover::before {
-  opacity: 1;
-}
-
-/* Spring modal container */
-.modal-elastic-enter {
-  animation: modal-spring-enter 0.35s var(--ease-spring) both;
-  will-change: transform, opacity;
-}
-
-/* Highlighted tier ambient border shimmer */
+/* Subtle clean border highlight on active tier */
 .shimmer-border {
-  background-size: 200% 200%;
-  animation: border-shimmer-kf 4s ease infinite;
+  border-color: var(--orbit-accent) !important;
 }
 
 /* Drag-over active dropzone */
@@ -455,7 +427,7 @@ code, pre, kbd, .mono {
 }
 .group:hover .brand-icon-orbit,
 .brand-icon-orbit:hover {
-  transform: rotate(15deg) scale(1.06);
+  transform: scale(1.04);
 }
 
 .orbit-enter {
@@ -522,21 +494,21 @@ code, pre, kbd, .mono {
 
 /* ─── Tactile micro-interactions ─────────────────────────────────────────── */
 .orbit-card-hover {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .orbit-card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px -6px rgba(79, 70, 229, 0.12), 0 4px 12px -2px rgba(15, 14, 26, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
 }
 .orbit-card-hover:active {
-  transform: translateY(-1px);
+  transform: translateY(0);
 }
 
 .orbit-btn-press {
   transition: transform 0.15s ease-out, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .orbit-btn-press:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .orbit-interactive {
@@ -544,7 +516,7 @@ code, pre, kbd, .mono {
 }
 .orbit-interactive:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 26px rgba(79, 70, 229, 0.10);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
 main {
@@ -654,8 +626,8 @@ select.orbit-control--dense {
 .dark .orbit-tool .bg-stone-800\/50,
 .dark .orbit-tool .bg-stone-50   { background-color: var(--orbit-surface-soft); }
 .dark .orbit-tool .bg-accent-950\/50 { background-color: var(--orbit-accent-soft); }
-.dark .orbit-tool .border-accent-700 { border-color: rgba(129, 140, 248, 0.45); }
-.dark .orbit-tool .text-accent-300   { color: #A5B4FC; }
+.dark .orbit-tool .border-accent-700 { border-color: rgba(96, 165, 250, 0.35); }
+.dark .orbit-tool .text-accent-300   { color: #93C5FD; }
 .dark .orbit-tool .text-stone-100,
 .dark .orbit-tool .text-stone-200    { color: var(--orbit-ink); }
 .dark .orbit-tool .text-stone-300,
@@ -748,13 +720,13 @@ select.orbit-control--dense {
 
 @keyframes ring-pulse-kf {
   0% {
-    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.45);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
   }
 }
 

@@ -40,7 +40,7 @@ function ToolAvatar({ tool, size = 'md' }) {
     'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
     'bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300',
     'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
-    'bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300',
+    'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
     'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300',
     'bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300',
   ];
@@ -362,7 +362,7 @@ export function QuickAccessLeftSidebar() {
             <span className="truncate">Contact</span>
           </Link>
           <a href="/#support" className="px-2 py-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center gap-1.5 truncate">
-            <Heart size={12} className="text-violet-500 shrink-0" />
+            <Heart size={12} className="text-rose-500 shrink-0" />
             <span className="truncate">Support</span>
           </a>
           <Link to="/privacy" className="px-2 py-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center gap-1.5 truncate">

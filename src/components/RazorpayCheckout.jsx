@@ -109,7 +109,7 @@ export function RazorpayCheckout({
           contact: prefillContact,
         },
         theme: {
-          color: '#7c3aed',
+          color: '#2563eb',
         },
         modal: {
           ondismiss: () => {
@@ -242,7 +242,7 @@ export function RazorpayCheckout({
                 onClick={() => setSelectedAmount(preset)}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
                   selectedAmount === preset
-                    ? 'border-violet-600 bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-500 shadow-xs'
+                    ? 'border-accent-600 bg-accent-50 text-accent-700 dark:bg-accent-950/60 dark:text-accent-300 dark:border-accent-500 shadow-xs'
                     : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-300 dark:hover:border-stone-700'
                 }`}
               >
@@ -258,7 +258,7 @@ export function RazorpayCheckout({
           disabled={loading || confirmationPending}
           className={
             buttonClassName ||
-            'shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl bg-violet-600 hover:bg-violet-500 text-white transition-colors inline-flex items-center justify-center gap-2 shadow-xs disabled:opacity-50'
+            'shrink-0 px-4 py-2.5 min-h-[44px] text-xs font-semibold rounded-xl bg-accent-600 hover:bg-accent-500 text-white transition-colors inline-flex items-center justify-center gap-2 shadow-xs disabled:opacity-50'
           }
         >
           {loading ? (
@@ -271,7 +271,7 @@ export function RazorpayCheckout({
           )}
         </button>
 
-        {confirmationPending && <button type="button" disabled={loading} onClick={() => retryVerification.current?.()} className="min-h-11 text-xs text-violet-700 underline">Retry payment confirmation</button>}
+        {confirmationPending && <button type="button" disabled={loading} onClick={() => retryVerification.current?.()} className="min-h-11 text-xs text-accent-700 underline">Retry payment confirmation</button>}
         {status && (
           <div
             className={`text-[11px] font-medium flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
@@ -356,7 +356,7 @@ export function RazorpayCheckout({
         )}
       </button>
 
-      {confirmationPending && <button type="button" disabled={loading} onClick={() => retryVerification.current?.()} className="min-h-11 text-sm text-violet-700 underline">Retry payment confirmation</button>}
+      {confirmationPending && <button type="button" disabled={loading} onClick={() => retryVerification.current?.()} className="min-h-11 text-sm text-accent-700 underline">Retry payment confirmation</button>}
       {status && (
         <div
           className={`mt-4 p-3.5 rounded-xl border text-xs font-medium relative flex items-start gap-2.5 ${
