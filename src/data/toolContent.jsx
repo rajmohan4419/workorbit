@@ -1325,9 +1325,9 @@ export const TOOL_CONTENT = {
     ]
   },
   'gst-invoice-generator': {
-    title: 'OrbitBoard Invoice Generator | Five Templates, GST & Export Review',
+    title: 'OrbitBoard Invoice Generator | Five Templates, GST & Export Invoices',
     h1: 'Invoice Generator for Registered Indian Businesses',
-    metaDescription: 'Prepare B2B, B2C and reviewed export invoices with five original templates. Preview free; sign in to finalize and save an invoice snapshot with PDF download.',
+    metaDescription: 'Prepare B2B, B2C, and export invoices with five clean templates. Preview free; sign in to finalize and save an invoice snapshot with PDF download.',
     intro: 'Choose invoice type and template separately. Draft locally, review particulars and tax treatment, then explicitly save a finalized account invoice.',
     keywords: 'GST invoice, B2B invoice, B2C invoice, export invoice, invoice templates, LUT invoice',
     how: ['Enter seller, recipient and delivery details; choose an explicit place of supply.', 'Choose B2B, B2C or export goods/services and review the applicable legal treatment.', 'Add classified items, discounts and reviewed charges; inspect totals and validation.', 'Preview any of the five templates without signing in.', 'Sign in to finalize: five lifetime invoices are the configurable launch allowance. Re-download saved invoices without another invoice credit.'],

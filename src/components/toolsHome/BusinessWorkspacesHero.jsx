@@ -116,12 +116,12 @@ export function BusinessWorkspacesHero() {
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-[var(--orbit-border)] flex items-center justify-between text-xs">
-                <span className="text-[11px] font-medium text-stone-600 dark:text-stone-300">
+              <div className="mt-4 pt-3 border-t border-[var(--orbit-border)] flex items-center justify-between text-xs gap-3">
+                <span className="text-[11px] font-medium text-stone-600 dark:text-stone-300 truncate">
                   {item.metrics}
                 </span>
-                <span className="inline-flex items-center gap-1 font-bold text-accent-600 dark:text-accent-400 group-hover:translate-x-1 transition-transform duration-200">
-                  Launch
+                <span className="shrink-0 inline-flex items-center gap-1 font-bold text-accent-600 dark:text-accent-400 group-hover:translate-x-1 transition-transform duration-200">
+                  Open tool
                   <ArrowRight size={13} />
                 </span>
               </div>
