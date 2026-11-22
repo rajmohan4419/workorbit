@@ -6,6 +6,7 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { QuickQuiz } from './components/QuickQuiz';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { GlobalPreviewModal } from './components/tools/PreviewModal';
+import { ValueEngagementToast } from './components/ValueEngagementToast';
 import ToolsHome from './pages/ToolsHome';
 import { loadGoogleAnalytics } from './lib/analytics';
 const WishesStudio = lazy(() => import('./pages/WishesStudio'));
@@ -46,6 +47,7 @@ function AppContent() {
       <QuickQuiz />
       <CookieConsentBanner />
       <GlobalPreviewModal />
+      <ValueEngagementToast />
       <div style={{ position: 'relative', zIndex: 1 }}>
         <Suspense fallback={<div className="min-h-screen bg-[var(--orbit-canvas)]" />}>
           <Routes>

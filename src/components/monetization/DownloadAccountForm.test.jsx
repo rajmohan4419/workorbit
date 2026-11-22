@@ -6,8 +6,20 @@ import {beforeEach,afterEach,describe,expect,it,vi} from 'vitest';
 import {DownloadAccountForm} from './DownloadAccountForm';
 import {supabase} from '../../lib/supabase';
 import {getFeedbackSnapshot} from '../../lib/feedback/taskFeedback';
-vi.mock('../../lib/supabase',()=>({supabase:{auth:{signInWithOAuth:vi.fn(),onAuthStateChange:vi.fn()}}}));
+
+vi.mock('../../lib/supabase',()=>({
+  supabase:{
+    auth:{
+      signInWithOAuth:vi.fn(),
+      signInWithOtp:vi.fn(),
+      verifyOtp:vi.fn(),
+      onAuthStateChange:vi.fn()
+    }
+  }
+}));
+
 globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+
 describe('Google account sign-in',()=>{
  let root,container,popup,listener,unsubscribe;
  beforeEach(()=>{
@@ -29,10 +41,10 @@ describe('Google account sign-in',()=>{
   await act(async()=>{listener('SIGNED_IN',{user:{id:'synthetic'}});listener('SIGNED_IN',{user:{id:'synthetic'}});});expect(done).toHaveBeenCalledOnce();
   expect(getFeedbackSnapshot().tasks.at(-1).label).toBe('You’re signed in.');
  });
- it('keeps email sign-in available when the popup is blocked',async()=>{
+ it('keeps email OTP sign-in available when the popup is blocked',async()=>{
   window.open.mockReturnValue(null);await render();await click();
   expect(container.querySelector('[role="alert"]').textContent).toContain('Allow pop-ups');
-  expect(container.querySelector('input[type="password"]')).not.toBeNull();
+  expect(container.querySelector('input[type="email"]')).not.toBeNull();
  });
  it('rejects untrusted OAuth URLs and recovers from provider errors',async()=>{
   supabase.auth.signInWithOAuth.mockResolvedValue({data:{url:'https://untrusted.example/auth/v1/authorize'}});
@@ -55,5 +67,4 @@ describe('Google account sign-in',()=>{
   await act(async()=>listener('SIGNED_IN',{user:{id:'synthetic'}}));
   expect(done).not.toHaveBeenCalled();
  });
-
 });

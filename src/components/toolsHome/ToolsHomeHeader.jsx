@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Sparkles, ShieldCheck, Users } from 'lucide-react';
+import { Menu, ShieldCheck, Users } from 'lucide-react';
 import { useAccountSession } from '../../lib/monetization/useAccountSession';
 import { OrbitBoardIcon } from '../brand/OrbitBoardIcon';
 
@@ -77,12 +77,10 @@ export function ToolsHomeHeader({ visitorCount }) {
               {loading || signedIn ? 'Account' : 'Sign up / Sign in'}
             </Link>
 
-            {/* Primary Announcement Pill */}
-            <div className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-accent-200/80 dark:border-accent-800/80 bg-accent-50/70 dark:bg-accent-950/40 px-2.5 sm:px-3.5 py-1 text-[11px] sm:text-xs font-semibold text-accent-800 dark:text-accent-300 shadow-2xs truncate">
-              <Sparkles size={13} className="shrink-0 text-accent-600 dark:text-accent-400" />
+            {/* Info Pill */}
+            <div className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 px-2.5 sm:px-3.5 py-1 text-[11px] sm:text-xs font-medium text-stone-600 dark:text-stone-300 truncate">
               <span className="truncate">
-                <span className="hidden sm:inline font-bold">Announcement: </span>
-                <span>{signedIn ? 'Free tools · Manage your download credits' : 'Free tools · Sign up for PDF/XLSX downloads'}</span>
+                {signedIn ? 'Free tools · manage download credits' : 'Free · no sign-up needed for most tools'}
               </span>
             </div>
 
