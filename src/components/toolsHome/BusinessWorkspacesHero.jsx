@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
-  Sparkles, ArrowRight, Building2, FileText, FileSpreadsheet,
+  ArrowRight, Building2, FileText, FileSpreadsheet,
   Clock, TrendingUp, Target, ShieldCheck
 } from 'lucide-react';
 import { LISTED_TOOLS } from '../../data/toolCatalog';
@@ -70,24 +70,20 @@ const BUSINESS_WORKFLOWS = FEATURED_WORKFLOW_CONFIG.map(cfg => {
 export function BusinessWorkspacesHero() {
   return (
     <section className="mx-auto max-w-6xl py-6 sm:py-8 border-t border-[var(--orbit-border)]">
-      {/* Header with high-value positioning */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5 anim-fade-up" style={{ '--stagger-index': 0 }}>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent-100 text-accent-800 dark:bg-accent-950/70 dark:text-accent-300 mb-2">
-            <Sparkles size={12} className="text-amber-500" />
-            Task-Based Business Discovery
-          </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-            Business & Financial Workspaces
+            Business & financial workspaces
           </h2>
-          <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1 max-w-2xl">
-            Purpose-built workflows for founders, finance teams, and operators. Perform reconciliations, create tax invoices, clean spreadsheets, and track SaaS revenue—privately in your browser.
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-1 max-w-xl">
+            Reconcile accounts, create GST invoices, clean spreadsheets, track SaaS metrics — privately, in your browser.
           </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300">
-          <ShieldCheck size={14} className="text-emerald-500" />
-          <span>Zero server upload • 100% private</span>
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400 shrink-0">
+          <ShieldCheck size={13} className="text-emerald-500" />
+          <span>Zero server upload</span>
         </div>
       </div>
 
