@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, ArrowRight, RotateCcw, ShieldCheck } from 'lucide-react';
 import { useTaskFeedback } from '../../lib/feedback/useTaskFeedback';
 import { unlockSound } from '../../lib/feedback/sound';
 import { supabase } from '../../lib/supabase';
@@ -26,6 +25,7 @@ export function DownloadAccountForm({ onSignedIn }) {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [busy, setBusy] = useState(false);
+  const [isGooglePending, setIsGooglePending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const cooldownRef = useRef(null);
 
@@ -43,6 +43,7 @@ export function DownloadAccountForm({ onSignedIn }) {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session && googlePending.current) {
         googlePending.current = false;
+        setIsGooglePending(false);
         locked.current = false;
         setBusy(false);
         action.current?.success('You’re signed in.');
@@ -59,6 +60,7 @@ export function DownloadAccountForm({ onSignedIn }) {
     const timer = setInterval(() => {
       if (googlePending.current && popupRef.current?.closed) {
         googlePending.current = false;
+        setIsGooglePending(false);
         locked.current = false;
         setBusy(false);
         const msg = 'Google sign-in was cancelled. Your inputs are still here. Please try again.';
@@ -86,12 +88,51 @@ export function DownloadAccountForm({ onSignedIn }) {
     return () => clearInterval(cooldownRef.current);
   }, [resendCooldown]);
 
-  // Auto-verify when OTP completes
-  useEffect(() => {
-    if (step === 'otp' && otp.replace(/\s/g, '').length === OTP_LENGTH && !busy) {
-      verifyOtp(otp);
+  const verifyOtp = useCallback(async (code) => {
+    if (locked.current) return;
+    unlockSound();
+    action.current = feedback.begin({ label: 'Verifying code', stage: 'Checking code' });
+    if (!action.current) return;
+    locked.current = true;
+    setBusy(true);
+    setMessage('');
+    setError('');
+    try {
+      if (!supabase?.auth) throw new Error('Account service is unavailable.');
+      const { data, error: err } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: code.trim(),
+        type: 'email',
+      });
+      if (err) throw err;
+      if (data?.session) {
+        action.current.success('You’re signed in.');
+        setMessage('You’re signed in.');
+        void Promise.resolve().then(() => onSignedIn?.(data.session)).catch(() => {});
+      } else {
+        throw new Error('Verification did not return an active session.');
+      }
+    } catch (err) {
+      action.current?.error('Invalid or expired code.');
+      setOtp('');
+      setError(
+        err.message?.includes('expired') || err.message?.includes('invalid')
+          ? 'That code is invalid or has expired. Please request a new one.'
+          : err.message || 'Could not verify code. Please try again.'
+      );
+    } finally {
+      locked.current = false;
+      setBusy(false);
     }
-  }, [otp, step]);
+  }, [email, feedback, onSignedIn]);
+
+  const handleOtpChange = (e) => {
+    const nextOtp = e.target.value.replace(/\D/g, '').slice(0, OTP_LENGTH);
+    setOtp(nextOtp);
+    if (nextOtp.length === OTP_LENGTH && !busy) {
+      void verifyOtp(nextOtp);
+    }
+  };
 
   async function googleSignIn() {
     if (locked.current) return;
@@ -116,6 +157,7 @@ export function DownloadAccountForm({ onSignedIn }) {
     locked.current = true;
     setBusy(true);
     googlePending.current = true;
+    setIsGooglePending(true);
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -143,6 +185,7 @@ export function DownloadAccountForm({ onSignedIn }) {
       setMessage('Complete Google sign-in in the new window, then return here. Your generated file stays in this tab.');
     } catch {
       googlePending.current = false;
+      setIsGooglePending(false);
       locked.current = false;
       setBusy(false);
       action.current?.error('Google sign-in could not start. Please retry or use email sign-in.');
@@ -194,44 +237,6 @@ export function DownloadAccountForm({ onSignedIn }) {
     }
   }
 
-  async function verifyOtp(code) {
-    if (locked.current) return;
-    unlockSound();
-    action.current = feedback.begin({ label: 'Verifying code', stage: 'Checking code' });
-    if (!action.current) return;
-    locked.current = true;
-    setBusy(true);
-    setMessage('');
-    setError('');
-    try {
-      if (!supabase?.auth) throw new Error('Account service is unavailable.');
-      const { data, error: err } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: code.trim(),
-        type: 'email',
-      });
-      if (err) throw err;
-      if (data?.session) {
-        action.current.success('You’re signed in.');
-        setMessage('You’re signed in.');
-        void Promise.resolve().then(() => onSignedIn?.(data.session)).catch(() => {});
-      } else {
-        throw new Error('Verification did not return an active session.');
-      }
-    } catch (err) {
-      action.current?.error('Invalid or expired code.');
-      setOtp('');
-      setError(
-        err.message?.includes('expired') || err.message?.includes('invalid')
-          ? 'That code is invalid or has expired. Please request a new one.'
-          : err.message || 'Could not verify code. Please try again.'
-      );
-    } finally {
-      locked.current = false;
-      setBusy(false);
-    }
-  }
-
   async function handleResend() {
     if (resendCooldown > 0 || busy) return;
     setError('');
@@ -252,6 +257,7 @@ export function DownloadAccountForm({ onSignedIn }) {
   const cancelGoogle = () => {
     if (!googlePending.current) return;
     googlePending.current = false;
+    setIsGooglePending(false);
     locked.current = false;
     closePopup();
     setBusy(false);
@@ -280,7 +286,7 @@ export function DownloadAccountForm({ onSignedIn }) {
         Continue with Google
       </button>
 
-      {busy && googlePending.current && (
+      {busy && isGooglePending && (
         <button
           type="button"
           className="text-sm text-violet-700 underline"
@@ -333,7 +339,7 @@ export function DownloadAccountForm({ onSignedIn }) {
                 autoComplete="one-time-code"
                 required
                 value={otp}
-                onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, OTP_LENGTH))}
+                onChange={handleOtpChange}
                 placeholder="123456"
               />
             </label>

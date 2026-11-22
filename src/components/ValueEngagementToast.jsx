@@ -29,12 +29,12 @@ export function ValueEngagementToast() {
 
       // Trigger after user has used/viewed at least 3 tools
       if (count >= MILESTONE_COUNT) {
-        // Alternating kind based on whether they are already signed in
         const isSigned = Boolean(session && !session.user?.is_anonymous);
-        setKind(isSigned ? 'support' : (count % 2 === 0 ? 'support' : 'milestone'));
+        const targetKind = isSigned ? 'support' : (count % 2 === 0 ? 'support' : 'milestone');
 
         // Brief delay so it appears gently after the page is usable
         const timer = setTimeout(() => {
+          setKind(targetKind);
           setVisible(true);
         }, 1800);
         return () => clearTimeout(timer);

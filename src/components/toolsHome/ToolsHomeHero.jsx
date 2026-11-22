@@ -1,32 +1,9 @@
 import { Search } from 'lucide-react';
 import { ResultRow } from './ToolCard';
 
-const categoryChips = [
-  { name: 'All', label: 'All tools' },
-  { name: 'Finance', label: 'Finance' },
-  { name: 'Career', label: 'Career' },
-  { name: 'Business', label: 'Business' },
-  { name: 'Developer', label: 'Developer' },
-  { name: 'Everyday', label: 'Everyday' },
-];
-
-export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCategory, searchResults, addRecent, logEvent }) {
-  const activeCategory = category || 'All';
-
-  const handleChipClick = (catName) => {
-    if (catName === 'All') {
-      setCategory(null);
-    } else {
-      setCategory(catName);
-    }
-    if (onQueryChange) onQueryChange('');
-    else setQuery('');
-    if (logEvent) logEvent('category.chip_clicked', { category: catName });
-  };
-
+export function ToolsHomeHero({ query, setQuery, onQueryChange, searchResults, addRecent }) {
   return (
     <section className="mx-auto max-w-3xl px-4 pt-10 pb-6 sm:pt-16 sm:pb-8 text-center">
-
       <h1 className="text-[2rem] sm:text-5xl font-bold tracking-tight text-stone-900 dark:text-stone-50 leading-[1.15]">
         Get work done,{' '}
         <span
@@ -85,37 +62,6 @@ export function ToolsHomeHero({ query, setQuery, onQueryChange, category, setCat
             )}
           </div>
         )}
-      </div>
-
-      {/* Category Chips */}
-      <div className="mt-4 flex items-center justify-center">
-        <div className="overflow-x-auto no-scrollbar flex gap-2 py-1">
-          {categoryChips.map((chip) => {
-            const isActive = activeCategory === chip.name;
-            return (
-              <button
-                key={chip.name}
-                type="button"
-                onClick={() => handleChipClick(chip.name)}
-                onMouseEnter={() => {
-                  if (chip.name !== 'All') {
-                    window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: chip.name.toLowerCase() }));
-                  }
-                }}
-                onMouseLeave={() => {
-                  window.dispatchEvent(new CustomEvent('orbitboard:category-theme', { detail: category ? category.toLowerCase() : null }));
-                }}
-                className={`shrink-0 rounded-lg px-3.5 py-1.5 text-sm transition-all duration-150 active:scale-[0.98] ${
-                  isActive
-                    ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-medium shadow-sm'
-                    : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800'
-                }`}
-              >
-                {chip.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
     </section>
   );
